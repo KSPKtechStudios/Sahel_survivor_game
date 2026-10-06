@@ -11,7 +11,7 @@ export const ITEMS = {
   wood: { name: 'Puu', stack: 30, floats: true, desc: 'Akasiapuuta.' },
   stone_axe: { name: 'Kivikirves', stack: 1, tool: 'axe', damage: 1, weapon: 'axe', desc: 'Puiden kaatamiseen. Kelpaa myös aseeksi.' },
   stone_pick: { name: 'Kivihakku', stack: 1, tool: 'pickaxe', damage: 1, weapon: 'pick', desc: 'Lohkareiden louhimiseen.' },
-  wooden_club: { name: 'Puunuija', stack: 1, weapon: 'club', desc: 'Raskas nuija. Kolmen iskun sarja: sivulle, takaisin ja murskaava isku ylhäältä.' },
+  wooden_club: { name: 'Puunuija', stack: 1, weapon: 'club', desc: 'Raskas nuija: hidas mutta voimakas isku, joka tönäisee kauas.' },
   machete: { name: 'Viidakkoveitsi', stack: 1, tool: 'blade', weapon: 'machete', desc: 'Nopea terä. Kolmen iskun sarja päättyy pistoon. Raivaa myös pensaita.' },
   shield: { name: 'Puukilpi', stack: 1, shield: true, desc: 'Varusta kilpi vasempaan käteen (valitse se ja paina hiiren oikeaa, tai hiiren oikea repussa). Varustettuna [Hiiri 2] torjuu lähes kaiken.' },
   campfire: { name: 'Nuotio', stack: 5, place: 'campfire', desc: 'Valoa ja lämpöä yöhön. Aseta hiiren oikealla.' },

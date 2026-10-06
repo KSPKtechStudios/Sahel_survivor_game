@@ -2,6 +2,16 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-06 (sessio 8)
+**Tehtiin**
+- Käyttäjän palaute: sademetsässä ei soinut musiikkia, häivytys liian pitkä, grafiikan esiasetukset (matala–ultra), lyömiseen ja komboon jäähdytys, kombo vain nopeille ja kevyille aseille, lisää tönäisyä, kuolemaefekti ja veri. Kirjattu `DESIGN.md`:hen.
+- `combat.js`: uusi asetaulukko (sarja vain viidakkoveitsellä, jäähdytykset), tähtäin himmenee jäähdytyksen ajan (`hud.js`). `mobs.js`: osumahorjahdus, isompi tönäisy ja hypähdys, veriroiskeet ja kuolemalammikko. Uusi `src/render/blood.js` (pisarat ja läikät). `music.js`: sademetsä, lyhyemmät ajat. `save.js` + `menu.js` + `index.html`: grafiikan esiasetukset. `main.js`: Ultra 2× pikselitiheys, varjokartan koon muutos korjattu.
+- Testattiin headless-Chromiumilla: esiasetukset ja "Oma", iskujen tahti (nyrkit 0,8 s, nuija 1,4 s, viidakkoveitsen sarja ja 1,3 s tauko), tönäisy (1,8 m, hypähdys 0,2 m), kuoleman roiske ja lammikko (kuvat), sademetsän musiikki, WebGL-varoitusten syy (Tarkka-varjot) ja korjaus, vanhat hakkuu- ja toimintatestit. Ei konsolivirheitä.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute taistelun tahdista, tönäisystä, verestä ja esiasetuksista.
+- Avoimet: oma kappale sademetsään, miekka tai muita kevyitä aseita, Alpha v0.1 -julkaisu GitHubissa (käyttäjä tekee).
+
 ## 2026-10-06 (sessio 7)
 **Tehtiin**
 - Käyttäjä pyysi: iskusarjojen rajoitus (yli 50 % kestävyydestä tai yksi sarja tyhjentää), kilpi varustetaan itse, savipeikot joutuvat aamulla paniikkiin ja syttyvät palamaan, F3-kehittäjätyökalut (siirtyminen, kutsuminen, lentäminen, nopeus, koko kartta) ja testityökalut pois valikosta, musiikki biomeittain ja päävalikkoon (luettelo, pelissä hiljaa, valikossa normaalisti, viive ja pitkät häivytykset), ääniasetukset, aavikko ja dyynit yhdeksi biomiksi. Kesken työn: versio nimetään GitHubissa Alpha v0.1:ksi. Kirjattu `DESIGN.md`:hen.

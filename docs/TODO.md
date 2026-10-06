@@ -1,6 +1,8 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa jäähdytyksen, tönäisyt, veren ja kuolemaefektin, grafiikan esiasetukset ja sademetsän musiikin
+- [ ] Vastaus: oma kappale sademetsään? Miekka tai muita kevyitä aseita?
 - [ ] Käyttäjä luo GitHubiin julkaisun **Alpha v0.1** (tagi `alpha-v0.1`, commit 03a2b3b); tagin pushaus oli estetty tästä ympäristöstä
 - [ ] Käyttäjä testaa musiikin (voimakkuudet, viiveet, häivytykset), ääniasetukset, kehittäjätyökalut [F3], kombojen rajoituksen, kilven varustamisen ja palavat savipeikot
 - [ ] Vastaus: mihin Hiekan jäljet -kappale; musiikki sademetsään, vuoristoon, rannalle, yöhön tai taisteluun?
@@ -41,6 +43,7 @@
 - [ ] Päätä lopullinen nimi (Sahel vai jokin muu)
 
 ## Valmis
+- [x] Jäähdytys, kombot vain kevyille aseille, lisää tönäisyä, veri ja kuolemaefekti, grafiikan esiasetukset, sademetsän musiikki, lyhyemmät häivytykset, varjokorjaus (2026-10-06, sessio 8)
 - [x] Musiikki (päävalikko, savanni, aavikko, meri) viiveillä ja häivytyksillä, ääniasetukset (2026-10-06, sessio 7)
 - [x] Kehittäjätyökalut [F3]: lentäminen, nopeus, kuolemattomuus, siirtyminen, olennot, esineet, sää, aika, koko kartta (2026-10-06, sessio 7)
 - [x] Iskusarjojen rajoitus, kilven varustaminen, savipeikot palavat aamulla, dyynit yhdistetty aavikkoon (2026-10-06, sessio 7)

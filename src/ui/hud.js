@@ -133,7 +133,9 @@ export class Hud {
     this.messageTimer = 1.8;
   }
 
-  update(dt, { prompt, player, env, visible }) {
+  update(dt, { prompt, player, env, visible, cooldown = 0 }) {
+    // Iskun jäähdytys: tähtäin himmenee, kunnes voi lyödä uudelleen.
+    this.crosshair.classList.toggle('cooldown', cooldown > 0.02);
     // Kohde
     if (prompt && visible) {
       this.targetBox.classList.add('show');

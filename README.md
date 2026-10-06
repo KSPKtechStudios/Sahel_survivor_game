@@ -26,7 +26,7 @@ Haarojen testauslinkit: `https://raw.githack.com/KSPKtech/sahel/<haara>/index.ht
 | Shift | juokse |
 | Välilyönti | hyppää (kuolleena: herää henkiin) |
 | Ctrl tai C | kyykky päälle/pois |
-| Hiiri 1 | lyö / hakkaa (klikkaa tahdissa tai pidä pohjassa: iskusarjat nuijalla, viidakkoveitsellä ja nyrkeillä) |
+| Hiiri 1 | lyö / hakkaa (iskun jälkeen lyhyt jäähdytys; viidakkoveitsellä iskusarja) |
 | Hiiri 2 | torju (heti iskun alla: parry); asetettava esine kädessä: aseta (esim. nuotio); kilpi kädessä: varusta |
 | E | poimi |
 | Q | heitä valittu esine |
@@ -45,7 +45,7 @@ Haarojen testauslinkit: `https://raw.githack.com/KSPKtech/sahel/<haara>/index.ht
 | `src/main.js` | Käynnistys, tilat (valikko/lataus/peli/tauko/reppu/kartta), pääsilmukka |
 | `src/config.js` | Säädettävät arvot (näkyvyys, vuorokauden pituus, nopeudet…) |
 | `src/world/` | Maailman generointi (vyöhykkeet, biomit, meri, joet ja järvet, siemen, rakennelmien paikat), chunkit ja LOD, generointisäikeet (`genWorker.js`), aaltojen kaavat (`waves.js`), esinetyypit, tumbleweedit |
-| `src/render/` | Taivas, vuorokausi ja sää, materiaalit, vesi (`water.js`), väreily (`ripples.js`), roiskeet (`splash.js`), tuli ja savu (`fire.js`), jälkikäsittely (`post.js`: valonsäteet, DOF, liike-epäterävyys), hiukkaset, sirpaleet, tekstuurit |
+| `src/render/` | Taivas, vuorokausi ja sää, materiaalit, vesi (`water.js`), väreily (`ripples.js`), roiskeet (`splash.js`), tuli ja savu (`fire.js`), veri (`blood.js`), jälkikäsittely (`post.js`: valonsäteet, DOF, liike-epäterävyys), hiukkaset, sirpaleet, tekstuurit |
 | `src/models/` | Proseduraaliset 3D-mallit: puut, kasvit (`flora.js`), kivet, esineet ja aseet, rakennelmat ja arkku, olennot (`creatures.js`) (korvattavissa glTF-malleilla) |
 | `src/player/` | Ohjaus, liikkuminen, uinti, terveys, kyykky, käsi ja esine kädessä (iskuanimaatiot, torjunta, kilpi) |
 | `src/game/` | Esineet, reppu, valmistus, opas, hakkaaminen, kaatuminen, saaliit, nuotio, rauniot ja arkut (`ruins.js`), taistelu (`combat.js`), eläimet ja viholliset (`mobs.js`), tallennus |

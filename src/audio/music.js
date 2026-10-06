@@ -11,16 +11,21 @@ export const TRACKS = {
   savanna: { file: 'assets/music/savannah-dawn.mp3', name: 'Savannah Dawn', lufs: -15.2 },
   desert: { file: 'assets/music/caravan-of-the-desert.mp3', name: 'Caravan of the Desert', lufs: -14.4 },
   ocean: { file: 'assets/music/grand-ocean-adventure.mp3', name: 'Grand Ocean Adventure', lufs: -15.0 },
+  // Sademetsälle ei ole omaa kappaletta: väliaikaisesti päävalikon kappale
+  // (pelin hiljaisella tasolla), kunnes käyttäjä toimittaa oman.
+  jungle: { file: 'assets/music/deep-exploration.mp3', name: 'Deep Exploration (sademetsä)', lufs: -14.1 },
   // assets/music/hiekan-jaljet.mp3: ei vielä paikkaa (kysytään käyttäjältä).
 };
 
 // Biomi (terrain.js: displayBiome) -> kappale. Sahelin savanni muunnelmineen
 // soittaa savannin kappaletta, aavikko (dyynit ja keitaat mukaan lukien)
-// aavikon kappaletta ja meri meren kappaletta. Muissa biomeissa on hiljaista.
+// aavikon kappaletta, meri meren kappaletta ja sademetsä (väliaikaisesti)
+// päävalikon kappaletta. Vuoristossa ja rannalla on hiljaista.
 export const BIOME_MUSIC = {
   savanna: 'savanna', laterite: 'savanna', mare: 'savanna', woodland: 'savanna',
   desert: 'desert', oasis: 'desert',
   ocean: 'ocean',
+  rainforest: 'jungle',
 };
 
 // Voimakkuudet. Kappaleet tasataan samaan äänekkyyteen (mitattu EBU R128
@@ -30,13 +35,13 @@ export const MENU_LEVEL = 1.0;
 export const GAME_LEVEL = 0.25;   // −12 dB: taustamusiikki
 
 // Ajat sekunteina
-const FIRST_DELAY = 4;     // pelin alussa ennen ensimmäistä kappaletta
-const ENTER_DELAY = 8;     // uudessa biomissa oltava näin kauan ennen vaihtoa
-const LEAVE_DELAY = 15;    // musiikittomalle alueelle: hiljenee vasta tämän jälkeen
-const MIN_HOLD = 45;       // kappale soi vähintään näin kauan ennen vaihtoa
-const FADE_IN = 10;        // biomin kappale voimistuu
-const FADE_OUT = 8;        // biomin kappale hiljenee
-const GAP = 2.5;           // hiljaisuus kahden biomikappaleen välissä
+const FIRST_DELAY = 3;     // pelin alussa ennen ensimmäistä kappaletta
+const ENTER_DELAY = 5;     // uudessa biomissa oltava näin kauan ennen vaihtoa
+const LEAVE_DELAY = 10;    // musiikittomalle alueelle: hiljenee vasta tämän jälkeen
+const MIN_HOLD = 20;       // kappale soi vähintään näin kauan ennen vaihtoa
+const FADE_IN = 6;         // biomin kappale voimistuu
+const FADE_OUT = 3.5;      // biomin kappale hiljenee
+const GAP = 1;             // hiljaisuus kahden biomikappaleen välissä
 const MENU_FADE_IN = 3;
 const QUICK_FADE_OUT = 2.5; // valikosta peliin ja pelistä valikkoon
 const RESUME_WITHIN = 90;  // palataanko kesken jääneeseen kohtaan (muuten alusta)

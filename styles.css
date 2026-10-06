@@ -38,6 +38,7 @@ html, body {
   transition: transform 0.12s, background 0.12s;
 }
 #crosshair.active { transform: scale(1.5); background: var(--accent-2); }
+#crosshair.cooldown { opacity: 0.3; transform: scale(0.7); }
 
 #target {
   position: absolute; left: 50%; top: calc(50% + 26px);

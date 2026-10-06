@@ -1,5 +1,9 @@
 // Pää- ja taukovalikko, maailmojen valinta, asetukset ja latausruutu.
-import { listWorlds, createWorld, deleteWorld, saveSettings } from '../game/save.js';
+import { listWorlds, createWorld, deleteWorld, saveSettings, QUALITY_PRESETS } from '../game/save.js';
+
+const QUALITY_NAMES = { low: 'Matala', medium: 'Keskitaso', high: 'Korkea', ultra: 'Ultra', custom: 'Oma' };
+// Asetukset, jotka kuuluvat grafiikan laatuun (niiden muutos = "oma").
+const GRAPHICS_KEYS = new Set(['viewDistance', 'shadows', 'renderScale', 'godRays', 'motionBlur', 'dof']);
 import { seedFromString, randomSeed } from '../world/terrain.js';
 
 const $ = (id) => document.getElementById(id);
@@ -265,6 +269,7 @@ export class Menu {
       const out = el.parentElement.querySelector('output');
       el.addEventListener('input', () => {
         s[key] = parseFloat(el.value);
+        if (GRAPHICS_KEYS.has(key)) { s.quality = 'custom'; this._syncQuality(); }
         out.textContent = fmt(s[key]);
         this._changed();
       });
@@ -278,12 +283,21 @@ export class Menu {
     bindRange('set-sfx', 'sfxVolume', (v) => `${Math.round(v * 100)} %`);
     $('set-invert').addEventListener('change', (e) => { s.invertY = e.target.checked; this._changed(); });
     $('set-fps').addEventListener('change', (e) => { s.showFps = e.target.checked; this._changed(); });
-    $('set-rays').addEventListener('change', (e) => { s.godRays = e.target.checked; this._changed(); });
-    $('set-dof').addEventListener('change', (e) => { s.dof = e.target.checked; this._changed(); });
+    $('set-rays').addEventListener('change', (e) => { s.godRays = e.target.checked; s.quality = 'custom'; this._syncQuality(); this._changed(); });
+    $('set-dof').addEventListener('change', (e) => { s.dof = e.target.checked; s.quality = 'custom'; this._syncQuality(); this._changed(); });
+    $('set-quality').addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      s.quality = b.dataset.v;
+      Object.assign(s, QUALITY_PRESETS[s.quality]);
+      this._syncSettings();
+      this._changed();
+    });
     $('set-mblur').addEventListener('click', (e) => {
       const b = e.target.closest('button');
       if (!b) return;
       s.motionBlur = b.dataset.v;
+      s.quality = 'custom';
       this._syncSettings();
       this._changed();
     });
@@ -291,6 +305,7 @@ export class Menu {
       const b = e.target.closest('button');
       if (!b) return;
       s.shadows = b.dataset.v;
+      s.quality = 'custom';
       this._syncSettings();
       this._changed();
     });
@@ -317,6 +332,13 @@ export class Menu {
     for (const b of $('set-mblur').children) b.classList.toggle('on', b.dataset.v === s.motionBlur);
     $('set-rays').checked = !!s.godRays;
     $('set-dof').checked = !!s.dof;
+    this._syncQuality();
+  }
+
+  _syncQuality() {
+    const q = this.settings.quality || 'custom';
+    for (const b of $('set-quality').children) b.classList.toggle('on', b.dataset.v === q);
+    $('out-quality').textContent = QUALITY_NAMES[q] || 'Oma';
   }
 
   _changed() {

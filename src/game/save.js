@@ -78,7 +78,16 @@ export function saveWorldData(id, data) {
 
 // --- Asetukset ---------------------------------------------------------------------
 
+// Grafiikan esiasetukset. Kun yksittäistä asetusta muutetaan, laaduksi tulee "oma".
+export const QUALITY_PRESETS = {
+  low: { viewDistance: 3, shadows: 'off', renderScale: 0.7, godRays: false, motionBlur: 'off', dof: false },
+  medium: { viewDistance: 4, shadows: 'normal', renderScale: 0.85, godRays: true, motionBlur: 'off', dof: false },
+  high: { viewDistance: 5, shadows: 'normal', renderScale: 1, godRays: true, motionBlur: 'off', dof: false },
+  ultra: { viewDistance: 7, shadows: 'high', renderScale: 1, godRays: true, motionBlur: 'off', dof: false },
+};
+
 export const DEFAULT_SETTINGS = {
+  quality: 'high',    // low | medium | high | ultra | custom
   sensitivity: 1,     // kerroin
   invertY: false,
   fov: 72,

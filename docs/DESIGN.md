@@ -104,6 +104,15 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - **Biomin musiikki alkaa vähän viiveellä** biomiin astumisen jälkeen, ja siinä on **pitkät häivytykset sisään ja ulos**, ettei musiikki vaihdu hervotonta tahtia biomien välissä.
 - Versio nimetään GitHubissa **Alpha v0.1**:ksi.
 
+## Palaute (käyttäjän kertoma, 2026-10-06, sessio 8)
+- **Viidakossa (sademetsässä) ei soinut mitään.**
+- **Häivytys on liian pitkä:** edellinen kappale soi liian kauan uudessa biomissa.
+- **Grafiikka-asetuksiin esiasetuksia:** matala, keskitaso, korkea, ultra.
+- **Lyömiseen ja komboon jäähdytys** (oli edelleen liian vahva).
+- **Kombon voi tehdä vain nopeilla ja kevyillä aseilla** (esim. veitsi, miekka), ei esim. nyrkillä.
+- **Lisää tönäisyä:** olennot pysyvät liian paikallaan, kun niitä lyö.
+- **Kuollessa efekti ja veren tyylistä nestettä**, kuten peleissä yleensä.
+
 ## Teknologia
 - Selaimessa toimiva peli: three.js (WebGL), ei käännösvaihetta. Ks. `DECISIONS.md`.
 - Kohdealusta toistaiseksi tietokoneen selain (hiiri + näppäimistö).
@@ -148,12 +157,14 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - **Hahmo:** tummaihoinen käsi ja indigonsininen hiha (koska peli sijoittuu Burkina Fasoon).
 - **Valikon fontit:** Eagle Lake (otsikko), Permanent Marker (napit), Alegreya (teksti).
 - **Ohjaimet:** WASD, Shift, välilyönti, Ctrl/C (kyykky päälle/pois), hiiri 1 (lyö, sarjat), hiiri 2 (torju / aseta / varusta kilpi), E, Q (heitä esine), 1–8, Tab/I, M, F3 (kehittäjätyökalut), Esc.
-- **Iskusarjojen rajoitus:** sarja jatkuu vain yli 50 %:n kestävyydellä; sarjan iskut: nuija 10 + 15 + 24, viidakkoveitsi 8 + 14 + 24, nyrkit 4 + 12 kestävyyttä.
+- **Iskut (sessio 8):** iskusarja vain viidakkoveitsellä (9 + 9 + 17 vahinkoa, kestävyys 8 + 14 + 24, jatkuu vain yli 50 %:n kestävyydellä, jäähdytys sarjan jälkeen 1,3 s). Yksi isku: nyrkit 5 (jäähdytys 0,4 s), puunuija 16 (0,75 s), risu 5, kirves 10 (0,2 s), hakku 9 (0,25 s).
+- **Grafiikan esiasetukset:** Matala (näkö 3, varjot pois, tarkkuus 70 %, ei valonsäteitä), Keskitaso (4, normaali, 85 %), Korkea (5, normaali, 100 %), Ultra (7, tarkka, 100 %, 2× pikselitiheys).
+- **Veri:** pisarat ja läikät (haalistuvat n. 40 s); savipeikoilla punaruskea savivelli.
 - **Kilpi:** varustetaan hiiren oikealla (kilpi valittuna) tai hiiren oikealla repussa.
 - **Savipeikko aamulla:** paniikki 0,5–1,4 s, palaa 3,5–6 s, palaneista ei saalista.
 - **Musiikin voimakkuudet:** kappaleet tasattu −16 LUFS:iin; valikko täysi, peli −12 dB. Oletukset: äänenvoimakkuus 100 %, musiikki 80 %, äänitehosteet 100 %.
-- **Musiikin ajoitus:** viive 8 s (pelin alussa 4 s), häivytys 8 s, tauko 2,5 s, voimistuminen 10 s, vähintään 45 s ennen vaihtoa, musiikittomalle alueelle 15 s.
-- **Musiikki biomeittain:** savanni = Sahelin savanni, laterittitasanko, kausilampi, akasiametsikkö; aavikko = aavikko, dyynit, keitaat; meri = meri. Sademetsä, vuoristo ja ranta ilman musiikkia.
+- **Musiikin ajoitus:** viive 5 s (pelin alussa 3 s), häivytys 3,5 s, tauko 1 s, voimistuminen 6 s, vähintään 20 s ennen vaihtoa, musiikittomalle alueelle 10 s.
+- **Musiikki biomeittain:** savanni = Sahelin savanni, laterittitasanko, kausilampi, akasiametsikkö; aavikko = aavikko, dyynit, keitaat; meri = meri; sademetsä = väliaikaisesti Deep Exploration. Vuoristo ja ranta ilman musiikkia.
 - **Terveys:** 100, palautuu 1,5 / s, kun osumasta on 6 s. Kuollessa herätään maailman aloituspaikasta, reppu säilyy.
 - **Kestävyys:** 100; juoksu 14 / s, hyppy 10, iskut 4–13, uinti 4,5 / s (paikallaan 1,5 / s). Hukkuminen 9 terveyttä / s, kun kestävyys on loppu syvässä vedessä.
 - **Kyykky:** silmät 1,08 m (seisten 1,65 m), nopeus puolet, eläimet huomaavat 45 % lähempää.
@@ -181,7 +192,8 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 
 ## Avoimet kysymykset
 - Mihin **Hiekan jäljet** -kappale laitetaan? (Se oli liitteissä, mutta ei luettelossa.)
-- Soiko sademetsässä, vuoristossa, rannalla, yöllä tai taistelussa jokin musiikki (käyttäjä toimittaa)?
+- Oma kappale sademetsään (nyt väliaikaisesti Deep Exploration)? Soiko vuoristossa, rannalla, yöllä tai taistelussa jokin musiikki (käyttäjä toimittaa)?
+- Lisätäänkö miekka tai muita kevyitä aseita, joilla on iskusarja?
 - Mitä meren takana on (nyt virta vie takaisin)? Pitäisikö merellä voida liikkua veneellä?
 - Voiko veden alle sukeltaa? (Uinti kuluttaa nyt kestävyyttä, ja sen loputtua alkaa hukkuminen.)
 - Pitäisikö vesistöissä olla kaloja tai muuta elämää (kalastus)?

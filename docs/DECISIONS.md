@@ -2,6 +2,15 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-06 (sessio 8)
+- **Iskusarja vain viidakkoveitsellä; muilla aseilla yksi isku. Jokaisella iskulla on jäähdytys, joka alkaa, kun isku päättyy ilman sarjan jatkoa.** Syy: käyttäjän mukaan lyöminen oli edelleen liian vahvaa, ja kombot kuuluvat vain nopeille ja kevyille aseille (veitsi, miekka). Sarjan 50 %:n kestävyysraja säilyi. Työkaluilla jäähdytys on lyhyt, jotta puiden hakkuu ei hidastu liikaa.
+- **Osumasta olento horjuu 0,3 s (ei ohjaa itseään), tönäisy vaimenee hitaammin ja hypähdys skaalataan massan neliöjuurella.** Syy: käyttäjän mukaan olennot pysyivät liian paikallaan osuessa.
+- **Veri on hiukkasina ja maahan jäävinä läikkinä (48 läikän kierrätetty joukko).** Syy: käyttäjä pyysi kuollessa efektin ja veren kaltaista nestettä; kiinteä määrä läikkiä pitää kuormituksen tasaisena.
+- **Grafiikan esiasetukset asettavat näköetäisyyden, varjot, tarkkuuden ja valonsäteet; liike-epäterävyys ja DOF pois.** Ultra sallii myös 2× pikselitiheyden tarkoilla näytöillä. Oletus on Korkea (sama kuin aiemmat oletukset). Syy: käyttäjän toive.
+- **Sademetsään väliaikaisesti päävalikon kappale (pelin hiljaisella tasolla).** Syy: käyttäjä odotti sademetsään musiikkia; Deep Exploration sopii tutkimiseen paremmin kuin hiekka-aiheinen Hiekan jäljet. Vaihdetaan, kun sademetsälle tulee oma kappale.
+- **Musiikin ajat lyhennettiin (viive 5 s, häivytys 3,5 s, vähintään 20 s).** Syy: käyttäjän mukaan edellinen kappale soi liian kauan uudessa biomissa.
+- **Varjokartan kokoa ei enää poisteta käsin; three.js muuttaa sen koon itse.** Syy: käsin poistettu kartta jätti materiaaleille vanhan syvyystekstuurin (WebGL-virheitä Tarkka-varjoilla).
+
 ## 2026-10-06 (sessio 7)
 - **Alpha v0.1 on commit 03a2b3b** (session 6 versio, jota käyttäjä testasi). Tagia ei voitu pushata tästä Claude-ympäristöstä (vain kehityshaaraan saa pushata), joten käyttäjä luo GitHub-julkaisun itse valmiilla tekstillä.
 - **Iskusarjojen rajoitus: sarja jatkuu vain, kun kestävyyttä on yli 50 %, ja sarjan iskut ovat kalliimpia.** Syy: käyttäjä ehdotti joko 50 %:n rajaa tai yhden sarjan kokoista kulutusta; yhdistelmällä täydellä kestävyydellä ehtii juuri yhden sarjan, mutta kestävyyttä jää vielä torjuntaan tai pakoon (pelkkä nollaan kuluttaminen jättäisi pelaajan puolustuskyvyttömäksi). Yksittäisiä iskuja voi lyödä edelleen.

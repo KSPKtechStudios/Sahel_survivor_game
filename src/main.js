@@ -11,6 +11,7 @@ import { createWaterMaterial, updateWaterMaterial } from './render/water.js';
 import { Ripples } from './render/ripples.js';
 import { Splashes } from './render/splash.js';
 import { FireFx } from './render/fire.js';
+import { Blood } from './render/blood.js';
 import { PostFX } from './render/post.js';
 import { Music, BIOME_MUSIC } from './audio/music.js';
 import { createModelLibrary } from './models/models.js';
@@ -81,6 +82,7 @@ const ripples = new Ripples(renderer);
 const post = new PostFX(renderer);
 const splashes = new Splashes(scene);
 const fire = new FireFx(scene);
+const blood = new Blood(scene);
 const music = new Music();
 // Selain sallii äänen vasta käyttäjän ensimmäisen klikkauksen tai näppäimen jälkeen.
 for (const ev of ['pointerdown', 'keydown']) window.addEventListener(ev, () => music.unlock(), { capture: true });
@@ -90,7 +92,7 @@ const guide = new Guide();
 const player = new Player(camera);
 const input = new Input(canvas);
 const viewmodel = new ViewModel(models.items);
-const mobs = new Mobs({ scene, world, drops, debris, bursts, player, env, structures, fire });
+const mobs = new Mobs({ scene, world, drops, debris, bursts, player, env, structures, fire, blood });
 const interaction = new Interaction({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs });
 const combat = new Combat({ camera, player, inventory, viewmodel, interaction, mobs, debris, bursts });
 mobs.combat = combat;
@@ -140,7 +142,8 @@ function applySettings(s) {
   camera.updateProjectionMatrix();
   if (world.viewRadius !== s.viewDistance) world.setViewRadius(s.viewDistance);
   env.maxVis = s.viewDistance * 64 + 10;
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5) * s.renderScale);
+  // Ultra: tarkkuus myös tarkoilla näytöillä (enintään 2× pikselitiheys).
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, s.quality === 'ultra' ? 2 : 1.5) * s.renderScale);
   renderer.setSize(window.innerWidth, window.innerHeight);
   if (s.shadows !== shadowMode) {
     const prevEnabled = renderer.shadowMap.enabled;
@@ -150,10 +153,9 @@ function applySettings(s) {
     const size = s.shadows === 'high' ? 2048 : 1536;
     env.sun.shadow.camera.far = s.shadows === 'high' ? 260 : 170;
     env.sun.shadow.radius = s.shadows === 'high' ? 2.5 : 2;
-    if (env.sun.shadow.mapSize.x !== size) {
-      env.sun.shadow.mapSize.set(size, size);
-      if (env.sun.shadow.map) { env.sun.shadow.map.dispose(); env.sun.shadow.map = null; }
-    }
+    // Koon muutos: three.js muuttaa varjokartan koon itse (setSize). Kartan
+    // käsin poistaminen jätti materiaaleille vanhan syvyystekstuurin.
+    if (env.sun.shadow.mapSize.x !== size) env.sun.shadow.mapSize.set(size, size);
     if (prevEnabled !== renderer.shadowMap.enabled) {
       scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; });
     }
@@ -212,6 +214,7 @@ function clearWorldState(seed) {
   explored.clear();
   splashes.clear();
   fire.clear();
+  blood.clear();
   mobs.clear();
   combat.reset();
 }
@@ -557,6 +560,7 @@ function frame(now) {
   materials.water.uniforms.uRippleRect.value = ripples.rect;
   splashes.update(simDt, env.lightColor, materials.water.uniforms.uAmbient.value);
   fire.update(simDt, materials.water.uniforms.uAmbient.value);
+  blood.update(simDt, 0.35 + 0.65 * env.daylight);
   tumbleweeds.update(simDt, player.position, env.w.wind, env.windDir);
   if (state === 'playing' && !player.dead) interaction.update(simDt, input);
   else { structures.showGhost(null); interaction.prompt = null; }
@@ -587,7 +591,7 @@ function frame(now) {
     viewmodel.setItem(inventory.selectedItem ? inventory.selectedItem.id : null);
     viewmodel.update(simDt, player, input, env, camera, fireNear * 1.5);
     guide.update(simDt);
-    hud.update(dt, { prompt: interaction.prompt, player, env, visible: state === 'playing' });
+    hud.update(dt, { prompt: interaction.prompt, player, env, visible: state === 'playing', cooldown: combat.cooldownFrac });
     explored.update(dt, player.position.x, player.position.z);
     minimap.update(dt, player);
     bigMap.update();
@@ -648,6 +652,6 @@ enterMenu(true);
 window.sahel = {
   THREE, renderer, scene, camera, env, world, player, input, inventory, invUI, guide, structures, tumbleweeds,
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
-  ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music,
+  ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, blood,
   startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
 };

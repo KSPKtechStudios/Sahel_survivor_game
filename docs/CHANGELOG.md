@@ -2,6 +2,16 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-06 (sessio 8): jäähdytys ja kombot kevyille aseille, tönäisy, veri, grafiikan esiasetukset, sademetsän musiikki
+- Iskuille jäähdytys: iskun jälkeen pitää odottaa ennen seuraavaa (nyrkit 0,4 s, nuija 0,75 s, viidakkoveitsen sarjan jälkeen 1,3 s, työkalut 0,2–0,35 s). Tähtäin himmenee jäähdytyksen ajaksi.
+- Iskusarja vain nopeilla ja kevyillä aseilla (viidakkoveitsi); nyrkit ja puunuija lyövät yhden iskun (nuija raskaasti: 16 vahinkoa, iso tönäisy).
+- Enemmän tönäisyä: olennot lennähtävät osumasta (n. 1–2 m) ja hypähtävät, ja ne horjuvat hetken eivätkä heti juokse takaisin.
+- Veri: osumasta lentää veripisaroita, jotka jättävät maahan läikkiä; kuollessa iso roiske, pölypöllähdys ja ruumiin alle leviävä verilammikko. Savipeikoista lentää punaruskeaa savivelliä. Läikät haalistuvat n. 40 s:ssa.
+- Grafiikan esiasetukset: Matala, Keskitaso, Korkea, Ultra (näköetäisyys, varjot, tarkkuus, valonsäteet). Yksittäisen asetuksen muutos tekee laaduksi "Oma".
+- Sademetsässä soi musiikki (väliaikaisesti Deep Exploration hiljaisella pelitasolla, kunnes sademetsälle tulee oma kappale).
+- Musiikin vaihto nopeutui: viive 5 s (alussa 3 s), häivytys 3,5 s, tauko 1 s, voimistuminen 6 s, vähintään 20 s ennen vaihtoa.
+- Korjattu: varjojen vaihto "Tarkka"-tasolle (ja nyt Ultra) rikkoi varjokartan (WebGL-virheet).
+
 ## 2026-10-06 (sessio 7): musiikki, kehittäjätyökalut, kombojen rajoitus, kilven varustaminen, palavat savipeikot
 - Musiikki: päävalikossa soi Deep Exploration normaalilla voimakkuudella; pelissä Sahelin savanneilla Savannah Dawn, aavikolla Caravan of the Desert ja merellä Grand Ocean Adventure hiljaa taustalla (12 dB valikkoa hiljempaa, tilaa tuleville äänitehosteille). Kappaleet soivat silmukkana ja on tasattu samaan äänekkyyteen. Biomin musiikki alkaa viiveellä (8 s, pelin alussa 4 s), vaihtuu pitkillä häivytyksillä (8 s hiljenee, 10 s voimistuu) ja soi vähintään 45 s ennen vaihtoa, joten biomien rajalla musiikki ei vaihtele. Musiikittomalle alueelle (sademetsä, vuoristo, ranta) musiikki hiljenee 15 s jälkeen.
 - Asetuksiin ääniosio: äänenvoimakkuus, musiikki ja äänitehosteet (tuleville äänille).

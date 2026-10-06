@@ -38,6 +38,9 @@ const _v = new THREE.Vector3();
 const _m = new THREE.Matrix4();
 const _w = new THREE.Vector3();
 
+// Veren väri lajeittain (savipeikolla punaruskeaa savivelliä).
+const BLOOD = { warthog: new THREE.Color(0.55, 0.03, 0.02), clay: new THREE.Color(0.45, 0.16, 0.07) };
+
 // Hiiltynyt versio geometriasta (palanut savipeikko murenee mustina paloina).
 const charred = new Map();
 function charredGeometry(geo) {
@@ -93,8 +96,8 @@ function smooth(t) {
 }
 
 export class Mobs {
-  constructor({ scene, world, drops, debris, bursts, player, env, structures, fire }) {
-    Object.assign(this, { scene, world, drops, debris, bursts, player, env, structures, fire });
+  constructor({ scene, world, drops, debris, bursts, player, env, structures, fire, blood }) {
+    Object.assign(this, { scene, world, drops, debris, bursts, player, env, structures, fire, blood });
     this.list = [];
     this.eyeMaterial = new THREE.MeshBasicMaterial({ color: 0xffb347 });
     this.flameMat = new THREE.SpriteMaterial({
@@ -220,6 +223,7 @@ export class Mobs {
     if (m.vulnerable) amount *= 1.5;
     m.hp -= amount;
     m.flash = 1;
+    m.hitStun = 0.3; // tönäisy ehtii näkyä ennen kuin olento ohjaa taas itse
     this.push(m, m.pos.x - (opts.fromX ?? m.pos.x), m.pos.z - (opts.fromZ ?? m.pos.z), opts.knock || 3, opts.up || 0);
     events.emit('mobHit', { type: m.type, amount });
     if (m.hp <= 0) {
@@ -255,7 +259,7 @@ export class Mobs {
     const k = strength / m.def.mass;
     m.knock.x += (dx / len) * k;
     m.knock.z += (dz / len) * k;
-    if (up > 0) m.vy = Math.max(m.vy, up / m.def.mass);
+    if (up > 0) m.vy = Math.max(m.vy, up / Math.sqrt(m.def.mass));
   }
 
   _set(m, state, timer) {
@@ -266,10 +270,25 @@ export class Mobs {
     if (state !== 'stagger') m.vulnerable = false;
   }
 
+  // Veriroiske osumasta (savipeikolla savivelliä). pos = osumakohta,
+  // dx, dz = iskun suunta (pelaajasta olentoon).
+  bleed(m, pos, dx, dz, amount) {
+    if (!this.blood) return;
+    _w.set(dx, 0, dz).normalize();
+    this.blood.spray(pos, _w, BLOOD[m.type], Math.min(30, 6 + Math.round(amount * 1.1)), 0.8 + amount / 25);
+  }
+
   _kill(m) {
     const def = m.def;
     _v.copy(m.pos);
     _v.y += def.height * 0.5;
+    // Kuolema: iso roiske, pölypöllähdys ja lammikko alle.
+    if (this.blood) {
+      this.blood.spray(_v, null, BLOOD[m.type], 34, 1.3);
+      m.poolAt = 0.35;
+    }
+    this.bursts.spawn(_v, m.type === 'clay' ? 0x8a5a3a : 0xb8a888, 18, 1.8);
+    if (m.type === 'clay' && this.blood) this.blood.splat(m.pos.x, m.pos.z, 1.3, BLOOD.clay, 1.5);
     for (const [item, a, b] of def.drops) {
       const n = a + Math.floor(Math.random() * (b - a + 1));
       this.drops.spawn(item, n, _v, { spread: 0.6, up: 0.8 });
@@ -559,6 +578,11 @@ export class Mobs {
       case 'dead':
         m.deadT += dt;
         m.vel.multiplyScalar(Math.exp(-dt * 6));
+        // Verilammikko levenee ruumiin alle, kun se on kaatunut.
+        if (m.poolAt > 0 && m.deadT >= m.poolAt && this.blood) {
+          m.poolAt = 0;
+          this.blood.splat(m.pos.x, m.pos.z, 1.6, BLOOD.warthog, 4);
+        }
         if (m.deadT > 6) this.remove(m);
         break;
       default:
@@ -669,6 +693,13 @@ export class Mobs {
   // Kääntyy kohti suuntaa (dx, dz) ja liikkuu nopeudella speed.
   // face = käänny vain (ei liikettä).
   _steer(m, dx, dz, speed, dt, face = false) {
+    if (m.hitStun > 0) {
+      // Osumasta horjuva olento ei ohjaa itseään (tönäisy vie).
+      m.hitStun -= dt;
+      m.vel.multiplyScalar(Math.exp(-dt * 10));
+      m.wantSpeed = 0;
+      return;
+    }
     let want = m.yaw;
     if (dx !== 0 || dz !== 0) {
       want = Math.atan2(dx, dz);
@@ -691,7 +722,7 @@ export class Mobs {
     const pos = m.pos;
     const nx = pos.x + (m.vel.x + m.knock.x) * dt;
     const nz = pos.z + (m.vel.z + m.knock.z) * dt;
-    m.knock.multiplyScalar(Math.exp(-dt * 6));
+    m.knock.multiplyScalar(Math.exp(-dt * 3.5));
     const w = waterAt(nx, nz, _wq);
     const deep = w.wl - w.h > 0.55;
     const ox = pos.x, oz = pos.z;

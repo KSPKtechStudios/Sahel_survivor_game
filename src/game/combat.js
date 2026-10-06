@@ -10,44 +10,45 @@ import { CONFIG } from '../config.js';
 import { ITEMS } from './items.js';
 import { events } from './events.js';
 
-// Iskusarjat. anim = käden animaatio (viewmodel.js), dur = kesto (s),
-// hitAt = osumahetki, chain = milloin seuraava isku voi alkaa, dmg = vahinko,
-// kb = tönäisy, stam = kestävyys, arc = osumakaaren puolikulma (rad),
-// reach = lisäulottuvuus, multi = osuu useampaan, stagger = horjuttaa (s).
+// Iskut. anim = käden animaatio (viewmodel.js), dur = kesto (s),
+// hitAt = osumahetki, chain = milloin sarjan seuraava isku voi alkaa,
+// cd = jäähdytys iskun jälkeen ennen kuin voi lyödä uudelleen (s),
+// dmg = vahinko, kb = tönäisy, up = heitto ylös, stam = kestävyys,
+// arc = osumakaaren puolikulma (rad), reach = lisäulottuvuus,
+// multi = osuu useampaan, stagger = horjuttaa (s).
+// Iskusarja (useampi isku) on vain nopeilla ja kevyillä aseilla
+// (viidakkoveitsi); muilla on yksi isku ja jäähdytys.
 export const WEAPONS = {
   fist: {
     name: 'Nyrkit', block: 'fist', reach: 1.9, combo: [
-      { anim: 'punch', dur: 0.36, hitAt: 0.42, chain: 0.6, dmg: 4, kb: 2.5, stam: 4, arc: 0.6 },
-      { anim: 'hook', dur: 0.42, hitAt: 0.45, chain: 0.75, dmg: 6, kb: 4.5, stam: 12, arc: 0.75 },
+      { anim: 'punch', dur: 0.36, hitAt: 0.42, chain: 1, cd: 0.4, dmg: 5, kb: 5, up: 1.2, stam: 5, arc: 0.6 },
     ],
   },
   stick: {
     name: 'Risu', block: 'tool', reach: 2.3, combo: [
-      { anim: 'swing', dur: 0.45, hitAt: 0.5, chain: 0.999, dmg: 5, kb: 3, stam: 5, arc: 0.55 },
+      { anim: 'swing', dur: 0.45, hitAt: 0.5, chain: 1, cd: 0.35, dmg: 5, kb: 5.5, up: 1.2, stam: 5, arc: 0.55 },
     ],
   },
   axe: {
     name: 'Kirves', block: 'tool', reach: 2.4, combo: [
-      { anim: 'swing', dur: 0.5, hitAt: 0.5, chain: 0.999, dmg: 10, kb: 3.5, stam: 6, arc: 0.5 },
+      { anim: 'swing', dur: 0.5, hitAt: 0.5, chain: 1, cd: 0.2, dmg: 10, kb: 6.5, up: 1.5, stam: 6, arc: 0.5 },
     ],
   },
   pick: {
     name: 'Hakku', block: 'tool', reach: 2.4, combo: [
-      { anim: 'swing', dur: 0.55, hitAt: 0.5, chain: 0.999, dmg: 9, kb: 3.5, stam: 7, arc: 0.45 },
+      { anim: 'swing', dur: 0.55, hitAt: 0.5, chain: 1, cd: 0.25, dmg: 9, kb: 6.5, up: 1.5, stam: 7, arc: 0.45 },
     ],
   },
   club: {
     name: 'Puunuija', block: 'weapon', reach: 2.5, combo: [
-      { anim: 'slashR', dur: 0.55, hitAt: 0.5, chain: 0.64, dmg: 11, kb: 5, stam: 10, arc: 0.85, multi: true },
-      { anim: 'slashL', dur: 0.55, hitAt: 0.5, chain: 0.64, dmg: 11, kb: 5, stam: 15, arc: 0.85, multi: true },
-      { anim: 'smash', dur: 0.85, hitAt: 0.6, chain: 0.92, dmg: 24, kb: 9, up: 3, stam: 24, arc: 0.55, stagger: 1.0, heavy: true },
+      { anim: 'slashR', dur: 0.62, hitAt: 0.5, chain: 1, cd: 0.75, dmg: 16, kb: 11, up: 4, stam: 14, arc: 0.85, multi: true, stagger: 0.5, heavy: true },
     ],
   },
   machete: {
     name: 'Viidakkoveitsi', block: 'weapon', reach: 2.4, combo: [
-      { anim: 'slashR', dur: 0.36, hitAt: 0.5, chain: 0.62, dmg: 9, kb: 2.5, stam: 8, arc: 0.9, multi: true },
-      { anim: 'slashL', dur: 0.36, hitAt: 0.5, chain: 0.62, dmg: 9, kb: 2.5, stam: 14, arc: 0.9, multi: true },
-      { anim: 'thrust', dur: 0.46, hitAt: 0.48, chain: 0.9, dmg: 17, kb: 5, stam: 24, arc: 0.35, reach: 0.5, stagger: 0.5 },
+      { anim: 'slashR', dur: 0.36, hitAt: 0.5, chain: 0.62, cd: 0.5, dmg: 9, kb: 5, up: 1.2, stam: 8, arc: 0.9, multi: true },
+      { anim: 'slashL', dur: 0.36, hitAt: 0.5, chain: 0.62, cd: 0.5, dmg: 9, kb: 5, up: 1.2, stam: 14, arc: 0.9, multi: true },
+      { anim: 'thrust', dur: 0.46, hitAt: 0.48, chain: 1, cd: 1.3, dmg: 17, kb: 9, up: 3, stam: 24, arc: 0.35, reach: 0.5, stagger: 0.5 },
     ],
   },
 };
@@ -82,6 +83,12 @@ export class Combat {
     this.stun = 0;           // torjunnan murtuminen: ei voi lyödä eikä torjua
     this.elapsed = 0;
     this.comboMsgT = 0;      // ilmoitus "kestävyys ei riitä sarjaan" harvoin
+    this.cooldown = 0;       // jäähdytys: ei uutta iskua ennen kuin tämä on 0
+  }
+
+  // 0..1: kuinka paljon jäähdytystä on jäljellä (HUD:n tähtäin).
+  get cooldownFrac() {
+    return this.cooldownMax > 0 ? Math.max(0, this.cooldown / this.cooldownMax) : 0;
   }
 
   weaponKey(def) {
@@ -102,6 +109,7 @@ export class Combat {
     this.buffer = 0;
     this.comboIdx = 0;
     this.stun = 0;
+    this.cooldown = 0;
     this.viewmodel.setBlock(null);
     this.player.moveMul = 1;
     this.player.staminaRegenMul = 1;
@@ -117,8 +125,13 @@ export class Combat {
     vm.setShield(shield);
     this.stun = Math.max(0, this.stun - dt);
     this.comboMsgT = Math.max(0, this.comboMsgT - dt);
+    this.cooldown = Math.max(0, this.cooldown - dt);
     this.sinceAttack += dt;
-    if (this.attacking && !vm.action) this.attacking = null;
+    if (this.attacking && vm.action !== this.attacking.action) {
+      // Isku päättyi (tai keskeytettiin) ilman sarjan jatkoa: jäähdytys alkaa.
+      this.cooldown = this.cooldownMax = this.attacking.step.cd || 0;
+      this.attacking = null;
+    }
 
     const can = active && !player.dead && input.enabled && input.locked;
     const wkey = this.weaponKey(def);
@@ -156,7 +169,7 @@ export class Combat {
       const cur = this.attacking;
       const comboOk = player.stamina > COMBO_MIN * CONFIG.staminaMax;
       let start = false;
-      if (!a) start = true;
+      if (!a) start = this.cooldown <= 0;
       else if (cur && a === cur.action && a.hitDone && a.t >= cur.step.chain) {
         // Sarjan seuraava isku heti, jos kestävyys riittää; muuten odotetaan,
         // että isku päättyy, ja aloitetaan alusta.
@@ -177,6 +190,7 @@ export class Combat {
           const ok = vm.play(step.anim, { dur: step.dur, hitAt: step.hitAt, onHit: () => this._onHit(step, def, weapon) });
           if (ok) {
             this.attacking = { action: vm.action, step, idx };
+            this.cooldown = 0;
             this.comboIdx = (idx + 1) % weapon.combo.length;
             this.sinceAttack = 0;
             this.buffer = 0;
@@ -216,7 +230,7 @@ export class Combat {
         const d = Math.hypot(dx, dz) || 1;
         _v.set(m.pos.x + (dx / d) * m.def.radius, m.pos.y + m.def.height * 0.55, m.pos.z + (dz / d) * m.def.radius);
         if (m.type === 'clay') this.debris.chips(_v, 0x9c4a2a, 5, null, 0.9);
-        else this.bursts.spawn(_v, 0x7a2a1c, 8, 0.7);
+        this.mobs.bleed(m, _v, -dx, -dz, step.dmg);
       }
       this.viewmodel.hitStop(step.heavy || killed ? 0.11 : 0.06);
       events.emit('hitFeedback', { strength: 0.3 + step.dmg / 35 });
