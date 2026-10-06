@@ -1,5 +1,6 @@
 // Vuorokausi ja sää: aurinko/kuu, valot, sumu, taivaan värit ja tuuli.
 import * as THREE from 'three';
+import { SunLight } from 'three/addons/lights/SunLight.js';
 import { CONFIG } from '../config.js';
 import { windUniforms } from './materials.js';
 import { smoothstep, lerp } from '../noise.js';
@@ -46,9 +47,6 @@ const _c = new THREE.Color();
 const _c2 = new THREE.Color();
 const _grey = new THREE.Color(0x9a9ca0);
 const _moonCol = new THREE.Color(0x8ea6d8);
-const _v = new THREE.Vector3();
-const _right = new THREE.Vector3();
-const _upv = new THREE.Vector3();
 
 export class Environment {
   constructor(scene, renderer, sky) {
@@ -59,20 +57,18 @@ export class Environment {
     this.day = 1;
     this.timeScale = 24 / CONFIG.dayLengthSec;
 
-    this.sun = new THREE.DirectionalLight(0xffffff, 3);
+    // Aurinko: kaksi varjokaskadia (tarkat varjot lähellä, karkeammat kauempana),
+    // jotka sovitetaan kameran näkymään. Varjon reunat pehmenevät etäisyyden mukaan.
+    this.sun = new SunLight(0xffffff, 3);
     this.sun.castShadow = true;
     const sh = this.sun.shadow;
-    sh.mapSize.set(2048, 2048);
-    sh.camera.left = -48;
-    sh.camera.right = 48;
-    sh.camera.top = 48;
-    sh.camera.bottom = -48;
-    sh.camera.near = 1;
-    sh.camera.far = 300;
-    sh.bias = -0.0004;
-    sh.normalBias = 0.04;
+    sh.mapSize.set(1536, 1536);
+    sh.camera.near = 0.5;
+    sh.camera.far = 170;   // varjojen kantama (m)
+    sh.bias = -0.0003;
+    sh.normalBias = 0.05;
+    sh.radius = 2;
     scene.add(this.sun);
-    scene.add(this.sun.target);
 
     this.hemi = new THREE.HemisphereLight(0xffffff, 0x886644, 1);
     scene.add(this.hemi);
@@ -277,21 +273,9 @@ export class Environment {
     this.hemi.intensity = hemiI * (1 + greyAmt * 0.25 + w.haze * 0.15) * (1 - 0.2 * this.humid);
     if (this.humid > 0.001) this.hemi.color.lerp(_c2.copy(CANOPY_GREEN).multiplyScalar(dayLum), 0.35 * this.humid);
 
-    // Varjokamera seuraa pelaajaa, ja sen paikka lukitaan tekseliruudukkoon
-    // (vähentää varjojen värinää liikkuessa).
-    const texel = (this.sun.shadow.camera.right - this.sun.shadow.camera.left) / this.sun.shadow.mapSize.x;
-    _v.copy(dir).negate();
-    _right.crossVectors(_v, THREE.Object3D.DEFAULT_UP).normalize();
-    _upv.crossVectors(_right, _v).normalize();
-    const pr = playerPos.dot(_right);
-    const pu = playerPos.dot(_upv);
-    const pf = playerPos.dot(_v);
-    const sr = Math.round(pr / texel) * texel;
-    const su = Math.round(pu / texel) * texel;
-    const target2 = this.sun.target.position;
-    target2.copy(_right).multiplyScalar(sr).addScaledVector(_upv, su).addScaledVector(_v, pf);
-    this.sun.position.copy(target2).addScaledVector(dir, 150);
-    this.sun.target.updateMatrixWorld();
+    // Valon suunta (SunLight valaisee sijainnistaan origoa kohti).
+    this.sun.position.copy(dir);
+    this.sun.updateMatrixWorld();
     // Varjot pysyvät päällä (päälle/pois vaihto kääntäisi kaikki shaderit uudelleen).
     this.sun.shadow.intensity = smoothstep(0.03, 0.3, intensity);
 

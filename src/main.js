@@ -10,6 +10,7 @@ import { Debris } from './render/debris.js';
 import { createWaterMaterial, updateWaterMaterial } from './render/water.js';
 import { Ripples } from './render/ripples.js';
 import { Splashes } from './render/splash.js';
+import { PostFX } from './render/post.js';
 import { createModelLibrary } from './models/models.js';
 import { World } from './world/world.js';
 import { Tumbleweeds } from './world/tumbleweeds.js';
@@ -72,6 +73,7 @@ const breakables = new Breakables({ world, models, debris, drops, fallen, materi
 const structures = new Structures(scene, models, world);
 const ruins = new Ruins({ scene, world, drops, bursts });
 const ripples = new Ripples(renderer);
+const post = new PostFX(renderer);
 const splashes = new Splashes(scene);
 
 const inventory = new Inventory();
@@ -132,7 +134,10 @@ function applySettings(s) {
     const prevEnabled = renderer.shadowMap.enabled;
     shadowMode = s.shadows;
     renderer.shadowMap.enabled = s.shadows !== 'off';
-    const size = s.shadows === 'high' ? 4096 : 2048;
+    // Korkea: tarkempi varjokartta ja varjot kauemmas.
+    const size = s.shadows === 'high' ? 2048 : 1536;
+    env.sun.shadow.camera.far = s.shadows === 'high' ? 260 : 170;
+    env.sun.shadow.radius = s.shadows === 'high' ? 2.5 : 2;
     if (env.sun.shadow.mapSize.x !== size) {
       env.sun.shadow.mapSize.set(size, size);
       if (env.sun.shadow.map) { env.sun.shadow.map.dispose(); env.sun.shadow.map = null; }
@@ -142,6 +147,9 @@ function applySettings(s) {
     }
   }
   $('fps').classList.toggle('hidden', !s.showFps);
+  post.godRays = s.godRays !== false;
+  post.motionBlur = s.motionBlur === 'high' ? 2 : s.motionBlur === 'low' ? 1 : 0;
+  post.dof = !!s.dof;
 }
 applySettings(settings);
 
@@ -537,9 +545,10 @@ function frame(now) {
   drawTimer -= dt;
   if (state !== 'paused' || drawTimer <= 0) {
     drawTimer = 0.25;
-    renderer.clear();
-    renderer.render(scene, camera);
+    // Maailma tehosteineen, sitten käsi päälle (ei tehosteita).
+    post.render(scene, camera, env, state === 'paused' ? 0 : dt);
     if (inGame) {
+      renderer.setRenderTarget(null);
       renderer.clearDepth();
       renderer.render(viewmodel.scene, viewmodel.camera);
     }
@@ -569,6 +578,6 @@ enterMenu(true);
 window.sahel = {
   THREE, renderer, scene, camera, env, world, player, input, inventory, invUI, guide, structures, tumbleweeds,
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
-  ripples, splashes, waterFx, materials,
+  ripples, splashes, waterFx, materials, post,
   startWorld, enterMenu, quitToMenu, setState: (s) => setState(s), get state() { return state; },
 };

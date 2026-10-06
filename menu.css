@@ -320,7 +320,7 @@
 .nw-hint { margin: 4px 0 6px; font-size: 14px; font-style: italic; color: #7a5a2e; max-width: 260px; line-height: 1.35; }
 
 /* Asetukset */
-.settings-grid { display: flex; flex-direction: column; gap: 10px; max-width: 560px; margin: 0 auto; }
+.settings-grid { display: flex; flex-direction: column; gap: 10px; max-width: 560px; margin: 0 auto; max-height: min(520px, 56vh); overflow-y: auto; padding-right: 6px; }
 .set-row { display: grid; grid-template-columns: 180px 1fr 70px; align-items: center; gap: 12px; font-size: 17px; color: #3a2814; }
 .set-row output { font-size: 15px; color: #7a5a30; text-align: right; }
 .set-row input[type='range'] { width: 100%; accent-color: #8a5a28; cursor: pointer; }

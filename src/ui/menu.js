@@ -274,6 +274,15 @@ export class Menu {
     bindRange('set-scale', 'renderScale', (v) => `${Math.round(v * 100)} %`);
     $('set-invert').addEventListener('change', (e) => { s.invertY = e.target.checked; this._changed(); });
     $('set-fps').addEventListener('change', (e) => { s.showFps = e.target.checked; this._changed(); });
+    $('set-rays').addEventListener('change', (e) => { s.godRays = e.target.checked; this._changed(); });
+    $('set-dof').addEventListener('change', (e) => { s.dof = e.target.checked; this._changed(); });
+    $('set-mblur').addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      s.motionBlur = b.dataset.v;
+      this._syncSettings();
+      this._changed();
+    });
     $('set-shadows').addEventListener('click', (e) => {
       const b = e.target.closest('button');
       if (!b) return;
@@ -298,6 +307,9 @@ export class Menu {
     $('set-invert').checked = !!s.invertY;
     $('set-fps').checked = !!s.showFps;
     for (const b of $('set-shadows').children) b.classList.toggle('on', b.dataset.v === s.shadows);
+    for (const b of $('set-mblur').children) b.classList.toggle('on', b.dataset.v === s.motionBlur);
+    $('set-rays').checked = !!s.godRays;
+    $('set-dof').checked = !!s.dof;
   }
 
   _changed() {

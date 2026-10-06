@@ -55,9 +55,16 @@ void main() {
   vec3 col = mix(uHorizon, uZenith, t);
   col = mix(col, uGround, smoothstep(0.0, -0.25, y));
 
-  // Auringon hehku ja kiekko
+  // Auringon hehku ja kiekko. Ilmakehän sironta: laaja hehku auringon
+  // ympärillä (Mie) ja matalan auringon puolella lämmin horisonttivyö.
   float sd = max(dot(dir, uSunDir), 0.0);
+  float mu = dot(dir, uSunDir);
+  float g = 0.76;
+  float mie = (1.0 - g * g) / pow(1.0 + g * g - 2.0 * g * mu, 1.5);
+  float lowSun = 1.0 - smoothstep(0.0, 0.45, uSunDir.y);
   col += uSunColor * (pow(sd, 6.0) * 0.25 + pow(sd, 64.0) * 0.5) * uSunVisible;
+  col += uSunColor * mie * 0.012 * uSunVisible;
+  col += uSunColor * pow(sd, 3.0) * pow(1.0 - clamp(y, 0.0, 1.0), 6.0) * 0.45 * lowSun * uSunVisible;
   float disc = smoothstep(0.99955, 0.99975, sd);
 
   // Tähdet

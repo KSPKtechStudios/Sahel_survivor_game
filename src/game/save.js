@@ -86,6 +86,9 @@ export const DEFAULT_SETTINGS = {
   shadows: 'normal',  // off | normal | high
   renderScale: 1,     // 0.5 .. 1
   showFps: false,
+  godRays: true,      // valonsäteet ja ilmakehän hehku
+  motionBlur: 'off',  // off | low | high
+  dof: false,         // syväterävyys
 };
 
 export function loadSettings() {
