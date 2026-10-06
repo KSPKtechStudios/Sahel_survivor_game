@@ -17,7 +17,7 @@ export const MOB_TYPES = {
   warthog: {
     name: 'Pahkasika', hp: 55, radius: 0.5, height: 0.8, walk: 1.1, run: 6.6, mass: 1.6,
     damage: 13, knock: 6.5, up: 2.5, reach: 1.45, windup: 0.5, attack: 0.32, recover: 0.9,
-    sight: 10, poise: 15, turn: 5, drops: [['raw_meat', 1, 2], ['hide', 1, 1]], cause: 'warthog',
+    sight: 10, poise: 15, turn: 5, drops: [['raw_meat', 1, 2], ['hide', 1, 1], ['bone', 0, 1], ['sinew', 0, 1]], cause: 'warthog',
   },
   clay: {
     name: 'Savipeikko', hp: 28, radius: 0.36, height: 1.25, walk: 0.9, run: 3.5, mass: 0.9,

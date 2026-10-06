@@ -5,19 +5,21 @@ import { events } from './events.js';
 export const GUIDE_STEPS = [
   {
     title: 'Ensimmäiset tarvikkeet',
-    text: 'Kerää risuja, hakkaa kuivuneita pensaita ja tumbleweedejä ja kerää kiviä.',
+    text: 'Kerää risuja ja kiviä maasta ja hakkaa kuivuneita pensaita. Sienet, kukat ja marjat voi poimia [E].',
     goals: [
       { key: 'pickup:stick', label: 'Kerää risuja maasta', need: 5 },
-      { key: 'harvest:bush', label: 'Hakkaa kuivuneita pensaita', need: 3 },
-      { key: 'harvest:tumbleweed', label: 'Hakkaa tumbleweedejä', need: 2 },
       { key: 'pickup:stone', label: 'Kerää kiviä', need: 5 },
+      { key: 'harvest:bush', label: 'Hakkaa kuivuneita pensaita', need: 3 },
     ],
     hint: '[E] poimi · [Hiiri 1] hakkaa · kävele pudonneiden esineiden yli',
   },
   {
-    title: 'Ensimmäinen työkalu',
-    text: 'Avaa reppu ja valmista kivikirves risuista, kivistä ja kuidusta.',
-    goals: [{ key: 'craft:stone_axe', label: 'Valmista kivikirves', need: 1 }],
+    title: 'Ensimmäiset työkalut',
+    text: 'Avaa reppu ja valmista kivikirves ja vasara. Vasaralla rakennetaan.',
+    goals: [
+      { key: 'craft:stone_axe', label: 'Valmista kivikirves', need: 1 },
+      { key: 'craft:hammer', label: 'Valmista vasara', need: 1 },
+    ],
     hint: '[Tab] reppu ja valmistus',
   },
   {
@@ -30,26 +32,38 @@ export const GUIDE_STEPS = [
     hint: '[1–8] tai rulla: valitse kirves',
   },
   {
-    title: 'Kivihakku',
-    text: 'Valmista kivihakku ja louhi sillä lohkare. Lohkareita on eniten punaisella laterittitasangolla.',
-    goals: [
-      { key: 'craft:stone_pick', label: 'Valmista kivihakku', need: 1 },
-      { key: 'harvest:boulder', label: 'Louhi lohkare', need: 1 },
-    ],
-    hint: '[Tab] reppu ja valmistus',
+    title: 'Työstöpenkki',
+    text: 'Ota vasara käteen, avaa rakennusvalikko ja rakenna työstöpenkki. Nuotio ja muut rakennelmat vaativat työstöpenkin lähelle.',
+    goals: [{ key: 'place:workbench', label: 'Rakenna työstöpenkki', need: 1 }],
+    hint: 'Vasara kädessä: [Hiiri 2] valikko, [Hiiri 1] rakenna',
   },
   {
     title: 'Nuotio yötä varten',
-    text: 'Yöt ovat pimeitä. Valmista nuotio ja aseta se maahan.',
+    text: 'Yöt ovat pimeitä. Rakenna nuotio työstöpenkin lähelle.',
+    goals: [{ key: 'place:campfire', label: 'Rakenna nuotio', need: 1 }],
+    hint: 'Vasara: [Hiiri 2] valikko → Nuotio',
+  },
+  {
+    title: 'Ateria',
+    text: 'Raaka ruoka ja sienet ovat huonoa ruokaa, ja niistä voi saada myrkytyksen. Valmista ateria nuotiolla ja syö se.',
     goals: [
-      { key: 'craft:campfire', label: 'Valmista nuotio', need: 1 },
-      { key: 'place:campfire', label: 'Aseta nuotio maahan', need: 1 },
+      { key: 'cook:any', label: 'Valmista ruokaa nuotiolla', need: 1 },
+      { key: 'ate:any', label: 'Syö', need: 1 },
     ],
-    hint: 'Valitse nuotio ja paina [Hiiri 2]',
+    hint: 'Nuotion lähellä [Tab] → Ruoka · ruoka kädessä [Hiiri 2] syö',
+  },
+  {
+    title: 'Metsästys',
+    text: 'Arat eläimet pakenevat, vaikka hiipisit. Valmista työstöpenkillä jousi ja nuolia ja ammu.',
+    goals: [
+      { key: 'craft:bow', label: 'Valmista jousi', need: 1 },
+      { key: 'shoot:any', label: 'Ammu nuoli', need: 1 },
+    ],
+    hint: 'Pidä [Hiiri 1] pohjassa ja päästä · [Ctrl] hiivi',
   },
   {
     title: 'Hyvä alku!',
-    text: 'Selvisit ensimmäisistä askelista. Lisää tehtäviä on tulossa.',
+    text: 'Selvisit ensimmäisistä askelista. Rakenna suoja, tutki maailmaa ja etsi riimukiviä.',
     goals: [],
     hint: '',
   },
@@ -63,8 +77,13 @@ export class Guide {
     const track = (prefix, field) => (data) => this.record(`${prefix}:${data[field]}`);
     events.on('pickup', track('pickup', 'type'));
     events.on('harvest', track('harvest', 'type'));
-    events.on('craft', track('craft', 'item'));
+    events.on('craft', (d) => {
+      this.record(`craft:${d.item}`);
+      if (d.station === 'campfire') this.record('cook:any');
+    });
     events.on('place', track('place', 'item'));
+    events.on('ate', () => this.record('ate:any'));
+    events.on('arrowShot', () => this.record('shoot:any'));
   }
 
   get current() {

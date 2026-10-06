@@ -51,7 +51,13 @@
         <svg class="ico" viewBox="0 0 24 24"><path d="M13.5 2 4 13.5h6.5L9 22l10-12h-6.6z"/></svg>
         <div class="bar"><i></i></div>
       </div>
+      <div class="vital hu" id="hunger" title="Ravinto (syö ruokaa: valitse ruoka ja paina hiiren oikeaa)">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M3 11h18a9 9 0 0 1-18 0zm2.5-2C6 6 8.5 4 12 4s6 2 6.5 5z"/></svg>
+        <div class="bar"><i></i></div>
+      </div>
     </div>
+    <div id="effects"></div>
+    <div id="poison"></div>
     <div id="hurt"></div>
     <div id="drown"></div>
     <div id="flash"></div>
@@ -79,6 +85,16 @@
         <div id="recipes"></div>
       </div>
       <div class="inv-close">[Tab] sulje</div>
+    </div>
+  </div>
+  <div id="buildmenu" class="hidden">
+    <div class="inv-card build-card">
+      <div class="inv-col">
+        <h2>Rakenna</h2>
+        <div id="build-grid"></div>
+        <div id="build-info"></div>
+      </div>
+      <div class="inv-close">[Hiiri 2] tai [Esc] sulje</div>
     </div>
   </div>
   <div id="bigmap" class="hidden">

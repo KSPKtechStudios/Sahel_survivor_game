@@ -3,6 +3,7 @@
 import { CONFIG } from '../config.js';
 import { ITEMS } from '../game/items.js';
 import { events } from '../game/events.js';
+import { EFFECTS, HUNGER_MAX } from '../game/survival.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -13,12 +14,19 @@ const DEATH_TEXT = {
   drown: 'Hukuit. Uidessa kestävyys kuluu: lepää rannalla ajoissa.',
   warthog: 'Pahkasika puski sinut kumoon.',
   clay: 'Savipeikot saivat sinut.',
+  starve: 'Nääntyit nälkään. Syö ajoissa: marjat, hedelmät ja paistettu liha täyttävät.',
 };
 
 export class Hud {
-  constructor(inventory, icons) {
+  constructor(inventory, icons, survival = null) {
     this.inventory = inventory;
     this.icons = icons;
+    this.survival = survival;
+    this.hungerEl = $('hunger');
+    this.hungerFill = this.hungerEl.querySelector('i');
+    this.effectsEl = $('effects');
+    this.poisonEl = $('poison');
+    this.effectEls = {};
     this.hotbar = $('hotbar');
     this.targetBox = $('target');
     this.targetName = this.targetBox.querySelector('.name');
@@ -62,6 +70,7 @@ export class Hud {
     }
 
     events.on('inventory', () => this.renderHotbar());
+    events.on('effects', () => this.renderEffects());
     events.on('notify', (d) => this.notify(d));
     events.on('message', (d) => this.message(d.text));
     events.on('playerHurt', ({ amount }) => {
@@ -107,6 +116,25 @@ export class Hud {
       } else {
         this.itemName.classList.remove('show');
       }
+    }
+  }
+
+  // Tilavaikutukset pikapalkin yläpuolella (nimi ja jäljellä oleva aika).
+  renderEffects() {
+    if (!this.survival) return;
+    const fx = this.survival.effects;
+    for (const k of Object.keys(this.effectEls)) {
+      if (!fx[k]) { this.effectEls[k].remove(); delete this.effectEls[k]; }
+    }
+    for (const k of Object.keys(fx)) {
+      if (this.effectEls[k]) continue;
+      const def = EFFECTS[k];
+      const el = document.createElement('div');
+      el.className = 'effect ' + (def.bad ? 'bad' : 'good');
+      el.innerHTML = `<span></span><i><b></b></i>`;
+      el.querySelector('span').textContent = def.name;
+      this.effectsEl.appendChild(el);
+      this.effectEls[k] = el;
     }
   }
 
@@ -171,6 +199,21 @@ export class Hud {
     this.stamina.classList.toggle('low', st < 0.25);
     this.stamina.classList.toggle('nocombo', st <= 0.5 && st >= 0.25);
     this.stamina.classList.toggle('out', st <= 0.001 && player.inWater === 2);
+
+    // Ravinto ja tilavaikutukset
+    if (this.survival) {
+      const hu = this.survival.hunger / HUNGER_MAX;
+      this.hungerFill.style.width = `${hu * 100}%`;
+      this.hungerEl.classList.toggle('low', hu < 0.25);
+      this.hungerEl.classList.toggle('empty', hu <= 0.001 && !player.dead);
+      for (const [k, el] of Object.entries(this.effectEls)) {
+        const e = this.survival.effects[k];
+        if (e) el.querySelector('b').style.width = `${Math.max(0, e.t / e.max) * 100}%`;
+      }
+      const poison = this.survival.effects.poison;
+      const pk = poison && !player.dead ? 0.55 + 0.3 * Math.sin(performance.now() * 0.0025) : 0;
+      this.poisonEl.style.opacity = pk.toFixed(3);
+    }
 
     // Osuma (punainen reunus), matala terveys sykkii, hukkuminen (sininen).
     this.hurtFlash = Math.max(0, this.hurtFlash - dt * 1.6);

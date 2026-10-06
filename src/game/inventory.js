@@ -1,6 +1,6 @@
 // Repun tietomalli: paikat 0..hotbarSize-1 ovat pikapalkki, loput reppua.
 import { CONFIG } from '../config.js';
-import { ITEMS, RECIPES } from './items.js';
+import { ITEMS, RECIPES, tagged } from './items.js';
 import { events } from './events.js';
 
 export class Inventory {
@@ -14,7 +14,13 @@ export class Inventory {
     return this.slots[this.selected];
   }
 
+  // id voi olla myös tunniste ('#pelt' = mikä tahansa talja).
   count(id) {
+    if (id[0] === '#') {
+      let n = 0;
+      for (const t of tagged(id.slice(1))) n += this.count(t);
+      return n;
+    }
     let n = 0;
     for (const s of this.slots) if (s && s.id === id) n += s.count;
     return n;
@@ -46,6 +52,14 @@ export class Inventory {
   }
 
   remove(id, count) {
+    if (id[0] === '#') {
+      let left = count;
+      for (const t of tagged(id.slice(1))) {
+        if (left <= 0) break;
+        left -= this.remove(t, Math.min(left, this.count(t)));
+      }
+      return count - left;
+    }
     let left = count;
     for (let i = this.size - 1; i >= 0 && left > 0; i--) {
       const s = this.slots[i];
@@ -68,9 +82,16 @@ export class Inventory {
     events.emit('inventory');
   }
 
-  canCraft(recipe) {
+  // Riittävätkö materiaalit (valmistuspaikka tarkistetaan erikseen).
+  hasMaterials(recipe) {
     for (const [id, n] of Object.entries(recipe.need)) if (this.count(id) < n) return false;
     return true;
+  }
+
+  // stations = lähellä olevat valmistuspaikat (Set: 'workbench', 'campfire').
+  canCraft(recipe, stations = null) {
+    if (recipe.station && !(stations && stations.has(recipe.station))) return false;
+    return this.hasMaterials(recipe);
   }
 
   // Mahtuuko tuotos reppuun (yksinkertaistettu tarkistus).
@@ -84,17 +105,29 @@ export class Inventory {
     return room >= count;
   }
 
-  craft(recipeId) {
+  craft(recipeId, stations = null) {
     const r = RECIPES.find((x) => x.id === recipeId);
-    if (!r || !this.canCraft(r)) return false;
-    for (const [id, n] of Object.entries(r.need)) this.remove(id, n);
+    if (!r || !this.canCraft(r, stations)) return false;
+    const taken = [];
+    for (const [id, n] of Object.entries(r.need)) {
+      if (id[0] === '#') {
+        // Muista, mitkä esineet ryhmästä kuluivat (palautusta varten).
+        for (const t of tagged(id.slice(1))) {
+          const k = Math.min(n - taken.filter((x) => x.tag === id).reduce((a, x) => a + x.n, 0), this.count(t));
+          if (k > 0) { this.remove(t, k); taken.push({ id: t, n: k, tag: id }); }
+        }
+      } else {
+        this.remove(id, n);
+        taken.push({ id, n });
+      }
+    }
     if (!this.hasRoomFor(r.out, r.count)) {
       // Palauta materiaalit, jos tuotos ei mahdu.
-      for (const [id, n] of Object.entries(r.need)) this.add(id, n);
+      for (const t of taken) this.add(t.id, t.n);
       return false;
     }
     this.add(r.out, r.count);
-    events.emit('craft', { item: r.out });
+    events.emit('craft', { item: r.out, station: r.station || null });
     return true;
   }
 

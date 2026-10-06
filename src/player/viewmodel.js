@@ -2,6 +2,8 @@
 // näkymänään maailman päälle, jottei käsi leikkaudu seinien/puiden sisään.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { itemBowBody, bowPoints, makeArrowGeometry } from '../models/items2.js';
+import { createFlameTexture } from '../render/textures.js';
 
 const _qi = new THREE.Quaternion();
 
@@ -34,7 +36,38 @@ const HOLD = {
   clay: { pos: [0.0, 0.0, -0.035], rot: [0.4, 0.3, 0], s: 0.85 },
   // Varustamaton kilpi kädessä (varustettuna se on vasemmassa kädessä).
   shield: { pos: [-0.02, 0.06, -0.05], rot: [0.15, Math.PI - 0.5, 0.25], s: 0.42 },
+  // Sessio 9
+  stone_knife: { pos: [0, -0.03, 0], rot: [0, Math.PI / 2, 0], s: 0.85 },
+  flint_axe: { pos: [0, -0.07, 0], rot: [0, Math.PI / 2, 0], s: 0.78 },
+  flint_pick: { pos: [0, -0.07, 0], rot: [0, Math.PI / 2, 0], s: 0.78 },
+  hammer: { pos: [0, -0.06, 0], rot: [0, Math.PI / 2, 0], s: 0.74 },
+  torch: { pos: [0, -0.05, 0], rot: [0, 0, 0], s: 0.85 },
+  spear: { pos: [0, -0.02, 0], rot: [-0.35, 0, 0], s: 0.72 },
+  bow: { pos: [0, 0, 0], rot: [0, Math.PI / 2, 0], s: 0.8 },
+  sinew_bow: { pos: [0, 0, 0], rot: [0, Math.PI / 2, 0], s: 0.8 },
+  bamboo: { pos: [0, -0.06, 0], rot: [0, 0, 0], s: 0.85 },
+  reed: { pos: [0, -0.04, 0], rot: [0, 0, 0], s: 0.85 },
+  palm_leaf: { pos: [0, -0.04, 0], rot: [0, 0, 0.3], s: 0.75 },
+  fonio: { pos: [0, -0.04, 0], rot: [0, 0, 0], s: 0.85 },
+  bone: { pos: [0, -0.02, 0], rot: [0, 0, 0], s: 0.9 },
+  feather: { pos: [0, -0.02, 0], rot: [0, 0, 0], s: 1 },
+  banana: { pos: [0, -0.02, 0], rot: [0, 0, -0.3], s: 1 },
+  gazelle_pelt: { pos: [0.0, 0.0, -0.05], rot: [1.2, 0, 0.3], s: 0.75 },
+  monkey_pelt: { pos: [0.0, 0.0, -0.05], rot: [1.2, 0, 0.3], s: 0.75 },
+  fox_pelt: { pos: [0.0, 0.0, -0.05], rot: [1.2, 0, 0.3], s: 0.75 },
+  leather: { pos: [0.0, 0.0, -0.05], rot: [0.9, 0, 0.3], s: 0.8 },
+  fonio_porridge: { pos: [0, -0.02, -0.06], rot: [0.3, 0, 0], s: 0.85 },
+  meat_stew: { pos: [0, -0.02, -0.06], rot: [0.3, 0, 0], s: 0.85 },
+  shea_butter: { pos: [0, -0.02, -0.05], rot: [0.3, 0, 0], s: 0.9 },
+  bissap: { pos: [0, -0.02, -0.05], rot: [0.2, 0, 0], s: 0.9 },
+  arrow_wood: { pos: [0, -0.03, 0], rot: [0, 0, 0], s: 0.6 },
+  arrow_bone: { pos: [0, -0.03, 0], rot: [0, 0, 0], s: 0.6 },
+  arrow_flint: { pos: [0, -0.03, 0], rot: [0, 0, 0], s: 0.6 },
 };
+// Pienet esineet, joille ei ole omaa otetta: kämmenellä kuin kivi.
+const DEFAULT_HOLD = { pos: [0.0, 0.03, -0.035], rot: [0.4, 0.3, 0], s: 0.9 };
+const BOWS = { bow: false, sinew_bow: true };
+const BOW_SCALE = 0.7;
 
 function colorize(geo, hex) {
   geo = geo.index ? geo.toNonIndexed() : geo;
@@ -122,6 +155,28 @@ function buildLeftArmGeometry() {
   return mergeGeometries(parts, false);
 }
 
+// Vasen käsi jousen kahvassa: nyrkki origossa pystysuoran kahvan ympärillä,
+// kyynärvarsi alavasemmalle.
+function buildBowArmGeometry() {
+  const parts = [];
+  const fist = new THREE.SphereGeometry(1, 10, 8);
+  fist.scale(0.042, 0.05, 0.045);
+  fist.translate(-0.01, 0, 0.01);
+  parts.push(colorize(fist, SKIN));
+  parts.push(capsule(0.013, 0.06, SKIN_DARK, [0.012, 0, -0.02], [0, 0, 0]));
+  const dir = new THREE.Vector3(-0.42, -0.5, 0.76).normalize();
+  const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+  const fore = new THREE.CylinderGeometry(0.04, 0.034, 0.42, 10, 1, false);
+  fore.translate(0, 0.21, 0);
+  fore.applyQuaternion(q);
+  parts.push(colorize(fore, SKIN));
+  const sleeve = new THREE.CylinderGeometry(0.07, 0.058, 0.32, 12, 1, true);
+  sleeve.translate(0, 0.44, 0);
+  sleeve.applyQuaternion(q);
+  parts.push(colorize(sleeve, SLEEVE));
+  return mergeGeometries(parts, false);
+}
+
 // Animaation asento: [x, y, z, kääntö, kallistus eteen, kallistus sivulle, kierto
 // varren ympäri]. Kierto lasketaan ensin, sitten sivukallistus, eteen ja kääntö.
 const ZERO = [0, 0, 0, 0, 0, 0, 0];
@@ -164,16 +219,56 @@ export class ViewModel {
     this.items = {};
     for (const [id, geo] of Object.entries(itemGeometries)) {
       const m = new THREE.Mesh(geo, itemMat);
-      const h = HOLD[id];
-      if (h) {
-        m.position.set(...h.pos);
-        m.rotation.set(...h.rot);
-        m.scale.setScalar(h.s);
-      }
+      const h = HOLD[id] || DEFAULT_HOLD;
+      m.position.set(...h.pos);
+      m.rotation.set(...h.rot);
+      m.scale.setScalar(h.s);
       m.visible = false;
       this.anim.add(m);
       this.items[id] = m;
     }
+
+    // Soihdun liekki (kädessä olevan soihdun kärjessä)
+    this.flameMat = new THREE.SpriteMaterial({ map: createFlameTexture(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
+    this.flames = [];
+    for (let i = 0; i < 2; i++) {
+      const f = new THREE.Sprite(this.flameMat);
+      f.visible = false;
+      this.anim.add(f);
+      this.flames.push(f);
+    }
+
+    // Jousi vasemmassa kädessä: runko, jänne (kaksi osaa) ja jänteelle asetettu nuoli.
+    this.bowGroup = new THREE.Group();
+    this.bowArm = new THREE.Mesh(buildBowArmGeometry(), this.material);
+    this.bowGroup.add(this.bowArm);
+    this.bowBodies = {};
+    for (const [id, recurve] of Object.entries(BOWS)) {
+      const body = new THREE.Mesh(itemBowBody(recurve), itemMat);
+      body.rotation.y = Math.PI / 2; // kaari eteenpäin (-Z), jänne pelaajaa kohti
+      body.scale.setScalar(BOW_SCALE);
+      body.visible = false;
+      this.bowGroup.add(body);
+      this.bowBodies[id] = { body, pts: bowPoints(recurve) };
+    }
+    const strGeo = new THREE.CylinderGeometry(0.0022, 0.0022, 1, 4);
+    strGeo.translate(0, 0.5, 0);
+    const strMat = new THREE.MeshBasicMaterial({ color: 0xe8dcc0 });
+    this.strings = [new THREE.Mesh(strGeo, strMat), new THREE.Mesh(strGeo, strMat)];
+    this.bowGroup.add(...this.strings);
+    this.nocked = {};
+    for (const kind of ['arrow_wood', 'arrow_bone', 'arrow_flint']) {
+      const a = new THREE.Mesh(makeArrowGeometry(kind), itemMat);
+      a.visible = false;
+      this.bowGroup.add(a);
+      this.nocked[kind] = a;
+    }
+    this.bowGroup.visible = false;
+    this.scene.add(this.bowGroup);
+    this.bowDraw = 0;      // 0..1, asetetaan archery.js:ssä
+    this.bowArrow = null;  // jänteellä oleva nuoli (esinetunnus) tai null
+    this.bowT = 0;         // jousi esillä 0..1
+    this.bowKick = 0;      // laukauksen jälkeinen värähdys
 
     // Vasen käsi ja kilpi (näkyy, kun kilpi on pikapalkissa).
     this.left = new THREE.Group();
@@ -275,6 +370,21 @@ export class ViewModel {
   pickup() {
     if (this.action) return;
     this.action = { type: 'pickup', t: 0, dur: 0.3, hitAt: 2, onHit: null, hitDone: true, from: this.pose.slice() };
+  }
+
+  // Syöminen: käsi suun eteen.
+  eat() {
+    if (this.action) return;
+    this.action = { type: 'eat', t: 0, dur: 0.75, hitAt: 2, onHit: null, hitDone: true, from: this.pose.slice() };
+  }
+
+  // Jousi laukesi: jänne värähtää.
+  bowShot() {
+    this.bowKick = 1;
+  }
+
+  get bowMode() {
+    return this.current in BOWS;
   }
 
   resize(aspect) {
@@ -402,8 +512,27 @@ export class ViewModel {
     this.forearm.position.copy(_w);
     this.forearm.quaternion.setFromUnitVectors(_down, _d);
 
-    // Kilpi vasemmassa kädessä
-    this.shieldT += ((this.hasShield && !player.dead ? 1 : 0) - this.shieldT) * (1 - Math.exp(-dt * 8));
+    // Soihdun liekki lepattaa kärjessä.
+    const torch = this.current === 'torch' && this.items.torch && this.items.torch.visible;
+    for (let i = 0; i < this.flames.length; i++) {
+      const f = this.flames[i];
+      f.visible = torch;
+      if (!torch) continue;
+      const m = this.items.torch;
+      const k = 0.85 + Math.sin(this.time * (9 + i * 3.1) + i) * 0.1 + Math.sin(this.time * 23 + i * 2) * 0.05;
+      f.position.set(m.position.x + (i - 0.5) * 0.012, m.position.y + 0.43 * m.scale.y + 0.03 * k, m.position.z);
+      f.scale.set(0.085 * k * (1 - i * 0.25), 0.15 * k * (1 - i * 0.2), 1);
+    }
+
+    // Jousi vasemmassa kädessä; oikea käsi vetää jännettä.
+    const bowOn = this.bowMode && !player.dead && this.pending === undefined;
+    this.bowT += ((bowOn ? 1 : 0) - this.bowT) * (1 - Math.exp(-dt * 9));
+    if (this.bowMode && this.items[this.current]) this.items[this.current].visible = false;
+    this.bowGroup.visible = this.bowT > 0.01 && this.bowMode;
+    if (this.bowGroup.visible) this._updateBow(dt, player, bob, sinP, cosP, step, amp, breathe, sp);
+
+    // Kilpi vasemmassa kädessä (ei jousen kanssa)
+    this.shieldT += ((this.hasShield && !player.dead && !this.bowMode ? 1 : 0) - this.shieldT) * (1 - Math.exp(-dt * 8));
     this.left.visible = this.shieldT > 0.01;
     if (this.left.visible) {
       const sb = shieldUp ? bb : 0;
@@ -422,6 +551,77 @@ export class ViewModel {
   }
 }
 
+ViewModel.prototype._updateBow = function (dt, player, bob, sinP, cosP, step, amp, breathe, sp) {
+  const d = smooth(this.bowDraw);
+  const hide = 1 - smooth(this.bowT);
+  this.bowKick *= Math.exp(-dt * 9);
+  const kick = Math.sin(this.bowKick * Math.PI * 3) * this.bowKick;
+  // Jousi: levossa alempana vasemmalla, jännitettynä keskellä silmien edessä
+  // (yläpää kallistuu hieman oikealle).
+  const g = this.bowGroup;
+  // Jännitettynä nuoli osoittaa tähtäimeen (jousi vasemmalla alhaalla).
+  g.position.set(
+    -0.24 + 0.11 * d + this.sway.x * 0.8 - cosP * 0.008 * amp,
+    -0.26 + 0.16 * d + this.sway.y * 0.8 - step * 0.014 * amp * (1 - d) - hide * 0.4 - sp * 0.05 + breathe,
+    -0.62,
+  );
+  g.rotation.set(0.1 + 0.06 * d + this.sway.y * 0.6 - sp * 0.2, 0.25 - 0.45 * d - this.sway.x * 0.8, -0.35 + 0.13 * d + kick * 0.03);
+  for (const [id, b] of Object.entries(this.bowBodies)) b.body.visible = id === this.current;
+  const bb = this.bowBodies[this.current];
+  if (!bb) return;
+  // Jänteen päät ja vetokohta jousen koordinaatistossa (kaari -Z, jänne +Z).
+  const s = BOW_SCALE;
+  const top = _bt.set(0, bb.pts[bb.pts.length - 1].y * s, bb.pts[bb.pts.length - 1].x * -s);
+  const bot = _bb.set(0, bb.pts[0].y * s, bb.pts[0].x * -s);
+  const pull = 0.01 + d * 0.4;
+  const nock = _bn.set(0, 0, pull - kick * 0.01);
+  const setStr = (m, a, b2) => {
+    _bd.subVectors(b2, a);
+    m.position.copy(a);
+    m.scale.set(1, _bd.length(), 1);
+    m.quaternion.setFromUnitVectors(_up, _bd.normalize());
+  };
+  setStr(this.strings[0], top, nock);
+  setStr(this.strings[1], bot, nock);
+  for (const [kind, a] of Object.entries(this.nocked)) {
+    a.visible = this.bowArrow === kind && d > 0.02;
+    if (!a.visible) continue;
+    // Nuoli jänteeltä eteenpäin (-Z), kahvan vierestä: pää jänteellä.
+    a.position.set(0.012, 0.0, nock.z - 0.1);
+    a.rotation.set(-Math.PI / 2, 0, 0);
+  }
+  // Oikea käsi jänteelle: lepoasennossa alhaalla, jännittäessä poskella.
+  if (d > 0.001 || this.bowT > 0.01) {
+    _bw.copy(nock).applyEuler(g.rotation).add(g.position);
+    const tx = THREE.MathUtils.lerp(this.basePos.x - 0.02, _bw.x + 0.035, d);
+    const ty = THREE.MathUtils.lerp(this.basePos.y - 0.08, _bw.y - 0.035, d);
+    const tz = THREE.MathUtils.lerp(this.basePos.z + 0.05, _bw.z + 0.03, d);
+    const k = this.bowT;
+    this.root.position.set(
+      THREE.MathUtils.lerp(this.root.position.x, tx, k),
+      THREE.MathUtils.lerp(this.root.position.y, ty, k),
+      THREE.MathUtils.lerp(this.root.position.z, tz, k),
+    );
+    this.root.rotation.set(
+      THREE.MathUtils.lerp(this.root.rotation.x, -0.1 + 0.3 * d, k),
+      THREE.MathUtils.lerp(this.root.rotation.y, 0.5 + 0.6 * d, k),
+      THREE.MathUtils.lerp(this.root.rotation.z, 0.9 + 0.5 * d, k),
+    );
+    applyPose(this.anim, ZERO);
+    this.anim.updateMatrix();
+    _w.copy(WRIST).applyMatrix4(this.anim.matrix);
+    _d.subVectors(ELBOW, _w).normalize();
+    this.forearm.position.copy(_w);
+    this.forearm.quaternion.setFromUnitVectors(_down, _d);
+  }
+};
+
+const _bt = new THREE.Vector3();
+const _bb = new THREE.Vector3();
+const _bn = new THREE.Vector3();
+const _bd = new THREE.Vector3();
+const _bw = new THREE.Vector3();
+const _up = new THREE.Vector3(0, 1, 0);
 const _pose = ZERO.slice();
 const _w = new THREE.Vector3();
 const _d = new THREE.Vector3();
@@ -492,6 +692,14 @@ const ANIMS = {
   pickup: [
     [0, ZERO],
     [0.5, [-0.05, -0.12, -0.1, 0, 0.5, 0.2, 0], 'inOut'],
+    [1, ZERO, 'inOut'],
+  ],
+  // Syöminen: käsi suun eteen ja takaisin.
+  eat: [
+    [0, ZERO],
+    [0.3, [-0.11, 0.13, 0.12, 0.35, 0.55, 0.25, 0], 'inOut'],
+    [0.5, [-0.12, 0.12, 0.13, 0.4, 0.62, 0.3, 0], 'out'],
+    [0.62, [-0.11, 0.13, 0.12, 0.35, 0.55, 0.25, 0], 'inOut'],
     [1, ZERO, 'inOut'],
   ],
 };

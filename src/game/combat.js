@@ -33,6 +33,16 @@ export const WEAPONS = {
       { anim: 'swing', dur: 0.5, hitAt: 0.5, chain: 1, cd: 0.65, dmg: 6, kb: 6, up: 1.3, stam: 7, arc: 0.55 },
     ],
   },
+  knife: {
+    name: 'Kivipuukko', block: 'tool', reach: 2.0, combo: [
+      { anim: 'slashR', dur: 0.36, hitAt: 0.5, chain: 1, cd: 0.5, dmg: 7, kb: 4.5, up: 1, stam: 6, arc: 0.8 },
+    ],
+  },
+  spear: {
+    name: 'Keihäs', block: 'weapon', reach: 3.0, combo: [
+      { anim: 'thrust', dur: 0.55, hitAt: 0.48, chain: 1, cd: 0.75, dmg: 15, kb: 7, up: 1.5, stam: 11, arc: 0.3, reach: 0.4 },
+    ],
+  },
   axe: {
     name: 'Kirves', block: 'tool', reach: 2.4, combo: [
       { anim: 'swing', dur: 0.55, hitAt: 0.5, chain: 1, cd: 0.5, dmg: 12, kb: 7, up: 1.6, stam: 9, arc: 0.5 },
@@ -144,7 +154,10 @@ export class Combat {
 
     // --- Torjunta [Hiiri 2] (paitsi kun kädessä on asetettava esine tai
     // varustamaton kilpi: silloin hiiren oikea asettaa / varustaa)
-    const wantBlock = can && this.stun <= 0 && input.buttons.has(2) && !(def && def.place) && !(def && def.shield && !shield);
+    // Vasara, jousi ja ruoka käyttävät hiiren painikkeita muuhun.
+    const special = !!(def && (def.build || def.bow));
+    const rmbOther = !!(def && (def.place || def.food || def.build || def.bow || (def.shield && !shield)));
+    const wantBlock = can && this.stun <= 0 && input.buttons.has(2) && !rmbOther;
     if (wantBlock && !this.blocking) {
       const a = vm.action;
       // Iskun alkuvaihetta ei voi perua, palautumisen voi.
@@ -163,7 +176,7 @@ export class Combat {
     if (this.blocking) vm.setBlock(this.blockType === 'shield' ? 'shield' : this.blockType === 'fist' ? 'fist' : 'weapon');
 
     // --- Isku [Hiiri 1]: painallus muistetaan hetken; pohjassa pitäminen jatkaa sarjaa.
-    if (can && (input.clicked.has(0) || input.buttons.has(0))) this.buffer = BUFFER;
+    if (can && !special && (input.clicked.has(0) || input.buttons.has(0))) this.buffer = BUFFER;
     else this.buffer = Math.max(0, this.buffer - dt);
     if (!can) this.buffer = 0;
 

@@ -7,10 +7,15 @@ import { makeAcacia, makeBaobab, makeJungleTree, makePalm, makeCanopyTree, makeD
 import { makeBush, makeFern, makeTumbleweed, makeGrassTuft, makeBamboo, makeThicket, makeEuphorbia, makeReeds, makeUndergrowth } from './plants.js';
 import { makeGroundStick, makeStone, makeBoulder, makeTermiteMound, makeOutcrop, makeSpire } from './rocks.js';
 import { makeCampfireBase, createItemModels } from './items.js';
+import { createBuildModels } from './building.js';
 import {
   makeSheaTree, makeDoumPalm, makeLog, makeBanana, makeDesertShrub, makeCoconutPalm, makeDriftwood,
-  makeTallGrass, makeFlowers, makeMushrooms, makeLilies, makeSeaweed, makeBones, makeScree,
+  makeTallGrass, makeFlowers, makeLilies, makeSeaweed, makeBones, makeScree,
 } from './flora.js';
+import {
+  makeFlintGround, makeShellGround, makeFeatherGround, makeCoconutGround, makeBaobabFruitGround, makeSheaNutsGround,
+  makeMushPatch, makeJujubeBush, makeMoringa, makeHibiscus, makeReedClump, makeFonio, makeClayLump,
+} from './pickups.js';
 
 const VARIANTS = {
   acacia: [makeAcacia, 4, 1],
@@ -44,11 +49,27 @@ const VARIANTS = {
   driftwood: [makeDriftwood, 3, 221],
   tallGrass: [makeTallGrass, 3, 231],
   flowers: [makeFlowers, 4, 241],
-  mushrooms: [makeMushrooms, 3, 251],
   lilies: [makeLilies, 3, 261],
   seaweed: [makeSeaweed, 2, 271],
   bones: [makeBones, 2, 281],
   scree: [makeScree, 3, 291],
+  // Sessio 9: poimittavat
+  flint: [makeFlintGround, 3, 401],
+  shell: [makeShellGround, 2, 411],
+  feather: [makeFeatherGround, 2, 421],
+  coconutGround: [makeCoconutGround, 2, 431],
+  baobabFruit: [makeBaobabFruitGround, 2, 441],
+  sheaNuts: [makeSheaNutsGround, 1, 451],
+  jujubeBush: [makeJujubeBush, 3, 461],
+  moringa: [makeMoringa, 2, 471],
+  hibiscus: [makeHibiscus, 3, 481],
+  reedClump: [makeReedClump, 2, 491],
+  fonio: [makeFonio, 2, 501],
+  clayLump: [makeClayLump, 2, 511],
+  mushBrown: [(s) => makeMushPatch('brown', s), 2, 521],
+  mushPale: [(s) => makeMushPatch('pale', s), 2, 531],
+  mushRed: [(s) => makeMushPatch('red', s), 2, 541],
+  mushTermite: [(s) => makeMushPatch('termite', s), 2, 551],
 };
 // Mallit, joilla on kevyt kaukoversio (ilman varjoa).
 const HAS_FAR = new Set(['acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut']);
@@ -82,5 +103,6 @@ export function createModelLibrary() {
     tumbleweed: makeTumbleweed(42),
     campfire: makeCampfireBase(3),
     items: createItemModels(),
+    build: createBuildModels(),
   };
 }

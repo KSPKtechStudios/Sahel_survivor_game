@@ -61,6 +61,7 @@ export class World {
     this.terrainIndex = createTerrainIndex();
     this.shakes = [];
     this.extraColliders = []; // pelaajan rakennelmat, kaatuneet rungot, rauniot
+    this.platforms = [];      // kävelypinnat (lattiat): { x0, z0, x1, z1, y }
 
     // Poolit: lähi- ja kaukomallit per tyyppi ja variantti, sekä kannot.
     this.pools = {};
@@ -103,6 +104,7 @@ export class World {
     this.center = null;
     this.shakes = [];
     this.extraColliders.length = 0;
+    this.platforms.length = 0;
     for (const P of Object.values(this.pools)) {
       for (const pool of P.near) pool.clear();
       if (P.far) for (const pool of P.far) pool.clear();

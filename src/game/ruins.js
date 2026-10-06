@@ -9,7 +9,12 @@ import { buildStructure, makeChestModels } from '../models/structures.js';
 import { events } from './events.js';
 
 const BUILD_RANGE = 300;
-const COMMON = [['stick', 3, 8], ['stone', 2, 6], ['fiber', 2, 6], ['wood', 1, 4]];
+const COMMON = [
+  ['stick', 3, 8], ['stone', 2, 6], ['fiber', 2, 6], ['wood', 1, 4], ['flint', 2, 5], ['rope', 1, 3],
+  ['arrow_flint', 3, 8], ['gum', 1, 3], ['torch', 1, 2], ['shea_nuts', 2, 5], ['herbal_remedy', 1, 1],
+];
+// Laivanhylyn arkussa merellisempää tavaraa.
+const WRECK = [['rope', 2, 5], ['seashell', 2, 6], ['wood', 2, 5], ['coconut', 1, 3], ['arrow_bone', 4, 8], ['leather', 1, 3]];
 const VALUABLE = [['gold_nugget', 1, 3], ['cowrie', 3, 8], ['bronze_bracelet', 1, 1]];
 
 export const STRUCT_NAMES = {
@@ -20,7 +25,7 @@ export const STRUCT_NAMES = {
 export function rollLoot(st) {
   const r = mulberry32((st.seed ^ 0xc0ffee) >>> 0);
   const loot = [];
-  const pool = COMMON.slice();
+  const pool = (st.type === 'shipwreck' ? WRECK : COMMON).slice();
   const n = 2 + Math.floor(r() * 2);
   for (let i = 0; i < n && pool.length; i++) {
     const [item, a, b] = pool.splice(Math.floor(r() * pool.length), 1)[0];

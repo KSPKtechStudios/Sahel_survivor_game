@@ -31,6 +31,10 @@ import { Ruins } from './game/ruins.js';
 import { Interaction } from './game/interaction.js';
 import { Mobs } from './game/mobs.js';
 import { Combat } from './game/combat.js';
+import { Survival } from './game/survival.js';
+import { Archery } from './game/archery.js';
+import { BuildSystem } from './game/building.js';
+import { PIECES } from './game/pieces.js';
 import { events } from './game/events.js';
 import { loadWorldData, saveWorldData, loadSettings } from './game/save.js';
 import { renderItemIcons } from './ui/icons.js';
@@ -40,6 +44,7 @@ import { ExploredMap } from './ui/explored.js';
 import { BigMap } from './ui/bigMap.js';
 import { GuideUI } from './ui/guideUI.js';
 import { InventoryUI } from './ui/inventoryUI.js';
+import { BuildMenu } from './ui/buildMenu.js';
 import { Menu } from './ui/menu.js';
 import { DevTools } from './ui/devtools.js';
 
@@ -97,14 +102,76 @@ const mobs = new Mobs({ scene, world, drops, debris, bursts, player, env, struct
 const interaction = new Interaction({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs });
 const combat = new Combat({ camera, player, inventory, viewmodel, interaction, mobs, debris, bursts });
 mobs.combat = combat;
+const survival = new Survival(player);
+const archery = new Archery({ scene, camera, player, inventory, viewmodel, mobs, world, drops, debris });
+const build = new BuildSystem({ camera, player, inventory, structures, world, viewmodel, drops });
 
 const icons = renderItemIcons(models.items);
-const hud = new Hud(inventory, icons);
+const pieceIcons = renderItemIcons(models.build);
+const hud = new Hud(inventory, icons, survival);
 const explored = new ExploredMap(world.gen);
 const minimap = new Minimap(explored);
 const bigMap = new BigMap(explored, player);
 new GuideUI(guide);
-const invUI = new InventoryUI(inventory, icons);
+const invUI = new InventoryUI(inventory, icons, {
+  stations: () => structures.stationsNear(player.position.x, player.position.z),
+  use: (i) => useSlot(i),
+});
+const buildMenu = new BuildMenu({
+  inventory, itemIcons: icons, pieceIcons,
+  hasBench: () => !!structures.nearest('workbench', player.position.x, player.position.z, 20),
+  onSelect: (type) => {
+    build.select(type);
+    events.emit('message', { text: `${PIECES[type].name}: [Hiiri 1] rakenna, [R] käännä` });
+    closeBuildMenu();
+  },
+});
+document.getElementById('buildmenu').addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  if (state === 'build') closeBuildMenu();
+});
+
+// Syö / käytä repun paikan esine (ruoka ja rohdot).
+function useSlot(i) {
+  const s = inventory.slots[i];
+  if (!s || player.dead) return;
+  if (survival.eat(s.id)) {
+    inventory.removeFromSlot(i, 1);
+    viewmodel.eat();
+    events.emit('notify', { item: s.id, count: -1 });
+  }
+}
+interaction.useItem = useSlot;
+
+// Makuualusta: yöllä nukutaan aamuun, aina asetetaan herätyspaikaksi.
+let sleepT = 0;
+interaction.usePiece = (st) => {
+  structures.bed = st;
+  const night = env.time >= 20 || env.time < 5.5;
+  if (!night) {
+    events.emit('message', { text: 'Herätyspaikka asetettu. Nukkua voi vain yöllä.' });
+    return;
+  }
+  const foes = mobs.list.some((m) => m.type === 'clay' && m.state !== 'dead' && m.pos.distanceTo(player.position) < 25);
+  if (foes) {
+    events.emit('message', { text: 'Et voi nukkua: savipeikkoja on lähellä' });
+    return;
+  }
+  sleepT = 1.6;
+  combat.reset();
+};
+
+function openBuildMenu() {
+  if (state !== 'playing') return;
+  wantBuild = true;
+  input.unlock();
+}
+function closeBuildMenu() {
+  buildMenu.hide();
+  input.lock();
+  setTimeout(() => { if (state === 'build' && !input.locked) setState('paused'); }, 600);
+}
+build.openMenu = openBuildMenu;
 
 // --- Vesi: roiskeet ja väreily ----------------------------------------------------
 // Pelaaja, pudotetut esineet ja heitot kutsuvat tätä osuessaan veteen.
@@ -174,14 +241,16 @@ let state = 'boot'; // boot | menu | loading | ready | playing | paused | invent
 let currentWorld = null;
 let wantInventory = false;
 let wantMap = false;
+let wantBuild = false;
 let wantDev = false;
 const menuCam = { x: 0, z: 0, t: 0 };
 
 function setState(s) {
   state = s;
-  const inGame = s === 'playing' || s === 'paused' || s === 'inventory' || s === 'map' || s === 'dev';
+  const inGame = s === 'playing' || s === 'paused' || s === 'inventory' || s === 'map' || s === 'dev' || s === 'build';
   $('hud').classList.toggle('hidden', !inGame);
   if (s !== 'inventory') invUI.hide();
+  if (s !== 'build') buildMenu.hide();
   if (s !== 'map') bigMap.hide();
   if (s !== 'dev') devtools.hide();
   if (s === 'playing') {
@@ -218,6 +287,10 @@ function clearWorldState(seed) {
   blood.clear();
   mobs.clear();
   combat.reset();
+  archery.clear();
+  build.select(null);
+  survival.reset();
+  structures.held = null;
 }
 
 function buildAround(x, z, onProgress) {
@@ -271,6 +344,7 @@ async function startWorld(meta) {
   player.crouching = false;
   inventory.load(data ? data.inventory : { slots: [] });
   guide.load(data ? data.guide : { step: 0, stats: {} });
+  survival.load(data ? data.survival : null);
   world.load(data ? data.world : null);
   if (data && data.env) env.load(data.env);
   else { env.setTime(CONFIG.startHour); env.setWeather('clear', true); env.day = 1; }
@@ -300,6 +374,7 @@ function persist() {
     player: player.serialize(),
     inventory: inventory.serialize(),
     guide: guide.serialize(),
+    survival: survival.serialize(),
     env: env.serialize(),
     world: world.serialize(),
     structures: structures.serialize(),
@@ -335,7 +410,11 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) persi
 // --- Hiiren lukitus ja näppäimet ---------------------------------------------------
 document.addEventListener('pointerlockchange', () => {
   if (input.locked) {
-    if (state === 'ready' || state === 'paused' || state === 'inventory' || state === 'map' || state === 'dev') setState('playing');
+    if (state === 'ready' || state === 'paused' || state === 'inventory' || state === 'map' || state === 'dev' || state === 'build') setState('playing');
+  } else if (wantBuild) {
+    wantBuild = false;
+    setState('build');
+    buildMenu.show(build.selected);
   } else if (wantDev) {
     wantDev = false;
     setState('dev');
@@ -354,7 +433,7 @@ document.addEventListener('pointerlockchange', () => {
   }
 });
 document.addEventListener('pointerlockerror', () => {
-  if (state === 'inventory' || state === 'map' || state === 'dev') setState('paused');
+  if (state === 'inventory' || state === 'map' || state === 'dev' || state === 'build') setState('paused');
 });
 canvas.addEventListener('click', () => { if (state === 'playing' && !input.locked) input.lock(); });
 
@@ -378,6 +457,9 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
     wantInventory = true;
     input.unlock();
+  } else if (state === 'build' && (e.code === 'Escape' || e.code === 'Tab')) {
+    e.preventDefault();
+    closeBuildMenu();
   } else if (state === 'inventory' && (e.code === 'Tab' || e.code === 'KeyI' || e.code === 'Escape')) {
     e.preventDefault();
     invUI.hide();
@@ -426,8 +508,12 @@ let respawning = false;
 async function respawnPlayer() {
   if (respawning) return;
   respawning = true;
-  const sp = findSpawn();
+  // Herätyspaikka: makuualusta, jos sellainen on rakennettu.
+  const bed = structures.bed;
+  const sp = bed ? { x: bed.x + 1.2 * Math.cos(bed.rot), z: bed.z - 1.2 * Math.sin(bed.rot) } : findSpawn();
   combat.reset();
+  archery.reset();
+  survival.reset(Math.max(50, survival.hunger));
   player.respawn(sp.x, sp.z);
   player.yaw = Math.PI * 0.75;
   player.pitch = 0;
@@ -484,6 +570,7 @@ let saveTimer = CONFIG.autosaveSec;
 let edgeMsgTimer = 0;
 let drawTimer = 0;
 let menuShadowTimer = 0;
+const torchFire = { x: 0, y: 0, z: 0, seed: 7, light: 0.75 };
 const fps = { frames: 0, t: 0, value: 0 };
 const _s = {};
 
@@ -524,8 +611,8 @@ function frame(now) {
   const rawDt = (now - last) / 1000;
   const dt = Math.min(0.05, rawDt);
   last = now;
-  const inGame = state === 'playing' || state === 'inventory' || state === 'paused' || state === 'ready' || state === 'map' || state === 'dev';
-  const running = state === 'playing' || state === 'inventory' || state === 'map' || state === 'dev';
+  const inGame = state === 'playing' || state === 'inventory' || state === 'paused' || state === 'ready' || state === 'map' || state === 'dev' || state === 'build';
+  const running = state === 'playing' || state === 'inventory' || state === 'map' || state === 'dev' || state === 'build';
   const simDt = running || state === 'menu' ? dt : 0;
   elapsed += simDt;
   input.enabled = state === 'playing';
@@ -563,9 +650,42 @@ function frame(now) {
   fire.update(simDt, materials.water.uniforms.uAmbient.value);
   blood.update(simDt, 0.35 + 0.65 * env.daylight);
   tumbleweeds.update(simDt, player.position, env.w.wind, env.windDir);
-  if (state === 'playing' && !player.dead) interaction.update(simDt, input);
-  else { structures.showGhost(null); interaction.prompt = null; }
+  if (state === 'playing' && !player.dead) {
+    interaction.update(simDt, input);
+    // Vasara: rakennushaamu ja kehote (vasaran kehote korvaa muut).
+    if (build.update(simDt, input) && build.prompt) interaction.prompt = build.prompt;
+  } else { structures.showGhost(null); interaction.prompt = null; }
   combat.update(simDt, input, elapsed, state === 'playing');
+  archery.update(simDt, input, state === 'playing');
+  if (running) survival.update(dt);
+  // Jousen tähtäys: näkökenttä kapenee jännittäessä.
+  const wantFov = settings.fov - 9 * archery.zoom;
+  if (Math.abs(camera.fov - wantFov) > 0.01) {
+    camera.fov += (wantFov - camera.fov) * Math.min(1, dt * 12);
+    camera.updateProjectionMatrix();
+  }
+  // Kädessä oleva soihtu valaisee ympäristön (jaettu tulivalo).
+  const torchHeld = inGame && !player.dead && inventory.selectedItem && inventory.selectedItem.id === 'torch';
+  if (torchHeld) {
+    torchFire.x = player.position.x;
+    torchFire.y = player.position.y + 0.55;
+    torchFire.z = player.position.z;
+  }
+  structures.held = torchHeld ? torchFire : null;
+  // Nukkuminen: ruutu pimenee, aika siirtyy aamuun.
+  if (sleepT > 0) {
+    const was = sleepT;
+    sleepT = Math.max(0, sleepT - dt);
+    $('flash').style.background = 'rgba(0, 0, 0, 1)';
+    $('flash').style.opacity = (Math.min(1, Math.sin((1 - sleepT / 1.6) * Math.PI) * 1.6)).toFixed(3);
+    if (was > 0.8 && sleepT <= 0.8) {
+      env.setTime(6);
+      if (env.time < 6.5) env.day += 1;
+      events.emit('message', { text: 'Nukuit aamuun' });
+      persist();
+    }
+    if (sleepT <= 0) { $('flash').style.background = ''; $('flash').style.opacity = '0'; }
+  }
   mobs.update(running ? dt : 0, elapsed);
   // Kuollut pelaaja herää välilyönnillä tai klikkauksella.
   if (state === 'playing' && player.dead && player.deathT > RESPAWN_WAIT && (input.pressed.has('Space') || input.clicked.has(0))) {
@@ -588,7 +708,8 @@ function frame(now) {
       camera.position.y += (Math.random() - 0.5) * shake * 0.12;
       shake *= Math.exp(-dt * 6);
     }
-    const fireNear = Math.max(0, 1 - structures.nearestFire / 7) * (1.2 - env.daylight);
+    const torchLit = inventory.selectedItem && inventory.selectedItem.id === 'torch' ? 0.9 : 0;
+    const fireNear = Math.max(torchLit, Math.max(0, 1 - structures.nearestFire / 7)) * (1.2 - env.daylight);
     viewmodel.setItem(inventory.selectedItem ? inventory.selectedItem.id : null);
     viewmodel.update(simDt, player, input, env, camera, fireNear * 1.5);
     guide.update(simDt);
@@ -655,5 +776,5 @@ window.sahel = {
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
   ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, blood,
   startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
-  menuSpot: MENU_SPOT, menuCam,
+  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot,
 };

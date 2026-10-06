@@ -104,7 +104,10 @@ export function generateChunk(cx, cz, variantCounts) {
       if (!def.density.rock) p *= 1 - s.rock * 0.85;
       if (!def.density.mesa) p *= 1 - s.mesa * 0.75;
       if (r1 >= p / maxD) continue;
-      if (s.h < s.wl + 0.15) continue;
+      if (def.nearWater) {
+        // Vain vesirajassa (joet, järvet, lammet, meren ranta)
+        if (s.h < s.wl - 0.1 || s.h > s.wl + 1.0) continue;
+      } else if (s.h < s.wl + 0.15) continue;
       if (def.maxSlope < 1 && slope(x, z, s.h) > def.maxSlope) continue;
       if (insideStructure(x, z, def.kind === 'pickup' ? 0 : 2)) continue;
       const scale = def.scale[0] + r3 * (def.scale[1] - def.scale[0]);

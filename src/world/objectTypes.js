@@ -15,7 +15,7 @@ export const OBJECT_TYPES = {
     density: { savanna: 2.2, woodland: 11, mare: 4, laterite: 0.6, dunes: 0.25, desert: 0.04, mountains: 0.5, oasis: 1 },
     scale: [0.85, 1.25], maxSlope: 0.45, collider: 0.3, hit: { y: 1.2, r: 0.6 }, drawDist: 99,
     harvest: { tool: 'axe', hp: 5, needMsg: 'Tarvitset kirveen' },
-    log: { name: 'Kaatunut akasia', hp: 4, drops: [['wood', 3], ['stick', 2]] },
+    log: { name: 'Kaatunut akasia', hp: 4, drops: [['wood', 3], ['stick', 2], ['gum', 1]] },
   },
   jungle: {
     name: 'Kapokkipuu', model: 'jungle', kind: 'tree', material: 'vegetation', castShadow: true,
@@ -36,28 +36,28 @@ export const OBJECT_TYPES = {
     density: { rainforest: 4, mare: 0.8, savanna: 0.05, oasis: 14 },
     scale: [0.85, 1.2], maxSlope: 0.5, collider: 0.24, hit: { y: 1.2, r: 0.45 }, drawDist: 99,
     harvest: { tool: 'axe', hp: 4, needMsg: 'Tarvitset kirveen' },
-    log: { name: 'Kaatunut palmu', hp: 3, drops: [['wood', 2], ['fiber', 3]] },
+    log: { name: 'Kaatunut palmu', hp: 3, drops: [['wood', 2], ['palm_leaf', 3]] },
   },
   shea: {
     name: 'Karitepuu', model: 'shea', kind: 'tree', material: 'vegetation', castShadow: true,
     density: { savanna: 1.0, woodland: 2.6, mare: 0.6, laterite: 0.3 },
     scale: [0.85, 1.2], maxSlope: 0.45, collider: 0.34, hit: { y: 1.2, r: 0.65 }, drawDist: 99,
     harvest: { tool: 'axe', hp: 6, needMsg: 'Tarvitset kirveen' },
-    log: { name: 'Kaatunut karitepuu', hp: 4, drops: [['wood', 4], ['stick', 2]] },
+    log: { name: 'Kaatunut karitepuu', hp: 4, drops: [['wood', 4], ['stick', 2], ['shea_nuts', 3]] },
   },
   doum: {
     name: 'Doumpalmu', model: 'doum', kind: 'tree', material: 'vegetation', castShadow: true,
     density: { mare: 2.4, oasis: 3, savanna: 0.25, woodland: 0.4, dunes: 0.12 },
     scale: [0.85, 1.2], maxSlope: 0.45, collider: 0.26, hit: { y: 1.2, r: 0.5 }, drawDist: 99,
     harvest: { tool: 'axe', hp: 5, needMsg: 'Tarvitset kirveen' },
-    log: { name: 'Kaatunut doumpalmu', hp: 3, drops: [['wood', 2], ['fiber', 3]] },
+    log: { name: 'Kaatunut doumpalmu', hp: 3, drops: [['wood', 2], ['palm_leaf', 3]] },
   },
   coconut: {
     name: 'Kookospalmu', model: 'coconut', kind: 'tree', material: 'vegetation', castShadow: true,
     density: { beach: 7 },
     scale: [0.85, 1.15], maxSlope: 0.5, collider: 0.24, hit: { y: 1.2, r: 0.45 }, drawDist: 99,
     harvest: { tool: 'axe', hp: 4, needMsg: 'Tarvitset kirveen' },
-    log: { name: 'Kaatunut kookospalmu', hp: 3, drops: [['wood', 2], ['fiber', 3]] },
+    log: { name: 'Kaatunut kookospalmu', hp: 3, drops: [['wood', 2], ['palm_leaf', 2], ['coconut', 2]] },
   },
   baobab: {
     name: 'Baobab', model: 'baobab', kind: 'static', material: 'vegetation', castShadow: true,
@@ -87,7 +87,7 @@ export const OBJECT_TYPES = {
     name: 'Bambu', model: 'bamboo', kind: 'bush', material: 'tall', castShadow: true,
     density: { rainforest: 5, mare: 0.4 },
     scale: [0.9, 1.3], maxSlope: 0.6, collider: 0.55, hit: { y: 1.0, r: 0.8 }, drawDist: 3,
-    harvest: { tool: null, hp: 4, drops: [['stick', 4]] },
+    harvest: { tool: null, hp: 4, drops: [['bamboo', 3], ['stick', 1]] },
   },
   log: {
     name: 'Lahopuu', model: 'log', kind: 'bush', material: 'solid', castShadow: false,
@@ -105,7 +105,7 @@ export const OBJECT_TYPES = {
     name: 'Villibanaani', model: 'banana', kind: 'bush', material: 'bush', castShadow: false,
     density: { rainforest: 6, oasis: 1.5, mare: 0.3, beach: 0.5 },
     scale: [0.85, 1.3], maxSlope: 0.6, collider: 0.25, hit: { y: 1.0, r: 0.9 }, drawDist: 3,
-    harvest: { tool: null, hp: 3, drops: [['fiber', 3]] },
+    harvest: { tool: null, hp: 3, drops: [['banana', 2], ['fiber', 2]] },
   },
   desertShrub: {
     name: 'Aavikkopensas', model: 'desertShrub', kind: 'bush', material: 'bush', castShadow: false,
@@ -184,15 +184,12 @@ export const OBJECT_TYPES = {
     density: { savanna: 35, woodland: 45, mare: 40, laterite: 10 },
     scale: [0.8, 1.3], maxSlope: 0.6, collider: 0, hit: null,
   },
+  // Sessio 9: kukat ovat poimittavia (terälehdet rohtoihin).
   flowers: {
-    name: 'Kukat', model: 'flowers', kind: 'decor', material: 'grass', castShadow: false, decorative: true,
-    density: { rainforest: 18, oasis: 25, mare: 14, savanna: 3, mountains: 4 },
-    scale: [0.8, 1.3], maxSlope: 0.6, collider: 0, hit: null,
-  },
-  mushrooms: {
-    name: 'Sienet', model: 'mushrooms', kind: 'decor', material: 'solid', castShadow: false, decorative: true,
-    density: { rainforest: 16 },
-    scale: [0.8, 1.6], maxSlope: 0.7, collider: 0, hit: null,
+    name: 'Villikukkia', model: 'flowers', kind: 'pickup', material: 'grass', castShadow: false,
+    density: { rainforest: 6, oasis: 8, mare: 5, savanna: 1.5, woodland: 1.2, mountains: 1.5 },
+    scale: [0.8, 1.3], maxSlope: 0.6, collider: 0, hit: { y: 0.15, r: 0.4 }, drawDist: 2,
+    pickup: { drops: [['petals', 2, 4]] },
   },
   lilies: {
     name: 'Lumpeet', model: 'lilies', kind: 'decor', material: 'solid', castShadow: false, decorative: true,
@@ -207,9 +204,10 @@ export const OBJECT_TYPES = {
     nearWater: true,
   },
   bones: {
-    name: 'Luut', model: 'bones', kind: 'decor', material: 'solid', castShadow: false, decorative: true,
-    density: { desert: 0.8, dunes: 0.5 },
-    scale: [0.9, 1.2], maxSlope: 0.4, collider: 0, hit: null,
+    name: 'Luuranko', model: 'bones', kind: 'pickup', material: 'solid', castShadow: false,
+    density: { desert: 0.6, dunes: 0.4, savanna: 0.15, laterite: 0.15 },
+    scale: [0.9, 1.2], maxSlope: 0.4, collider: 0, hit: { y: 0.15, r: 0.9 }, drawDist: 2,
+    pickup: { drops: [['bone', 2, 4]] },
   },
   scree: {
     name: 'Kivikko', model: 'scree', kind: 'decor', material: 'solid', castShadow: false, decorative: true,
@@ -221,6 +219,106 @@ export const OBJECT_TYPES = {
     density: { mare: 140, oasis: 150, rainforest: 60, savanna: 30, woodland: 30, mountains: 25 },
     scale: [0.8, 1.3], maxSlope: 0.9, collider: 0, hit: null,
     nearWater: true, // vain vesirajassa (myös jokien ja järvien rannoilla)
+  },
+  // --- Sessio 9: poimittavat [E]. Uudet tyypit lisätään loppuun, jotta
+  // vanhojen esineiden sijainnit (siemenet) eivät muutu.
+  flintStone: {
+    name: 'Piikivi', model: 'flint', kind: 'pickup', material: 'solid', castShadow: false,
+    density: { laterite: 3, mountains: 2.5, desert: 1.2, savanna: 0.6, woodland: 0.6, mare: 0.3, beach: 0.4, rock: 3, mesa: 2 },
+    scale: [0.9, 1.15], maxSlope: 0.8, collider: 0, hit: { y: 0.06, r: 0.3 }, drawDist: 2,
+    pickup: { drops: [['flint', 1, 2]] },
+  },
+  seashellPick: {
+    name: 'Simpukankuoria', model: 'shell', kind: 'pickup', material: 'solid', castShadow: false,
+    density: { beach: 4 },
+    scale: [0.9, 1.2], maxSlope: 0.8, collider: 0, hit: { y: 0.04, r: 0.28 }, drawDist: 2,
+    pickup: { drops: [['seashell', 1, 2]] },
+  },
+  featherPick: {
+    name: 'Sulka', model: 'feather', kind: 'pickup', material: 'solid', castShadow: false,
+    density: { savanna: 0.6, woodland: 1.0, mare: 0.8, rainforest: 0.6, oasis: 0.6 },
+    scale: [0.9, 1.1], maxSlope: 0.7, collider: 0, hit: { y: 0.04, r: 0.3 }, drawDist: 2,
+    pickup: { drops: [['feather', 1, 2]] },
+  },
+  coconutPick: {
+    name: 'Kookospähkinä', model: 'coconutGround', kind: 'pickup', material: 'solid', castShadow: false,
+    density: { beach: 2.5 },
+    scale: [0.95, 1.1], maxSlope: 0.7, collider: 0, hit: { y: 0.1, r: 0.32 }, drawDist: 2,
+    pickup: { drops: [['coconut', 1, 2]] },
+  },
+  baobabFruitPick: {
+    name: 'Apinanleipä', model: 'baobabFruit', kind: 'pickup', material: 'solid', castShadow: false,
+    density: { savanna: 0.25, woodland: 0.35, mare: 0.4 },
+    scale: [0.95, 1.1], maxSlope: 0.6, collider: 0, hit: { y: 0.08, r: 0.32 }, drawDist: 2,
+    pickup: { drops: [['baobab_fruit', 1, 2]] },
+  },
+  sheaNutsPick: {
+    name: 'Karitepähkinöitä', model: 'sheaNuts', kind: 'pickup', material: 'solid', castShadow: false,
+    density: { woodland: 1.2, savanna: 0.5, mare: 0.3 },
+    scale: [0.95, 1.1], maxSlope: 0.6, collider: 0, hit: { y: 0.04, r: 0.28 }, drawDist: 2,
+    pickup: { drops: [['shea_nuts', 2, 4]] },
+  },
+  jujubeBush: {
+    name: 'Jujubapensas', model: 'jujubeBush', kind: 'pickup', material: 'bush', castShadow: false,
+    density: { savanna: 0.8, woodland: 1.0, laterite: 0.5, mare: 0.6 },
+    scale: [0.85, 1.2], maxSlope: 0.6, collider: 0, hit: { y: 0.5, r: 0.6 }, drawDist: 3,
+    pickup: { drops: [['jujube', 3, 5], ['stick', 0, 1]] },
+  },
+  moringaPlant: {
+    name: 'Moringa', model: 'moringa', kind: 'pickup', material: 'bush', castShadow: false,
+    density: { woodland: 0.6, mare: 0.8, savanna: 0.3, oasis: 1.5 },
+    scale: [0.85, 1.2], maxSlope: 0.6, collider: 0, hit: { y: 0.6, r: 0.5 }, drawDist: 3,
+    pickup: { drops: [['moringa', 2, 3]] },
+  },
+  hibiscusPlant: {
+    name: 'Hibiskus', model: 'hibiscus', kind: 'pickup', material: 'bush', castShadow: false,
+    density: { mare: 1.2, oasis: 2, rainforest: 1, savanna: 0.3, woodland: 0.4 },
+    scale: [0.85, 1.2], maxSlope: 0.6, collider: 0, hit: { y: 0.4, r: 0.5 }, drawDist: 3,
+    pickup: { drops: [['hibiscus', 2, 4], ['petals', 0, 1]] },
+  },
+  reedClump: {
+    name: 'Ruokotupas', model: 'reedClump', kind: 'pickup', material: 'grass', castShadow: false,
+    density: { mare: 4, oasis: 4, rainforest: 2, savanna: 1, woodland: 1, mountains: 1 },
+    scale: [0.85, 1.2], maxSlope: 0.8, collider: 0, hit: { y: 0.6, r: 0.45 }, drawDist: 3,
+    nearWater: true,
+    pickup: { drops: [['reed', 3, 5]] },
+  },
+  fonioTuft: {
+    name: 'Villifonio', model: 'fonio', kind: 'pickup', material: 'grass', castShadow: false,
+    density: { savanna: 1.5, woodland: 1, laterite: 0.6, mare: 0.6 },
+    scale: [0.85, 1.2], maxSlope: 0.6, collider: 0, hit: { y: 0.3, r: 0.4 }, drawDist: 2,
+    pickup: { drops: [['fonio', 2, 4]] },
+  },
+  clayLump: {
+    name: 'Savikokkare', model: 'clayLump', kind: 'pickup', material: 'solid', castShadow: false,
+    density: { mare: 1.5, rainforest: 0.8, savanna: 0.5, woodland: 0.5, oasis: 1 },
+    scale: [0.85, 1.2], maxSlope: 0.7, collider: 0, hit: { y: 0.08, r: 0.45 }, drawDist: 2,
+    nearWater: true,
+    pickup: { drops: [['clay', 2, 3]] },
+  },
+  mushBrown: {
+    name: 'Ruskeita sieniä', model: 'mushBrown', kind: 'pickup', material: 'solid', castShadow: false,
+    density: { rainforest: 4, mare: 0.8, woodland: 0.5, oasis: 1 },
+    scale: [0.85, 1.2], maxSlope: 0.7, collider: 0, hit: { y: 0.08, r: 0.32 }, drawDist: 2,
+    pickup: { drops: [['mushroom_brown', 1, 3]] },
+  },
+  mushPale: {
+    name: 'Kalpeita sieniä', model: 'mushPale', kind: 'pickup', material: 'solid', castShadow: false,
+    density: { rainforest: 3, oasis: 0.8, mountains: 0.3 },
+    scale: [0.85, 1.2], maxSlope: 0.7, collider: 0, hit: { y: 0.08, r: 0.32 }, drawDist: 2,
+    pickup: { drops: [['mushroom_pale', 1, 3]] },
+  },
+  mushRed: {
+    name: 'Punahattuja', model: 'mushRed', kind: 'pickup', material: 'solid', castShadow: false,
+    density: { rainforest: 2, mountains: 0.5, woodland: 0.2 },
+    scale: [0.85, 1.2], maxSlope: 0.7, collider: 0, hit: { y: 0.08, r: 0.32 }, drawDist: 2,
+    pickup: { drops: [['mushroom_red', 1, 2]] },
+  },
+  mushTermite: {
+    name: 'Termiittisieniä', model: 'mushTermite', kind: 'pickup', material: 'solid', castShadow: false,
+    density: { savanna: 0.5, woodland: 0.8, mare: 0.3 },
+    scale: [0.85, 1.2], maxSlope: 0.7, collider: 0, hit: { y: 0.1, r: 0.32 }, drawDist: 2,
+    pickup: { drops: [['mushroom_termite', 1, 3]] },
   },
 };
 

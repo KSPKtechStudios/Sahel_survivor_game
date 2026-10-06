@@ -19,6 +19,24 @@ const ICON_POSE = {
   raw_meat: [0.6, 0.4, 0],
   hide: [0.7, 0.3, 0],
   clay: [0.5, 0.4, 0],
+  // Pitkät esineet vinottain, jotta ne täyttävät kuvakkeen paremmin.
+  bow: [0, 0.3, 0.75],
+  sinew_bow: [0, 0.3, 0.75],
+  spear: [0.2, -0.5, -0.75],
+  hammer: [0.2, -0.5, -0.75],
+  flint_axe: [0.2, -0.5, -0.75],
+  flint_pick: [0.2, -0.5, -0.75],
+  stone_knife: [0.2, -0.5, -0.75],
+  torch: [0.2, -0.5, -0.75],
+  arrow_wood: [0.2, 0, -0.75],
+  arrow_bone: [0.2, 0, -0.75],
+  arrow_flint: [0.2, 0, -0.75],
+  reed: [0.2, 0, -0.75],
+  bamboo: [0.2, 0, -0.75],
+  fonio: [0.2, 0, -0.6],
+  palm_leaf: [0.4, 0, -0.6],
+  feather: [0.2, 0.4, -0.7],
+  bone: [0.2, 0, -0.75],
 };
 
 export function renderItemIcons(itemGeometries, size = 96) {

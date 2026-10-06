@@ -7,6 +7,7 @@ import { OBJECT_TYPES } from '../world/objectTypes.js';
 import { heightAt, sampleTerrain } from '../world/terrain.js';
 import { ITEMS } from './items.js';
 import { MOB_TYPES } from './mobs.js';
+import { PIECES, BENCH_RANGE } from './pieces.js';
 import { events } from './events.js';
 
 const _dir = new THREE.Vector3();
@@ -17,9 +18,11 @@ const _cols = [];
 export class Interaction {
   constructor({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs }) {
     Object.assign(this, { camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs });
-    this.target = null; // { obj, t, kind: 'object'|'tumbleweed'|'drop'|'log' }
+    this.target = null; // { obj, t, kind: 'object'|'tumbleweed'|'drop'|'log'|'chest'|'mob'|'piece' }
     this.prompt = null;
     this.placeValid = false;
+    this.useItem = null;  // main.js: syö / käytä valitun paikan esine
+    this.usePiece = null; // main.js: [E] rakennelmaan (makuualusta)
   }
 
   _raycast() {
@@ -35,6 +38,7 @@ export class Interaction {
     consider(this.drops.raycast(o, _dir, reach), 'drop');
     consider(this.fallen.raycast(o, _dir, reach + 0.4), 'log');
     consider(this.ruins.raycast(o, _dir, reach), 'chest');
+    consider(this.structures.raycast(o, _dir, reach), 'piece');
     if (this.mobs) consider(this.mobs.raycast(o, _dir, reach + 2), 'mob');
     return best;
   }
@@ -49,8 +53,9 @@ export class Interaction {
       const pos = this._placementPoint();
       this.placeValid = !!pos && this._canPlace(pos);
       this.structures.showGhost(pos, this.placeValid);
+      const noBench = pos && !this.structures.nearest('workbench', pos.x, pos.z, BENCH_RANGE);
       this.prompt = pos
-        ? { name: def.name, action: this.placeValid ? '[Hiiri 2] Aseta' : 'Ei voi asettaa tähän', warn: !this.placeValid }
+        ? { name: def.name, action: this.placeValid ? '[Hiiri 2] Aseta' : noBench ? 'Vaatii työstöpenkin lähelle' : 'Ei voi asettaa tähän', warn: !this.placeValid }
         : { name: def.name, action: 'Katso maahan asettaaksesi', warn: false };
       if (input.clicked.has(2) && pos && this.placeValid) this._place(pos, item);
       return;
@@ -71,6 +76,14 @@ export class Interaction {
     this.target = this._raycast();
     this.prompt = this._promptFor(this.target, def);
     if (input.pressed.has('KeyE') && input.enabled && this.target && !this.player.dead) this._tryPickup(this.target);
+
+    // Ruoka kädessä: hiiren oikea syö (kohteen kehote näkyy, jos sellainen on).
+    if (def && def.food) {
+      if (!this.prompt || !this.target || this.target.kind === 'piece') {
+        this.prompt = { name: def.name, action: def.cat === 'medicine' ? '[Hiiri 2] Käytä' : '[Hiiri 2] Syö' };
+      }
+      if (input.clicked.has(2) && input.enabled && !this.player.dead && this.useItem) this.useItem(this.inventory.selected);
+    }
   }
 
   _promptFor(target, def) {
@@ -87,6 +100,12 @@ export class Interaction {
     if (target.kind === 'drop') {
       const d = target.obj;
       return { name: ITEMS[d.item].name + (d.count > 1 ? ` ×${d.count}` : ''), action: '[E] Poimi' };
+    }
+    if (target.kind === 'piece') {
+      const pd = PIECES[target.obj.type];
+      const hint = pd.bed ? '[E] Nuku / aseta herätyspaikka' : pd.station === 'workbench' ? '[Tab] Valmista työkaluja ja aseita'
+        : pd.station === 'campfire' ? '[Tab] Valmista ruokaa ja rohtoja' : '';
+      return { name: pd.name, action: hint };
     }
     if (target.kind === 'log') {
       const log = target.obj;
@@ -112,6 +131,10 @@ export class Interaction {
   }
 
   _tryPickup(target) {
+    if (target.kind === 'piece') {
+      if (PIECES[target.obj.type].bed && this.usePiece) this.usePiece(target.obj);
+      return true;
+    }
     if (target.kind === 'chest') {
       if (this.ruins.open(target.obj)) this.viewmodel.pickup();
       return true;
@@ -125,14 +148,22 @@ export class Interaction {
     if (target.kind !== 'object') return false;
     const t = OBJECT_TYPES[target.obj.type];
     if (!t.pickup) return false;
-    const left = this.inventory.add(t.pickup.item, t.pickup.count);
-    if (left > 0) {
-      events.emit('message', { text: 'Reppu on täynnä' });
-      return false;
+    // pickup: { item, count } tai { drops: [[esine, min, max], ...] } (satunnainen määrä)
+    const list = t.pickup.drops
+      ? t.pickup.drops.map(([item, a, b]) => [item, a + Math.floor(Math.random() * (b - a + 1))]).filter(([, n]) => n > 0)
+      : [[t.pickup.item, t.pickup.count]];
+    for (const [item, n] of list) {
+      if (!this.inventory.hasRoomFor(item, n)) {
+        events.emit('message', { text: 'Reppu on täynnä' });
+        return false;
+      }
+    }
+    for (const [item, n] of list) {
+      this.inventory.add(item, n);
+      events.emit('notify', { item, count: n });
     }
     this.viewmodel.pickup();
     this.world.removeObject(target.obj);
-    events.emit('notify', { item: t.pickup.item, count: t.pickup.count });
     events.emit('pickup', { type: target.obj.type });
     this.target = null;
     return true;
@@ -218,6 +249,8 @@ export class Interaction {
   _canPlace(pos) {
     const p = this.player.position;
     if (Math.hypot(pos.x - p.x, pos.z - p.z) < 1.1) return false;
+    // Nuotio (ja muut rakennelmat) vaativat työstöpenkin lähelle.
+    if (!this.structures.nearest('workbench', pos.x, pos.z, BENCH_RANGE)) return false;
     const s = sampleTerrain(pos.x, pos.z, {});
     if (s.h < s.wl + 0.1) return false;
     const slope = Math.abs(heightAt(pos.x + 0.6, pos.z) - heightAt(pos.x - 0.6, pos.z)) + Math.abs(heightAt(pos.x, pos.z + 0.6) - heightAt(pos.x, pos.z - 0.6));

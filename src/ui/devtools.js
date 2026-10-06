@@ -161,12 +161,23 @@ export class DevTools {
     });
     row = this._row(sec);
     this._button(row, 'Aseet', () => {
-      for (const id of ['wooden_club', 'machete', 'shield']) if (inventory.count(id) === 0) inventory.add(id, 1);
-      return 'Puunuija, viidakkoveitsi ja puukilpi (varusta kilpi hiiren oikealla)';
+      for (const id of ['wooden_club', 'machete', 'shield', 'spear', 'bow']) if (inventory.count(id) === 0) inventory.add(id, 1);
+      inventory.add('arrow_flint', 20);
+      return 'Nuija, viidakkoveitsi, kilpi, keihäs, jousi ja 20 nuolta';
     });
     this._button(row, 'Materiaalit', () => {
-      for (const id of ['stick', 'stone', 'fiber', 'wood']) inventory.add(id, 20);
-      return '+20 risua, kiveä, kuitua ja puuta';
+      for (const id of ['stick', 'stone', 'fiber', 'wood', 'flint', 'rope', 'clay', 'reed', 'gum']) inventory.add(id, 20);
+      return '+20 kutakin perusmateriaalia';
+    });
+    this._button(row, 'Rakentaminen', () => {
+      if (inventory.count('hammer') === 0) inventory.add('hammer', 1);
+      for (const id of ['wood', 'stick', 'stone', 'fiber', 'reed', 'clay']) inventory.add(id, 30);
+      return 'Vasara ja rakennusmateriaalit';
+    });
+    this._button(row, 'Ruokaa', () => {
+      inventory.add('cooked_meat', 5);
+      inventory.add('herbal_remedy', 2);
+      return '+5 paistettua lihaa, +2 yrttirohtoa';
     });
 
     // Maailma

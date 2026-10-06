@@ -45,6 +45,9 @@ export class Player {
     this.knock = new THREE.Vector3(); // tönäisy (vaimenee itsestään)
     this.moveMul = 1;                 // taistelu: torjunta ja isku hidastavat
     this.staminaRegenMul = 1;
+    // Ravinto ja tilavaikutukset (survival.js): palautumisen kertoimet
+    this.survivalHealthMul = 1;
+    this.survivalStaminaMul = 1;
     this.hurtKick = 0;                // kameran nytkähdys osumasta
     this.hurtRoll = 0;
     // Kyykky ja hukkuminen
@@ -230,7 +233,12 @@ export class Player {
 
     // --- Maa ja vesi (meri, järvet ja joet omalla korkeudellaan)
     waterAt(p.x, p.z, _wq);
-    const ground = _wq.h;
+    let ground = _wq.h;
+    // Rakennetut lattiat: päälle voi astua (askel enintään 0,5 m).
+    for (const pf of world.platforms) {
+      if (p.x < pf.x0 - 0.1 || p.x > pf.x1 + 0.1 || p.z < pf.z0 - 0.1 || p.z > pf.z1 + 0.1) continue;
+      if (pf.y > ground && p.y >= pf.y - 0.5) ground = pf.y;
+    }
     const still = _wq.wl - ground;
     const W = this.waves;
     const amp = W.amp * openFactor(_wq.type, still, _wq.ocean, _wq.lakeR);
@@ -349,10 +357,10 @@ export class Player {
     // --- Kestävyyden ja terveyden palautuminen
     if (this.god && alive) { this.stamina = CONFIG.staminaMax; this.health = CONFIG.healthMax; }
     if (this.staminaDelay > 0) this.staminaDelay -= dt;
-    else this.stamina = Math.min(CONFIG.staminaMax, this.stamina + CONFIG.staminaRegenPerSec * this.staminaRegenMul * dt);
+    else this.stamina = Math.min(CONFIG.staminaMax, this.stamina + CONFIG.staminaRegenPerSec * this.staminaRegenMul * this.survivalStaminaMul * dt);
     if (alive) {
       if (this.healthDelay > 0) this.healthDelay -= dt;
-      else if (this.health < CONFIG.healthMax) this.health = Math.min(CONFIG.healthMax, this.health + CONFIG.healthRegenPerSec * dt);
+      else if (this.health < CONFIG.healthMax) this.health = Math.min(CONFIG.healthMax, this.health + CONFIG.healthRegenPerSec * this.survivalHealthMul * dt);
     } else {
       this.deathT += dt;
     }

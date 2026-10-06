@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
 import { V, displace, paint, limb, flatNormals, merge, prep } from './util.js';
 import { makeStone } from './rocks.js';
+import { createItemModels2 } from './items2.js';
 
 // Nuotion runko (kivikehä + tukit). Liekit lisätään erikseen.
 export function makeCampfireBase(seed = 3) {
@@ -319,5 +320,6 @@ export function createItemModels() {
     raw_meat: itemMeat(),
     hide: itemHide(),
     clay: itemClay(),
+    ...createItemModels2(),
   };
 }
