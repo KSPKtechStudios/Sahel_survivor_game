@@ -12,34 +12,26 @@ const _hit = new THREE.Vector3();
 const _place = new THREE.Vector3();
 const _cols = [];
 
-const BURST_COLORS = {
-  bush: 0x8a7350,
-  acacia: 0xc9a679,
-  boulder: 0x8f7a68,
-  tumbleweed: 0xc8b07a,
-  stick: 0x7a5a3a,
-  stone: 0x8a8178,
-  baobab: 0x9a8a78,
-  termite: 0x9a5a36,
-};
-
 export class Interaction {
-  constructor({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, bursts }) {
-    Object.assign(this, { camera, player, world, tumbleweeds, inventory, viewmodel, structures, bursts });
-    this.target = null; // { obj, t, kind: 'object'|'tumbleweed' }
-    this.prompt = null; // HUD:lle
+  constructor({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables }) {
+    Object.assign(this, { camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables });
+    this.target = null; // { obj, t, kind: 'object'|'tumbleweed'|'drop'|'log' }
+    this.prompt = null;
     this.placeValid = false;
   }
 
   _raycast() {
     this.camera.getWorldDirection(_dir);
-    const origin = this.camera.position;
+    const o = this.camera.position;
     const reach = CONFIG.reach;
-    const a = this.world.raycast(origin, _dir, reach);
-    const b = this.tumbleweeds.raycast(origin, _dir, reach);
     let best = null;
-    if (a) best = { ...a, kind: 'object' };
-    if (b && (!best || b.t < best.t)) best = { ...b, kind: 'tumbleweed' };
+    const consider = (res, kind) => {
+      if (res && (!best || res.t < best.t)) best = { ...res, kind };
+    };
+    consider(this.world.raycast(o, _dir, reach), 'object');
+    consider(this.tumbleweeds.raycast(o, _dir, reach), 'tumbleweed');
+    consider(this.drops.raycast(o, _dir, reach), 'drop');
+    consider(this.fallen.raycast(o, _dir, reach + 0.4), 'log');
     return best;
   }
 
@@ -62,10 +54,8 @@ export class Interaction {
     }
     this.structures.showGhost(null);
 
-    // --- Kohde
     this.target = this._raycast();
     this.prompt = this._promptFor(this.target, def);
-
     if (input.pressed.has('KeyE') && input.enabled && this.target) this._tryPickup(this.target);
     if (input.buttons.has(0) && !this.viewmodel.busy) this._swing(def);
   }
@@ -73,18 +63,23 @@ export class Interaction {
   _promptFor(target, def) {
     if (!target) return null;
     if (target.kind === 'tumbleweed') return { name: 'Tumbleweed', action: '[Hiiri 1] Hakkaa' };
+    if (target.kind === 'drop') {
+      const d = target.obj;
+      return { name: ITEMS[d.item].name + (d.count > 1 ? ` ×${d.count}` : ''), action: '[E] Poimi' };
+    }
+    if (target.kind === 'log') {
+      const log = target.obj;
+      const t = OBJECT_TYPES[log.type];
+      const ok = def && def.tool === 'axe';
+      return { name: t.log.name, action: ok ? '[Hiiri 1] Pilko' : 'Tarvitset kirveen', warn: !ok, hp: ok && log.hp < t.log.hp ? log.hp / t.log.hp : null };
+    }
     const t = OBJECT_TYPES[target.obj.type];
     if (t.pickup) return { name: t.name, action: '[E] Poimi' };
     if (t.harvest) {
       const h = t.harvest;
       const ok = this._toolOk(h, def);
       const hp = h.hp ? target.obj.hp / h.hp : 1;
-      return {
-        name: t.name,
-        action: ok ? '[Hiiri 1] Hakkaa' : h.needMsg,
-        warn: !ok,
-        hp: ok && hp < 1 ? hp : null,
-      };
+      return { name: t.name, action: ok ? '[Hiiri 1] Hakkaa' : h.needMsg, warn: !ok, hp: ok && hp < 1 ? hp : null };
     }
     return { name: t.name, action: '' };
   }
@@ -96,6 +91,12 @@ export class Interaction {
   }
 
   _tryPickup(target) {
+    if (target.kind === 'drop') {
+      this.viewmodel.pickup();
+      this.drops.pick(target.obj, true);
+      this.target = null;
+      return true;
+    }
     if (target.kind !== 'object') return false;
     const t = OBJECT_TYPES[target.obj.type];
     if (!t.pickup) return false;
@@ -126,12 +127,28 @@ export class Interaction {
     const target = this._raycast();
     if (!target) return;
     _hit.copy(this.camera.position).addScaledVector(this.camera.getWorldDirection(_dir), target.t);
+    const playerPos = this.camera.position;
 
+    if (target.kind === 'drop') return;
     if (target.kind === 'tumbleweed') {
-      this.bursts.spawn(_hit, BURST_COLORS.tumbleweed, 18, 2);
-      this.tumbleweeds.remove(target.obj);
-      this._give([['fiber', 2], ['stick', 1]]);
+      const tw = target.obj;
+      tw.mesh.updateMatrixWorld(true);
+      this.debris.shatter(tw.mesh.geometry, tw.mesh.matrixWorld, { pieces: 6, inner: 0xb49c6c, power: 1.5, life: 1.6, closed: false });
+      this.drops.spawn('fiber', 2, tw.mesh.position);
+      this.drops.spawn('stick', 1, tw.mesh.position);
+      this.tumbleweeds.remove(tw);
       events.emit('harvest', { type: 'tumbleweed' });
+      events.emit('hitFeedback', { strength: 0.3 });
+      return;
+    }
+    if (target.kind === 'log') {
+      if (!def || def.tool !== 'axe') {
+        this.debris.chips(_hit, 0x5b4838, 3, null, 0.6);
+        events.emit('message', { text: 'Tarvitset kirveen' });
+        return;
+      }
+      this.fallen.hit(target.obj, _hit.clone(), playerPos);
+      events.emit('hitFeedback', { strength: 0.6 });
       return;
     }
 
@@ -142,34 +159,20 @@ export class Interaction {
       return;
     }
     if (!t.harvest) {
-      this.bursts.spawn(_hit, BURST_COLORS[obj.type] || 0x8a7a6a, 6, 1);
+      this.debris.chips(_hit, 0x9a5a36, 4, null, 0.6);
       return;
     }
     const h = t.harvest;
     if (!this._toolOk(h, def)) {
       this.world.shake(obj, 0.3);
-      this.bursts.spawn(_hit, BURST_COLORS[obj.type] || 0x8a7a6a, 5, 0.8);
+      this.debris.chips(_hit, 0x8a7a6a, 3, null, 0.6);
       events.emit('message', { text: h.needMsg });
       return;
     }
     // Työkalu tehoaa kaksinkertaisesti pensaisiin.
     const dmg = def && def.tool && !h.tool ? 2 : 1;
-    obj.hp -= dmg;
-    this.world.shake(obj, obj.type === 'boulder' ? 0.25 : 1);
-    this.bursts.spawn(_hit, BURST_COLORS[obj.type] || 0x8a7a6a, 14, 1.6);
-    if (obj.hp <= 0) {
-      this.world.removeObject(obj);
-      this._give(h.drops);
-      events.emit('harvest', { type: obj.type });
-    }
-  }
-
-  _give(drops) {
-    for (const [id, n] of drops) {
-      const left = this.inventory.add(id, n);
-      if (n - left > 0) events.emit('notify', { item: id, count: n - left });
-      if (left > 0) events.emit('message', { text: 'Reppu on täynnä' });
-    }
+    this.breakables.hit(obj, _hit.clone(), playerPos, dmg);
+    events.emit('hitFeedback', { strength: t.kind === 'bush' ? 0.3 : 0.6 });
   }
 
   // Missä kohtaa katse osuu maahan (asettamista varten).
@@ -182,12 +185,10 @@ export class Interaction {
       const y = o.y + _dir.y * t;
       const z = o.z + _dir.z * t;
       if (y <= heightAt(x, z)) {
-        // Hienosäätö puolittamalla
         let lo = prev, hi = t;
         for (let i = 0; i < 6; i++) {
           const m = (lo + hi) / 2;
-          const yy = o.y + _dir.y * m;
-          if (yy <= heightAt(o.x + _dir.x * m, o.z + _dir.z * m)) hi = m; else lo = m;
+          if (o.y + _dir.y * m <= heightAt(o.x + _dir.x * m, o.z + _dir.z * m)) hi = m; else lo = m;
         }
         const px = o.x + _dir.x * hi;
         const pz = o.z + _dir.z * hi;
@@ -200,14 +201,14 @@ export class Interaction {
 
   _canPlace(pos) {
     const p = this.player.position;
-    const d = Math.hypot(pos.x - p.x, pos.z - p.z);
-    if (d < 1.1) return false;
+    if (Math.hypot(pos.x - p.x, pos.z - p.z) < 1.1) return false;
     const s = sampleTerrain(pos.x, pos.z, {});
     if (s.h < WATER_LEVEL + 0.1) return false;
     const slope = Math.abs(heightAt(pos.x + 0.6, pos.z) - heightAt(pos.x - 0.6, pos.z)) + Math.abs(heightAt(pos.x, pos.z + 0.6) - heightAt(pos.x, pos.z - 0.6));
     if (slope > 0.7) return false;
     this.world.collidersNear(pos.x, pos.z, 2, _cols);
     for (const c of _cols) {
+      if (c.seg) continue;
       if (Math.hypot(c.x - pos.x, c.z - pos.z) < c.r + 0.7) return false;
     }
     return true;

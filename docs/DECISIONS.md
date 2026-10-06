@@ -2,6 +2,26 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-06 (sessio 3)
+- **Maailma on vyöhykkeellinen ympyrä (säde 10 km), ja joka maailmalla on oma siemen.** Syy: käyttäjän luonnos (spawn -> tier 1 Sahel -> tier 2 aavikko/sademetsä -> vuoristoreuna) ja toive valtavasta maailmasta. Vyöhykkeiden rajat vääristetään kohinalla, jotta ne ovat epäsäännöllisiä ja joka siemenellä erilaisia.
+- **Aavikko ja sademetsä painottuvat maailman vastakkaisille puolille** (suunta arvotaan siemenestä). Syy: pelkkä kohina sekoitti ne pieniksi läikiksi; näin syntyy yhtenäisiä alueita, vähän kuin Sahara pohjoisessa ja Guinean metsät etelässä.
+- **Maailman reunan takana on läpäisemätön vuoriseinämä**, ja pelaaja työnnetään takaisin. Syy: luonnoksessa ulkoreuna on vuoristoa; reunan takaa ei ole päätetty (avoin kysymys).
+- **Chunkien maasto tallennetaan paikallisissa koordinaateissa.** Syy: 10 km päässä keskeltä float32-tarkkuus riittää näin paremmin.
+- **Etäisyystasot (LOD):** lähellä tarkka malli ja varjo, kauempana kevyt malli ilman varjoa, pienet esineet (risut, kivet, pensaat) piilotetaan kaukana. Syy: tiheä sademetsä olisi muuten liian raskas; kolmioita on nyt n. 550 tuhatta.
+- **Hakattava esine irrotetaan instanssipoolista omaksi Meshikseen.** Syy: vain siihen voi tehdä lovia (verteksien muokkaus) ja säröjä (oma materiaali). Lovi tehdään tiheärunkoiseen versioon puusta, joka luodaan vain tarvittaessa.
+- **Puun lovi tulee aina kiinteään kaatokohtaan** sille puolelle, josta lyödään. Syy: puu halkaistaan kaatuessa kannoksi ja kaatuvaksi osaksi juuri siitä kohdasta (rungossa on siinä verteksirengas).
+- **Kaatuminen on yksinkertaista fysiikkaa** (sauva kaatuu tukipisteen ympäri, kiihtyvyys ~ sin(kulma), pomppu maahan osuessa). Syy: näyttää luonnolliselta ilman fysiikkakirjastoa.
+- **Kaatumissuunta on satunnainen, mutta ei suoraan pelaajaa kohti.** Syy: käyttäjä halusi satunnaisen suunnan; pieni poikkeus estää puuta kaatumasta pelaajan päälle. Helppo poistaa, jos halutaan täysi satunnaisuus.
+- **Kiven säröt piirretään shaderilla** (3D Voronoi -reunat, jotka leviävät vaurion kasvaessa) ja osumakohtaan painuu kuoppa. Syy: näyttää säröilyltä ilman tekstuureja.
+- **Murskautuminen:** geometria jaetaan paloihin ryhmittelemällä kolmiot; kivillä palat suljetaan sisäpinnoilla, ohuilla esineillä (oksat, lehdet) ei. Syy: ohuista osista syntyi muuten isoja levyjä.
+- **Saaliit ovat fyysisiä esineitä maassa**, ja ne poimitaan [E]:llä tai automaattisesti 1,5 m säteellä. Ne tallennetaan maailman mukana (enintään 250). Syy: käyttäjän toive.
+- **Päävalikko on HTML/CSS:ää ilman kuvatiedostoja**, ja taustalla on elävä pelimaailma auringonlaskussa. Syy: tyyli saadaan mallikuvan kaltaiseksi, ja tausta näyttää pelin oikeaa grafiikkaa. Mallikuvaa ei käytetty suoraan, koska logo ja napit ovat siinä osa kuvaa.
+- **Fontit kopioitu repoon** (`assets/fonts/`, OFL/Apache-lisenssit mukana). Syy: toimivat ilman ulkoisia palveluja.
+- **Useita maailmoja tallennetaan erikseen** (`sahel.worlds.v2` + maailmakohtainen data), asetukset omanaan. Vanha v1-tallennus jätetään huomiotta. Syy: siemen per maailma.
+- **Pelin aloitus vaatii klikkauksen latauksen jälkeen.** Syy: selain sallii hiiren lukituksen vain käyttäjän eleestä.
+- **Sademetsässä hiekkamyrsky ja hiekkausva näkyvät sumuna.** Syy: hiekkailmiöt eivät sovi sademetsään; sää on silti koko maailmalle yhteinen.
+- **Vesitaso jaettu pienempiin kolmioihin.** Syy: ohjelmistorenderöijä piirsi ison kameran alta kulkevan kolmion väärin (vesi näkyi maan päällä); korjaus on halpa.
+
 ## 2026-10-06 (sessio 2)
 - **Peli tehdään selaimeen three.js:llä ilman käännösvaihetta.** Syy: käyttäjä testaa raw.githack-linkillä ilman asennuksia; ES-moduulit + import map toimivat suoraan staattisena sivuna. three.js tukee PBR-materiaaleja, varjoja ja glTF-malleja, joten grafiikkaa voi myöhemmin parantaa samalla pohjalla.
 - **three.js (r186) on kopioitu repoon (`vendor/three/`, minifioitu) eikä ladata CDN:stä.** Syy: versio pysyy lukittuna, peli toimii vaikka CDN olisi estetty, ja paikallinen testaus onnistuu. Lisenssi (MIT) mukana.

@@ -58,6 +58,13 @@ export class InstancePool {
     this.mesh.instanceMatrix.needsUpdate = true;
   }
 
+  // Tyhjennä kaikki instanssit (maailman vaihto).
+  clear() {
+    this.free = [];
+    this.used = 0;
+    this.mesh.count = 0;
+  }
+
   remove(slot) {
     this.mesh.setMatrixAt(slot, ZERO);
     this.mesh.instanceMatrix.needsUpdate = true;

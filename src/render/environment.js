@@ -35,6 +35,9 @@ export const WEATHER = {
   sandstorm: { name: 'Hiekkamyrsky', cloud: 0.65, vis: 34, sunMul: 0.18, wind: 1.0, dust: 1.0, haze: 1.0, tint: 0xb87a3e, tintAmt: 0.92, grey: 0 },
 };
 export const WEATHER_KEYS = Object.keys(WEATHER);
+// Päävalikon taustan tunnelmallinen auringonlasku (ei satunnaisessa säässä).
+WEATHER.menu = { name: 'Selkeä', cloud: 0.5, vis: 330, sunMul: 1.0, wind: 0.25, dust: 0.08, haze: 0.04, tint: 0xffffff, tintAmt: 0, grey: 0 };
+const HUMID_TINT = new THREE.Color(0xa9b5a2);
 
 const NUMERIC = ['cloud', 'vis', 'sunMul', 'wind', 'dust', 'haze', 'tintAmt', 'grey'];
 
@@ -78,7 +81,13 @@ export class Environment {
     // Sää
     this.weatherKey = 'clear';
     this.targetKey = 'clear';
+    // gw = koko maailman sää (vaihtuu pehmeästi), w = paikallinen tehollinen sää
+    this.gw = { ...WEATHER.clear, tint: new THREE.Color(WEATHER.clear.tint) };
     this.w = { ...WEATHER.clear, tint: new THREE.Color(WEATHER.clear.tint) };
+    this.humid = 0;
+    this.humidTarget = 0;
+    this.frozen = false; // päävalikossa aika ja sää eivät etene
+    this.maxVis = 330;   // näköetäisyysasetuksen mukaan
     this.weatherTimer = 240 + Math.random() * 180;
     this.windDir = new THREE.Vector2(-0.7071, 0.7071);
     this.windAngle = Math.atan2(0.7071, -0.7071);
@@ -102,7 +111,7 @@ export class Environment {
     this.weatherTimer = this._durationFor(key);
     if (instant) {
       this.weatherKey = key;
-      Object.assign(this.w, WEATHER[key], { tint: new THREE.Color(WEATHER[key].tint) });
+      Object.assign(this.gw, WEATHER[key], { tint: new THREE.Color(WEATHER[key].tint) });
     }
   }
 
@@ -120,7 +129,7 @@ export class Environment {
       cloudy: { clear: 4, cloudy: 1, haze: 2, sandstorm: 0.5 },
       haze: { clear: 3, cloudy: 1, haze: 1, sandstorm: 3 },
       sandstorm: { clear: 1, cloudy: 1, haze: 4, sandstorm: 0 },
-    }[from];
+    }[from] || { clear: 3, cloudy: 1, haze: 1, sandstorm: 0 };
     let total = 0;
     for (const k in table) total += table[k];
     let r = Math.random() * total;
@@ -135,18 +144,41 @@ export class Environment {
     return WEATHER[this.targetKey].name;
   }
 
-  update(dt, playerPos, elapsed) {
-    this.time += dt * this.timeScale;
-    if (this.time >= 24) { this.time -= 24; this.day++; }
+  // Paikallinen kosteus 0..1 (sademetsä): hiekka-ilmiöt muuttuvat sumuksi.
+  setLocalHumidity(h) {
+    this.humidTarget = h;
+  }
 
-    // --- Sään vaihtuminen ja pehmeä siirtymä
-    this.weatherTimer -= dt;
-    if (this.weatherTimer <= 0) this.setWeather(this._pickNextWeather());
+  update(dt, playerPos, elapsed) {
+    if (!this.frozen) {
+      this.time += dt * this.timeScale;
+      if (this.time >= 24) { this.time -= 24; this.day++; }
+      this.weatherTimer -= dt;
+      if (this.weatherTimer <= 0) this.setWeather(this._pickNextWeather());
+    }
+
+    // --- Sään pehmeä siirtymä
     const target = WEATHER[this.targetKey];
     const k = 1 - Math.exp(-dt / 9); // n. 25-30 s täyteen siirtymään
-    for (const n of NUMERIC) this.w[n] = lerp(this.w[n], target[n], k);
-    this.w.tint.lerp(_c.set(target.tint), k);
-    if (Math.abs(this.w.vis - target.vis) < 1) this.weatherKey = this.targetKey;
+    const g = this.gw;
+    for (const n of NUMERIC) g[n] = lerp(g[n], target[n], k);
+    g.tint.lerp(_c.set(target.tint), k);
+    if (Math.abs(g.vis - target.vis) < 1) this.weatherKey = this.targetKey;
+
+    // --- Paikallinen tehollinen sää
+    this.humid += (this.humidTarget - this.humid) * Math.min(1, dt * 0.5);
+    const H = this.humid;
+    const we = this.w;
+    for (const n of NUMERIC) we[n] = g[n];
+    we.tint.copy(g.tint);
+    if (H > 0.001) {
+      we.dust = g.dust * (1 - H);
+      we.haze = lerp(g.haze, Math.min(g.haze, 0.3), H);
+      we.vis = lerp(g.vis, Math.max(g.vis, 170), H);
+      we.wind = g.wind * (1 - 0.6 * H);
+      we.tintAmt = lerp(g.tintAmt, Math.min(g.tintAmt, 0.3), H);
+      we.tint.lerp(HUMID_TINT, H);
+    }
 
     // Tuulen suunta vaihtelee hitaasti koillisen ympärillä.
     const ang = this.windAngle + Math.sin(elapsed * 0.03) * 0.35;
@@ -206,7 +238,8 @@ export class Environment {
     // Sumu
     const fogC = tinted(lerpC('fog', this.scene.fog.color));
     u.uFogColor.value.copy(fogC);
-    const vis = Math.min(w.vis, 330);
+    // Selkeällä/pilvisellä säällä näkyvyys = näköetäisyys, usvassa ja myrskyssä sään oma.
+    const vis = Math.min(w.vis >= 290 ? this.maxVis : w.vis, this.maxVis);
     this.scene.fog.far = vis;
     this.scene.fog.near = vis < 100 ? 0 : vis * 0.12;
 

@@ -1,4 +1,4 @@
-// Sahel: pelin käynnistys ja pääsilmukka.
+// Sahel: käynnistys, tilat (päävalikko / lataus / peli / tauko / reppu) ja pääsilmukka.
 import * as THREE from 'three';
 import { CONFIG } from './config.js';
 import { createGroundDetailTexture } from './render/textures.js';
@@ -6,32 +6,39 @@ import { createSharedMaterials } from './render/materials.js';
 import { Sky } from './render/sky.js';
 import { Environment, WEATHER, WEATHER_KEYS } from './render/environment.js';
 import { Dust, Bursts } from './render/particles.js';
+import { Debris } from './render/debris.js';
 import { createModelLibrary } from './models/models.js';
 import { World } from './world/world.js';
 import { Tumbleweeds } from './world/tumbleweeds.js';
-import { findSpawn } from './world/terrain.js';
+import { findSpawn, findBiome, setWorldSeed, seedFromString, sampleTerrain, heightAt } from './world/terrain.js';
 import { Player } from './player/player.js';
 import { Input } from './player/input.js';
 import { ViewModel } from './player/viewmodel.js';
 import { Inventory } from './game/inventory.js';
 import { Guide } from './game/guide.js';
 import { Structures } from './game/structures.js';
+import { Drops } from './game/drops.js';
+import { FallenTrees } from './game/fallen.js';
+import { Breakables } from './game/breakables.js';
 import { Interaction } from './game/interaction.js';
 import { events } from './game/events.js';
-import { loadGame, saveGame, clearSave } from './game/save.js';
+import { loadWorldData, saveWorldData, loadSettings } from './game/save.js';
 import { renderItemIcons } from './ui/icons.js';
 import { Hud } from './ui/hud.js';
 import { Minimap } from './ui/minimap.js';
 import { GuideUI } from './ui/guideUI.js';
 import { InventoryUI } from './ui/inventoryUI.js';
+import { Menu } from './ui/menu.js';
 
 const $ = (id) => document.getElementById(id);
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
+const MENU_SEED = seedFromString('sahel-valikko');
+// Maisemallinen paikka valikon taustalle (dyynit, akasiat ja lateriitti näkyvissä).
+const MENU_SPOT = { x: -2650, z: -495, yaw: 2.3, time: 17.1 };
 
 // --- Renderöijä ja kamera ----------------------------------------------------
 const canvas = $('game');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -39,10 +46,11 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.autoClear = false;
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 1200);
+const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 1500);
 
-// --- Maailma ja järjestelmät --------------------------------------------------
+// --- Järjestelmät -------------------------------------------------------------
 const materials = createSharedMaterials(createGroundDetailTexture());
+const activeMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
 const models = createModelLibrary();
 const sky = new Sky(scene);
 const env = new Environment(scene, renderer, sky);
@@ -50,6 +58,10 @@ const world = new World(scene, materials, models);
 const tumbleweeds = new Tumbleweeds(scene, models.tumbleweed, materials.solid);
 const dust = new Dust(scene);
 const bursts = new Bursts(scene);
+const debris = new Debris(scene);
+const drops = new Drops(scene, models.items);
+const fallen = new FallenTrees({ scene, world, models, material: activeMaterial, debris, drops, bursts });
+const breakables = new Breakables({ world, models, debris, drops, fallen, material: activeMaterial });
 const structures = new Structures(scene, models, world);
 
 const inventory = new Inventory();
@@ -57,7 +69,7 @@ const guide = new Guide();
 const player = new Player(camera);
 const input = new Input(canvas);
 const viewmodel = new ViewModel(models.items);
-const interaction = new Interaction({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, bursts });
+const interaction = new Interaction({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables });
 
 const icons = renderItemIcons(models.items);
 const hud = new Hud(inventory, icons);
@@ -65,130 +77,246 @@ const minimap = new Minimap();
 new GuideUI(guide);
 const invUI = new InventoryUI(inventory, icons);
 
-// --- Tallennus ---------------------------------------------------------------
-let resetting = false;
-const save = loadGame();
-if (save) {
-  world.load(save.removed);
-  inventory.load(save.inventory);
-  guide.load(save.guide);
-  env.load(save.env);
-  structures.load(save.structures);
-}
-if (!save || !player.load(save.player)) {
-  const sp = findSpawn();
-  player.teleport(sp.x, sp.z);
-  player.yaw = Math.PI * 0.75;
-}
+const settings = loadSettings();
+const menu = new Menu({
+  settings,
+  onPlay: (meta) => startWorld(meta),
+  onResume: () => input.lock(),
+  onQuit: () => quitToMenu(),
+  onSettings: (s) => applySettings(s),
+});
 
-function persist() {
-  if (resetting) return;
-  saveGame({
-    player: player.serialize(),
-    inventory: inventory.serialize(),
-    guide: guide.serialize(),
-    env: env.serialize(),
-    removed: world.serialize(),
-    structures: structures.serialize(),
-  });
+// --- Asetukset ------------------------------------------------------------------
+let shadowMode = null;
+function applySettings(s) {
+  input.sensitivity = 0.0022 * s.sensitivity;
+  input.invertY = !!s.invertY;
+  camera.fov = s.fov;
+  camera.updateProjectionMatrix();
+  if (world.viewRadius !== s.viewDistance) world.setViewRadius(s.viewDistance);
+  env.maxVis = s.viewDistance * 64 + 10;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5) * s.renderScale);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  if (s.shadows !== shadowMode) {
+    const prevEnabled = renderer.shadowMap.enabled;
+    shadowMode = s.shadows;
+    renderer.shadowMap.enabled = s.shadows !== 'off';
+    const size = s.shadows === 'high' ? 4096 : 2048;
+    if (env.sun.shadow.mapSize.x !== size) {
+      env.sun.shadow.mapSize.set(size, size);
+      if (env.sun.shadow.map) { env.sun.shadow.map.dispose(); env.sun.shadow.map = null; }
+    }
+    if (prevEnabled !== renderer.shadowMap.enabled) {
+      scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; });
+    }
+  }
+  $('fps').classList.toggle('hidden', !s.showFps);
 }
-window.addEventListener('beforeunload', persist);
-document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
+applySettings(settings);
 
-// --- Tilat: start / playing / paused / inventory -------------------------------
-let state = 'start';
+// --- Tila ---------------------------------------------------------------------------
+let state = 'boot'; // boot | menu | loading | ready | playing | paused | inventory
+let currentWorld = null;
 let wantInventory = false;
-const menu = $('menu');
-const playBtn = $('btn-play');
+const menuCam = { x: 0, z: 0, t: 0 };
 
 function setState(s) {
   state = s;
-  menu.classList.toggle('hidden', s === 'playing' || s === 'inventory');
+  const inGame = s === 'playing' || s === 'paused' || s === 'inventory';
+  $('hud').classList.toggle('hidden', !inGame);
   if (s !== 'inventory') invUI.hide();
-  if (s === 'paused') {
-    menu.querySelector('h1').textContent = 'SAHEL';
-    playBtn.textContent = 'Jatka';
-    persist();
+  if (s === 'playing') {
+    menu.hidePause();
+    menu.hideLoading();
+    // Valikon nappi ei saa jäädä kohdistetuksi (välilyönti painaisi sitä).
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   }
-  refreshMenu();
+  if (s === 'paused') menu.showPause(statusText());
 }
 
-playBtn.addEventListener('click', () => input.lock());
-canvas.addEventListener('click', () => { if (state === 'playing' && !input.locked) input.lock(); });
-
-document.addEventListener('pointerlockchange', () => {
-  if (input.locked) {
-    setState('playing');
-  } else if (wantInventory) {
-    wantInventory = false;
-    setState('inventory');
-    invUI.show();
-  } else if (state === 'playing') {
-    setState('paused');
-  }
-});
-document.addEventListener('pointerlockerror', () => {
-  if (state !== 'start') setState('paused');
-});
-
-function openInventory() {
-  wantInventory = true;
-  input.unlock();
+function statusText() {
+  return currentWorld ? `${currentWorld.name} · päivä ${env.day}, klo ${fmtTime(env.time)} · ${env.weatherName}` : '';
 }
-function closeInventory() {
-  invUI.hide();
-  input.lock();
-  // Jos selain ei anna lukita hiirtä heti, näytetään taukovalikko.
-  setTimeout(() => { if (state === 'inventory' && !input.locked) setState('paused'); }, 600);
-}
-
-window.addEventListener('keydown', (e) => {
-  if (state === 'playing' && (e.code === 'Tab' || e.code === 'KeyI')) {
-    e.preventDefault();
-    openInventory();
-  } else if (state === 'inventory' && (e.code === 'Tab' || e.code === 'KeyI' || e.code === 'Escape')) {
-    e.preventDefault();
-    closeInventory();
-  }
-});
-
-// Testaustyökalut valikossa
-const weatherBtns = $('weather-btns');
-for (const k of WEATHER_KEYS) {
-  const b = document.createElement('button');
-  b.textContent = WEATHER[k].name;
-  b.dataset.key = k;
-  b.addEventListener('click', () => { env.setWeather(k, true); refreshMenu(); });
-  weatherBtns.appendChild(b);
-}
-const timeBtns = $('time-btns');
-for (const [label, h] of [['Aamu', 7], ['Päivä', 12.5], ['Ilta', 17.8], ['Yö', 23], ['+1 h', null]]) {
-  const b = document.createElement('button');
-  b.textContent = label;
-  b.addEventListener('click', () => { env.setTime(h === null ? env.time + 1 : h); refreshMenu(); });
-  timeBtns.appendChild(b);
-}
-$('btn-reset').addEventListener('click', () => {
-  if (!confirm('Aloitetaanko uusi peli? Nykyinen edistyminen poistetaan.')) return;
-  resetting = true;
-  clearSave();
-  location.reload();
-});
 
 function fmtTime(h) {
   const hh = Math.floor(h);
   const mm = Math.floor((h - hh) * 60);
   return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
 }
-const touchOnly = window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(pointer: fine)').matches;
-function refreshMenu() {
-  $('menu-status').textContent = touchOnly
-    ? 'Peli vaatii toistaiseksi hiiren ja näppäimistön (tietokone).'
-    : `Päivä ${env.day}, klo ${fmtTime(env.time)} · ${env.weatherName}`;
-  for (const b of weatherBtns.children) b.classList.toggle('on', b.dataset.key === env.targetKey);
+
+function clearWorldState() {
+  world.reset();
+  structures.clear();
+  drops.clear();
+  fallen.clear();
+  debris.clear();
+  tumbleweeds.clear();
 }
 
-// --- Koko ----------------------------------------------------------------------
+async function buildAround(x, z, onProgress) {
+  world.update(x, z, 0, 0);
+  const total = world.queue.length || 1;
+  while (world.queue.length) {
+    world.update(x, z, 0, 5);
+    onProgress?.(1 - world.queue.length / total);
+    await nextFrame();
+  }
+}
+
+// Päävalikko: tausta on oikea pelimaailma auringonlaskussa.
+async function enterMenu(first = false) {
+  state = 'loading';
+  $('hud').classList.add('hidden');
+  setWorldSeed(MENU_SEED);
+  clearWorldState();
+  env.frozen = true;
+  env.setTime(MENU_SPOT.time);
+  env.setWeather('menu', true);
+  env.setLocalHumidity(0);
+  const sp = MENU_SPOT;
+  menuCam.x = sp.x;
+  menuCam.z = sp.z;
+  menuCam.t = 0;
+  player.teleport(sp.x, sp.z);
+  if (first) menu.showLoading('Ladataan…');
+  await buildAround(sp.x, sp.z, (p) => menu.setLoading(p));
+  menu.hideLoading();
+  state = 'menu';
+  menu.showMain();
+}
+
+async function startWorld(meta) {
+  if (state === 'loading') return;
+  state = 'loading';
+  menu.hideMain();
+  const data = loadWorldData(meta.id);
+  menu.showLoading(data ? `Ladataan maailmaa ”${meta.name}”…` : `Luodaan maailmaa ”${meta.name}”…`);
+  await nextFrame();
+  currentWorld = meta;
+  setWorldSeed(meta.seed);
+  clearWorldState();
+  env.frozen = false;
+  inventory.load(data ? data.inventory : { slots: [] });
+  guide.load(data ? data.guide : { step: 0, stats: {} });
+  world.load(data ? data.world : null);
+  if (data && data.env) env.load(data.env);
+  else { env.setTime(CONFIG.startHour); env.setWeather('clear', true); env.day = 1; }
+  if (!data || !player.load(data.player)) {
+    const sp = findSpawn();
+    player.teleport(sp.x, sp.z);
+    player.yaw = Math.PI * 0.75;
+    player.pitch = 0;
+  }
+  player.stamina = CONFIG.staminaMax;
+  await buildAround(player.position.x, player.position.z, (p) => menu.setLoading(p));
+  structures.load(data ? data.structures : []);
+  drops.load(data ? data.drops : []);
+  fallen.load(data ? data.fallen : []);
+  player.update(0, input, world);
+  state = 'ready';
+  menu.loadingReady('Maailma on valmis', () => input.lock());
+}
+
+function persist() {
+  if (!currentWorld || state === 'loading' || state === 'menu') return;
+  saveWorldData(currentWorld.id, {
+    seed: currentWorld.seed,
+    player: player.serialize(),
+    inventory: inventory.serialize(),
+    guide: guide.serialize(),
+    env: env.serialize(),
+    world: world.serialize(),
+    structures: structures.serialize(),
+    drops: drops.serialize(),
+    fallen: fallen.serialize(),
+  });
+}
+
+async function quitToMenu() {
+  persist();
+  currentWorld = null;
+  menu.hidePause();
+  invUI.hide();
+  menu.showLoading('Palataan päävalikkoon…');
+  await nextFrame();
+  await enterMenu();
+}
+
+window.addEventListener('beforeunload', persist);
+document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
+
+// --- Hiiren lukitus ja näppäimet ---------------------------------------------------
+document.addEventListener('pointerlockchange', () => {
+  if (input.locked) {
+    if (state === 'ready' || state === 'paused' || state === 'inventory') setState('playing');
+  } else if (wantInventory) {
+    wantInventory = false;
+    setState('inventory');
+    invUI.show();
+  } else if (state === 'playing') {
+    persist();
+    setState('paused');
+  }
+});
+document.addEventListener('pointerlockerror', () => {
+  if (state === 'inventory') setState('paused');
+});
+canvas.addEventListener('click', () => { if (state === 'playing' && !input.locked) input.lock(); });
+
+window.addEventListener('keydown', (e) => {
+  if (state === 'playing' && (e.code === 'Tab' || e.code === 'KeyI')) {
+    e.preventDefault();
+    wantInventory = true;
+    input.unlock();
+  } else if (state === 'inventory' && (e.code === 'Tab' || e.code === 'KeyI' || e.code === 'Escape')) {
+    e.preventDefault();
+    invUI.hide();
+    input.lock();
+    setTimeout(() => { if (state === 'inventory' && !input.locked) setState('paused'); }, 600);
+  } else if (e.code === 'Escape') {
+    if (state === 'paused') menu.back(menu.pause);
+    else if (state === 'menu') menu.back(menu.main);
+  }
+});
+
+// --- Testaustyökalut taukovalikossa -----------------------------------------------------
+function refreshTestButtons() {
+  for (const b of $('weather-btns').children) b.classList.toggle('on', b.dataset.key === env.targetKey);
+  $('pm-status').textContent = statusText();
+}
+for (const k of WEATHER_KEYS) {
+  const b = document.createElement('button');
+  b.className = 'mini-btn';
+  b.textContent = WEATHER[k].name;
+  b.dataset.key = k;
+  b.addEventListener('click', () => { env.setWeather(k, true); refreshTestButtons(); });
+  $('weather-btns').appendChild(b);
+}
+for (const [label, h] of [['Aamu', 7], ['Päivä', 12.5], ['Ilta', 17.8], ['Yö', 23], ['+1 h', null]]) {
+  const b = document.createElement('button');
+  b.className = 'mini-btn';
+  b.textContent = label;
+  b.addEventListener('click', () => { env.setTime(h === null ? env.time + 1 : h); refreshTestButtons(); });
+  $('time-btns').appendChild(b);
+}
+for (const [label, key] of [['Sahel', 'savanna'], ['Dyynit', 'dunes'], ['Aavikko', 'desert'], ['Sademetsä', 'rainforest'], ['Vuoristo', 'mountains']]) {
+  const b = document.createElement('button');
+  b.className = 'mini-btn';
+  b.textContent = label;
+  b.addEventListener('click', async () => {
+    const p = key === 'savanna' ? findSpawn() : findBiome(key, player.position.x, player.position.z);
+    if (!p) { $('pm-status').textContent = 'Biomia ei löytynyt'; return; }
+    $('pm-status').textContent = 'Siirrytään…';
+    await nextFrame();
+    player.teleport(p.x, p.z);
+    world.buildAllNow(p.x, p.z);
+    player.update(0, input, world);
+    refreshTestButtons();
+  });
+  $('tp-btns').appendChild(b);
+}
+
+// --- Koko ------------------------------------------------------------------------------
 function resize() {
   const w = window.innerWidth;
   const h = window.innerHeight;
@@ -200,11 +328,21 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// --- Pääsilmukka -----------------------------------------------------------------
+// --- Tuntuma: kameran tärinä puun kaatuessa ja osumista -----------------------------------------
+let shake = 0;
+events.on('impact', ({ x, z, strength }) => {
+  const d = Math.hypot(x - player.position.x, z - player.position.z);
+  shake = Math.max(shake, strength * Math.max(0, 1 - d / 35));
+});
+events.on('hitFeedback', ({ strength }) => { shake = Math.max(shake, strength * 0.12); });
+
+// --- Pääsilmukka --------------------------------------------------------------------------
 let last = performance.now();
 let elapsed = 0;
 let saveTimer = CONFIG.autosaveSec;
+let edgeMsgTimer = 0;
 const fps = { frames: 0, t: 0, value: 0 };
+const _s = {};
 
 function handleHotbar() {
   for (let i = 0; i < CONFIG.hotbarSize; i++) {
@@ -226,41 +364,76 @@ function handleHotbar() {
   }
 }
 
+function updateMenuCamera(dt) {
+  menuCam.t += dt;
+  const t = menuCam.t;
+  const x = menuCam.x + Math.sin(t * 0.03) * 5;
+  const z = menuCam.z + Math.cos(t * 0.021) * 3;
+  const y = Math.max(heightAt(x, z), CONFIG.waterLevel) + 3 + Math.sin(t * 0.2) * 0.12;
+  camera.position.set(x, y, z);
+  // Katse kohti laskevaa aurinkoa, hidas panorointi.
+  camera.rotation.set(0.05 + Math.sin(t * 0.07) * 0.02, MENU_SPOT.yaw + Math.sin(t * 0.045) * 0.18, 0, 'YXZ');
+  player.position.set(x, y - 3, z);
+}
+
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
+  const inGame = state === 'playing' || state === 'inventory' || state === 'paused' || state === 'ready';
   const running = state === 'playing' || state === 'inventory';
-  const simDt = running ? dt : 0;
+  const simDt = running || state === 'menu' ? dt : 0;
   elapsed += simDt;
   input.enabled = state === 'playing';
 
   if (state === 'playing') handleHotbar();
 
-  player.update(simDt, input, world);
-  world.update(player.position.x, player.position.z, simDt);
+  if (state === 'menu') updateMenuCamera(dt);
+  else if (inGame) player.update(running ? dt : 0, input, world);
+
+  if (state !== 'boot') world.update(player.position.x, player.position.z, simDt);
+  sampleTerrain(player.position.x, player.position.z, _s);
+  env.setLocalHumidity(_s.rainforest);
   env.update(simDt, player.position, elapsed);
   tumbleweeds.update(simDt, player.position, env.w.wind, env.windDir);
   if (state === 'playing') interaction.update(simDt, input);
   else structures.showGhost(null);
 
   structures.update(simDt, elapsed, player.position);
-  const fireNear = Math.max(0, 1 - structures.nearestFire / 7) * (1.2 - env.daylight);
-  viewmodel.setItem(inventory.selectedItem ? inventory.selectedItem.id : null);
-  viewmodel.update(simDt, player, input, env, camera, fireNear * 1.5);
-  dust.update(elapsed, camera.position, env);
+  drops.update(running ? dt : 0, elapsed, player, inventory);
+  fallen.update(running || state === 'menu' ? dt : 0);
+  debris.update(running ? dt : 0);
   bursts.update(simDt);
+  dust.update(elapsed, camera.position, env);
   sky.update(camera.position);
-  guide.update(simDt);
 
-  hud.update(dt, { prompt: interaction.prompt, player, env, visible: state === 'playing' });
-  minimap.update(dt, player);
+  if (inGame) {
+    // Kameran tärinä
+    if (shake > 0.001) {
+      camera.position.x += (Math.random() - 0.5) * shake * 0.12;
+      camera.position.y += (Math.random() - 0.5) * shake * 0.12;
+      shake *= Math.exp(-dt * 6);
+    }
+    const fireNear = Math.max(0, 1 - structures.nearestFire / 7) * (1.2 - env.daylight);
+    viewmodel.setItem(inventory.selectedItem ? inventory.selectedItem.id : null);
+    viewmodel.update(simDt, player, input, env, camera, fireNear * 1.5);
+    guide.update(simDt);
+    hud.update(dt, { prompt: interaction.prompt, player, env, visible: state === 'playing' });
+    minimap.update(dt, player);
+    if (player.atEdge && state === 'playing') {
+      edgeMsgTimer -= dt;
+      if (edgeMsgTimer <= 0) { events.emit('message', { text: 'Maailman reuna' }); edgeMsgTimer = 3; }
+    }
+  } else {
+    hud.update(dt, { prompt: null, player, env, visible: false });
+  }
 
   renderer.clear();
   renderer.render(scene, camera);
-  renderer.clearDepth();
-  renderer.render(viewmodel.scene, viewmodel.camera);
-
+  if (inGame) {
+    renderer.clearDepth();
+    renderer.render(viewmodel.scene, viewmodel.camera);
+  }
   input.endFrame();
 
   if (running) {
@@ -268,33 +441,23 @@ function frame(now) {
     if (saveTimer <= 0) { saveTimer = CONFIG.autosaveSec; persist(); }
   }
   fps.frames++;
-  fps.t += dt;
-  if (fps.t >= 1) { fps.value = fps.frames / fps.t; fps.frames = 0; fps.t = 0; }
+  fps.t += (now - (frame.prev || now)) / 1000;
+  frame.prev = now;
+  if (fps.t >= 1) {
+    fps.value = fps.frames / fps.t;
+    fps.frames = 0;
+    fps.t = 0;
+    if (settings.showFps) $('fps').textContent = `${Math.round(fps.value)} FPS`;
+  }
 }
 
-// --- Käynnistys: rakenna lähialue ennen pelin alkua -----------------------------------
-async function boot() {
-  const fill = $('load-fill');
-  const px = player.position.x;
-  const pz = player.position.z;
-  world.update(px, pz, 0, 0);
-  const total = world.queue.length || 1;
-  while (world.queue.length) {
-    world.update(px, pz, 0, 6);
-    fill.style.width = `${Math.round((1 - world.queue.length / total) * 100)}%`;
-    await nextFrame();
-  }
-  // Varmista pelaajan korkeus valmiissa maastossa.
-  player.update(0, input, world);
-  env.update(0, player.position, 0);
-  $('loading').classList.add('hidden');
-  playBtn.disabled = false;
-  playBtn.textContent = save ? 'Jatka peliä' : 'Aloita';
-  refreshMenu();
-  last = performance.now();
-  requestAnimationFrame(frame);
-}
-boot();
+// --- Käynnistys ---------------------------------------------------------------------------
+requestAnimationFrame(frame);
+enterMenu(true);
 
 // Testausta ja vianetsintää varten (selaimen konsolissa: sahel.env.setWeather('sandstorm', true)).
-window.sahel = { THREE, renderer, scene, camera, env, world, player, input, inventory, invUI, guide, structures, tumbleweeds, viewmodel, interaction, fps, events, persist, setState: (s) => setState(s) };
+window.sahel = {
+  THREE, renderer, scene, camera, env, world, player, input, inventory, invUI, guide, structures, tumbleweeds,
+  viewmodel, interaction, drops, fallen, debris, breakables, menu, fps, events, persist, models,
+  startWorld, enterMenu, quitToMenu, setState: (s) => setState(s), get state() { return state; },
+};

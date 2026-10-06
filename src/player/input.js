@@ -12,6 +12,7 @@ export class Input {
     this.locked = false;
     this.enabled = true; // pois päältä, kun valikko/reppu on auki
     this.sensitivity = 0.0022;
+    this.invertY = false;
 
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Tab' || (this.locked && (e.code === 'Space' || e.code.startsWith('Arrow')))) e.preventDefault();

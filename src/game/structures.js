@@ -98,11 +98,23 @@ export class Structures {
     this.ghostMat.color.set(valid ? 0x88ff88 : 0xff6655);
   }
 
+  clear() {
+    for (const st of this.list) {
+      this.scene.remove(st.group);
+      const i = this.world.extraColliders.indexOf(st.collider);
+      if (i >= 0) this.world.extraColliders.splice(i, 1);
+    }
+    this.list = [];
+    this.nearestFire = Infinity;
+    for (const l of this.lights) l.intensity = 0;
+  }
+
   serialize() {
     return this.list.map((s) => ({ type: s.type, x: s.x, y: s.y, z: s.z, rot: s.rot }));
   }
 
   load(list) {
+    this.clear();
     if (!Array.isArray(list)) return;
     for (const s of list) {
       if (s && s.type === 'campfire' && Number.isFinite(s.x) && Number.isFinite(s.z)) {

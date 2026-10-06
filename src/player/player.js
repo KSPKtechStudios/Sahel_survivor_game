@@ -1,7 +1,7 @@
 // Pelaajan liikkuminen: kävely, juoksu, hyppy, törmäykset ja kestävyys.
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
-import { heightAt, WATER_LEVEL } from '../world/terrain.js';
+import { heightAt, edgeFactor, WATER_LEVEL } from '../world/terrain.js';
 
 const _fwd = new THREE.Vector3();
 const _right = new THREE.Vector3();
@@ -24,6 +24,7 @@ export class Player {
     this.bobAmount = 0;
     this.landDip = 0;
     this.speedNow = 0;
+    this.atEdge = false;
   }
 
   get eye() {
@@ -41,7 +42,7 @@ export class Player {
     // --- Katse
     if (input.locked && input.enabled) {
       this.yaw -= input.mouseDX * input.sensitivity;
-      this.pitch -= input.mouseDY * input.sensitivity;
+      this.pitch -= input.mouseDY * input.sensitivity * (input.invertY ? -1 : 1);
       this.pitch = Math.max(-1.55, Math.min(1.55, this.pitch));
     }
 
@@ -93,8 +94,17 @@ export class Player {
     const pr = CONFIG.playerRadius;
     world.collidersNear(p.x, p.z, 3, _colliders);
     for (const c of _colliders) {
-      const dx = p.x - c.x;
-      const dz = p.z - c.z;
+      let cx = c.x, cz = c.z;
+      if (c.seg) {
+        // Kaatunut runko: lähin piste janalla. Rungon päälle voi hypätä.
+        if (p.y > c.top - 0.15) continue;
+        const ux = c.bx - c.ax, uz = c.bz - c.az;
+        const t = Math.max(0, Math.min(1, ((p.x - c.ax) * ux + (p.z - c.az) * uz) / (ux * ux + uz * uz || 1)));
+        cx = c.ax + ux * t;
+        cz = c.az + uz * t;
+      }
+      const dx = p.x - cx;
+      const dz = p.z - cz;
       const min = c.r + pr;
       const d2 = dx * dx + dz * dz;
       if (d2 < min * min && d2 > 1e-8) {
@@ -103,6 +113,18 @@ export class Player {
         p.x += dx * push;
         p.z += dz * push;
       }
+    }
+
+    // --- Maailman reuna: työnnä takaisin kohti keskustaa
+    const edge = edgeFactor(p.x, p.z);
+    if (edge > 0.985) {
+      const len = Math.hypot(p.x, p.z) || 1;
+      const push = (edge - 0.985) * 400 * dt + 0.02;
+      p.x -= (p.x / len) * push;
+      p.z -= (p.z / len) * push;
+      this.atEdge = true;
+    } else {
+      this.atEdge = false;
     }
 
     // --- Maa ja vesi

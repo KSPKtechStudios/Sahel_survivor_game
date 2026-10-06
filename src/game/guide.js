@@ -12,7 +12,7 @@ export const GUIDE_STEPS = [
       { key: 'harvest:tumbleweed', label: 'Hakkaa tumbleweedejä', need: 2 },
       { key: 'pickup:stone', label: 'Kerää kiviä', need: 5 },
     ],
-    hint: '[E] poimi · [Hiiri 1] hakkaa',
+    hint: '[E] poimi · [Hiiri 1] hakkaa · kävele pudonneiden esineiden yli',
   },
   {
     title: 'Ensimmäinen työkalu',
@@ -22,8 +22,11 @@ export const GUIDE_STEPS = [
   },
   {
     title: 'Puuta',
-    text: 'Ota kirves käteen ja kaada akasia. Akasiat ovat matalia, sateenvarjon muotoisia puita.',
-    goals: [{ key: 'harvest:acacia', label: 'Kaada akasia', need: 1 }],
+    text: 'Ota kirves käteen ja kaada akasia (matala, sateenvarjon muotoinen puu). Pilko kaatunut runko ja kerää puut.',
+    goals: [
+      { key: 'harvest:acacia', label: 'Kaada akasia', need: 1 },
+      { key: 'harvest:log', label: 'Pilko kaatunut runko', need: 1 },
+    ],
     hint: '[1–8] tai rulla: valitse kirves',
   },
   {

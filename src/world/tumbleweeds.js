@@ -72,6 +72,8 @@ export class Tumbleweeds {
     const z = player.z - windDir.y * dist + windDir.x * side;
     const s = sampleTerrain(x, z, this._s);
     if (s.h < WATER_LEVEL + 0.2 || s.plateau > 0.5) return;
+    // Vain kuivilla alueilla (ei sademetsässä eikä vuorilla)
+    if (s.rainforest + s.mountains > 0.4) return;
     const mesh = new THREE.Mesh(this.geometry, this.material);
     const scale = 0.8 + Math.random() * 0.5;
     mesh.scale.setScalar(scale);
@@ -96,6 +98,11 @@ export class Tumbleweeds {
     const tw = this.list[i];
     this.scene.remove(tw.mesh);
     this.list.splice(i, 1);
+  }
+
+  clear() {
+    for (const tw of this.list) this.scene.remove(tw.mesh);
+    this.list = [];
   }
 
   remove(tw) {

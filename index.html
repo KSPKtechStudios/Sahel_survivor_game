@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sahel (prototyyppi)</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="menu.css">
   <script type="importmap">
     {
       "imports": {
@@ -18,19 +19,18 @@
   <canvas id="game"></canvas>
   <div id="weather-tint"></div>
 
-  <div id="hud">
+  <!-- ===================== HUD ===================== -->
+  <div id="hud" class="hidden">
     <div id="crosshair"></div>
     <div id="target">
       <div class="name"></div>
       <div class="action"></div>
       <div class="hpbar"><i></i></div>
     </div>
-
     <div id="minimap">
       <canvas id="minimap-canvas" width="176" height="176"></canvas>
       <div id="biome-name"></div>
     </div>
-
     <div id="guide">
       <div class="g-head"><span class="g-label">Opas</span><span class="g-step"></span></div>
       <div class="g-title"></div>
@@ -38,12 +38,12 @@
       <ul class="g-goals"></ul>
       <div class="g-hint"></div>
     </div>
-
     <div id="notifications"></div>
     <div id="message"></div>
     <div id="item-name"></div>
     <div id="stamina"><i></i></div>
     <div id="hotbar"></div>
+    <div id="fps" class="hidden"></div>
   </div>
 
   <div id="inventory" class="hidden">
@@ -62,47 +62,153 @@
   </div>
   <div id="drag-cursor"><img alt=""></div>
 
-  <div id="menu" class="overlay">
-    <div class="menu-card">
-      <h1>SAHEL</h1>
-      <div class="subtitle">työnimi · prototyyppi</div>
-      <div id="menu-status"></div>
-      <button id="btn-play" class="primary" disabled>Ladataan…</button>
-      <div class="menu-cols">
-        <section>
-          <h3>Ohjaimet</h3>
-          <dl class="keys">
-            <dt>W A S D</dt><dd>liiku</dd>
-            <dt>Shift</dt><dd>juokse</dd>
-            <dt>Välilyönti</dt><dd>hyppää</dd>
-            <dt>Hiiri 1</dt><dd>lyö / hakkaa (pidä pohjassa)</dd>
-            <dt>E</dt><dd>poimi</dd>
-            <dt>Hiiri 2</dt><dd>aseta (esim. nuotio)</dd>
-            <dt>1–8 / rulla</dt><dd>valitse esine</dd>
-            <dt>Tab tai I</dt><dd>reppu ja valmistus</dd>
-            <dt>Esc</dt><dd>tauko</dd>
-          </dl>
-        </section>
-        <section>
-          <h3>Testaus</h3>
-          <div class="test-row"><span>Sää</span><div class="btns" id="weather-btns"></div></div>
-          <div class="test-row"><span>Aika</span><div class="btns" id="time-btns"></div></div>
-          <div class="test-note">Pikanäppäimet: [O] seuraava sää, [L] +1 tunti</div>
-          <button id="btn-reset" class="danger">Aloita uusi peli</button>
-        </section>
+  <!-- ===================== Valikon osat (mallit) ===================== -->
+  <template id="tpl-scroll">
+    <div class="scroll">
+      <div class="scroll-frame">
+        <i class="orn tl"></i><i class="orn tr"></i><i class="orn bl"></i><i class="orn br"></i>
+        <div class="scroll-paper">
+          <span class="glyphs g1">Sahelin maa</span>
+          <span class="glyphs g2">· Burkina Faso ·</span>
+          <h1 class="scroll-title">Sahel</h1>
+          <div class="scroll-sub"></div>
+        </div>
+        <div class="roll left"></div>
+        <div class="roll right"></div>
       </div>
     </div>
+  </template>
+
+  <!-- ===================== Päävalikko ===================== -->
+  <div id="mainmenu" class="screen hidden">
+    <div class="mm-vignette"></div>
+    <div class="mm-stage">
+      <div class="scroll-slot"></div>
+      <div class="panels">
+        <div class="panel" data-panel="main">
+          <div class="btn-col">
+            <button class="wood-btn big" data-action="worlds"><span class="label">Pelaa</span></button>
+            <button class="wood-btn big" data-action="settings"><span class="label">Asetukset</span></button>
+          </div>
+        </div>
+
+        <div class="panel" data-panel="worlds">
+          <div class="board">
+            <div class="board-inner">
+              <h2>Maailmat</h2>
+              <div class="worlds-layout">
+                <div class="world-list-wrap">
+                  <h3>Tallennetut maailmat</h3>
+                  <div id="world-list"></div>
+                </div>
+                <div class="world-new">
+                  <h3>Uusi maailma</h3>
+                  <label class="field"><span>Nimi</span><input id="nw-name" maxlength="32" autocomplete="off"></label>
+                  <label class="field"><span>Siemen</span>
+                    <span class="seed-row">
+                      <input id="nw-seed" maxlength="24" placeholder="satunnainen" autocomplete="off">
+                      <button class="mini-btn" id="nw-dice" title="Arvo siemen" type="button">
+                        <svg viewBox="0 0 24 24" width="20" height="20"><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="8" r="1.6" fill="currentColor"/><circle cx="16" cy="16" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="16" cy="8" r="1.6" fill="currentColor"/><circle cx="8" cy="16" r="1.6" fill="currentColor"/></svg>
+                      </button>
+                    </span>
+                  </label>
+                  <div class="map-preview">
+                    <canvas id="nw-map" width="168" height="168"></canvas>
+                    <div class="map-legend">
+                      <span><i style="background:#b89a60"></i>Sahel</span>
+                      <span><i style="background:#e6bd84"></i>Aavikko</span>
+                      <span><i style="background:#4a6a2c"></i>Sademetsä</span>
+                      <span><i style="background:#7a6a60"></i>Vuoristo</span>
+                    </div>
+                  </div>
+                  <button class="wood-btn small" id="nw-create"><span class="label">Luo maailma</span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="wood-btn small back" data-action="back"><span class="label">Takaisin</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="mm-footer">työnimi · prototyyppi</div>
   </div>
 
-  <div id="loading" class="overlay">
-    <div class="load-card">
-      <div class="load-title">SAHEL</div>
-      <div class="load-text">Rakennetaan maailmaa…</div>
+  <!-- ===================== Asetukset (siirretään pää- tai taukovalikkoon) ===================== -->
+  <div class="panel" data-panel="settings" id="settings-panel">
+    <div class="board">
+      <div class="board-inner">
+        <h2>Asetukset</h2>
+        <div class="settings-grid">
+          <label class="set-row"><span>Hiiren herkkyys</span><input type="range" id="set-sens" min="0.2" max="3" step="0.05"><output id="out-sens"></output></label>
+          <label class="set-row"><span>Käännä pystyakseli</span><input type="checkbox" id="set-invert" class="toggle"><output></output></label>
+          <label class="set-row"><span>Näkökenttä</span><input type="range" id="set-fov" min="60" max="100" step="1"><output id="out-fov"></output></label>
+          <label class="set-row"><span>Näköetäisyys</span><input type="range" id="set-view" min="3" max="8" step="1"><output id="out-view"></output></label>
+          <div class="set-row"><span>Varjot</span>
+            <div class="seg" id="set-shadows">
+              <button type="button" data-v="off">Pois</button><button type="button" data-v="normal">Normaali</button><button type="button" data-v="high">Tarkka</button>
+            </div><output></output>
+          </div>
+          <label class="set-row"><span>Tarkkuus</span><input type="range" id="set-scale" min="0.5" max="1" step="0.05"><output id="out-scale"></output></label>
+          <label class="set-row"><span>Näytä FPS</span><input type="checkbox" id="set-fps" class="toggle"><output></output></label>
+        </div>
+      </div>
+    </div>
+    <button class="wood-btn small back" data-action="back"><span class="label">Takaisin</span></button>
+  </div>
+
+  <!-- ===================== Taukovalikko ===================== -->
+  <div id="pausemenu" class="screen hidden">
+    <div class="pm-dim"></div>
+    <div class="mm-stage compact">
+      <div class="scroll-slot"></div>
+      <div class="panels">
+        <div class="panel" data-panel="pause">
+          <div class="btn-col">
+            <button class="wood-btn big" data-action="resume"><span class="label">Jatka</span></button>
+            <button class="wood-btn big" data-action="settings"><span class="label">Asetukset</span></button>
+            <button class="wood-btn big" data-action="quit"><span class="label">Päävalikkoon</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <aside class="pm-side">
+      <div class="side-card">
+        <h3>Ohjaimet</h3>
+        <dl class="keys">
+          <dt>W A S D</dt><dd>liiku</dd>
+          <dt>Shift</dt><dd>juokse</dd>
+          <dt>Välilyönti</dt><dd>hyppää</dd>
+          <dt>Hiiri 1</dt><dd>lyö / hakkaa</dd>
+          <dt>E</dt><dd>poimi</dd>
+          <dt>Hiiri 2</dt><dd>aseta</dd>
+          <dt>1–8 / rulla</dt><dd>valitse esine</dd>
+          <dt>Tab / I</dt><dd>reppu</dd>
+        </dl>
+      </div>
+      <div class="side-card">
+        <h3>Testaus</h3>
+        <div id="pm-status" class="pm-status"></div>
+        <div class="test-row"><span>Sää</span><div class="btns" id="weather-btns"></div></div>
+        <div class="test-row"><span>Aika</span><div class="btns" id="time-btns"></div></div>
+        <div class="test-row"><span>Siirry</span><div class="btns" id="tp-btns"></div></div>
+        <div class="test-note">Pikanäppäimet: [O] sää, [L] +1 h</div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ===================== Lataus ===================== -->
+  <div id="loading" class="screen">
+    <div class="mm-vignette"></div>
+    <div class="load-box">
+      <div class="scroll-slot"></div>
+      <div class="load-text" id="load-text">Ladataan…</div>
       <div class="load-bar"><i id="load-fill"></i></div>
+      <button class="wood-btn small hidden" id="btn-enter"><span class="label">Klikkaa pelaamaan</span></button>
     </div>
   </div>
 
-  <div id="error" class="overlay hidden"><div class="menu-card"><h3>Virhe</h3><pre id="error-text"></pre></div></div>
+  <div id="puffs"></div>
+  <div id="error" class="screen hidden"><div class="error-card"><h3>Virhe</h3><pre id="error-text"></pre></div></div>
 
   <script>
     window.addEventListener('error', function (e) {
