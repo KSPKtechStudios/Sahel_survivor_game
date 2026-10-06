@@ -18,37 +18,41 @@ import { events } from './events.js';
 // multi = osuu useampaan, stagger = horjuttaa (s).
 // Iskusarja (useampi isku) on vain nopeilla ja kevyillä aseilla
 // (viidakkoveitsi); muilla on yksi isku ja jäähdytys.
+// Sessio 9: iskut ovat harkittuja ja harvoja. Yhden iskun kierto (kesto +
+// jäähdytys) on kevyillä noin 1,1 s ja raskaalla nuijalla noin 1,9 s; vahinkoa
+// on vastaavasti hieman enemmän. Kestävyyttä kuluu enemmän, joten jatkuva
+// huitominen loppuu nopeasti.
 export const WEAPONS = {
   fist: {
     name: 'Nyrkit', block: 'fist', reach: 1.9, combo: [
-      { anim: 'punch', dur: 0.36, hitAt: 0.42, chain: 1, cd: 0.4, dmg: 5, kb: 5, up: 1.2, stam: 5, arc: 0.6 },
+      { anim: 'punch', dur: 0.42, hitAt: 0.45, chain: 1, cd: 0.7, dmg: 6, kb: 5.5, up: 1.3, stam: 7, arc: 0.6 },
     ],
   },
   stick: {
     name: 'Risu', block: 'tool', reach: 2.3, combo: [
-      { anim: 'swing', dur: 0.45, hitAt: 0.5, chain: 1, cd: 0.35, dmg: 5, kb: 5.5, up: 1.2, stam: 5, arc: 0.55 },
+      { anim: 'swing', dur: 0.5, hitAt: 0.5, chain: 1, cd: 0.65, dmg: 6, kb: 6, up: 1.3, stam: 7, arc: 0.55 },
     ],
   },
   axe: {
     name: 'Kirves', block: 'tool', reach: 2.4, combo: [
-      { anim: 'swing', dur: 0.5, hitAt: 0.5, chain: 1, cd: 0.2, dmg: 10, kb: 6.5, up: 1.5, stam: 6, arc: 0.5 },
+      { anim: 'swing', dur: 0.55, hitAt: 0.5, chain: 1, cd: 0.5, dmg: 12, kb: 7, up: 1.6, stam: 9, arc: 0.5 },
     ],
   },
   pick: {
     name: 'Hakku', block: 'tool', reach: 2.4, combo: [
-      { anim: 'swing', dur: 0.55, hitAt: 0.5, chain: 1, cd: 0.25, dmg: 9, kb: 6.5, up: 1.5, stam: 7, arc: 0.45 },
+      { anim: 'swing', dur: 0.6, hitAt: 0.5, chain: 1, cd: 0.5, dmg: 11, kb: 7, up: 1.6, stam: 10, arc: 0.45 },
     ],
   },
   club: {
     name: 'Puunuija', block: 'weapon', reach: 2.5, combo: [
-      { anim: 'slashR', dur: 0.62, hitAt: 0.5, chain: 1, cd: 0.75, dmg: 16, kb: 11, up: 4, stam: 14, arc: 0.85, multi: true, stagger: 0.5, heavy: true },
+      { anim: 'slashR', dur: 0.8, hitAt: 0.52, chain: 1, cd: 1.1, dmg: 21, kb: 12, up: 4.2, stam: 20, arc: 0.85, multi: true, stagger: 0.6, heavy: true },
     ],
   },
   machete: {
     name: 'Viidakkoveitsi', block: 'weapon', reach: 2.4, combo: [
-      { anim: 'slashR', dur: 0.36, hitAt: 0.5, chain: 0.62, cd: 0.5, dmg: 9, kb: 5, up: 1.2, stam: 8, arc: 0.9, multi: true },
-      { anim: 'slashL', dur: 0.36, hitAt: 0.5, chain: 0.62, cd: 0.5, dmg: 9, kb: 5, up: 1.2, stam: 14, arc: 0.9, multi: true },
-      { anim: 'thrust', dur: 0.46, hitAt: 0.48, chain: 1, cd: 1.3, dmg: 17, kb: 9, up: 3, stam: 24, arc: 0.35, reach: 0.5, stagger: 0.5 },
+      { anim: 'slashR', dur: 0.42, hitAt: 0.5, chain: 0.85, cd: 0.8, dmg: 10, kb: 5.5, up: 1.3, stam: 10, arc: 0.9, multi: true },
+      { anim: 'slashL', dur: 0.42, hitAt: 0.5, chain: 0.85, cd: 0.8, dmg: 10, kb: 5.5, up: 1.3, stam: 16, arc: 0.9, multi: true },
+      { anim: 'thrust', dur: 0.52, hitAt: 0.48, chain: 1, cd: 1.6, dmg: 19, kb: 9.5, up: 3, stam: 26, arc: 0.35, reach: 0.5, stagger: 0.5 },
     ],
   },
 };

@@ -215,6 +215,116 @@ function camp(out, colliders, rand, chestSpot) {
   if (chestSpot) chestSpot.push({ x: 1.6, z: -1.8, rot: rand() * 6 });
 }
 
+// Laivanhylky: kyljelleen kallistunut, puoliksi hiekkaan uponnut runko.
+// Kuori on yhtenäinen lankkupinta, josta puuttuu paloja (kaaret näkyvät
+// aukoista); lisäksi köli, keula- ja peräpiikit, katkennut masto, purjeen
+// riekale ja tavaraa hiekalla. Runko on x-akselin suuntainen; avoin kansi
+// kääntyy +z:n suuntaan.
+function shipwreck(out, colliders, rand, chestSpot) {
+  const L = 12 + rand() * 3;           // pituus
+  const B = 2.3 + rand() * 0.3;        // puolileveys
+  const H = 2.5;                       // syvyys
+  const roll = 0.3 + rand() * 0.15;    // kallistus
+  const sink = 0.35;
+  const nI = 14, nK = 8;
+  const hull = [];
+  // Rungon pinta: asemat i (pituussuunta) ja k (laidasta kölin kautta laitaan).
+  const P = [];
+  for (let i = 0; i <= nI; i++) {
+    const t = i / nI;
+    const x = (t - 0.5) * L;
+    const end = 1 - Math.sin(Math.PI * t);
+    const w = B * Math.pow(Math.sin(Math.PI * (0.04 + t * 0.92)), 0.6) + 0.04;
+    const keelY = 0.55 * end * end;
+    const top = H + 0.7 * Math.pow(end, 1.5);
+    const row = [];
+    for (let k = 0; k <= nK; k++) {
+      const a = (k / nK - 0.5) * Math.PI;
+      row.push([x, keelY + (top - keelY) * Math.pow(1 - Math.cos(a), 0.85), Math.sin(a) * w]);
+    }
+    P.push(row);
+  }
+  // Iso murtuma ylemmässä kyljessä ja pienempiä aukkoja.
+  const bi = 3 + Math.floor(rand() * (nI - 7)), bk = 1 + Math.floor(rand() * 2);
+  const plank = [0x6b5038, 0x5d4530, 0x735a40];
+  for (let k = 0; k < nK; k++) {
+    const pos = [];
+    for (let i = 0; i < nI; i++) {
+      const hole = (Math.abs(i - bi) <= 1 + (k === bk ? 1 : 0) && Math.abs(k - bk) <= 1) || rand() < (k < nK / 2 ? 0.16 : 0.05);
+      if (hole) continue;
+      const q = [P[i][k], P[i + 1][k], P[i + 1][k + 1], P[i][k + 1]];
+      // Molemmat puolet (materiaali on yksipuolinen).
+      for (const [p0, p1, p2] of [[q[0], q[1], q[2]], [q[0], q[2], q[3]], [q[0], q[2], q[1]], [q[0], q[3], q[2]]]) pos.push(...p0, ...p1, ...p2);
+    }
+    if (!pos.length) continue;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.computeVertexNormals();
+    hull.push(paint(g, plank[k % 3], { rand, jitter: 0.14 }));
+  }
+  // Kaaret sisäpuolella (näkyvät aukoista) ja reunalista
+  for (let i = 1; i < nI; i += 2) {
+    const kEnd = rand() < 0.3 ? nK - 2 : nK;
+    for (let k = 0; k < kEnd; k++) {
+      const a = P[i][k], c = P[i][k + 1];
+      hull.push(paint(limb(V(a[0], a[1] * 0.96 + 0.05, a[2] * 0.93), V(c[0], c[1] * 0.96 + 0.05, c[2] * 0.93), 0.09, 0.09, 5, true), 0x4a3624, { rand }));
+    }
+  }
+  for (const k of [0, nK]) {
+    for (let i = 0; i < nI; i++) {
+      if (k === 0 && Math.abs(i - bi) <= 1) continue;
+      const a = P[i][k], c = P[i + 1][k];
+      hull.push(paint(limb(V(...a), V(...c), 0.1, 0.1, 5, true), 0x4a3624, { rand }));
+    }
+  }
+  // Köli sekä keula- ja peräpiikit
+  hull.push(paint(box(0, 0.05, 0, L * 0.92, 0.3, 0.34), 0x3f2e20, { rand }));
+  hull.push(paint(limb(V(L * 0.46, 0.1, 0), V(L * 0.5 + 1.2, H + 1.4, 0), 0.17, 0.1, 6, true), 0x3f2e20, { rand }));
+  hull.push(paint(limb(V(-L * 0.46, 0.1, 0), V(-L * 0.5 - 0.4, H + 1.0, 0), 0.2, 0.15, 6, true), 0x3f2e20, { rand }));
+  // Kannen palkit (osa katkennut) ja maston tynkä
+  for (const t of [0.3, 0.55, 0.75]) {
+    const i = Math.round(t * nI);
+    const a = P[i][0], c = P[i][nK];
+    const half = rand() < 0.4;
+    hull.push(paint(limb(V(a[0], a[1] - 0.2, a[2] * 0.95), V(c[0], c[1] - 0.2, half ? 0 : c[2] * 0.95), 0.1, 0.1, 5, true), 0x4e3a28, { rand }));
+  }
+  hull.push(paint(limb(V(-0.4, 0.2, 0), V(-0.6, H + 2.6, 0.3), 0.2, 0.17, 7, true), 0x56402c, { rand }));
+  // Runko kallistuu (laita k = 0 nousee) ja uppoaa hiekkaan.
+  for (const g of hull) {
+    g.rotateX(roll);
+    g.translate(0, -sink, 0);
+    out.push(g);
+  }
+  // Katkennut maston yläosa ja purjeen riekale kölin puolella hiekalla
+  const mx = (rand() - 0.5) * 3, mz = -2.8 - rand() * 0.8;
+  const mAng = -0.25 - rand() * 0.4;
+  const mL = 6 + rand() * 2;
+  out.push(paint(limb(V(mx, 0.15, mz), V(mx + Math.cos(mAng) * mL, 0.24, mz + Math.sin(mAng) * mL), 0.17, 0.12, 7, true), 0x56402c, { rand }));
+  const sail = new THREE.BoxGeometry(2.8, 0.03, 1.9, 5, 1, 3);
+  displace(sail, () => [(rand() - 0.5) * 0.25, rand() * 0.15, (rand() - 0.5) * 0.25]);
+  sail.rotateY(-mAng);
+  sail.translate(mx + Math.cos(mAng) * mL * 0.55, 0.12, mz + Math.sin(mAng) * mL * 0.55 - 1.2);
+  out.push(paint(sail, 0xc8b894, { rand, jitter: 0.1 }));
+  // Tynnyreitä ja laudanpaloja hiekalla rungon molemmin puolin
+  const side = () => (rand() < 0.5 ? -1 : 1);
+  for (let i = 0, n = 2 + Math.floor(rand() * 3); i < n; i++) {
+    const x = (rand() - 0.5) * L, z = side() > 0 ? 4.2 + rand() * 2 : -2.6 - rand() * 2;
+    const br = new THREE.CylinderGeometry(0.32, 0.32, 0.8, 10);
+    if (rand() < 0.6) { br.rotateZ(Math.PI / 2); br.translate(0, -0.08, 0); }
+    br.rotateY(rand() * 3);
+    br.translate(x, 0.33, z);
+    out.push(paint(br, 0x6a4a2c, { rand, jitter: 0.1 }));
+    colliders.push({ x, z, r: 0.4 });
+  }
+  for (let i = 0; i < 8; i++) {
+    const x = (rand() - 0.5) * (L + 4), z = side() > 0 ? 4 + rand() * 4 : -2.4 - rand() * 4;
+    out.push(paint(box(x, 0.03, z, 1 + rand() * 1.4, 0.06, 0.22, rand() * 3), 0x5d4530, { rand }));
+  }
+  // Runko on kiinteä este (kallistuneen rungon jalanjälki z ≈ −1,2…3,2).
+  colliders.push({ seg: true, ax: -L * 0.42, az: 1.0, bx: L * 0.42, bz: 1.0, r: 2.0, top: 2.6 });
+  if (chestSpot) chestSpot.push({ x: (rand() - 0.5) * L * 0.5, z: 4.6, rot: rand() * 0.6 - 0.3 });
+}
+
 export function buildStructure(st) {
   const rand = mulberry32(st.seed);
   const style = STYLE[st.style] || STYLE.mud;
@@ -227,6 +337,8 @@ export function buildStructure(st) {
     camp(out, colliders, rand, chestSpot);
   } else if (st.type === 'ruinHouse') {
     house(out, colliders, 0, 0, 0, style, rand, chestSpot);
+  } else if (st.type === 'shipwreck') {
+    shipwreck(out, colliders, rand, chestSpot);
   } else {
     // Kylä: muutama talo ja aitta keskusaukion ympärillä, matala aita.
     const nh = 3 + Math.floor(rand() * 3);

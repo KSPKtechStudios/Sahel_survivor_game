@@ -46,8 +46,9 @@ import { DevTools } from './ui/devtools.js';
 const $ = (id) => document.getElementById(id);
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
 const MENU_SEED = seedFromString('sahel-valikko');
-// Maisemallinen paikka valikon taustalle (dyynit, akasiat ja lateriitti näkyvissä).
-const MENU_SPOT = { x: -2650, z: -495, yaw: 2.3, time: 17.1 };
+// Maisemallinen paikka valikon taustalle (savannia, akasioita ja kallioita
+// auringonlaskussa). Sessio 9: siirretty uuden biomijaon mukaan.
+const MENU_SPOT = { x: -2296, z: 582, yaw: 1.6, time: 17.1 };
 
 // --- Renderöijä ja kamera ----------------------------------------------------
 const canvas = $('game');
@@ -654,4 +655,5 @@ window.sahel = {
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
   ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, blood,
   startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
+  menuSpot: MENU_SPOT, menuCam,
 };

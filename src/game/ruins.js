@@ -13,7 +13,7 @@ const COMMON = [['stick', 3, 8], ['stone', 2, 6], ['fiber', 2, 6], ['wood', 1, 4
 const VALUABLE = [['gold_nugget', 1, 3], ['cowrie', 3, 8], ['bronze_bracelet', 1, 1]];
 
 export const STRUCT_NAMES = {
-  stoneCircle: 'Kivikehä', camp: 'Hylätty leiri', ruinHouse: 'Talon rauniot', ruinVillage: 'Kylän rauniot',
+  stoneCircle: 'Kivikehä', camp: 'Hylätty leiri', ruinHouse: 'Talon rauniot', ruinVillage: 'Kylän rauniot', shipwreck: 'Laivanhylky',
 };
 
 // Arkun sisältö on siemenestä laskettu, joten se on joka kerta sama.
