@@ -7,10 +7,13 @@ import { Sky } from './render/sky.js';
 import { Environment, WEATHER, WEATHER_KEYS } from './render/environment.js';
 import { Dust, Bursts } from './render/particles.js';
 import { Debris } from './render/debris.js';
+import { createWaterMaterial, updateWaterMaterial } from './render/water.js';
+import { Ripples } from './render/ripples.js';
+import { Splashes } from './render/splash.js';
 import { createModelLibrary } from './models/models.js';
 import { World } from './world/world.js';
 import { Tumbleweeds } from './world/tumbleweeds.js';
-import { findSpawn, findBiome, setWorldSeed, seedFromString, sampleTerrain, heightAt } from './world/terrain.js';
+import { findSpawn, findBiome, findWater, setWorldSeed, seedFromString, sampleTerrain, heightAt, WATER } from './world/terrain.js';
 import { Player } from './player/player.js';
 import { Input } from './player/input.js';
 import { ViewModel } from './player/viewmodel.js';
@@ -56,6 +59,7 @@ const materials = createSharedMaterials(createGroundDetailTexture());
 const activeMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
 const models = createModelLibrary();
 const sky = new Sky(scene);
+materials.water = createWaterMaterial(sky);
 const env = new Environment(scene, renderer, sky);
 const world = new World(scene, materials, models);
 const tumbleweeds = new Tumbleweeds(scene, models.tumbleweed, materials.solid);
@@ -67,6 +71,8 @@ const fallen = new FallenTrees({ scene, world, models, material: activeMaterial,
 const breakables = new Breakables({ world, models, debris, drops, fallen, material: activeMaterial });
 const structures = new Structures(scene, models, world);
 const ruins = new Ruins({ scene, world, drops, bursts });
+const ripples = new Ripples(renderer);
+const splashes = new Splashes(scene);
 
 const inventory = new Inventory();
 const guide = new Guide();
@@ -82,6 +88,25 @@ const minimap = new Minimap(explored);
 const bigMap = new BigMap(explored, player);
 new GuideUI(guide);
 const invUI = new InventoryUI(inventory, icons);
+
+// --- Vesi: roiskeet ja väreily ----------------------------------------------------
+// Pelaaja, pudotetut esineet ja heitot kutsuvat tätä osuessaan veteen.
+function waterFx(kind, x, y, z, power) {
+  if (kind === 'splash') {
+    splashes.spawn(x, y, z, power);
+    ripples.disturb(x, z, 0.5 + power * 0.45, 0.35 + power * 0.3);
+  } else if (kind === 'wake') {
+    ripples.disturb(x, z, 0.45, 0.05 + power * 0.09);
+  } else if (kind === 'step') {
+    splashes.spawn(x, y, z, 0.15 * power, { spread: 0.5 });
+    ripples.disturb(x, z, 0.35, 0.08);
+  } else if (kind === 'drop') {
+    splashes.spawn(x, y, z, power * 0.45, { spread: 0.45 });
+    ripples.disturb(x, z, 0.22 + power * 0.25, 0.12 + power * 0.28);
+  }
+}
+player.onWater = waterFx;
+drops.onWater = waterFx;
 
 const settings = loadSettings();
 const menu = new Menu({
@@ -162,6 +187,7 @@ function clearWorldState(seed) {
   debris.clear();
   tumbleweeds.clear();
   explored.clear();
+  splashes.clear();
 }
 
 function buildAround(x, z, onProgress) {
@@ -285,6 +311,8 @@ window.addEventListener('keydown', (e) => {
     invUI.hide();
     input.lock();
     setTimeout(() => { if (state === 'inventory' && !input.locked) setState('paused'); }, 600);
+  } else if (state === 'playing' && e.code === 'KeyQ') {
+    throwSelected();
   } else if (state === 'playing' && e.code === 'KeyM') {
     e.preventDefault();
     wantMap = true;
@@ -299,6 +327,24 @@ window.addEventListener('keydown', (e) => {
     else if (state === 'menu') menu.back(menu.main);
   }
 });
+
+// Heitä valittu esine [Q] (yksi kerrallaan) katseen suuntaan.
+const _throwDir = new THREE.Vector3();
+function throwSelected() {
+  const sel = inventory.selectedItem;
+  if (!sel || viewmodel.busy) return;
+  const id = sel.id;
+  const slot = inventory.selected;
+  viewmodel.swing('punch', () => {
+    const now = inventory.slots[slot];
+    if (!now || now.id !== id) return;
+    camera.getWorldDirection(_throwDir);
+    const pos = camera.position.clone().addScaledVector(_throwDir, 0.5);
+    pos.y -= 0.2;
+    drops.throwItem(id, 1, pos, _throwDir, elapsed);
+    inventory.removeFromSlot(slot, 1);
+  });
+}
 
 // --- Testaustyökalut taukovalikossa -----------------------------------------------------
 function refreshTestButtons() {
@@ -320,16 +366,23 @@ for (const [label, h] of [['Aamu', 7], ['Päivä', 12.5], ['Ilta', 17.8], ['Yö'
   b.addEventListener('click', () => { env.setTime(h === null ? env.time + 1 : h); refreshTestButtons(); });
   $('time-btns').appendChild(b);
 }
-for (const [label, key] of [['Sahel', 'savanna'], ['Dyynit', 'dunes'], ['Aavikko', 'desert'], ['Sademetsä', 'rainforest'], ['Vuoristo', 'mountains']]) {
+const TP_PLACES = [
+  ['Sahel', 'savanna'], ['Dyynit', 'dunes'], ['Aavikko', 'desert'], ['Sademetsä', 'rainforest'], ['Vuoristo', 'mountains'],
+  ['Ranta', 'beach'], ['Järvi', WATER.LAKE], ['Joki', WATER.RIVER], ['Puro', WATER.STREAM],
+];
+for (const [label, key] of TP_PLACES) {
   const b = document.createElement('button');
   b.className = 'mini-btn';
   b.textContent = label;
   b.addEventListener('click', async () => {
-    const p = key === 'savanna' ? findSpawn() : findBiome(key, player.position.x, player.position.z);
-    if (!p) { $('pm-status').textContent = 'Biomia ei löytynyt'; return; }
+    const px = player.position.x, pz = player.position.z;
+    const p = key === 'savanna' ? findSpawn() : typeof key === 'number' ? findWater(key, px, pz) : findBiome(key, px, pz);
+    if (!p) { $('pm-status').textContent = 'Paikkaa ei löytynyt'; return; }
     $('pm-status').textContent = 'Siirrytään…';
     await nextFrame();
     player.teleport(p.x, p.z);
+    // Vesistön rannalla katsotaan veteen päin.
+    if (p.wx !== undefined) player.yaw = Math.atan2(-(p.wx - p.x), -(p.wz - p.z));
     await buildAround(p.x, p.z);
     player.update(0, input, world);
     refreshTestButtons();
@@ -422,6 +475,18 @@ function frame(now) {
   if (env.humid > 0.6) world.setDetailRange(2.2);
   else if (env.humid < 0.4) world.setDetailRange(Infinity);
   env.update(simDt, player.position, elapsed);
+  // Vesi: aallot, väreily ja roiskeet
+  const waves = player.waves;
+  waves.amp = env.waveAmp;
+  waves.windX = env.windDir.x;
+  waves.windZ = env.windDir.y;
+  waves.t = elapsed;
+  drops.waves = waves;
+  updateWaterMaterial(materials.water, env, elapsed);
+  if (state !== 'boot') ripples.update(simDt, player.position.x, player.position.z);
+  materials.water.uniforms.uRipple.value = ripples.texture;
+  materials.water.uniforms.uRippleRect.value = ripples.rect;
+  splashes.update(simDt, env.lightColor, materials.water.uniforms.uAmbient.value);
   tumbleweeds.update(simDt, player.position, env.w.wind, env.windDir);
   if (state === 'playing') interaction.update(simDt, input);
   else structures.showGhost(null);
@@ -452,7 +517,10 @@ function frame(now) {
     bigMap.update();
     if (player.atEdge && state === 'playing') {
       edgeMsgTimer -= dt;
-      if (edgeMsgTimer <= 0) { events.emit('message', { text: 'Maailman reuna' }); edgeMsgTimer = 3; }
+      if (edgeMsgTimer <= 0) {
+        events.emit('message', { text: player.inWater ? 'Virta on liian voimakas' : 'Maailman reuna' });
+        edgeMsgTimer = 3;
+      }
     }
   } else {
     hud.update(dt, { prompt: null, player, env, visible: false });
@@ -501,5 +569,6 @@ enterMenu(true);
 window.sahel = {
   THREE, renderer, scene, camera, env, world, player, input, inventory, invUI, guide, structures, tumbleweeds,
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
+  ripples, splashes, waterFx, materials,
   startWorld, enterMenu, quitToMenu, setState: (s) => setState(s), get state() { return state; },
 };

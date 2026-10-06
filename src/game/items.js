@@ -4,10 +4,10 @@
 // HUOM: esineet ja reseptit ovat prototyypin paikkamerkkejä (ks. docs/DESIGN.md).
 
 export const ITEMS = {
-  stick: { name: 'Risu', stack: 50, desc: 'Kuiva oksa. Perusmateriaali.' },
+  stick: { name: 'Risu', stack: 50, floats: true, desc: 'Kuiva oksa. Perusmateriaali.' },
   stone: { name: 'Kivi', stack: 50, desc: 'Käteen sopiva kivi.' },
-  fiber: { name: 'Kuitu', stack: 50, desc: 'Kuivaa kortetta ja kuitua sitomiseen.' },
-  wood: { name: 'Puu', stack: 30, desc: 'Akasiapuuta.' },
+  fiber: { name: 'Kuitu', stack: 50, floats: true, desc: 'Kuivaa kortetta ja kuitua sitomiseen.' },
+  wood: { name: 'Puu', stack: 30, floats: true, desc: 'Akasiapuuta.' },
   stone_axe: { name: 'Kivikirves', stack: 1, tool: 'axe', damage: 1, desc: 'Puiden kaatamiseen.' },
   stone_pick: { name: 'Kivihakku', stack: 1, tool: 'pickaxe', damage: 1, desc: 'Lohkareiden louhimiseen.' },
   campfire: { name: 'Nuotio', stack: 5, place: 'campfire', desc: 'Valoa ja lämpöä yöhön. Aseta hiiren oikealla.' },

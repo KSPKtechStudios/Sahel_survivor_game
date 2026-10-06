@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 import { OBJECT_TYPES } from '../world/objectTypes.js';
-import { heightAt, sampleTerrain, WATER_LEVEL } from '../world/terrain.js';
+import { heightAt, sampleTerrain } from '../world/terrain.js';
 import { ITEMS } from './items.js';
 import { events } from './events.js';
 
@@ -211,7 +211,7 @@ export class Interaction {
     const p = this.player.position;
     if (Math.hypot(pos.x - p.x, pos.z - p.z) < 1.1) return false;
     const s = sampleTerrain(pos.x, pos.z, {});
-    if (s.h < WATER_LEVEL + 0.1) return false;
+    if (s.h < s.wl + 0.1) return false;
     const slope = Math.abs(heightAt(pos.x + 0.6, pos.z) - heightAt(pos.x - 0.6, pos.z)) + Math.abs(heightAt(pos.x, pos.z + 0.6) - heightAt(pos.x, pos.z - 0.6));
     if (slope > 0.7) return false;
     this.world.collidersNear(pos.x, pos.z, 2, _cols);

@@ -2,7 +2,8 @@
 // fyysisinä esineinä. Ne poimitaan [E]:llä tai ne imaistaan automaattisesti,
 // kun pelaaja kävelee niiden yli.
 import * as THREE from 'three';
-import { heightAt, WATER_LEVEL } from '../world/terrain.js';
+import { heightAt, waterAt, WATER } from '../world/terrain.js';
+import { waveHeight, openFactor } from '../world/waves.js';
 import { ITEMS } from './items.js';
 import { events } from './events.js';
 
@@ -36,6 +37,8 @@ export class Drops {
       emissiveIntensity: 0.25,
     });
     this.fullWarned = 0;
+    this.waves = { amp: 0, windX: 1, windZ: 0, t: 0 };
+    this.onWater = null; // (laji, x, y, z, voima) roiskeet ja väreily
   }
 
   // Pudota count kappaletta esinettä. Isot määrät jaetaan muutamaan kasaan.
@@ -65,6 +68,8 @@ export class Drops {
       item, count, mesh, vel, rest,
       spin: resting ? new THREE.Vector3() : new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(10),
       resting, age: resting ? 10 : 0, magnet: null, blockedUntil: 0,
+      // Vesi: w = viimeisin näyte, floating = kelluu pinnalla, wet = osui veteen
+      w: null, wTimer: 0, floating: false, wet: false, flowX: 0, flowZ: 0, bob: Math.random() * 6,
     };
     this.list.push(d);
     return d;
@@ -125,31 +130,69 @@ export class Drops {
       }
 
       if (!d.resting) {
-        d.vel.y -= 14 * dt;
-        p.addScaledVector(d.vel, dt);
-        const ground = Math.max(heightAt(p.x, p.z), WATER_LEVEL - 0.3) + (REST_Y[d.item] ?? 0.05);
-        if (p.y <= ground) {
-          p.y = ground;
-          if (d.vel.y < -1.5) {
-            d.vel.y *= -0.3;
-            d.vel.x *= 0.55;
-            d.vel.z *= 0.55;
-            d.spin.multiplyScalar(0.5);
-          } else {
-            d.vel.set(0, 0, 0);
-            d.resting = true;
-          }
+        const rest = REST_Y[d.item] ?? 0.05;
+        // Veden näyte harvakseltaan (kallis), aallot joka ruudulla.
+        d.wTimer -= dt;
+        if (!d.w || d.wTimer <= 0) {
+          d.w = waterAt(p.x, p.z, d.w || {});
+          d.wTimer = d.floating ? 0.25 : 0.05;
+          this._flow(d);
         }
-        const sp = d.spin.length();
-        if (sp > 0.01 && !d.resting) {
-          _axis.copy(d.spin).divideScalar(sp);
-          _q.setFromAxisAngle(_axis, sp * dt);
-          d.mesh.quaternion.premultiply(_q);
+        const still = d.w.wl - d.w.h;
+        const W = this.waves;
+        const surf = still > 0.03 ? d.w.wl + waveHeight(p.x, p.z, W.t, W.amp * openFactor(d.w.type, still, d.w.ocean, d.w.lakeR), W.windX, W.windZ) : -Infinity;
+        if (surf > -Infinity && p.y <= surf + 0.02 && !d.wet) {
+          // Osui veteen: roiske ja väreily esineen koon ja vauhdin mukaan
+          d.wet = true;
+          const speed = d.vel.length();
+          this.onWater?.('drop', p.x, surf, p.z, Math.min(1.2, 0.15 + speed * 0.08) * (ITEMS[d.item].floats ? 0.8 : 1));
+        }
+        if (d.wet && surf > -Infinity && p.y < surf + 0.2) {
+          if (ITEMS[d.item].floats) {
+            // Kelluu: noste painaa pintaan, virta ja tuuli kuljettavat.
+            const target = surf + rest * 0.4;
+            d.vel.y += ((target - p.y) * 40 - d.vel.y * 6) * dt;
+            const k = Math.exp(-dt * 2.5);
+            d.vel.x = d.flowX + (d.vel.x - d.flowX) * k;
+            d.vel.z = d.flowZ + (d.vel.z - d.flowZ) * k;
+            d.floating = true;
+            d.spin.multiplyScalar(Math.exp(-dt * 4));
+            d.mesh.quaternion.slerp(d.rest, Math.min(1, dt * 3));
+          } else {
+            // Uppoaa hitaasti pohjaan
+            d.vel.y = Math.max(d.vel.y - 3 * dt, -1.1);
+            d.vel.x *= Math.exp(-dt * 3);
+            d.vel.z *= Math.exp(-dt * 3);
+            d.floating = false;
+          }
+          p.addScaledVector(d.vel, dt);
+          if (p.y <= d.w.h + rest) {
+            p.y = d.w.h + rest;
+            // Kelluva esine nousee pohjasta takaisin pintaan, jos vettä riittää.
+            if (ITEMS[d.item].floats && still > 0.15) {
+              d.vel.y = Math.max(0, d.vel.y);
+            } else {
+              d.vel.set(0, 0, 0);
+              d.resting = true;
+              d.floating = false;
+            }
+          }
+          // Kelluva esine ajautui rantaan
+          if (d.floating && still <= 0.03) d.floating = false;
+          if (d.floating) {
+            d.bob += dt;
+            const tilt = Math.sin(d.bob * 1.7) * 0.06;
+            _q.setFromAxisAngle(_axis.set(1, 0, 0), tilt * dt);
+            d.mesh.quaternion.premultiply(_q);
+          }
+        } else {
+          if (still <= 0.03) d.wet = false;
+          this._fall(d, p, dt, d.w.h + rest);
         }
       } else {
         // Asetu makaamaan
         d.mesh.quaternion.slerp(d.rest, Math.min(1, dt * 8));
-        p.y += (Math.max(heightAt(p.x, p.z), WATER_LEVEL - 0.3) + (REST_Y[d.item] ?? 0.05) - p.y) * Math.min(1, dt * 8);
+        if (d.age < 12) p.y += (heightAt(p.x, p.z) + (REST_Y[d.item] ?? 0.05) - p.y) * Math.min(1, dt * 8);
       }
 
       // Automaattinen poiminta, kun pelaaja kävelee yli
@@ -160,6 +203,55 @@ export class Drops {
         if (dx * dx + dz * dz < PICK_RADIUS * PICK_RADIUS && dy > -1 && dy < 2.2) this.pick(d);
       }
     }
+  }
+
+  // Lento ilmassa ja pomppu maahan.
+  _fall(d, p, dt, ground) {
+    d.vel.y -= 14 * dt;
+    p.addScaledVector(d.vel, dt);
+    if (p.y <= ground) {
+      p.y = ground;
+      if (d.vel.y < -1.5) {
+        d.vel.y *= -0.3;
+        d.vel.x *= 0.55;
+        d.vel.z *= 0.55;
+        d.spin.multiplyScalar(0.5);
+      } else {
+        d.vel.set(0, 0, 0);
+        d.resting = true;
+      }
+    }
+    const sp = d.spin.length();
+    if (sp > 0.01 && !d.resting) {
+      _axis.copy(d.spin).divideScalar(sp);
+      _q.setFromAxisAngle(_axis, sp * dt);
+      d.mesh.quaternion.premultiply(_q);
+    }
+  }
+
+  // Virtauksen nopeus esineen kohdalla (joet ja purot: alamäkeen pintaa pitkin;
+  // meri ja järvet: tuuli kuljettaa hiljaa).
+  _flow(d) {
+    d.flowX = 0;
+    d.flowZ = 0;
+    const w = d.w;
+    if (!w || w.wl <= w.h) return;
+    if (w.type === WATER.RIVER || w.type === WATER.STREAM) {
+      d.flowX = w.flowX * 0.9;
+      d.flowZ = w.flowZ * 0.9;
+    } else {
+      d.flowX = this.waves.windX * 0.15;
+      d.flowZ = this.waves.windZ * 0.15;
+    }
+  }
+
+  // Heitä esine (Q): lentää katseen suuntaan.
+  throwItem(item, count, pos, dir, elapsed) {
+    if (!ITEMS[item] || count <= 0) return null;
+    const vel = new THREE.Vector3().copy(dir).multiplyScalar(7.5).add(new THREE.Vector3(0, 2.2, 0));
+    const d = this._add(item, count, pos.clone(), vel, false);
+    d.blockedUntil = elapsed + 1.5;
+    return d;
   }
 
   raycast(origin, dir, maxDist) {

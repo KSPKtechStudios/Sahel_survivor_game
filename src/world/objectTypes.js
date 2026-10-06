@@ -61,7 +61,7 @@ export const OBJECT_TYPES = {
     harvest: { tool: null, hp: 3, drops: [['fiber', 2], ['stick', 1]] },
   },
   bamboo: {
-    name: 'Bambu', model: 'bamboo', kind: 'bush', material: 'bush', castShadow: true,
+    name: 'Bambu', model: 'bamboo', kind: 'bush', material: 'tall', castShadow: true,
     density: { rainforest: 5, mare: 0.4 },
     scale: [0.9, 1.3], maxSlope: 0.6, collider: 0.55, hit: { y: 1.0, r: 0.8 }, drawDist: 3,
     harvest: { tool: null, hp: 4, drops: [['stick', 4]] },

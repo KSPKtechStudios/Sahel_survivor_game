@@ -1,7 +1,7 @@
 // Minikartta (oikea yläkulma): alussa tyhjä karttapohja, johon tutkittu
 // maasto piirtyy (explored.js). Kartta kääntyy pelaajan mukana, joten
 // katsesuunta on aina ylöspäin. Alla biomin nimi.
-import { biomeOf, sampleTerrain, BIOMES } from '../world/terrain.js';
+import { sampleTerrain, placeName } from '../world/terrain.js';
 import { drawWaypoint, createPaperPattern } from './explored.js';
 
 const RANGE = 110; // metriä keskeltä reunaan
@@ -115,10 +115,10 @@ export class Minimap {
     this.biomeTimer -= dt;
     if (this.biomeTimer <= 0) {
       this.biomeTimer = 0.4;
-      const biome = biomeOf(sampleTerrain(px, pz, this._s));
+      const biome = placeName(sampleTerrain(px, pz, this._s));
       if (biome !== this.lastBiome) {
         this.lastBiome = biome;
-        this.label.textContent = BIOMES[biome].name;
+        this.label.textContent = biome;
         this.label.classList.remove('pulse');
         void this.label.offsetWidth;
         this.label.classList.add('pulse');

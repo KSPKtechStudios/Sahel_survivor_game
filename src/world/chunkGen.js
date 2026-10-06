@@ -4,9 +4,10 @@
 import { CONFIG } from '../config.js';
 import { mulberry32, hashSeed } from '../noise.js';
 import {
-  sampleTerrain, heightAt, groundColor, getWorldSeed, WATER_LEVEL, BIOME_KEYS, insideStructure, mapColorRGB,
+  sampleTerrain, heightAt, groundColor, getWorldSeed, BIOME_KEYS, insideStructure, mapColorRGB,
 } from './terrain.js';
 import { OBJECT_TYPES, OBJECT_TYPE_KEYS, DECOR_TYPES } from './objectTypes.js';
+import { openFactor } from './waves.js';
 
 const SIZE = CONFIG.chunkSize;
 const SEG = CONFIG.chunkSegments;
@@ -76,6 +77,8 @@ export function generateChunk(cx, cz, variantCounts) {
     }
   }
 
+  const water = buildWater(samples, row);
+
   // --- Esineet
   const seed = getWorldSeed();
   const objs = [];
@@ -96,7 +99,7 @@ export function generateChunk(cx, cz, variantCounts) {
       let p = 0;
       for (const b of BIOME_KEYS) p += (def.density[b] || 0) * s[b];
       if (r1 >= p / maxD) continue;
-      if (s.h < WATER_LEVEL + 0.15) continue;
+      if (s.h < s.wl + 0.15) continue;
       if (def.maxSlope < 1 && slope(x, z, s.h) > def.maxSlope) continue;
       if (insideStructure(x, z, def.kind === 'pickup' ? 0 : 2)) continue;
       const scale = def.scale[0] + r3 * (def.scale[1] - def.scale[0]);
@@ -120,8 +123,8 @@ export function generateChunk(cx, cz, variantCounts) {
       for (const b of BIOME_KEYS) p += (def.density[b] || 0) * s[b];
       if (r1 >= p / maxD) continue;
       if (def.nearWater) {
-        if (s.h < WATER_LEVEL - 0.35 || s.h > WATER_LEVEL + 0.9) continue;
-      } else if (s.h < WATER_LEVEL + 0.05) continue;
+        if (s.h < s.wl - 0.35 || s.h > s.wl + 0.9) continue;
+      } else if (s.h < s.wl + 0.05) continue;
       if (insideStructure(x, z, -1)) continue;
       const sc = def.scale[0] + r3 * (def.scale[1] - def.scale[0]);
       decor.push(ti, Math.floor(r4 * nv), x, s.h - 0.03, z, r2 * Math.PI * 2, sc, sc * (0.8 + s.mare * 0.5));
@@ -133,8 +136,78 @@ export function generateChunk(cx, cz, variantCounts) {
     positions, normals, colors, uvs,
     objects: new Float32Array(objs),
     decor: new Float32Array(decor),
+    water,
   };
 }
+
+// --- Vesipinta -----------------------------------------------------------------
+// Sama ruudukko kuin maastolla. Mukaan otetaan ruudut, joiden jokin kulma on
+// veden alla; muut kulmat jäävät maan alle piiloon. Pisteen tiedot:
+// syvyys, avoimuus (aallot), virtaus (joet) ja veden värit (syvä / matala).
+
+function srgbLin(hex) {
+  const f = (c) => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+  return [f(((hex >> 16) & 255) / 255), f(((hex >> 8) & 255) / 255), f((hex & 255) / 255)];
+}
+const W_COL = {
+  sea: [srgbLin(0x0d3a50), srgbLin(0x3aa59c)],
+  rain: [srgbLin(0x1c2614), srgbLin(0x55603a)],
+  sahel: [srgbLin(0x352c1c), srgbLin(0x7e6c45)],
+  mount: [srgbLin(0x0e3644), srgbLin(0x4a9a94)],
+  oasis: [srgbLin(0x123c3c), srgbLin(0x4c9a7c)],
+};
+
+function buildWater(samples, row) {
+  const n = row * row;
+  const wet = new Uint8Array(n);
+  let any = false;
+  for (let v = 0; v < n; v++) {
+    if (samples[v].h < samples[v].wl) { wet[v] = 1; any = true; }
+  }
+  if (!any) return null;
+  const idx = [];
+  for (let j = 0; j < SEG; j++) {
+    for (let i = 0; i < SEG; i++) {
+      const a = j * row + i;
+      const b = a + 1;
+      const c = a + row;
+      const d = c + 1;
+      if (wet[a] | wet[b] | wet[c] | wet[d]) idx.push(a, c, b, b, c, d);
+    }
+  }
+  const positions = new Float32Array(n * 3);
+  const data = new Float32Array(n * 4);
+  const deep = new Float32Array(n * 3);
+  const shallow = new Float32Array(n * 3);
+  for (let j = 0; j <= SEG; j++) {
+    for (let i = 0; i <= SEG; i++) {
+      const v = j * row + i;
+      const s = samples[v];
+      positions[v * 3] = i * STEP;
+      positions[v * 3 + 1] = s.wl;
+      positions[v * 3 + 2] = j * STEP;
+      const depth = s.wl - s.h;
+      // Avoimuus: meri aaltoilee, järvet vähän, joet tuskin lainkaan.
+      data[v * 4] = depth;
+      data[v * 4 + 1] = openFactor(s.wtype, depth, s.ocean + s.beach, s.lakeR);
+      // Virtaus uoman suuntaan alamäkeen (vain joet ja purot).
+      data[v * 4 + 2] = s.flowX || 0;
+      data[v * 4 + 3] = s.flowZ || 0;
+      // Värit biomin mukaan
+      const wSea = s.ocean + s.beach;
+      const wRain = s.rainforest;
+      const wMount = s.mountains;
+      const wOasis = s.oasis;
+      const wSahel = Math.max(0, 1 - wSea - wRain - wMount - wOasis);
+      for (let c = 0; c < 3; c++) {
+        deep[v * 3 + c] = W_COL.sea[0][c] * wSea + W_COL.rain[0][c] * wRain + W_COL.mount[0][c] * wMount + W_COL.oasis[0][c] * wOasis + W_COL.sahel[0][c] * wSahel;
+        shallow[v * 3 + c] = W_COL.sea[1][c] * wSea + W_COL.rain[1][c] * wRain + W_COL.mount[1][c] * wMount + W_COL.oasis[1][c] * wOasis + W_COL.sahel[1][c] * wSahel;
+      }
+    }
+  }
+  return { positions, data, deep, shallow, index: new Uint32Array(idx) };
+}
+
 
 // Kartan ruutu: koko x koko pikseliä, mpp metriä / pikseli, vasen yläkulma (x0, z0).
 const PAPER = [226, 206, 162];
@@ -147,7 +220,8 @@ export function generateMapTile(x0, z0, size, mpp) {
     for (let i = -1; i < size; i++) {
       const x = x0 + (i + 0.5) * mpp;
       const z = z0 + (j + 0.5) * mpp;
-      const h = mapColorRGB(x, z, col).h;
+      const sm = mapColorRGB(x, z, col);
+      const h = sm.h < sm.wl ? sm.wl : sm.h;
       if (j >= 0 && i >= 0) {
         // Rinnevarjostus: vertaa luoteiseen naapuriin.
         const d = h - prevRow[i];

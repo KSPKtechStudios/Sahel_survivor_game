@@ -1,12 +1,14 @@
 // Pelaajan liikkuminen: kävely, juoksu, hyppy, törmäykset ja kestävyys.
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
-import { heightAt, edgeFactor, WATER_LEVEL } from '../world/terrain.js';
+import { heightAt, edgeFactor, waterAt } from '../world/terrain.js';
+import { waveHeight, openFactor } from '../world/waves.js';
 
 const _fwd = new THREE.Vector3();
 const _right = new THREE.Vector3();
 const _wish = new THREE.Vector3();
 const _colliders = [];
+const _wq = {};
 
 export class Player {
   constructor(camera) {
@@ -26,6 +28,12 @@ export class Player {
     this.speedNow = 0;
     this.atEdge = false;
     this.speedMul = 1; // esim. sademetsän tiheä aluskasvillisuus hidastaa
+    // Veden tila: pinnan korkeus aaltoineen ja aaltojen parametrit (main.js).
+    this.waves = { amp: 0, windX: 1, windZ: 0, t: 0 };
+    this.surface = -Infinity;
+    this.waterDepth = 0;
+    this.onWater = null; // (laji, x, y, z, voima) roiskeita ja väreilyä varten
+    this.wakeTimer = 0;
   }
 
   get eye() {
@@ -129,15 +137,35 @@ export class Player {
       this.atEdge = false;
     }
 
-    // --- Maa ja vesi
-    const ground = heightAt(p.x, p.z);
-    const depth = WATER_LEVEL - ground;
-    this.inWater = depth > 1.25 ? 2 : depth > 0.1 ? 1 : 0;
+    // --- Maa ja vesi (meri, järvet ja joet omalla korkeudellaan)
+    waterAt(p.x, p.z, _wq);
+    const ground = _wq.h;
+    const still = _wq.wl - ground;
+    const W = this.waves;
+    const amp = W.amp * openFactor(_wq.type, still, _wq.ocean, _wq.lakeR);
+    const surface = _wq.wl + (still > 0 ? waveHeight(p.x, p.z, W.t, amp, W.windX, W.windZ) : 0);
+    const depth = surface - ground;
+    const prevFeet = p.y - this.velocity.y * dt;
+    // Vedessä ollaan vasta, kun jalat ovat pinnan alla (ei ilmassa veden yllä).
+    const feetUnder = p.y < surface + 0.05;
+    this.inWater = !feetUnder || depth <= 0.1 ? 0 : depth > 1.25 ? 2 : 1;
+    this.surface = depth > 0 ? surface : -Infinity;
+    this.waterDepth = Math.max(0, depth);
+    // Veteen hyppääminen tai putoaminen: roiske kokoa vastaavasti.
+    if (depth > 0.05 && prevFeet > surface && p.y <= surface + 0.05 && this.velocity.y < -2.5) {
+      this.onWater?.('splash', p.x, surface, p.z, Math.min(2.2, -this.velocity.y / 4));
+    }
     if (this.inWater === 2) {
-      // Uidaan pinnalla
-      const swimY = WATER_LEVEL - 1.3;
-      p.y += (swimY - p.y) * Math.min(1, dt * 4);
-      this.velocity.y = 0;
+      // Uidaan pinnalla, aaltojen mukana (silmät pysyvät pinnan yläpuolella).
+      const swimY = surface - 1.25;
+      if (this.velocity.y < -0.5 && p.y > swimY) {
+        // Pudottiin veteen: vauhti hidastuu nopeasti
+        this.velocity.y *= Math.exp(-dt * 9);
+      } else {
+        p.y += (swimY - p.y) * Math.min(1, dt * 5);
+        this.velocity.y = 0;
+      }
+      if (p.y < swimY - 0.2) p.y = swimY - 0.2;
       this.onGround = false;
     } else if (p.y <= ground) {
       if (!this.onGround && this.velocity.y < -6) this.landDip = Math.min(0.18, -this.velocity.y * 0.015);
@@ -148,6 +176,17 @@ export class Player {
       // Pysy kiinni maassa alamäessä.
       this.onGround = this.onGround && p.y - ground < 0.35 && this.velocity.y <= 0;
       if (this.onGround) p.y = ground;
+    }
+
+    // Liike vedessä jättää vanan (väreily) ja juostessa roiskii.
+    if (this.inWater) {
+      const hs0 = Math.hypot(this.velocity.x, this.velocity.z);
+      this.wakeTimer -= dt;
+      if (hs0 > 0.6 && this.wakeTimer <= 0) {
+        this.wakeTimer = this.inWater === 2 ? 0.32 : 0.24;
+        this.onWater?.('wake', p.x, surface, p.z, Math.min(1, hs0 / CONFIG.sprintSpeed) * (this.inWater === 2 ? 1 : 0.7));
+        if (this.inWater === 1 && hs0 > 3) this.onWater?.('step', p.x, surface, p.z, hs0 / CONFIG.sprintSpeed);
+      }
     }
 
     // --- Kestävyyden palautuminen
@@ -173,7 +212,10 @@ export class Player {
   }
 
   teleport(x, z) {
-    this.position.set(x, heightAt(x, z) + 0.1, z);
+    const w = waterAt(x, z, _wq);
+    // Syvään veteen siirtyessä ollaan heti pinnalla.
+    const y = w.wl - w.h > 1.25 ? w.wl - 1.25 : w.h + 0.1;
+    this.position.set(x, y, z);
     this.velocity.set(0, 0, 0);
   }
 

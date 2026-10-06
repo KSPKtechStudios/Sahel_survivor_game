@@ -10,7 +10,6 @@
 // Hakattava esine irrotetaan poolista omaksi Meshikseen (obj.active).
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
-import { WATER_LEVEL } from './terrain.js';
 import { OBJECT_TYPES, OBJECT_TYPE_KEYS, DECOR_TYPES } from './objectTypes.js';
 import { InstancePool } from './instancePool.js';
 import { GenPool } from './genPool.js';
@@ -60,9 +59,6 @@ export class World {
     this.viewRadius = CONFIG.viewRadius;
     this.detailRange = Infinity; // sademetsässä esineitä piirretään lyhyemmälle
     this.terrainIndex = createTerrainIndex();
-    // Vesitaso jaettu pienempiin kolmioihin: isot kolmiot kameran alla piirtyivät
-    // osalla renderöijistä väärin (vesi näkyi maan päällä).
-    this.waterGeo = new THREE.PlaneGeometry(SIZE, SIZE, 16, 16).rotateX(-Math.PI / 2);
     this.shakes = [];
     this.extraColliders = []; // pelaajan rakennelmat, kaatuneet rungot, rauniot
 
@@ -261,10 +257,23 @@ export class World {
     mesh.matrixAutoUpdate = false;
     this.scene.add(mesh);
 
+    // Vesipinta (meri, järvet, joet) omalla korkeudellaan.
     let water = null;
-    if (data.minH < WATER_LEVEL) {
-      water = new THREE.Mesh(this.waterGeo, this.materials.water);
-      water.position.set(x0 + SIZE / 2, WATER_LEVEL, z0 + SIZE / 2);
+    if (data.water) {
+      const w = data.water;
+      const wg = new THREE.BufferGeometry();
+      wg.setAttribute('position', new THREE.BufferAttribute(w.positions, 3));
+      wg.setAttribute('aData', new THREE.BufferAttribute(w.data, 4));
+      wg.setAttribute('aDeep', new THREE.BufferAttribute(w.deep, 3));
+      wg.setAttribute('aShallow', new THREE.BufferAttribute(w.shallow, 3));
+      wg.setIndex(new THREE.BufferAttribute(w.index, 1));
+      wg.computeBoundingBox();
+      // Aallot nostavat pintaa: laajennetaan rajoja, ettei verkkoa karsita väärin.
+      wg.boundingBox.min.y -= 3;
+      wg.boundingBox.max.y += 3;
+      wg.boundingSphere = wg.boundingBox.getBoundingSphere(new THREE.Sphere());
+      water = new THREE.Mesh(wg, this.materials.water);
+      water.position.set(x0, 0, z0);
       water.updateMatrix();
       water.matrixAutoUpdate = false;
       water.renderOrder = 1;
@@ -329,7 +338,10 @@ export class World {
   _disposeChunk(k, ch) {
     this.scene.remove(ch.mesh);
     ch.mesh.geometry.dispose();
-    if (ch.water) this.scene.remove(ch.water);
+    if (ch.water) {
+      this.scene.remove(ch.water);
+      ch.water.geometry.dispose();
+    }
     for (const obj of ch.objects) {
       if (obj.pool) obj.pool.remove(obj.slot);
       obj.pool = null;

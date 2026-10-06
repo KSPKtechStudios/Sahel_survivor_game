@@ -1,7 +1,9 @@
 // Tuulen mukana vierivät tumbleweedit. Niitä on vain pelaajan lähellä:
 // uusia syntyy tuulen yläpuolelle ja kaukana olevat poistetaan.
 import * as THREE from 'three';
-import { heightAt, sampleTerrain, WATER_LEVEL } from './terrain.js';
+import { sampleTerrain, waterAt } from './terrain.js';
+
+const _wq = {};
 
 const MAX = 10;
 const _axis = new THREE.Vector3();
@@ -43,7 +45,8 @@ export class Tumbleweeds {
       p.x += tw.vx * dt;
       p.z += tw.vz * dt;
       p.y += tw.vy * dt;
-      const ground = Math.max(heightAt(p.x, p.z), WATER_LEVEL) + tw.radius;
+      const wq = waterAt(p.x, p.z, _wq);
+      const ground = Math.max(wq.h, wq.wl) + tw.radius;
       if (p.y <= ground) {
         p.y = ground;
         const hspeed = Math.hypot(tw.vx, tw.vz);
@@ -71,7 +74,7 @@ export class Tumbleweeds {
     const x = player.x - windDir.x * dist - windDir.y * side;
     const z = player.z - windDir.y * dist + windDir.x * side;
     const s = sampleTerrain(x, z, this._s);
-    if (s.h < WATER_LEVEL + 0.2 || s.plateau > 0.5) return;
+    if (s.h < s.wl + 0.2 || s.plateau > 0.5 || s.rainforest > 0.3 || s.ocean > 0.3) return;
     // Vain kuivilla alueilla (ei sademetsässä eikä vuorilla)
     if (s.rainforest + s.mountains > 0.4) return;
     const mesh = new THREE.Mesh(this.geometry, this.material);

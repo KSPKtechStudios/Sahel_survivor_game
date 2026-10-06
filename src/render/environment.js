@@ -100,6 +100,7 @@ export class Environment {
     this.lightColor = new THREE.Color();
     this.lightDir = new THREE.Vector3(0, 1, 0); // suunta kohti valonlähdettä
     this.lightIntensity = 1;
+    this.waveAmp = 0.3; // meren aaltojen korkeus (m), kasvaa tuulen mukana
   }
 
   setTime(hour) {
@@ -180,6 +181,9 @@ export class Environment {
       we.tintAmt = lerp(g.tintAmt, Math.min(g.tintAmt, 0.3), H);
       we.tint.lerp(HUMID_TINT, H);
     }
+
+    // Meren aallot kasvavat tuulen mukana (myrskyssä metrien aallokko).
+    this.waveAmp = 0.15 + Math.pow(g.wind, 1.5) * 1.6;
 
     // Tuulen suunta vaihtelee hitaasti koillisen ympärillä.
     const ang = this.windAngle + Math.sin(elapsed * 0.03) * 0.35;
