@@ -3,7 +3,7 @@
 ## Heti (odottaa käyttäjää)
 - [ ] Käyttäjä testaa jäähdytyksen, tönäisyt, veren ja kuolemaefektin, grafiikan esiasetukset ja sademetsän musiikin
 - [ ] Vastaus: oma kappale sademetsään? Miekka tai muita kevyitä aseita?
-- [ ] Käyttäjä luo GitHubiin julkaisun **Alpha v0.1** (tagi `alpha-v0.1`, commit 03a2b3b); tagin pushaus oli estetty tästä ympäristöstä
+- [ ] Käyttäjä kytkee GitHub Pagesin päälle (Settings → Pages → Deploy from a branch → main / root) ja luo julkaisun **Alpha v0.1** (tagi `alpha-v0.1` main-haarasta)
 - [ ] Käyttäjä testaa musiikin (voimakkuudet, viiveet, häivytykset), ääniasetukset, kehittäjätyökalut [F3], kombojen rajoituksen, kilven varustamisen ja palavat savipeikot
 - [ ] Vastaus: mihin Hiekan jäljet -kappale; musiikki sademetsään, vuoristoon, rannalle, yöhön tai taisteluun?
 - [ ] Käyttäjä testaa taistelun (iskusarjat nuijalla ja viidakkoveitsellä, torjunta, parry, tönäisyt), pahkasian, savipeikot yöllä, uinnin ja hukkumisen, kyykyn, karttamerkkien nimet sekä korjatut joet, aallot ja DOF:n

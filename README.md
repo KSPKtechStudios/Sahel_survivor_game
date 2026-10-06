@@ -4,7 +4,9 @@
 
 Valheim- ja Minecraft-tyyppinen selviytymispeli, joka sijoittuu Burkina Fason Sahel-alueelle. 3D avoin maailma (20 km, generoidaan joka kerta omalla siemenellä), ensimmäisen persoonan kuvakulma, reppu ja valmistus, vuorokausisykli ja sää (selkeä, pilvinen, hiekkausva, hiekkamyrsky). Puut kaatuvat ja kivet murskautuvat, ja saaliit putoavat maahan. Kartta piirtyy sitä mukaa kuin maailmaa tutkii, ja maailmasta löytyy kivikehiä, hylättyjä leirejä ja raunioita arkkuineen. Sademetsän takana on meri, ja maailmassa on jokia, puroja ja järviä, joissa vesi aaltoilee ja roiskuu. Taistelussa on iskusarjat, torjunta ja parry; savanneilla elää pahkasikoja, ja öisin maasta nousee savipeikkoja. Musiikki vaihtuu biomin mukaan.
 
-**Versio:** Alpha v0.1 = commit `03a2b3b` (tagi `alpha-v0.1`). Kehitys jatkuu haarassa.
+**Versio:** Alpha v0.1 (ensimmäinen julkinen alfaversio).
+
+**Pelaa selaimessa:** https://kspktech.github.io/sahel/ (GitHub Pages) tai https://raw.githack.com/KSPKtech/sahel/main/index.html
 
 ## Pelaa
 

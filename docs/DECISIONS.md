@@ -2,6 +2,10 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-06 (julkaisu)
+- **Alpha v0.1 on sessioiden 1–8 versio, joka yhdistettiin `main`-haaraan** (aiempi merkintä "Alpha v0.1 = 03a2b3b" korvattiin, koska käyttäjä pyysi julkaisemaan nykyisen pelin Alpha v0.1:nä). Syy: käyttäjä halusi pelin julkisesti pelattavaksi.
+- **Julkinen pelilinkki: GitHub Pages `main`-haarasta (juurikansio) ja varalla raw.githack `main`.** `.nojekyll` estää Jekyll-käsittelyn. Pages pitää kytkeä päälle repon asetuksista (Claude-ympäristöstä ei voi), samoin tagi ja julkaisu.
+
 ## 2026-10-06 (sessio 8)
 - **Iskusarja vain viidakkoveitsellä; muilla aseilla yksi isku. Jokaisella iskulla on jäähdytys, joka alkaa, kun isku päättyy ilman sarjan jatkoa.** Syy: käyttäjän mukaan lyöminen oli edelleen liian vahvaa, ja kombot kuuluvat vain nopeille ja kevyille aseille (veitsi, miekka). Sarjan 50 %:n kestävyysraja säilyi. Työkaluilla jäähdytys on lyhyt, jotta puiden hakkuu ei hidastu liikaa.
 - **Osumasta olento horjuu 0,3 s (ei ohjaa itseään), tönäisy vaimenee hitaammin ja hypähdys skaalataan massan neliöjuurella.** Syy: käyttäjän mukaan olennot pysyivät liian paikallaan osuessa.

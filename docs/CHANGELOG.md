@@ -2,6 +2,9 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-06: Alpha v0.1 julkaistu
+- Ensimmäinen julkinen alfaversio: sessioiden 1–8 työ yhdistettiin `main`-haaraan, ja peli on pelattavissa julkisesti. Valikon alareunassa lukee "Alpha v0.1".
+
 ## 2026-10-06 (sessio 8): jäähdytys ja kombot kevyille aseille, tönäisy, veri, grafiikan esiasetukset, sademetsän musiikki
 - Iskuille jäähdytys: iskun jälkeen pitää odottaa ennen seuraavaa (nyrkit 0,4 s, nuija 0,75 s, viidakkoveitsen sarjan jälkeen 1,3 s, työkalut 0,2–0,35 s). Tähtäin himmenee jäähdytyksen ajaksi.
 - Iskusarja vain nopeilla ja kevyillä aseilla (viidakkoveitsi); nyrkit ja puunuija lyövät yhden iskun (nuija raskaasti: 16 vahinkoa, iso tönäisy).

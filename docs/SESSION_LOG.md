@@ -2,6 +2,14 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-06 (julkaisu Alpha v0.1)
+**Tehtiin**
+- Käyttäjä pyysi pelin julkiseksi pelattavaksi versiona Alpha v0.1. Lisättiin versiomerkintä valikkoon, `.nojekyll`, pelilinkit README:hen, ja PR #1 yhdistettiin `main`-haaraan.
+
+**Kesken / seuraavaksi**
+- Käyttäjä kytkee GitHub Pagesin päälle (Settings → Pages → main / root) ja luo julkaisun Alpha v0.1 (tagi `alpha-v0.1`).
+- Jatkokehitys uusissa haaroissa / PR:issä.
+
 ## 2026-10-06 (sessio 8)
 **Tehtiin**
 - Käyttäjän palaute: sademetsässä ei soinut musiikkia, häivytys liian pitkä, grafiikan esiasetukset (matala–ultra), lyömiseen ja komboon jäähdytys, kombo vain nopeille ja kevyille aseille, lisää tönäisyä, kuolemaefekti ja veri. Kirjattu `DESIGN.md`:hen.
