@@ -1,10 +1,12 @@
 // Mihin pelaaja katsoo ja mitä sille voi tehdä: poimi [E], hakkaa [Hiiri 1],
-// aseta rakennelma [Hiiri 2].
+// aseta rakennelma [Hiiri 2]. Iskut ja torjunta ovat combat.js:ssä; kun isku ei
+// osu olentoon, combat kutsuu _onHit()-funktiota (hakkuu).
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 import { OBJECT_TYPES } from '../world/objectTypes.js';
 import { heightAt, sampleTerrain } from '../world/terrain.js';
 import { ITEMS } from './items.js';
+import { MOB_TYPES } from './mobs.js';
 import { events } from './events.js';
 
 const _dir = new THREE.Vector3();
@@ -13,8 +15,8 @@ const _place = new THREE.Vector3();
 const _cols = [];
 
 export class Interaction {
-  constructor({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins }) {
-    Object.assign(this, { camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins });
+  constructor({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs }) {
+    Object.assign(this, { camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs });
     this.target = null; // { obj, t, kind: 'object'|'tumbleweed'|'drop'|'log' }
     this.prompt = null;
     this.placeValid = false;
@@ -33,6 +35,7 @@ export class Interaction {
     consider(this.drops.raycast(o, _dir, reach), 'drop');
     consider(this.fallen.raycast(o, _dir, reach + 0.4), 'log');
     consider(this.ruins.raycast(o, _dir, reach), 'chest');
+    if (this.mobs) consider(this.mobs.raycast(o, _dir, reach + 2), 'mob');
     return best;
   }
 
@@ -50,19 +53,22 @@ export class Interaction {
         ? { name: def.name, action: this.placeValid ? '[Hiiri 2] Aseta' : 'Ei voi asettaa tähän', warn: !this.placeValid }
         : { name: def.name, action: 'Katso maahan asettaaksesi', warn: false };
       if (input.clicked.has(2) && pos && this.placeValid) this._place(pos, item);
-      if (input.buttons.has(0) && !this.viewmodel.busy) this._swing(def);
       return;
     }
     this.structures.showGhost(null);
 
     this.target = this._raycast();
     this.prompt = this._promptFor(this.target, def);
-    if (input.pressed.has('KeyE') && input.enabled && this.target) this._tryPickup(this.target);
-    if (input.buttons.has(0) && !this.viewmodel.busy) this._swing(def);
+    if (input.pressed.has('KeyE') && input.enabled && this.target && !this.player.dead) this._tryPickup(this.target);
   }
 
   _promptFor(target, def) {
     if (!target) return null;
+    if (target.kind === 'mob') {
+      const m = target.obj;
+      const t = MOB_TYPES[m.type];
+      return { name: t.name, action: m.state === 'dead' ? '' : m.state === 'stagger' && m.vulnerable ? 'Horjuu, lyö nyt!' : '', hp: Math.max(0, m.hp) / t.hp };
+    }
     if (target.kind === 'tumbleweed') return { name: 'Tumbleweed', action: '[Hiiri 1] Hakkaa' };
     if (target.kind === 'chest') {
       return target.obj.chest.opened ? { name: 'Tyhjä arkku', action: '' } : { name: 'Arkku', action: '[E] Avaa' };
@@ -121,19 +127,10 @@ export class Interaction {
     return true;
   }
 
-  _swing(def) {
-    const kind = def && (def.tool || ITEMS.stick === def) ? 'swing' : 'punch';
-    if (!this.player.useStamina(CONFIG.staminaSwing)) {
-      events.emit('message', { text: 'Olet liian väsynyt' });
-      return;
-    }
-    this.viewmodel.swing(kind, () => this._onHit(def));
-  }
-
-  // Kutsutaan iskun hetkellä (animaation keskellä).
+  // Kutsutaan iskun hetkellä (combat.js), kun isku ei osunut olentoon.
   _onHit(def) {
     const target = this._raycast();
-    if (!target) return;
+    if (!target || target.kind === 'mob') return;
     _hit.copy(this.camera.position).addScaledVector(this.camera.getWorldDirection(_dir), target.t);
     const playerPos = this.camera.position;
 

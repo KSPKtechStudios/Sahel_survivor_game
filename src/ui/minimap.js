@@ -2,7 +2,7 @@
 // maasto piirtyy (explored.js). Kartta kääntyy pelaajan mukana, joten
 // katsesuunta on aina ylöspäin. Alla biomin nimi.
 import { sampleTerrain, placeName } from '../world/terrain.js';
-import { drawWaypoint, createPaperPattern } from './explored.js';
+import { drawWaypointName, drawWaypoint, createPaperPattern } from './explored.js';
 
 const RANGE = 110; // metriä keskeltä reunaan
 const GRID = 128;  // ruudukon väli metreinä
@@ -74,6 +74,7 @@ export class Minimap {
       if (d > max) { sx *= max / d; sy *= max / d; size = 10; }
       ctx.globalAlpha = d > max ? 0.8 : 1;
       drawWaypoint(ctx, w.type, R + sx, R + sy, size);
+      if (d <= max && w.name) drawWaypointName(ctx, w.name, R + sx, R + sy + 8, 11);
     }
     ctx.globalAlpha = 1;
 

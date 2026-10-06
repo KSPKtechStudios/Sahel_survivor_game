@@ -2,6 +2,22 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-06 (sessio 6)
+**Tehtiin**
+- Käyttäjän palaute sessiosta 5: DOF liian voimakas, kasvien pieni huojunta pitää säilyä myös tyynellä, purot ja joet olivat paikoin maasta koholla ja vesi valui reunojen yli, meren aallot käyttäytyivät oudosti. Kaikki korjattiin (ks. `CHANGELOG.md` ja `DECISIONS.md`).
+- Käyttäjä pyysi seuraavaksi taistelun: kestävyys ja terveyspalkki, iskut ja kombot tietyillä aseilla (puunuija, viidakkoveitsi), torjunta hiiren oikealla (kilpi, ase, osa työkaluista, kädet), parry, pieni tönäisy pelaajalle ja olennoille, villieläin sopivaan biomiin, heikko vihollinen öisin kaikkiin biomeihin, karttamerkeille nimet, uinti kuluttaa kestävyyttä ja sen loputtua hukkuu, Ctrl = kyykky. Kirjattu `DESIGN.md`:hen.
+- Uudet tiedostot: `src/game/combat.js` (iskusarjat, torjunta, parry, osumat), `src/game/mobs.js` (syntyminen, tekoäly, liike, osumat, kuolema), `src/models/creatures.js` (pahkasika ja savipeikko nivelineen). Muutettu: `player.js` (terveys, tönäisy, kyykky, uinnin kestävyys, hukkuminen, kuolema), `viewmodel.js` (uudet iskuanimaatiot asentoina, torjunta-asennot, vasemman käden kilpi, erillinen kyynärvarsi, osumapysäys), `hud.js` + `index.html` + `styles.css` (palkit, osuma- ja hukkumisreunus, parry-teksti, kuolemaruutu), `interaction.js` (iskut siirtyivät combat.js:ään, olennon nimi ja terveys tähtäimessä), `items.js` + `models/items.js` (puunuija, viidakkoveitsi, puukilpi, liha, nahka, savi), `ruins.js` (viidakkoveitsi arkkuihin), `bigMap.js` + `explored.js` + `minimap.js` (merkkien nimet), `main.js` (kytkennät, herääminen, testinapit, poistumisvahvistus).
+- Testattiin headless-Chromiumilla: kaikkien aseiden iskuasennot kuvina (korjattiin käsivarsi, joka kääntyi isoissa iskuissa näkökenttään), olentojen mallit ja animaatiot (päivä, yö, maasta nousu, syöksyn varoitus, kuolema), logiikkatestit aika-askelilla (kyykky, pahkasika pakenee ja kyykyssä ei, nuijan kombo 11+11+24 vahinkoa ja kuolema, pahkasika hyökkää takaisin, torjunta 60 % / kilpi 90 %, parry horjuttaa, savipeikko syntyy yöllä ja hyökkää, viidakkoveitsi kaataa sen, aamulla murenee, hukkuminen, kuolema ja herääminen), karttamerkkien nimeäminen hiirellä ja näppäimistöllä, vanha toimintatesti (hakkuu, kaatuminen, saaliit, tallennus). Ei konsolivirheitä.
+
+**Huomiot**
+- Ctrl+W sulkee selaimen välilehden, eikä peli voi estää sitä. Siksi kyykky on kytkin (Ctrl tai C), ja peli kysyy pelin aikana ennen sivulta poistumista.
+- Viidakkoveitsi löytyy vain arkuista; testaamista varten taukovalikon "Kutsu"-rivillä on "Aseet"-nappi sekä pahkasian ja savipeikon kutsu.
+- Arvot (vahingot, nopeudet, ikkunat) ovat paikkamerkkejä ja helposti säädettävissä (`combat.js`, `mobs.js`, `config.js`).
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute taistelusta (tuntuma, vaikeus, animaatiot), olennoista ja uinnista.
+- Avoimet kysymykset: lihan, nahan ja saven käyttö, viidakkoveitsen lähde, kuoleman seuraukset, savipeikko vai muu yön olento.
+
 ## 2026-10-06 (sessio 5)
 **Tehtiin**
 - Käyttäjä raportoi bambujen tärinän ja pyysi: lisää sisältöä ja maastonmuotoja biomeihin; sademetsään lampia, järviä, jokia ja puroja, Saheliin harvoin pieniä jokia, vuoristoon järviä ja puroja; uusi meribiomi; veden fysiikka (aallot sään mukaan, molskahdus ja aallot hypätessä, kävellessä ja esinettä heittäessä); realistiset varjot, ilmakehä, god rays; liike-epäterävyys ja DOF asetuksiin. Kirjattu `DESIGN.md`:hen.

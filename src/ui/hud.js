@@ -1,9 +1,19 @@
-// HUD: pikapalkki, tähtäin ja kohteen nimi, kestävyyspalkki, ilmoitukset.
+// HUD: pikapalkki, tähtäin ja kohteen nimi, terveys ja kestävyys, osuma- ja
+// hukkumistehosteet, kuolemaruutu, ilmoitukset.
 import { CONFIG } from '../config.js';
 import { ITEMS } from '../game/items.js';
 import { events } from '../game/events.js';
 
 const $ = (id) => document.getElementById(id);
+
+// Kuinka kauan kuolemaruutu näkyy ennen kuin voi herätä (s).
+export const RESPAWN_WAIT = 1.8;
+const DEATH_TEXT = {
+  '': 'Voimasi loppuivat.',
+  drown: 'Hukuit. Uidessa kestävyys kuluu: lepää rannalla ajoissa.',
+  warthog: 'Pahkasika puski sinut kumoon.',
+  clay: 'Savipeikot saivat sinut.',
+};
 
 export class Hud {
   constructor(inventory, icons) {
@@ -17,6 +27,22 @@ export class Hud {
     this.targetHpFill = this.targetBox.querySelector('.hpbar i');
     this.stamina = $('stamina');
     this.staminaFill = this.stamina.querySelector('i');
+    this.hp = document.querySelector('.vital.hp');
+    this.hpFill = this.hp.querySelector('.bar i');
+    this.hpTrail = this.hp.querySelector('.bar b');
+    this.hpNum = this.hp.querySelector('.num');
+    this.hurtEl = $('hurt');
+    this.drownEl = $('drown');
+    this.flashEl = $('flash');
+    this.combatText = $('combat-text');
+    this.death = $('death');
+    this.deathCause = this.death.querySelector('.cause');
+    this.deathHint = this.death.querySelector('.hint');
+    this.trail = 1;        // terveyspalkin viivästetty osa
+    this.trailDelay = 0;
+    this.hurtFlash = 0;
+    this.flash = 0;
+    this.combatTextTimer = 0;
     this.notifyBox = $('notifications');
     this.messageBox = $('message');
     this.itemName = $('item-name');
@@ -38,6 +64,15 @@ export class Hud {
     events.on('inventory', () => this.renderHotbar());
     events.on('notify', (d) => this.notify(d));
     events.on('message', (d) => this.message(d.text));
+    events.on('playerHurt', ({ amount }) => {
+      this.hurtFlash = Math.min(1, Math.max(this.hurtFlash, 0.35 + amount / 25));
+      this.trailDelay = 0.55;
+    });
+    events.on('parry', () => { this.flash = 1; this.showCombatText('Parry!'); });
+    events.on('blocked', ({ broken }) => {
+      this.flash = Math.max(this.flash, broken ? 0 : 0.35);
+      if (broken) this.showCombatText('Torjunta murtui');
+    });
     this.renderHotbar();
   }
 
@@ -85,6 +120,12 @@ export class Hud {
     setTimeout(() => el.remove(), 3000);
   }
 
+  showCombatText(text) {
+    this.combatText.textContent = text;
+    this.combatText.classList.add('show');
+    this.combatTextTimer = 0.7;
+  }
+
   message(text) {
     this.messageBox.textContent = text;
     this.messageBox.classList.add('show');
@@ -110,11 +151,46 @@ export class Hud {
       this.crosshair.classList.remove('active');
     }
 
-    // Kestävyys näkyy vain kun se ei ole täynnä (kuten Valheimissa).
+    // Terveys: menetetty osa näkyy hetken vaaleana ennen kuin se kutistuu.
+    const hp = Math.max(0, player.health / CONFIG.healthMax);
+    if (this.trailDelay > 0) this.trailDelay -= dt;
+    else this.trail += (hp - this.trail) * Math.min(1, dt * 5);
+    if (this.trail < hp) this.trail = hp;
+    this.hpFill.style.width = `${hp * 100}%`;
+    this.hpTrail.style.width = `${this.trail * 100}%`;
+    this.hpNum.textContent = Math.ceil(player.health);
+    this.hp.classList.toggle('low', hp < 0.25 && !player.dead);
+
+    // Kestävyys: himmeä, kun täynnä.
     const st = player.stamina / CONFIG.staminaMax;
     this.staminaFill.style.width = `${st * 100}%`;
-    this.stamina.classList.toggle('show', st < 0.995);
+    this.stamina.classList.toggle('full', st >= 0.995);
     this.stamina.classList.toggle('low', st < 0.25);
+    this.stamina.classList.toggle('out', st <= 0.001 && player.inWater === 2);
+
+    // Osuma (punainen reunus), matala terveys sykkii, hukkuminen (sininen).
+    this.hurtFlash = Math.max(0, this.hurtFlash - dt * 1.6);
+    const lowPulse = hp < 0.3 && !player.dead ? (0.18 + 0.12 * Math.sin(performance.now() * 0.006)) * (1 - hp / 0.3) : 0;
+    this.hurtEl.style.opacity = Math.min(1, this.hurtFlash + lowPulse).toFixed(3);
+    this.drownEl.style.opacity = (player.drowning * (0.75 + 0.25 * Math.sin(performance.now() * 0.005))).toFixed(3);
+    this.flash = Math.max(0, this.flash - dt * 4);
+    this.flashEl.style.opacity = this.flash.toFixed(3);
+    if (this.combatTextTimer > 0) {
+      this.combatTextTimer -= dt;
+      if (this.combatTextTimer <= 0) this.combatText.classList.remove('show');
+    }
+
+    // Kuolemaruutu
+    if (player.dead && visible) {
+      if (this.death.classList.contains('hidden')) {
+        this.death.classList.remove('hidden');
+        this.deathCause.textContent = DEATH_TEXT[player.deathCause] || DEATH_TEXT[''];
+      }
+      this.deathHint.classList.toggle('show', player.deathT > RESPAWN_WAIT);
+    } else if (!this.death.classList.contains('hidden')) {
+      this.death.classList.add('hidden');
+      this.deathHint.classList.remove('show');
+    }
 
     if (this.messageTimer > 0) {
       this.messageTimer -= dt;

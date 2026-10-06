@@ -41,7 +41,28 @@
     <div id="notifications"></div>
     <div id="message"></div>
     <div id="item-name"></div>
-    <div id="stamina"><i></i></div>
+    <div id="vitals">
+      <div class="vital hp" title="Terveys">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.6 4.5c2.1 0 3.6 1.2 5.4 3.2 1.8-2 3.3-3.2 5.4-3.2 3.6 0 5.7 3.8 4.2 7.2C19.5 16.4 12 21 12 21z"/></svg>
+        <div class="bar"><b></b><i></i></div>
+        <span class="num"></span>
+      </div>
+      <div class="vital st" id="stamina" title="Kestävyys">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M13.5 2 4 13.5h6.5L9 22l10-12h-6.6z"/></svg>
+        <div class="bar"><i></i></div>
+      </div>
+    </div>
+    <div id="hurt"></div>
+    <div id="drown"></div>
+    <div id="flash"></div>
+    <div id="combat-text"></div>
+    <div id="death" class="hidden">
+      <div class="death-card">
+        <h2>Kuolit</h2>
+        <p class="cause"></p>
+        <p class="hint">[Välilyönti] Herää henkiin</p>
+      </div>
+    </div>
     <div id="hotbar"></div>
     <div id="fps" class="hidden"></div>
   </div>
@@ -68,9 +89,14 @@
         <div id="bm-symbols"></div>
         <button class="bm-btn" id="bm-center" type="button">Keskitä</button>
       </div>
+      <div id="bm-edit" class="hidden">
+        <input id="bm-name" placeholder="Merkin nimi" autocomplete="off" spellcheck="false">
+        <button class="bm-btn" id="bm-ok" type="button">OK</button>
+        <button class="bm-btn" id="bm-del" type="button">Poista</button>
+      </div>
       <div class="bm-bottom">
         <span id="bm-coords"></span>
-        <span class="bm-help">Klikkaa: lisää merkki · Klikkaa merkkiä: poista · Vedä: liikuta · Rulla: zoomaa · [M] sulje</span>
+        <span class="bm-help">Klikkaa: uusi merkki ja nimi · Klikkaa merkkiä: nimeä / poista · Oikea klikkaus: poista · Vedä: liikuta · Rulla: zoomaa · [M] sulje</span>
       </div>
     </div>
   </div>
@@ -191,9 +217,10 @@
           <dt>W A S D</dt><dd>liiku</dd>
           <dt>Shift</dt><dd>juokse</dd>
           <dt>Välilyönti</dt><dd>hyppää</dd>
-          <dt>Hiiri 1</dt><dd>lyö / hakkaa</dd>
+          <dt>Ctrl / C</dt><dd>kyykky</dd>
+          <dt>Hiiri 1</dt><dd>lyö / hakkaa (sarjat: klikkaa tahdissa)</dd>
+          <dt>Hiiri 2</dt><dd>torju (alussa parry) / aseta</dd>
           <dt>E</dt><dd>poimi</dd>
-          <dt>Hiiri 2</dt><dd>aseta</dd>
           <dt>1–8 / rulla</dt><dd>valitse esine</dd>
           <dt>Tab / I</dt><dd>reppu</dd>
           <dt>Q</dt><dd>heitä esine</dd>
@@ -206,6 +233,7 @@
         <div class="test-row"><span>Sää</span><div class="btns" id="weather-btns"></div></div>
         <div class="test-row"><span>Aika</span><div class="btns" id="time-btns"></div></div>
         <div class="test-row"><span>Siirry</span><div class="btns" id="tp-btns"></div></div>
+        <div class="test-row"><span>Kutsu</span><div class="btns" id="spawn-btns"></div></div>
         <div class="test-note">Pikanäppäimet: [O] sää, [L] +1 h</div>
       </div>
     </aside>

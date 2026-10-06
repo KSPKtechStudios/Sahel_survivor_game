@@ -13,6 +13,12 @@ const ICON_POSE = {
   gold_nugget: [0.6, 0.4, 0],
   cowrie: [0.7, 0.3, 0],
   bronze_bracelet: [0.3, 0.2, 0],
+  wooden_club: [0.2, -0.5, -0.75],
+  machete: [0.1, 0.3, -0.75],
+  shield: [0.25, Math.PI + 0.35, 0.1],
+  raw_meat: [0.6, 0.4, 0],
+  hide: [0.7, 0.3, 0],
+  clay: [0.5, 0.4, 0],
 };
 
 export function renderItemIcons(itemGeometries, size = 96) {

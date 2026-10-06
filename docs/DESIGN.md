@@ -70,6 +70,25 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - **Kunnon realistiset varjot**, **ilmakehä (atmosfääri)**, **god rays** ja valonsäteet.
 - Asetuksiin mahdollisuus **liike-epäterävyydelle (motion blur)** ja **syväterävyydelle (DOF)**.
 
+## Palaute ja korjaukset (käyttäjän kertoma, 2026-10-06, sessio 6)
+- **DOF oli aivan liian voimakas** (sumensi kaiken).
+- **Kasvien ja puiden latvojen pientä heilumista tuulessa saa olla vähän myös tyynellä säällä.**
+- Joet ja purot olivat välillä bugisia: **puro kulki reunan yli ja oli maasta koholla**.
+- **Meren aallot käyttäytyivät todella erikoisesti.**
+
+## Taistelu, olennot ja uinti (käyttäjän kertoma, 2026-10-06, sessio 6)
+- Kunnon **taistelujärjestelmä**.
+- Pelaajalle **kestävyys (stamina) ja terveyspalkki (health bar)**.
+- Pelaaja voi **lyödä** ja tehdä **hyviä komboja tietyillä aseilla**, esim. **puunuijalla** tai **viidakkoveitsellä**.
+- **Hiiren oikealla torjutaan (block).** Torjunta toimii **kilvellä, aseella, joillakin työkaluilla ja ihan vain käsillä**.
+- **Parry-mekanismi.**
+- Pelaaja ja olennot ottavat **pientä tönäisyä (knockback)**.
+- **Villieläin** jollekin sille sopivalle biomille.
+- **Vihamielinen mutta helppo ja heikko olento**, jota esiintyy **aika ajoin joka biomissa yöllä**.
+- **Karttamerkille voi antaa nimen.**
+- Pelaaja voi mennä **veteen uimaan**, mutta **jos kestävyys ehtyy, alkaa hukkuminen**.
+- **Ctrl-näppäimestä kyykky.**
+
 ## Teknologia
 - Selaimessa toimiva peli: three.js (WebGL), ei käännösvaihetta. Ks. `DECISIONS.md`.
 - Kohdealusta toistaiseksi tietokoneen selain (hiiri + näppäimistö).
@@ -90,6 +109,11 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - Meri ja hiekkarannat, joet ja purot, järvet ja lammet; graniittikalliot ja pöytävuoret.
 - Vesi: aallot (meressä sään mukaan), väreily, roiskeet, kelluvat ja uppoavat esineet, uinti aaltojen mukana, esineen heitto [Q].
 - Grafiikka: kaskadoidut varjot, valonsäteet, ilmakehän hehku ja sironta, DOF ja liike-epäterävyys (asetuksista).
+- Terveys- ja kestävyyspalkit, osuma- ja hukkumistehosteet, kuolema ja herääminen.
+- Taistelu: iskusarjat (puunuija, viidakkoveitsi, nyrkit), torjunta kilvellä / aseella / työkalulla / käsillä, parry, tönäisyt.
+- Pahkasika (villieläin) ja savipeikko (yön vihollinen).
+- Uinti kuluttaa kestävyyttä, hukkuminen. Kyykky.
+- Karttamerkkien nimet.
 
 ## Paikkamerkit (Clauden valitsemia, voi muuttaa vapaasti)
 - **Maailman koko:** säde 10 km. Spawn-alue n. 2,4 km, tier 1 n. 6 km asti, tier 2 n. 9,3 km asti, sen jälkeen vuoristoreuna. Vuorten takana on läpäisemätön vuoriseinämä, meren puolella virta vie takaisin. Rannikko alkaa n. 8,85 km päästä keskeltä.
@@ -105,7 +129,16 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - **Kestävyys (stamina):** kuluu juostessa, hypätessä ja lyödessä.
 - **Hahmo:** tummaihoinen käsi ja indigonsininen hiha (koska peli sijoittuu Burkina Fasoon).
 - **Valikon fontit:** Eagle Lake (otsikko), Permanent Marker (napit), Alegreya (teksti).
-- **Ohjaimet:** WASD, Shift, välilyönti, hiiri 1/2, E, Q (heitä esine), 1–8, Tab/I, M, Esc.
+- **Ohjaimet:** WASD, Shift, välilyönti, Ctrl/C (kyykky päälle/pois), hiiri 1 (lyö, sarjat), hiiri 2 (torju / aseta), E, Q (heitä esine), 1–8, Tab/I, M, Esc.
+- **Terveys:** 100, palautuu 1,5 / s, kun osumasta on 6 s. Kuollessa herätään maailman aloituspaikasta, reppu säilyy.
+- **Kestävyys:** 100; juoksu 14 / s, hyppy 10, iskut 4–13, uinti 4,5 / s (paikallaan 1,5 / s). Hukkuminen 9 terveyttä / s, kun kestävyys on loppu syvässä vedessä.
+- **Kyykky:** silmät 1,08 m (seisten 1,65 m), nopeus puolet, eläimet huomaavat 45 % lähempää.
+- **Aseet ja iskusarjat:** nyrkit (suora 4 + koukku 6), risu 5, kivikirves 10, kivihakku 9, puunuija (sivuisku 11, takaisin 11, murskaisku 24 + horjutus), viidakkoveitsi (vinoisku 9, takaisin 9, pisto 17). Kirves, hakku ja risu: yksi isku.
+- **Torjunta:** kilpi 90 % (kestävyys 0,55 / torjuttu vahinko, parry 0,28 s), ase 60 % (1,0, 0,22 s), työkalu 50 % (1,1, 0,2 s), kädet 30 % (1,25, 0,18 s). Torjunta hidastaa liikkeen puoleen. Parryn jälkeen hyökkääjä horjuu 1,8 s ja ottaa 1,5-kertaisen vahingon.
+- **Uudet esineet ja reseptit:** puunuija (2 puuta, 2 kuitua), puukilpi (4 puuta, 4 risua, 4 kuitua; pikapalkissa = vasemmassa kädessä), viidakkoveitsi (vain arkuista: leirit 40 %, muut 20 %). Saaliit: raaka liha, nahka (pahkasika), savi (savipeikko); ei vielä käyttöä.
+- **Pahkasika:** Sahelin savanni, akasiametsikkö, laterittitasanko (myös kausilampi), 1–3 yhdessä, enintään 3–4 lähellä. 55 terveyttä, juoksee 6,6 m/s (pelaaja juoksee 7,2 m/s). Huomaa pelaajan 10 m päästä (kyykyssä 4,5 m) ja pakenee. Lyötynä hyökkää 16 s ajan: syöksy 13 vahinkoa ja tönäisy; alle 35 % terveydellä pakenee. Saalis: liha 1–2, nahka 1.
+- **Savipeikko:** yöllä kaikissa biomeissa, 28 terveyttä, kävelee 3,5 m/s (hitaampi kuin pelaaja), isku 8 vahinkoa. Nousee maasta, hiipii pelaajaa kohti ja juoksee näköetäisyydellä (24 m). Ei synny nuotion lähelle (14 m), murenee aamulla. Saalis: savi 1–2.
+
 - **Meri:** ulkoreunalla sademetsän puolella (noin 43 % reunasta), rannat hiekkaa, harvoin saaria. Avomeren takana virta vie takaisin ("Virta on liian voimakas"). Aavikon puolella reuna on edelleen vuoria.
 - **Joet ja purot:** sademetsässä joet n. 14–20 m ja purot n. 5–7 m leveitä, Sahelissa harvoin 7–9 m jokia (n. 4–7 km koko Sahelin alueella), vuoristossa puroja vain loivissa kohdissa. Joki kapenee ja loppuu kuivaan uomaan.
 - **Järvet:** sademetsässä lampia ja järviä (säde 18–130 m), vuoristossa vuoristojärviä (25–80 m). Lumpeita järvillä ja lammilla.
@@ -124,7 +157,7 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 
 ## Avoimet kysymykset
 - Mitä meren takana on (nyt virta vie takaisin)? Pitäisikö merellä voida liikkua veneellä?
-- Voiko veden alle sukeltaa? Kuluuko uidessa kestävyyttä tai happea?
+- Voiko veden alle sukeltaa? (Uinti kuluttaa nyt kestävyyttä, ja sen loputtua alkaa hukkuminen.)
 - Pitäisikö vesistöissä olla kaloja tai muuta elämää (kalastus)?
 - Pitäisikö vettä voida juoda tai kerätä (jano)?
 - Mihin arvoesineitä (kultahippu, kaurikotilo, pronssirannerengas) käytetään: kaupankäynti, valmistus, pisteet?
@@ -136,8 +169,13 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - Pitäisikö kantojen olla poistettavissa / antaa puuta?
 - Pitäisikö kaatuvan puun vahingoittaa pelaajaa (kun terveys lisätään)?
 - Kuinka kauan pudonneet esineet säilyvät maassa (nyt pysyvästi, enintään 250)?
-- Selviytymismittarit: terveys, nälkä, jano, kuumuus? Mistä ruoka ja vesi?
-- Eläimet ja viholliset (esim. Sahelin eläimistö)?
+- Selviytymismittarit: terveys ja kestävyys on nyt tehty; tarvitaanko nälkä, jano tai kuumuus? Mistä ruoka ja vesi?
+- Mihin raaka liha, nahka ja savi käytetään? Voiko lihaa paistaa nuotiolla ja syödä (esim. terveydeksi)?
+- Mistä viidakkoveitsi saadaan: arkuista (nyt) vai valmistetaanko se (metalli, seppä)?
+- Mitä kuollessa tapahtuu: säilyykö reppu (nyt säilyy), jääkö hautakivi, herätäänkö sängystä?
+- Sopiiko savipeikko yön viholliseksi (nimi, ulkonäkö), vai jokin muu olento?
+- Lisää eläimiä ja vihollisia (esim. antilooppi, hyeena, krokotiili vesistöissä)? Viholliset rakennelmiin tai luoliin?
+- Kyykky: kytkin (nyt) vai pohjassa pidettävä? (Ctrl+W sulkee selaimen välilehden, siksi nyt kytkin.)
 - Rakentaminen: Valheimin tapainen vapaa rakentaminen vai jotain muuta?
 - Kuka pelaajahahmo on, ja onko pelissä tarinaa?
 - Uusiutuvatko resurssit (risut, kivet, puut)?

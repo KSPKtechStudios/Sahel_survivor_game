@@ -2,6 +2,25 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-06 (sessio 6): korjauksia, taistelu, pahkasika ja savipeikot, uinti ja hukkuminen
+- Syväterävyys (DOF) paljon hienovaraisempi: vain kaukainen tausta ja aivan lähellä olevat asiat pehmenevät hieman, ei enää koko kuvaa.
+- Kasvit ja puiden latvat huojuvat hieman myös tyynellä säällä.
+- Joet ja purot korjattu: ei enää maasta koholla olevia penkereitä eikä vettä reunojen yli. Veden pinta asettuu syvälle laaksoon, rannat loivenevat pehmeästi, kuivat reunapisteet painetaan maan alle, jyrkissä kohdissa vaahtoavia koskia.
+- Meren aallot korjattu: aallot kulkevat nyt tasaisesti kohti rantaa eivätkä enää "hypi" (aaltojen suunta riippui hitaasti kääntyvästä tuulesta, mikä kaukana keskeltä liikutti aaltoja valtavan nopeasti). Lyhyet aallot näkyvät vain pinnan valaistuksessa, jottei 2 m verkko väreile.
+- Terveys- ja kestävyyspalkit pikapalkin yläpuolella. Osuessa ruudun reuna punertuu ja kamera nytkähtää, matala terveys sykkii. Terveys palautuu hitaasti, kun viimeisestä osumasta on kulunut hetki.
+- Taistelu: iskusarjat (kombot) puunuijalla (sivuisku, takaisin, murskaava isku ylhäältä), viidakkoveitsellä (nopeat vinoiskut ja pisto) ja nyrkeillä (suora ja koukku). Klikkaa tahdissa tai pidä hiiren nappi pohjassa. Kirves, hakku ja risu lyövät yhdellä iskulla kuten ennen. Jos isku ei osu olentoon, se hakkaa puita, kiviä ja pensaita kuten ennen.
+- Torjunta [Hiiri 2]: kilpi torjuu 90 %, ase 60 %, työkalu 50 % ja paljaat kädet 30 % vahingosta. Torjunta kuluttaa kestävyyttä ja hidastaa liikettä; jos kestävyys loppuu, torjunta murtuu. Parry: kun torjunnan aloittaa juuri ennen iskua, vahinkoa ei tule ja hyökkääjä horjuu (ottaa silloin 1,5-kertaisen vahingon).
+- Tönäisyt: pelaaja ja olennot lennähtävät hieman osumasta, nuijan murskaisku heittää ilmaan. Osuman hetkellä isku pysähtyy hetkeksi (tuntuma).
+- Uudet esineet: Puunuija (2 puuta, 2 kuitua), Puukilpi (4 puuta, 4 risua, 4 kuitua; pikapalkissa kilpi on vasemmassa kädessä) ja Viidakkoveitsi (arkuista, raivaa pensaita kaksinkertaisesti). Eläinten saaliit: raaka liha, nahka ja savi.
+- Villieläin: pahkasika Sahelin savanneilla, akasiametsiköissä ja laterittitasangoilla (1–3 yhdessä). Pakenee lähestyvää pelaajaa (kyykyssä pääsee lähemmäs), lyötynä hyökkää takaisin syöksyllä (laskee päänsä ja kuopii maata ennen syöksyä), pakenee haavoittuneena. Häntä nousee pystyyn juostessa.
+- Vihollinen: savipeikko nousee öisin maasta missä tahansa biomissa (aika ajoin, enintään 3 kerrallaan), hiipii pelaajaa kohti ja lyö (nostaa kädet ennen iskua). Heikko: kaatuu muutamalla iskulla ja murenee paloiksi. Aamulla savipeikot murenevat itsestään, eikä niitä synny nuotion lähelle.
+- Uinti kuluttaa kestävyyttä (liikkuessa enemmän). Kun kestävyys loppuu syvässä vedessä, alkaa hukkuminen: ruudun reuna sinertyy, pää painuu pintaan ja terveys laskee.
+- Kuolema: "Kuolit"-ruutu syineen; [Välilyönti] herättää maailman aloituspaikasta, reppu säilyy.
+- Kyykky [Ctrl] tai [C] (päälle/pois): matalampi ja hitaampi, eläimet huomaavat myöhemmin. Juoksu tai hyppy nostaa ylös.
+- Karttamerkeille nimet: uusi merkki kysyy heti nimen, merkin klikkaus avaa nimeämisen ja poiston, oikea klikkaus poistaa. Nimet näkyvät isossa kartassa ja minikartalla, ja ne tallentuvat.
+- Pelin aikana selain kysyy ennen sivulta poistumista (vahingossa painettu Ctrl+W ei sulje peliä varoittamatta), ja selaimen Ctrl-pikanäppäimet on estetty pelatessa.
+- Testaustyökaluihin rivi "Kutsu": pahkasika, savipeikko, aseet (nuija, viidakkoveitsi, kilpi) ja paranna.
+
 ## 2026-10-06 (sessio 5): vesistöt ja meri, veden fysiikka, uusi grafiikka, lisää sisältöä
 - Bambujen tärinä korjattu: korkeat kasvit saivat matalille pensaille tarkoitetun tuulen, joka heilutti 9 m vartta liikaa ja pisteittäin eri tahtiin.
 - Uusi biomi: meri ja hiekkarannat. Sademetsän puolella maailman reunaa on avomeri (sen takana virta vie takaisin), rannoilla hiekkaa ja harvoin saaria.

@@ -1,7 +1,7 @@
 // Iso kartta [M]: tutkittu alue paperikartalla. Vedä = liikuta, rulla =
-// zoomaa, klikkaus tyhjään = uusi merkki valitulla symbolilla, klikkaus
-// merkin päälle (tai oikea klikkaus) = poista merkki.
-import { drawWaypoint, createPaperPattern, WAYPOINT_TYPES } from './explored.js';
+// zoomaa, klikkaus tyhjään = uusi merkki valitulla symbolilla ja sille nimi,
+// klikkaus merkin päälle = nimeä uudelleen tai poista, oikea klikkaus = poista.
+import { drawWaypoint, drawWaypointName, createPaperPattern, WAYPOINT_TYPES, WAYPOINT_NAME_MAX } from './explored.js';
 
 const MIN_MPP = 0.5;  // metriä / pikseli (lähin)
 const MAX_MPP = 24;   // kaukaisin
@@ -24,8 +24,70 @@ export class BigMap {
     this.drag = null;
     this.drawnVersion = -1;
     this.needs = true;
+    this.editing = -1;          // nimettävän merkin indeksi
     this._buildToolbar();
+    this._buildEditor();
     this._bind();
+  }
+
+  // Pieni ikkuna merkin nimeämiseen (avautuu merkin viereen).
+  _buildEditor() {
+    const ed = document.getElementById('bm-edit');
+    this.editor = ed;
+    this.nameInput = document.getElementById('bm-name');
+    this.nameInput.maxLength = WAYPOINT_NAME_MAX;
+    this.nameInput.addEventListener('keydown', (e) => {
+      // Kirjoittaminen ei saa ohjata peliä (M sulkisi kartan jne.).
+      e.stopPropagation();
+      if (e.key === 'Enter') { e.preventDefault(); this.closeEditor(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); this.closeEditor(false); }
+    });
+    this.nameInput.addEventListener('keyup', (e) => e.stopPropagation());
+    document.getElementById('bm-ok').addEventListener('click', () => this.closeEditor(true));
+    document.getElementById('bm-del').addEventListener('click', () => {
+      const i = this.editing;
+      this.closeEditor(false);
+      if (i >= 0) this.explored.removeWaypoint(i);
+      this.needs = true;
+    });
+    for (const el of [ed]) el.addEventListener('pointerdown', (e) => e.stopPropagation());
+  }
+
+  openEditor(i) {
+    const wp = this.explored.waypoints[i];
+    if (!wp) return;
+    this.editing = i;
+    this.nameInput.value = wp.name || '';
+    this.editor.classList.remove('hidden');
+    this._placeEditor();
+    // Kohdistus vasta, kun klikkaus on käsitelty.
+    setTimeout(() => { this.nameInput.focus(); this.nameInput.select(); }, 0);
+    this.needs = true;
+  }
+
+  closeEditor(save) {
+    if (this.editing < 0) return;
+    if (save) this.explored.renameWaypoint(this.editing, this.nameInput.value);
+    this.editing = -1;
+    this.editor.classList.add('hidden');
+    this.nameInput.blur();
+    this.needs = true;
+  }
+
+  get typing() {
+    return this.editing >= 0;
+  }
+
+  _placeEditor() {
+    const wp = this.explored.waypoints[this.editing];
+    if (!wp) return;
+    const x = (wp.x - this.cx) / this.mpp + this.w / 2;
+    const y = (wp.z - this.cz) / this.mpp + this.h / 2;
+    const ew = this.editor.offsetWidth || 260, eh = this.editor.offsetHeight || 40;
+    const left = Math.min(this.w - ew - 8, Math.max(8, x - ew / 2));
+    const top = y + 18 + eh > this.h - 8 ? y - 18 - eh : y + 18;
+    this.editor.style.left = `${left}px`;
+    this.editor.style.top = `${top}px`;
   }
 
   _buildToolbar() {
@@ -122,8 +184,17 @@ export class BigMap {
   _click(sx, sy, button) {
     const p = this._toWorld(sx, sy);
     const i = this.explored.waypointNear(p.x, p.z, PICK_PX * this.mpp);
-    if (i >= 0) this.explored.removeWaypoint(i);
-    else if (button === 0) this.explored.addWaypoint(p.x, p.z, this.selected);
+    if (this.editing >= 0) {
+      // Klikkaus muualle sulkee nimeämisen (nimi tallennetaan).
+      this.closeEditor(true);
+      if (i < 0) return;
+    }
+    if (i >= 0) {
+      if (button === 2) this.explored.removeWaypoint(i);
+      else this.openEditor(i);
+    } else if (button === 0) {
+      this.openEditor(this.explored.addWaypoint(p.x, p.z, this.selected));
+    }
     this.needs = true;
   }
 
@@ -152,6 +223,7 @@ export class BigMap {
 
   hide() {
     if (!this.visible) return;
+    this.closeEditor(true);
     this.visible = false;
     this.root.classList.add('hidden');
     this.drag = null;
@@ -215,7 +287,9 @@ export class BigMap {
         ctx.fill();
       }
       drawWaypoint(ctx, wp.type, x, y, 18);
+      drawWaypointName(ctx, wp.name, x, y + 12, 14);
     });
+    if (this.editing >= 0) this._placeEditor();
 
     // Pelaaja
     const p = this.player.position;
@@ -236,7 +310,7 @@ export class BigMap {
     ctx.restore();
 
     // Esikatselu siitä, mihin uusi merkki tulee
-    if (this.hover && !this.drag && hoverIdx < 0) {
+    if (this.hover && !this.drag && hoverIdx < 0 && this.editing < 0) {
       ctx.globalAlpha = 0.45;
       drawWaypoint(ctx, this.selected, this.hover.sx, this.hover.sy, 18);
       ctx.globalAlpha = 1;

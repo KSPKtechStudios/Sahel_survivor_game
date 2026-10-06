@@ -1,7 +1,8 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
-- [ ] Käyttäjä testaa vesistöt ja meren, veden fysiikan (aallot, roiskeet, kelluminen, [Q]-heitto), uuden grafiikan (varjot, valonsäteet, DOF, liike-epäterävyys) ja uuden sisällön ja antaa palautetta
+- [ ] Käyttäjä testaa taistelun (iskusarjat nuijalla ja viidakkoveitsellä, torjunta, parry, tönäisyt), pahkasian, savipeikot yöllä, uinnin ja hukkumisen, kyykyn, karttamerkkien nimet sekä korjatut joet, aallot ja DOF:n
+- [ ] Vastaus: mihin liha, nahka ja savi; mistä viidakkoveitsi; mitä kuollessa tapahtuu (reppu, herätyspaikka)?
 - [ ] Käyttäjä kertoo, pyöriikö peli sujuvasti (varjokaskadit ja jälkikäsittely lisäävät näytönohjaimen työtä)
 - [ ] Vastaus: mitä meren takana on, voiko sukeltaa, kalat, juomavesi?
 - [ ] Käyttäjä testaa kartan (minikartta + [M]), rakennelmat ja arkut, uudet biomit sekä animaatioiden sulavuuden ja antaa palautetta
@@ -13,6 +14,10 @@
 - [ ] Musiikki ja ambient-äänet (käyttäjä toimittaa)
 
 ## Seuraavaksi (ehdotuksia)
+- [ ] Äänet osumiin, torjuntaan ja olentoihin (kun käyttäjä toimittaa äänet)
+- [ ] Lisää eläimiä (esim. antilooppi) ja vihollisia; viholliset raunioihin?
+- [ ] Ruoka: lihan paistaminen nuotiolla (jos käyttäjä haluaa)
+- [ ] Työkalujen ja aseiden kuluminen (avoin kysymys)
 - [ ] Oppaaseen lisää vaiheita, kun pelin suunta tarkentuu (esim. aavikon ja sademetsän resurssit, arkkujen etsiminen)
 - [ ] Kartalle rakennelmien merkintä automaattisesti, kun ne on nähty (jos halutaan)
 - [ ] Kompassi tai merkkien suunta näytön yläreunaan (jos halutaan)
@@ -33,6 +38,12 @@
 - [ ] Päätä lopullinen nimi (Sahel vai jokin muu)
 
 ## Valmis
+- [x] Korjaukset käyttäjän palautteesta: DOF hienovaraisemmaksi, huojunta myös tyynellä, jokien penkereet, meren aallot (2026-10-06, sessio 6)
+- [x] Terveys ja kestävyys, kuolema ja herääminen, uinti ja hukkuminen, kyykky (2026-10-06, sessio 6)
+- [x] Taistelu: iskusarjat, torjunta, parry, tönäisyt; puunuija, viidakkoveitsi, puukilpi (2026-10-06, sessio 6)
+- [x] Pahkasika ja savipeikko (2026-10-06, sessio 6)
+- [x] Karttamerkkien nimet (2026-10-06, sessio 6)
+- [x] Käyttäjä testasi vesistöt, veden fysiikan ja grafiikan (palaute korjattu sessiossa 6)
 - [x] Meri ja hiekkarannat, joet, purot, järvet ja lammet; graniittikalliot ja pöytävuoret (2026-10-06, sessio 5)
 - [x] Veden fysiikka: aallot sään mukaan, väreily, roiskeet, kelluminen, uinti aaltojen mukana, esineen heitto [Q] (2026-10-06, sessio 5)
 - [x] Grafiikka: kaskadoidut varjot, valonsäteet, ilmakehä, DOF ja liike-epäterävyys asetuksiin (2026-10-06, sessio 5)

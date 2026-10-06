@@ -26,6 +26,9 @@ export function rollLoot(st) {
     const [item, a, b] = pool.splice(Math.floor(r() * pool.length), 1)[0];
     loot.push([item, a + Math.floor(r() * (b - a + 1))]);
   }
+  // Viidakkoveitsi: oma satunnaisvirta, jotta muu sisältö pysyy ennallaan.
+  const rm = mulberry32((st.seed ^ 0xb1ade5) >>> 0);
+  if (rm() < (st.type === 'camp' ? 0.4 : 0.2)) loot.push(['machete', 1]);
   if (st.valuables) {
     const vp = VALUABLE.slice();
     const nv = 1 + Math.floor(r() * 2);

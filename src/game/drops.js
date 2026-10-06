@@ -9,7 +9,10 @@ import { events } from './events.js';
 
 const PICK_RADIUS = 1.5;    // automaattinen poiminta
 // Kuinka korkealla maasta esine lepää (mallin paksuus makuuasennossa).
-const REST_Y = { stick: 0.025, stone: 0.07, fiber: 0.03, wood: 0.09, stone_axe: 0.03, stone_pick: 0.03, campfire: 0.05, gold_nugget: 0.02, cowrie: 0.02, bronze_bracelet: 0.02 };
+const REST_Y = {
+  stick: 0.025, stone: 0.07, fiber: 0.03, wood: 0.09, stone_axe: 0.03, stone_pick: 0.03, campfire: 0.05, gold_nugget: 0.02, cowrie: 0.02, bronze_bracelet: 0.02,
+  wooden_club: 0.06, machete: 0.016, shield: 0.06, raw_meat: 0.03, hide: 0.01, clay: 0.03,
+};
 const MAX_DROPS = 250;
 const LIE = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 const _q = new THREE.Quaternion();

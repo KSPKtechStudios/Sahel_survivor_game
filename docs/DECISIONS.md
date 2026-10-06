@@ -2,6 +2,29 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-06 (sessio 6)
+- **Jokien pinta asetetaan maaston loivan muodon alle (2 m), ja penkereet täytetään pehmeästi.** Syy: kova penger (vesi + 0,12 m) teki maasta koholla olevia seiniä; reunojen kuivat vesipisteet painetaan maan alle, jottei vesi näy reunan yli.
+- **Aaltojen suunnat ovat kiinteät (pääaalto aina kohti maailman keskustaa, eli rantaa), ja tekstuurien liike kertyy ajan mukana.** Syy: aaltojen vaihe riippui tuulen suunnasta kerrottuna sijainnilla; 9 km päässä keskeltä pienikin tuulen kääntyminen liikutti aaltoja holtittomasti.
+- **DOF vain kaukaiselle taustalle ja aivan lähelle, enimmäissumennus 4 px.** Syy: käyttäjän palaute (liian voimakas).
+- **Tuulen vähimmäisvoimakkuus 0,16.** Syy: käyttäjä halusi pienen huojunnan myös tyynellä.
+- **Taistelu on Valheimin tapainen: iskusarjat, torjunta ja parry.** Arvot (vahingot, nopeudet, kestävyys) ovat paikkamerkkejä `src/game/combat.js`:ssä. Syy: käyttäjä on viitannut Valheimiin, ja mekaniikka on tuttu ja selkeä.
+- **Iskusarjat vain puunuijalla, viidakkoveitsellä ja nyrkeillä; työkalut lyövät yhdellä iskulla.** Syy: käyttäjä pyysi kombot "tietyille aseille"; puiden ja kivien hakkuu pysyy ennallaan.
+- **Isku osuu olentoihin kaarena (ei vain tähtäimen säteenä), maailman hakkuu tehdään edelleen tähtäimellä.** Syy: liikkuvaan olentoon osuminen pelkällä säteellä on turhauttavaa.
+- **Kilpi on vasemmassa kädessä, kun se on pikapalkissa** (ei erillistä varustepaikkaa). Syy: yksinkertaisin ratkaisu, reppua ei tarvinnut muuttaa. Kilven voi poistaa käytöstä siirtämällä sen reppuun.
+- **Torjunta toimii vain edestä (noin 70° sivuille). Parry-ikkunat: kilpi 0,28 s, ase 0,22 s, työkalu 0,2 s, kädet 0,18 s.** Syy: selkään tulevaa iskua ei voi torjua; ikkunat testattiin niin, että iskun varoitusliikkeeseen ehtii reagoida.
+- **Viidakkoveitsi löytyy arkuista (leireissä 40 %, muissa rakennelmissa 20 %), eikä sitä voi valmistaa.** Syy: metallia ei vielä ole pelissä (avoin kysymys). Veitsi arvotaan omalla satunnaisvirralla, joten arkkujen muu sisältö pysyy samana.
+- **Villieläimeksi valittiin pahkasika.** Syy: tavallinen Burkina Fason savannien eläin, joka on neutraali mutta puolustautuu; sopii hyvin taistelun harjoitteluun.
+- **Yön vihollinen on keksitty "savipeikko" (lateriittisavesta), ei kansanperinteen olento (esim. mossien kinkirsi).** Syy: oikeista uskomuksista ei haluttu tehdä vihollisia; savi sopii Sahelin savirakentamiseen. Nimi ja ulkonäkö ovat paikkamerkkejä.
+- **Savipeikkoja syntyy yöllä 18–46 s välein 18–32 m päähän, enintään 3; ei 14 m sisällä nuotiosta; aamulla ne murenevat.** Syy: käyttäjä pyysi "aika ajoin" esiintyvää helppoa ja heikkoa vihollista; nuotio antaa turvapaikan.
+- **Olentoja ei tallenneta**, ne syntyvät uudelleen pelaajan ympärille. Syy: yksinkertaisuus; niitä on vain lähellä pelaajaa.
+- **Kuollessa herätään maailman aloituspaikasta ja reppu säilyy.** Syy: sänkyä tai hautakiveä ei vielä ole (avoin kysymys).
+- **Terveys palautuu itsestään (1,5 / s, kun osumasta on 6 s).** Syy: ruokaa ei vielä ole.
+- **Uinti kuluttaa kestävyyttä 4,5 / s liikkuessa ja 1,5 / s paikallaan; hukkuminen vie 9 terveyttä sekunnissa.** Täydellä kestävyydellä ehtii uida noin 45–50 m. Syy: käyttäjä halusi hukkumisen kestävyyden loputtua; lyhyet joet ylittää helposti, isot järvet vaativat suunnittelua.
+- **Kyykky on päälle/pois-kytkin [Ctrl] tai [C], ei pohjassa pidettävä.** Syy: selain sulkee välilehden Ctrl+W:llä, eikä sitä voi estää; pohjassa pidetty Ctrl + W (eteen) olisi vaarallinen. Lisäksi peli kysyy pelin aikana ennen sivulta poistumista.
+- **Käden kyynärvarsi suunnataan joka ruudulla ranteesta kyynärpäähän.** Syy: isoissa iskuissa koko käsivarsi kääntyi muuten näkökenttään.
+- **Olentojen mallit rakennetaan kerran latausruudun aikana (3 muunnelmaa / laji) ja jaetaan.** Syy: uuden olennon luonti nyki 5–14 ms; nyt alle 1 ms.
+- **Karttamerkin nimi kysytään heti merkkiä asetettaessa** (tyhjä nimi sallittu), klikkaus merkkiin avaa nimeämisen/poiston ja oikea klikkaus poistaa. Syy: ennen klikkaus merkkiin poisti sen; nyt klikkaus tarvitaan nimeämiseen.
+
 ## 2026-10-06 (sessio 5)
 - **Meri on maailman ulkoreunalla sademetsän puolella, vuoret aavikon puolella.** Syy: käyttäjä pyysi meribiomia; sademetsän takana oleva meri muistuttaa Guineanlahtea (aavikko ja vuoret pohjoisessa). Meri vie noin 43 % reunasta, ja siinä on rantahiekkaa sekä harvoin saaria.
 - **Joka pisteellä on veden pinta (wl).** Merenpinta on kaikkialla; lisäksi joet, purot ja järvet ovat omalla korkeudellaan. Piste on veden alla, jos maa on pintaa alempana. Syy: vuoristojärvet ja joet tarvitsevat muita pintoja kuin merenpinnan, ja sama tieto palvelee maastoa, vettä, esineitä, pelaajaa ja karttaa.

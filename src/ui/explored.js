@@ -91,6 +91,27 @@ export function createPaperPattern(ctx) {
   return ctx.createPattern(c, 'repeat');
 }
 
+export const WAYPOINT_NAME_MAX = 32;
+function cleanName(name) {
+  return typeof name === 'string' ? name.replace(/\s+/g, ' ').trim().slice(0, WAYPOINT_NAME_MAX) : '';
+}
+
+// Merkin nimi kartalle (vaalea reunus, jotta erottuu maastosta).
+export function drawWaypointName(ctx, name, x, y, size = 13) {
+  if (!name) return;
+  ctx.save();
+  ctx.font = `700 ${size}px Alegreya, Georgia, serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 3.5;
+  ctx.strokeStyle = 'rgba(255, 246, 226, 0.92)';
+  ctx.strokeText(name, x, y);
+  ctx.fillStyle = '#3e2610';
+  ctx.fillText(name, x, y);
+  ctx.restore();
+}
+
 function toB64(bytes) {
   let s = '';
   for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
@@ -283,8 +304,17 @@ export class ExploredMap {
     return !!(t.bits[b >> 3] & (1 << (b & 7)));
   }
 
-  addWaypoint(x, z, type) {
-    this.waypoints.push({ x: Math.round(x), z: Math.round(z), type });
+  addWaypoint(x, z, type, name = '') {
+    const w = { x: Math.round(x), z: Math.round(z), type, name: cleanName(name) };
+    this.waypoints.push(w);
+    this.version++;
+    return this.waypoints.length - 1;
+  }
+
+  renameWaypoint(i, name) {
+    const w = this.waypoints[i];
+    if (!w) return;
+    w.name = cleanName(name);
     this.version++;
   }
 
@@ -317,7 +347,7 @@ export class ExploredMap {
     if (Array.isArray(data.waypoints)) {
       this.waypoints = data.waypoints
         .filter((w) => w && Number.isFinite(w.x) && Number.isFinite(w.z) && WAYPOINT_TYPES.some((d) => d.type === w.type))
-        .map((w) => ({ x: w.x, z: w.z, type: w.type }));
+        .map((w) => ({ x: w.x, z: w.z, type: w.type, name: cleanName(w.name) }));
     }
     // Maski rakennetaan soluista: solut piirretään pieneen kuvaan, joka
     // venytetään ruudun kokoon (venytys pehmentää reunat).

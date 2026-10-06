@@ -26,10 +26,12 @@ import { FallenTrees } from './game/fallen.js';
 import { Breakables } from './game/breakables.js';
 import { Ruins } from './game/ruins.js';
 import { Interaction } from './game/interaction.js';
+import { Mobs } from './game/mobs.js';
+import { Combat } from './game/combat.js';
 import { events } from './game/events.js';
 import { loadWorldData, saveWorldData, loadSettings } from './game/save.js';
 import { renderItemIcons } from './ui/icons.js';
-import { Hud } from './ui/hud.js';
+import { Hud, RESPAWN_WAIT } from './ui/hud.js';
 import { Minimap } from './ui/minimap.js';
 import { ExploredMap } from './ui/explored.js';
 import { BigMap } from './ui/bigMap.js';
@@ -81,7 +83,10 @@ const guide = new Guide();
 const player = new Player(camera);
 const input = new Input(canvas);
 const viewmodel = new ViewModel(models.items);
-const interaction = new Interaction({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins });
+const mobs = new Mobs({ scene, world, drops, debris, bursts, player, env, structures });
+const interaction = new Interaction({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs });
+const combat = new Combat({ camera, player, inventory, viewmodel, interaction, mobs, debris, bursts });
+mobs.combat = combat;
 
 const icons = renderItemIcons(models.items);
 const hud = new Hud(inventory, icons);
@@ -196,6 +201,8 @@ function clearWorldState(seed) {
   tumbleweeds.clear();
   explored.clear();
   splashes.clear();
+  mobs.clear();
+  combat.reset();
 }
 
 function buildAround(x, z, onProgress) {
@@ -207,6 +214,7 @@ async function enterMenu(first = false) {
   state = 'loading';
   $('hud').classList.add('hidden');
   clearWorldState(MENU_SEED);
+  mobs.enabled = false;
   env.frozen = true;
   env.setTime(MENU_SPOT.time);
   env.setWeather('menu', true);
@@ -232,7 +240,11 @@ async function startWorld(meta) {
   await nextFrame();
   currentWorld = meta;
   clearWorldState(meta.seed);
+  mobs.enabled = true;
   env.frozen = false;
+  player.dead = false;
+  player.health = CONFIG.healthMax;
+  player.crouching = false;
   inventory.load(data ? data.inventory : { slots: [] });
   guide.load(data ? data.guide : { step: 0, stats: {} });
   world.load(data ? data.world : null);
@@ -251,6 +263,7 @@ async function startWorld(meta) {
   fallen.load(data ? data.fallen : []);
   ruins.load(data ? data.ruins : []);
   explored.load(data ? data.map : null);
+  mobs.prepare();
   player.update(0, input, world);
   state = 'ready';
   menu.loadingReady('Maailma on valmis', () => input.lock());
@@ -284,7 +297,15 @@ async function quitToMenu() {
   await enterMenu();
 }
 
-window.addEventListener('beforeunload', persist);
+// Pelin aikana selain kysyy ennen sivulta poistumista (esim. vahingossa
+// painettu Ctrl+W kyykyn kanssa sulkisi välilehden).
+window.addEventListener('beforeunload', (e) => {
+  persist();
+  if (currentWorld && state !== 'menu' && state !== 'loading') {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
 
 // --- Hiiren lukitus ja näppäimet ---------------------------------------------------
@@ -325,6 +346,9 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
     wantMap = true;
     input.unlock();
+  } else if (state === 'map' && bigMap.typing && e.code === 'Escape') {
+    e.preventDefault();
+    bigMap.closeEditor(false);
   } else if (state === 'map' && (e.code === 'KeyM' || e.code === 'Escape')) {
     e.preventDefault();
     bigMap.hide();
@@ -354,6 +378,29 @@ function throwSelected() {
   });
 }
 
+// Herää henkiin maailman aloituspaikasta (reppu säilyy).
+let respawning = false;
+async function respawnPlayer() {
+  if (respawning) return;
+  respawning = true;
+  const sp = findSpawn();
+  combat.reset();
+  player.respawn(sp.x, sp.z);
+  player.yaw = Math.PI * 0.75;
+  player.pitch = 0;
+  state = 'loading';
+  menu.showLoading('Herätään henkiin…');
+  await buildAround(sp.x, sp.z, (p) => menu.setLoading(p));
+  player.update(0, input, world);
+  menu.hideLoading();
+  respawning = false;
+  setState(input.locked ? 'playing' : 'paused');
+}
+events.on('playerDied', () => {
+  combat.reset();
+  persist();
+});
+
 // --- Testaustyökalut taukovalikossa -----------------------------------------------------
 function refreshTestButtons() {
   for (const b of $('weather-btns').children) b.classList.toggle('on', b.dataset.key === env.targetKey);
@@ -378,6 +425,23 @@ const TP_PLACES = [
   ['Sahel', 'savanna'], ['Dyynit', 'dunes'], ['Aavikko', 'desert'], ['Sademetsä', 'rainforest'], ['Vuoristo', 'mountains'],
   ['Ranta', 'beach'], ['Järvi', WATER.LAKE], ['Joki', WATER.RIVER], ['Puro', WATER.STREAM],
 ];
+for (const [label, fn] of [
+  ['Pahkasika', () => mobs.spawnInFront('warthog', 10)],
+  ['Savipeikko', () => mobs.spawnInFront('clay', 8)],
+  ['Aseet', () => {
+    for (const id of ['wooden_club', 'machete', 'shield']) if (inventory.count(id) === 0) inventory.add(id, 1);
+  }],
+  ['Paranna', () => { player.health = CONFIG.healthMax; player.stamina = CONFIG.staminaMax; }],
+]) {
+  const b = document.createElement('button');
+  b.className = 'mini-btn';
+  b.textContent = label;
+  b.addEventListener('click', () => {
+    const r = fn();
+    $('pm-status').textContent = r === null ? 'Paikkaa ei löytynyt' : `${label}: ok`;
+  });
+  $('spawn-btns').appendChild(b);
+}
 for (const [label, key] of TP_PLACES) {
   const b = document.createElement('button');
   b.className = 'mini-btn';
@@ -496,8 +560,14 @@ function frame(now) {
   materials.water.uniforms.uRippleRect.value = ripples.rect;
   splashes.update(simDt, env.lightColor, materials.water.uniforms.uAmbient.value);
   tumbleweeds.update(simDt, player.position, env.w.wind, env.windDir);
-  if (state === 'playing') interaction.update(simDt, input);
-  else structures.showGhost(null);
+  if (state === 'playing' && !player.dead) interaction.update(simDt, input);
+  else { structures.showGhost(null); interaction.prompt = null; }
+  combat.update(simDt, input, elapsed, state === 'playing');
+  mobs.update(running ? dt : 0, elapsed);
+  // Kuollut pelaaja herää välilyönnillä tai klikkauksella.
+  if (state === 'playing' && player.dead && player.deathT > RESPAWN_WAIT && (input.pressed.has('Space') || input.clicked.has(0))) {
+    respawnPlayer();
+  }
 
   structures.update(simDt, elapsed, player.position);
   ruins.update(running || state === 'menu' ? dt : 0, player.position);
@@ -578,6 +648,6 @@ enterMenu(true);
 window.sahel = {
   THREE, renderer, scene, camera, env, world, player, input, inventory, invUI, guide, structures, tumbleweeds,
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
-  ripples, splashes, waterFx, materials, post,
-  startWorld, enterMenu, quitToMenu, setState: (s) => setState(s), get state() { return state; },
+  ripples, splashes, waterFx, materials, post, mobs, combat, hud,
+  startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
 };

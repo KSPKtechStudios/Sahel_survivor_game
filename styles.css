@@ -119,7 +119,7 @@ html, body {
 
 /* Ilmoitukset vasemmalla alhaalla */
 #notifications {
-  position: absolute; left: 18px; bottom: 110px;
+  position: absolute; left: 18px; bottom: 120px;
   display: flex; flex-direction: column; gap: 4px; align-items: flex-start;
 }
 .note {
@@ -145,7 +145,7 @@ html, body {
 #message.show { opacity: 1; }
 
 #item-name {
-  position: absolute; left: 50%; bottom: 104px;
+  position: absolute; left: 50%; bottom: 112px;
   transform: translateX(-50%);
   font-size: 15px; font-weight: 700;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
@@ -153,16 +153,59 @@ html, body {
 }
 #item-name.show { opacity: 1; }
 
-#stamina {
-  position: absolute; left: 50%; bottom: 90px;
-  width: 260px; height: 6px; margin-left: -130px;
-  background: rgba(0, 0, 0, 0.45);
-  border-radius: 4px; overflow: hidden;
-  opacity: 0; transition: opacity 0.4s;
+/* Terveys ja kestävyys pikapalkin yläpuolella */
+#vitals {
+  position: absolute; left: 50%; bottom: 86px;
+  width: 506px; transform: translateX(-50%);
+  display: flex; gap: 14px;
 }
-#stamina.show { opacity: 1; }
-#stamina i { display: block; height: 100%; background: linear-gradient(90deg, #e8a33c, #f6d27a); }
-#stamina.low i { background: linear-gradient(90deg, #d0502a, #f08a4a); }
+.vital { flex: 1; display: flex; align-items: center; gap: 6px; transition: opacity 0.4s; }
+.vital .ico { width: 16px; height: 16px; flex: none; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8)); }
+.vital.hp .ico { fill: #e8553e; }
+.vital.st .ico { fill: #f2c66b; }
+.vital .bar {
+  position: relative; flex: 1; height: 9px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 5px; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(236, 200, 140, 0.25), 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.vital .bar i, .vital .bar b { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; border-radius: 5px; }
+.vital.hp .bar b { background: rgba(255, 232, 205, 0.8); }
+.vital.hp .bar i { background: linear-gradient(90deg, #a8261c, #e8553e); }
+.vital.hp.low .bar { animation: hpPulse 0.9s ease-in-out infinite; }
+@keyframes hpPulse { 50% { box-shadow: 0 0 0 1px rgba(255, 90, 60, 0.9), 0 0 10px rgba(255, 60, 30, 0.6); } }
+.vital .num { min-width: 26px; font-size: 12px; font-weight: 700; text-align: right; text-shadow: 0 1px 2px #000; font-variant-numeric: tabular-nums; }
+.vital.st .bar i { background: linear-gradient(90deg, #e8a33c, #f6d27a); }
+.vital.st.full { opacity: 0.55; }
+.vital.st.low .bar i { background: linear-gradient(90deg, #d0502a, #f08a4a); }
+.vital.st.out .bar { animation: hpPulse 0.6s ease-in-out infinite; }
+
+/* Osuma, hukkuminen, torjunta ja kuolema */
+#hurt, #drown, #flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+#hurt { background: radial-gradient(ellipse at center, rgba(150, 0, 0, 0) 42%, rgba(150, 12, 6, 0.6) 100%); }
+#drown { background: radial-gradient(ellipse at center, rgba(10, 45, 75, 0) 30%, rgba(4, 28, 58, 0.82) 100%); }
+#flash { background: radial-gradient(circle at center, rgba(255, 246, 220, 0.55) 0%, rgba(255, 220, 150, 0.15) 30%, rgba(255, 220, 150, 0) 60%); }
+#combat-text {
+  position: absolute; left: 50%; top: calc(50% - 70px);
+  transform: translateX(-50%) scale(0.9);
+  font-size: 22px; font-weight: 800; letter-spacing: 0.06em;
+  color: #ffe2a0;
+  text-shadow: 0 0 10px rgba(255, 190, 80, 0.8), 0 2px 3px rgba(0, 0, 0, 0.9);
+  opacity: 0; transition: opacity 0.25s, transform 0.25s;
+}
+#combat-text.show { opacity: 1; transform: translateX(-50%) scale(1); transition: opacity 0.05s, transform 0.12s; }
+#death {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(60, 6, 4, 0.35) 0%, rgba(30, 2, 2, 0.85) 100%);
+  animation: deathIn 1.4s ease-out;
+}
+@keyframes deathIn { from { opacity: 0; } to { opacity: 1; } }
+.death-card { text-align: center; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9); }
+.death-card h2 { margin: 0; font: 400 64px 'Eagle Lake', Georgia, serif; color: #f2c0a0; letter-spacing: 0.04em; }
+.death-card .cause { margin: 6px 0 0; font-size: 17px; color: var(--muted); }
+.death-card .hint { margin: 26px 0 0; font-size: 15px; font-weight: 700; color: var(--accent-2); opacity: 0; transition: opacity 0.6s; }
+.death-card .hint.show { opacity: 1; }
 
 /* Pikapalkki */
 #hotbar {
@@ -315,6 +358,25 @@ html, body {
   pointer-events: none;
 }
 #bm-coords { font-variant-numeric: tabular-nums; }
+#bm-edit {
+  position: absolute; z-index: 2;
+  display: flex; gap: 6px; align-items: center;
+  padding: 6px;
+  background: rgba(255, 248, 230, 0.94);
+  border: 1px solid rgba(110, 75, 35, 0.55);
+  border-radius: 9px;
+  box-shadow: 0 6px 16px rgba(60, 35, 10, 0.35);
+  animation: bmEditIn 0.14s ease-out;
+}
+@keyframes bmEditIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+#bm-name {
+  width: 170px; padding: 5px 8px;
+  font: 700 14px 'Alegreya', Georgia, serif; color: #3e2610;
+  background: #fffaf0; border: 1px solid rgba(110, 75, 35, 0.45); border-radius: 6px;
+  outline: none; user-select: text; -webkit-user-select: text;
+}
+#bm-name:focus { border-color: #c58a32; box-shadow: 0 0 0 2px rgba(197, 138, 50, 0.3); }
+#bm-edit .bm-btn { padding: 5px 10px; }
 @media (max-width: 760px) {
   .bm-sym span, .bm-help { display: none; }
 }

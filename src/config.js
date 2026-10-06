@@ -27,9 +27,20 @@ export const CONFIG = {
   staminaMax: 100,
   staminaSprintPerSec: 14,
   staminaJump: 10,
-  staminaSwing: 6,
   staminaRegenPerSec: 18,
   staminaRegenDelay: 1.0,
+  staminaSwimPerSec: 4.5,     // uidessa (liikkuessa)
+  staminaTreadPerSec: 1.5,    // uidessa paikallaan
+
+  // Terveys
+  healthMax: 100,
+  healthRegenPerSec: 1.5,
+  healthRegenDelay: 6,        // sekuntia viimeisestä osumasta
+  drownPerSec: 9,             // hukkuminen, kun kestävyys on loppu uidessa
+
+  // Kyykky
+  crouchEyeHeight: 1.08,
+  crouchSpeed: 0.5,           // kerroin kävelynopeuteen
 
   // Reppu
   hotbarSize: 8,

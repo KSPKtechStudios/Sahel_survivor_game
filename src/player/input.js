@@ -16,6 +16,9 @@ export class Input {
 
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Tab' || (this.locked && (e.code === 'Space' || e.code.startsWith('Arrow')))) e.preventDefault();
+      // Selaimen pikanäppäimet (Ctrl+D, Ctrl+S…) pois pelatessa; Ctrl on kyykky.
+      // (Ctrl+W/T/N ei voi estää; siksi peli kysyy ennen sivulta poistumista.)
+      if (this.locked && (e.ctrlKey || e.metaKey)) e.preventDefault();
       if (!e.repeat) this.pressed.add(e.code);
       this.keys.add(e.code);
     });
