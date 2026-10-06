@@ -1,6 +1,7 @@
 # TODO
 
 ## Heti
+- [ ] Päätä: avataanko repo julkiseksi, jotta raw.githack-testauslinkit toimivat (nyt yksityinen)
 - [ ] Selvitä pelin konsepti, genre, moottori ja alusta
 
 ## Myöhemmin

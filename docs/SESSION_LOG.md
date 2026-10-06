@@ -8,6 +8,8 @@ Uusin merkintä ylimpänä.
 - Repo liitettiin istuntoon ja ensimmäinen commit pushattiin `main`-haaraan.
 - Pystytettiin paikallinen projektin runko ja muistiinpanot (`README.md`, `CLAUDE.md`, `docs/`).
 - Tehtiin ensimmäinen paikallinen commit.
+- Kirjoitettiin `CLAUDE.md` uusiksi Claude Codea varten: muistiinpanojen luku/kirjoitus, haara + PR, raw.githack-linkki joka työn lopuksi.
 
 **Kesken / seuraavaksi**
+- Päätettävä repon näkyvyys: raw.githack toimii vain julkisille repoille.
 - Selvitettävä pelin konsepti, genre, moottori ja alusta (ks. `DESIGN.md`).
