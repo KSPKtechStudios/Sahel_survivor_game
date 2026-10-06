@@ -7,9 +7,13 @@
 // Savipeikko: heikko vihamielinen olento, joka nousee maasta öisin missä
 // tahansa biomissa. Aamulla se joutuu paniikkiin, syttyy itsestään palamaan,
 // juoksee liekeissä sinne tänne ja palaa lopuksi tuhkaksi.
+// Arat eläimet (sessio 9): gaselli, helmikana, apina, aavikkokettu ja pienet
+// linnut. Ne huomaavat pelaajan kaukaa (hiipiessä vasta lähellä), pysähtyvät
+// tarkkailemaan ja pakenevat koko lauma; linnut ja helmikanat lentävät.
+// Niiden pyytämiseen tarvitaan yleensä jousi.
 import * as THREE from 'three';
 import { waterAt, sampleTerrain, insideStructure } from '../world/terrain.js';
-import { makeWarthog, makeClayGolem } from '../models/creatures.js';
+import { makeWarthog, makeClayGolem, makeGazelle, makeFennec, makeMonkey, makeGuineafowl, makeBird } from '../models/creatures.js';
 import { createFlameTexture } from '../render/textures.js';
 import { events } from './events.js';
 
@@ -24,11 +28,41 @@ export const MOB_TYPES = {
     damage: 8, knock: 4, up: 0, reach: 1.4, windup: 0.65, attack: 0.28, recover: 0.8,
     sight: 24, poise: 6, turn: 4, drops: [['clay', 1, 2]], cause: 'clay',
   },
+  // --- Arat eläimet. sight = huomaamisetäisyys (kyykyssä noin 0,38 ×),
+  // group = laumakoko, max = enimmäismäärä, habitat = biomipainot.
+  gazelle: {
+    name: 'Gaselli', hp: 26, radius: 0.32, height: 1.0, walk: 1.3, run: 11, mass: 0.9, sight: 30, turn: 6, poise: 6,
+    drops: [['raw_meat', 1, 2], ['gazelle_pelt', 1, 1], ['bone', 0, 1], ['sinew', 0, 1]],
+    skittish: true, group: [2, 4], max: 6, habitat: (s) => s.savanna + s.woodland * 0.8 + s.laterite * 0.5 + s.mare * 0.5 + s.desert * 0.3,
+  },
+  guineafowl: {
+    name: 'Helmikana', hp: 7, radius: 0.18, height: 0.45, walk: 0.8, run: 6.5, mass: 0.3, sight: 17, turn: 9, poise: 1,
+    drops: [['raw_meat', 1, 1], ['feather', 2, 4]],
+    skittish: true, flies: true, group: [3, 6], max: 8, habitat: (s) => s.savanna + s.woodland + s.mare * 0.7 + s.laterite * 0.4,
+  },
+  monkey: {
+    name: 'Apina', hp: 18, radius: 0.24, height: 0.6, walk: 1.2, run: 8, mass: 0.6, sight: 20, turn: 8, poise: 4,
+    drops: [['raw_meat', 1, 1], ['monkey_pelt', 1, 1], ['bone', 0, 1]],
+    skittish: true, group: [2, 4], max: 5, habitat: (s) => s.rainforest + s.woodland * 0.25 + s.oasis * 0.5,
+  },
+  fennec: {
+    name: 'Aavikkokettu', hp: 10, radius: 0.2, height: 0.45, walk: 1.0, run: 9.5, mass: 0.35, sight: 22, turn: 8, poise: 2,
+    drops: [['raw_meat', 1, 1], ['fox_pelt', 1, 1]],
+    skittish: true, group: [1, 2], max: 2, habitat: (s) => (s.desert + s.dunes) * 1.2,
+  },
+  bird: {
+    name: 'Kutojalintu', hp: 3, radius: 0.08, height: 0.18, walk: 0.5, run: 2.5, mass: 0.05, sight: 10, turn: 12, poise: 0,
+    drops: [['feather', 1, 2]],
+    skittish: true, flies: true, bird: true, group: [4, 7], max: 12,
+    habitat: (s) => s.savanna + s.woodland + s.mare + s.oasis + s.rainforest * 0.5 + s.beach * 0.3,
+  },
 };
+const WILD = ['gazelle', 'guineafowl', 'monkey', 'fennec', 'bird'];
+const FACTORY = { warthog: makeWarthog, gazelle: makeGazelle, fennec: makeFennec, monkey: makeMonkey, guineafowl: makeGuineafowl, bird: makeBird };
 
 const MAX_WARTHOGS = 3;
 const MAX_CLAY = 3;
-const DESPAWN = { warthog: 150, clay: 70 };
+const DESPAWN = { warthog: 150, clay: 70, gazelle: 170, guineafowl: 150, monkey: 150, fennec: 150, bird: 120 };
 const PLAYER_R = 0.35;
 
 const _wq = {};
@@ -39,7 +73,8 @@ const _m = new THREE.Matrix4();
 const _w = new THREE.Vector3();
 
 // Veren väri lajeittain (savipeikolla punaruskeaa savivelliä).
-const BLOOD = { warthog: new THREE.Color(0.55, 0.03, 0.02), clay: new THREE.Color(0.45, 0.16, 0.07) };
+const RED = new THREE.Color(0.55, 0.03, 0.02);
+const BLOOD = { warthog: RED, clay: new THREE.Color(0.45, 0.16, 0.07), gazelle: RED, guineafowl: RED, monkey: RED, fennec: RED, bird: RED };
 
 // Hiiltynyt versio geometriasta (palanut savipeikko murenee mustina paloina).
 const charred = new Map();
@@ -67,7 +102,7 @@ function instantiate(type, n, eyeMat) {
   const key = `${type}:${n % VARIANTS}`;
   let t = templates.get(key);
   if (!t) {
-    t = type === 'warthog' ? makeWarthog(n % VARIANTS + 1) : makeClayGolem(n % VARIANTS + 1, eyeMat);
+    t = type === 'clay' ? makeClayGolem(n % VARIANTS + 1, eyeMat) : FACTORY[type](n % VARIANTS + 1);
     templates.set(key, t);
   }
   const group = t.group.clone(true);
@@ -79,7 +114,7 @@ function instantiate(type, n, eyeMat) {
   for (const o of dst) if (o.isMesh && o.material === t.material) o.material = material;
   const out = { group, material, kind: t.kind };
   for (const k of ['body', 'head', 'tail', 'torso']) if (t[k]) out[k] = map.get(t[k]);
-  for (const k of ['legs', 'arms', 'eyes']) if (t[k]) out[k] = t[k].map((o) => map.get(o));
+  for (const k of ['legs', 'arms', 'eyes', 'wings']) if (t[k]) out[k] = t[k].map((o) => map.get(o));
   return out;
 }
 
@@ -106,6 +141,7 @@ export class Mobs {
     this.fires = []; // palavat olennot nuotioiden valoille (structures.extraFires)
     this.spawnTimer = 3;
     this.clayTimer = 6;
+    this.wildTimer = 2;
     this.combat = null; // asetetaan main.js:ssä (osumat pelaajaan)
     this.enabled = true;
     this.seed = 1;
@@ -138,7 +174,7 @@ export class Mobs {
       vy: 0,
       yaw: Math.random() * Math.PI * 2,
       hp: def.hp,
-      state: emerge ? 'emerge' : type === 'warthog' ? 'graze' : 'wander',
+      state: emerge ? 'emerge' : type === 'clay' ? 'wander' : 'graze',
       stateT: 0,
       timer: 1 + Math.random() * 4,
       tx: x, tz: z,          // vaelluksen kohde
@@ -172,6 +208,7 @@ export class Mobs {
     this.fires.length = 0;
     this.spawnTimer = 3;
     this.clayTimer = 6;
+    this.wildTimer = 2;
   }
 
   // Lähin olento säteellä (kohteen nimi ja terveys tähtäimessä).
@@ -231,6 +268,12 @@ export class Mobs {
       return true;
     }
     const def = m.def;
+    if (def.skittish) {
+      // Arka eläin pakenee heti (lintu lentää) ja varoittaa laumaansa.
+      this._startFlee(m, true);
+      this._alarm(m);
+      return true;
+    }
     if (m.type === 'warthog') {
       if (m.hp / def.hp < 0.35) {
         m.provoked = 0;
@@ -384,6 +427,11 @@ export class Mobs {
         this.spawnTimer = 2.5 + Math.random() * 2.5;
         this._trySpawnWarthogs(night);
       }
+      this.wildTimer -= dt;
+      if (this.wildTimer <= 0) {
+        this.wildTimer = 2.5 + Math.random() * 3;
+        this._trySpawnWild(night);
+      }
       if (night && !player.dead) {
         this.clayTimer -= dt;
         if (this.clayTimer <= 0) {
@@ -413,10 +461,12 @@ export class Mobs {
     // --- Tekoäly, liike ja animaatio
     for (const m of this.list.slice()) {
       if (dt > 0) {
-        if (m.type === 'warthog') this._thinkWarthog(m, dt);
+        if (m.def.skittish) this._thinkSkittish(m, dt);
+        else if (m.type === 'warthog') this._thinkWarthog(m, dt);
         else this._thinkClay(m, dt);
         if (!this.list.includes(m)) continue;
-        this._physics(m, dt);
+        if (m.state === 'fly') this._flyPhysics(m, dt);
+        else this._physics(m, dt);
       }
       this._animate(m, dt, elapsed);
       if (m.burning) {
@@ -458,6 +508,41 @@ export class Mobs {
       if (Math.random() < 0.25 && this.count('clay') < MAX_CLAY) {
         const ox = x + (Math.random() - 0.5) * 6, oz = z + (Math.random() - 0.5) * 6;
         if (this._okSpot(ox, oz)) this.spawn('clay', ox, oz, { emerge: true });
+      }
+      return;
+    }
+  }
+
+  // Arat eläimet: valitaan biomiin sopiva laji ja lauma 45–95 m päähän.
+  _trySpawnWild(night) {
+    const p = this.player.position;
+    let wild = 0;
+    for (const m of this.list) if (m.def.skittish && m.state !== 'dead') wild++;
+    if (wild >= 22) return;
+    for (let a = 0; a < 5; a++) {
+      const ang = Math.random() * Math.PI * 2;
+      const r = 45 + Math.random() * 50;
+      const x = p.x + Math.cos(ang) * r, z = p.z + Math.sin(ang) * r;
+      if (!this._okSpot(x, z)) continue;
+      // Laji painotettuna biomin mukaan (kettu liikkuu enemmän öisin).
+      const w = WILD.map((t) => {
+        const def = MOB_TYPES[t];
+        let v = Math.max(0, def.habitat(_s));
+        if (t === 'fennec') v *= night ? 2 : 0.6;
+        else if (night) v *= t === 'bird' ? 0.1 : 0.4;
+        if (this.count(t) >= def.max) v = 0;
+        return v;
+      });
+      const total = w.reduce((s2, v) => s2 + v, 0);
+      if (total < 0.3) continue;
+      let pick = Math.random() * total, type = WILD[0];
+      for (let i = 0; i < WILD.length; i++) { pick -= w[i]; if (pick <= 0) { type = WILD[i]; break; } }
+      const def = MOB_TYPES[type];
+      const n = def.group[0] + Math.floor(Math.random() * (def.group[1] - def.group[0] + 1));
+      const spread = def.bird ? 3 : 6;
+      for (let i = 0; i < n && this.count(type) < def.max; i++) {
+        const ox = x + (Math.random() - 0.5) * spread, oz = z + (Math.random() - 0.5) * spread;
+        if (this._okSpot(ox, oz)) this.spawn(type, ox, oz);
       }
       return;
     }
@@ -588,6 +673,129 @@ export class Mobs {
       default:
         this._set(m, 'graze', 2);
     }
+  }
+
+  // Pakoon: maassa juoksee, linnut ja helmikanat (lähellä) lentävät.
+  _startFlee(m, hurt = false) {
+    if (m.state === 'dead' || m.state === 'fly') return;
+    const def = m.def;
+    const { d } = this._toPlayer(m);
+    if (def.bird || (def.flies && (hurt || d < def.sight * 0.45))) {
+      this._set(m, 'fly', def.bird ? 7 : 1.4 + Math.random() * 0.6);
+      m.vy = def.bird ? 3.2 + Math.random() : 4.2;
+    } else {
+      this._set(m, 'flee', 5 + Math.random() * 3);
+    }
+  }
+
+  // Lauman muut jäsenet säikähtävät pienellä viiveellä.
+  _alarm(m) {
+    for (const o of this.list) {
+      if (o === m || o.type !== m.type || o.state === 'dead' || o.state === 'flee' || o.state === 'fly') continue;
+      if ((o.pos.x - m.pos.x) ** 2 + (o.pos.z - m.pos.z) ** 2 > 22 * 22) continue;
+      o.alarmAt = 0.15 + Math.random() * 0.5;
+    }
+  }
+
+  _thinkSkittish(m, dt) {
+    const def = m.def;
+    m.stateT += dt;
+    m.timer -= dt;
+    const { dx, dz, d } = this._toPlayer(m);
+    const P = this.player;
+    // Havaitseminen: hiipiessä vasta lähellä, juostessa kauempaa.
+    const sight = P.dead ? 0 : def.sight * (P.crouching ? 0.38 : P.sprinting ? 1.25 : 1) * (P.inWater === 2 ? 0.7 : 1);
+    const near = d < sight;
+    if (m.alarmAt !== undefined && m.state !== 'dead') {
+      m.alarmAt -= dt;
+      if (m.alarmAt <= 0) { m.alarmAt = undefined; this._startFlee(m); }
+    }
+    switch (m.state) {
+      case 'graze':
+        this._steer(m, 0, 0, 0, dt);
+        if (near) this._set(m, 'alert', 0.5 + Math.random() * 0.9);
+        else if (m.timer <= 0) {
+          const a = Math.random() * Math.PI * 2, r = def.bird ? 1 + Math.random() * 2 : 3 + Math.random() * 7;
+          m.tx = m.pos.x + Math.cos(a) * r;
+          m.tz = m.pos.z + Math.sin(a) * r;
+          this._set(m, 'wander', 6);
+        }
+        break;
+      case 'wander': {
+        const wx = m.tx - m.pos.x, wz = m.tz - m.pos.z;
+        const wd = Math.hypot(wx, wz);
+        this._steer(m, wx / (wd || 1), wz / (wd || 1), def.walk, dt);
+        if (near) this._set(m, 'alert', 0.5 + Math.random() * 0.9);
+        else if (wd < 0.5 || m.timer <= 0) this._set(m, 'graze', 2 + Math.random() * 5);
+        break;
+      }
+      case 'alert':
+        // Pysähtyy katsomaan; liian lähelle tultaessa pakenee heti.
+        this._steer(m, dx, dz, 0, dt, true);
+        if (near && (d < sight * 0.6 || m.timer <= 0)) {
+          this._startFlee(m);
+          this._alarm(m);
+        } else if (!near && m.stateT > 2.5) this._set(m, 'graze', 1 + Math.random() * 3);
+        break;
+      case 'flee': {
+        const wob = Math.sin(m.stateT * 1.7 + m.phase) * 0.45;
+        const fx = -dx * Math.cos(wob) + dz * Math.sin(wob);
+        const fz = -dz * Math.cos(wob) - dx * Math.sin(wob);
+        this._steer(m, fx, fz, def.run, dt);
+        // Helmikana pyrähtää lentoon, jos pelaaja on aivan kintereillä.
+        if (def.flies && d < def.sight * 0.35 && m.stateT > 0.3) this._startFlee(m, true);
+        else if (m.timer <= 0) {
+          if (d > sight * 2 || P.dead) this._set(m, 'graze', 2 + Math.random() * 3);
+          else m.timer = 1.5;
+        }
+        break;
+      }
+      case 'fly': {
+        // Lento poispäin pelaajasta; lintu katoaa näkyvistä.
+        const want = Math.atan2(-dx, -dz) + Math.sin(m.stateT * 1.3 + m.phase) * 0.4;
+        const diff = angleDiff(want, m.yaw);
+        m.yaw += Math.max(-4 * dt, Math.min(4 * dt, diff));
+        const sp = def.bird ? 7 : 6.5;
+        m.vel.x = Math.sin(m.yaw) * sp;
+        m.vel.z = Math.cos(m.yaw) * sp;
+        if (m.timer <= 0) {
+          if (def.bird) { this.remove(m); return; }
+          if (m.pos.y <= m.groundH + 0.05) this._set(m, 'flee', 3 + Math.random() * 2);
+        }
+        break;
+      }
+      case 'stagger':
+        this._steer(m, 0, 0, 0, dt);
+        if (m.stateT >= m.staggerDur) this._startFlee(m, true);
+        break;
+      case 'dead':
+        m.deadT += dt;
+        m.vel.multiplyScalar(Math.exp(-dt * 6));
+        if (m.poolAt > 0 && m.deadT >= m.poolAt && this.blood) {
+          m.poolAt = 0;
+          this.blood.splat(m.pos.x, m.pos.z, Math.max(0.4, def.radius * 3), BLOOD[m.type], 4);
+        }
+        if (m.deadT > 6) this.remove(m);
+        break;
+      default:
+        this._set(m, 'graze', 2);
+    }
+  }
+
+  // Lento: nousu, liuku ja lasku (ei maaston törmäyksiä ilmassa).
+  _flyPhysics(m, dt) {
+    const pos = m.pos;
+    pos.x += (m.vel.x + m.knock.x) * dt;
+    pos.z += (m.vel.z + m.knock.z) * dt;
+    m.knock.multiplyScalar(Math.exp(-dt * 3.5));
+    const w = waterAt(pos.x, pos.z, _wq);
+    m.groundH = Math.max(w.h, w.wl);
+    const bird = m.def.bird;
+    // Linnut nousevat korkealle; helmikana liitää matalalla ja laskeutuu.
+    const lift = bird ? 2.2 : m.timer > 0.4 ? 0.6 : -6;
+    m.vy += (lift - m.vy) * Math.min(1, dt * (bird ? 1.2 : 2.5));
+    pos.y += m.vy * dt;
+    if (pos.y < m.groundH) { pos.y = m.groundH; m.vy = 0; }
   }
 
   _thinkClay(m, dt) {
@@ -815,9 +1023,68 @@ export class Mobs {
     m.flash *= Math.exp(-dt * 9);
     if (!m.burning) md.material.emissive.setRGB(m.flash * 0.85, m.flash * 0.22, m.flash * 0.12);
     const speed = Math.hypot(m.vel.x, m.vel.z);
-    m.phase += speed * dt * (m.type === 'warthog' ? 4.4 : 3.2);
+    const kind = md.kind;
+    m.phase += speed * dt * (m.type === 'warthog' ? 4.4 : kind === 'bird' ? 14 : kind === 'guineafowl' ? 9 : m.def.skittish ? 5 : 3.2);
     if (m.type === 'warthog') this._animWarthog(m, md, speed, dt, elapsed);
+    else if (kind === 'guineafowl' || kind === 'bird') this._animFowl(m, md, speed, dt, elapsed);
+    else if (m.def.skittish) this._animQuad(m, md, speed, dt, elapsed);
     else this._animClay(m, md, speed, dt, elapsed);
+  }
+
+  // Nelijalkaiset arat eläimet: käynti ristikkäin, juostessa loikka (etu- ja
+  // takajalat parina). Laiduntaessa pää alhaalla, valppaana ylhäällä.
+  _animQuad(m, md, speed, dt, elapsed) {
+    const ph = m.phase;
+    const L = md.legs;
+    const run = Math.min(1, Math.max(0, (speed - 2.5) / 4));
+    const amp = Math.min(0.85, speed * 0.25);
+    const walkA = Math.sin(ph) * amp, walkB = Math.sin(ph + Math.PI) * amp;
+    const gal = Math.sin(ph) * amp * 1.1, gal2 = Math.sin(ph + 1.2) * amp * 1.1;
+    const lf = walkA * (1 - run) + gal * run, rf = walkB * (1 - run) + gal * run;
+    const lb = walkB * (1 - run) - gal2 * run, rb = walkA * (1 - run) - gal2 * run;
+    L[0].rotation.x = lf; L[1].rotation.x = rf; L[2].rotation.x = lb; L[3].rotation.x = rb;
+    md.body.position.y = Math.abs(Math.sin(ph)) * 0.05 * run;
+    md.body.rotation.x = Math.sin(ph + 0.6) * 0.08 * run;
+    const s = m.state;
+    let headX = 0.1;
+    if (s === 'graze') headX = (m.type === 'gazelle' ? 1.55 : m.type === 'monkey' ? 0.55 : 0.9) + Math.sin(elapsed * 3 + m.phase) * 0.05;
+    else if (s === 'alert') headX = -0.25;
+    else if (s === 'flee') headX = -0.05;
+    md.head.rotation.x += (headX - md.head.rotation.x) * Math.min(1, dt * 8);
+    if (md.tail) md.tail.rotation.x = -0.3 - run * 0.6 + Math.sin(elapsed * 6 + m.phase) * 0.15;
+    if (s === 'dead') {
+      const k = smooth(m.deadT / 0.4);
+      md.group.rotation.z = (m.deathSide || 1) * k * 1.45;
+      md.group.position.y += k * m.def.radius * 0.4 - Math.max(0, m.deadT - 4.5) * 0.3;
+      for (const l of L) l.rotation.x *= Math.exp(-dt * 6);
+    }
+  }
+
+  // Linnut ja helmikana: maassa tepastelu ja nokkiminen, ilmassa siivet lyövät.
+  _animFowl(m, md, speed, dt, elapsed) {
+    const flying = m.state === 'fly' && m.pos.y > (m.groundH ?? m.pos.y) + 0.05;
+    const L = md.legs;
+    const amp = Math.min(0.9, speed * 0.4) * (flying ? 0 : 1);
+    L[0].rotation.x = Math.sin(m.phase) * amp;
+    L[1].rotation.x = Math.sin(m.phase + Math.PI) * amp;
+    let headX = 0;
+    if (m.state === 'graze') headX = Math.max(0, Math.sin(elapsed * 5 + m.phase)) * 0.9;
+    else if (m.state === 'alert') headX = -0.2;
+    md.head.rotation.x += (headX - md.head.rotation.x) * Math.min(1, dt * 14);
+    if (md.wings) {
+      const flap = flying ? Math.sin(elapsed * (m.def.bird ? 34 : 22) + m.phase) * 0.9 : 0;
+      for (let i = 0; i < md.wings.length; i++) {
+        const w = md.wings[i];
+        const sx = i === 0 ? -1 : 1;
+        if (m.type === 'guineafowl') w.visible = flying;
+        w.rotation.z = flying ? sx * (0.2 + flap) : sx * -0.05;
+      }
+    }
+    md.body.rotation.x = flying ? -0.15 : 0;
+    if (m.state === 'dead') {
+      const k = smooth(m.deadT / 0.3);
+      md.group.rotation.z = (m.deathSide || 1) * k * 1.5;
+    }
   }
 
   _animWarthog(m, md, speed, dt, elapsed) {

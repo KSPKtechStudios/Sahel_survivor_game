@@ -140,6 +140,10 @@ export class DevTools {
     this._button(row, 'Savipeikko', () => (mobs.spawnInFront('clay', 8) ? `Savipeikko kutsuttu${env.daylight > 0.18 ? ' (päivällä se syttyy pian palamaan)' : ''}` : 'Paikkaa ei löytynyt'));
     this._button(row, 'Poista olennot', () => { mobs.clear(); return 'Olennot poistettu'; });
     row = this._row(sec);
+    for (const [type, name] of [['gazelle', 'Gaselli'], ['guineafowl', 'Helmikana'], ['monkey', 'Apina'], ['fennec', 'Aavikkokettu'], ['bird', 'Lintu']]) {
+      this._button(row, name, () => (mobs.spawnInFront(type, 14) ? `${name} kutsuttu (arka: hiivi [Ctrl] tai käytä jousta)` : 'Paikkaa ei löytynyt'));
+    }
+    row = this._row(sec);
     this._toggle(row, 'Olentoja syntyy', () => mobs.enabled, (v) => { mobs.enabled = v; });
 
     // Esineet
