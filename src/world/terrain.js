@@ -936,20 +936,21 @@ export function sampleTerrain(x, z, out = {}) {
 export const STRUCT_CELL = 230;
 const STRUCT_CHANCE = 0.5;
 const SHIPWRECK_CHANCE = 0.45; // rannalla (märkä paikka), jos solussa ei ole kuivaa paikkaa
-export const STRUCT_RADIUS = { stoneCircle: 8, camp: 10, ruinHouse: 7, ruinVillage: 21, shipwreck: 11 };
+export const STRUCT_RADIUS = { stoneCircle: 8, camp: 10, ruinHouse: 7, ruinVillage: 21, shipwreck: 11, runestone: 3, runeTablet: 2 };
 // Painot biomeittain; null = ei rakennelmaa. Talon ja kylän rauniot ovat
 // kaikissa biomeissa harvinaisia (n. 7–8 % soluista), muut ovat biomin omia.
+// Riimukivet ja -taulut (sessio 9) ovat kaikkialla siellä täällä.
 const STRUCT_TABLE = {
-  savanna: [['stoneCircle', 5], ['ruinHouse', 2], ['ruinVillage', 0.6]],
-  woodland: [['stoneCircle', 4], ['ruinHouse', 2.2], ['ruinVillage', 0.7]],
-  laterite: [['stoneCircle', 6], ['ruinHouse', 2], ['ruinVillage', 0.6]],
-  dunes: [['camp', 3], ['stoneCircle', 2], ['ruinHouse', 1.2], [null, 1]],
-  mare: [['ruinHouse', 1.5], ['ruinVillage', 0.6], [null, 5]],
-  desert: [['camp', 6.5], ['ruinHouse', 1.5], ['ruinVillage', 0.6]],
-  oasis: [['camp', 4], ['ruinVillage', 1.2], [null, 1]],
-  rainforest: [['ruinHouse', 2.2], ['ruinVillage', 0.8], [null, 7]],
-  mountains: [['ruinHouse', 2.2], ['ruinVillage', 0.8], [null, 7]],
-  beach: [['camp', 2], ['ruinHouse', 1.5], ['shipwreck', 0.6], [null, 4]],
+  savanna: [['stoneCircle', 5], ['ruinHouse', 2], ['ruinVillage', 0.6], ['runestone', 1.2], ['runeTablet', 1.6]],
+  woodland: [['stoneCircle', 4], ['ruinHouse', 2.2], ['ruinVillage', 0.7], ['runestone', 1.1], ['runeTablet', 1.5]],
+  laterite: [['stoneCircle', 6], ['ruinHouse', 2], ['ruinVillage', 0.6], ['runestone', 1.4], ['runeTablet', 1.6]],
+  dunes: [['camp', 3], ['stoneCircle', 2], ['ruinHouse', 1.2], ['runestone', 0.8], ['runeTablet', 1], [null, 1]],
+  mare: [['ruinHouse', 1.5], ['ruinVillage', 0.6], ['runestone', 0.8], ['runeTablet', 1.2], [null, 5]],
+  desert: [['camp', 6.5], ['ruinHouse', 1.5], ['ruinVillage', 0.6], ['runestone', 1.4], ['runeTablet', 1.8]],
+  oasis: [['camp', 4], ['ruinVillage', 1.2], ['runestone', 0.6], ['runeTablet', 0.8], [null, 1]],
+  rainforest: [['ruinHouse', 2.2], ['ruinVillage', 0.8], ['runestone', 1.4], ['runeTablet', 1.6], [null, 7]],
+  mountains: [['ruinHouse', 2.2], ['ruinVillage', 0.8], ['runestone', 1.8], ['runeTablet', 1.6], [null, 7]],
+  beach: [['camp', 2], ['ruinHouse', 1.5], ['shipwreck', 0.6], ['runeTablet', 0.8], [null, 4]],
   ocean: [[null, 1]],
 };
 
@@ -998,7 +999,7 @@ export function structureInCell(ix, iz) {
     }
     if (type) {
       const seed = (rand() * 4294967296) >>> 0;
-      const chest = rand() < 0.45;
+      const chest = type !== 'runestone' && type !== 'runeTablet' && rand() < 0.45;
       const valuables = chest && rand() < 0.1;
       const style = best.biome === 'mountains' ? 'stone' : best.biome === 'rainforest' ? 'jungle' : 'mud';
       result = {

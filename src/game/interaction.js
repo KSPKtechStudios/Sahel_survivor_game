@@ -23,6 +23,7 @@ export class Interaction {
     this.placeValid = false;
     this.useItem = null;  // main.js: syö / käytä valitun paikan esine
     this.usePiece = null; // main.js: [E] rakennelmaan (makuualusta)
+    this.readRune = null; // main.js: [E] riimukiveen (käännös)
   }
 
   _raycast() {
@@ -38,6 +39,7 @@ export class Interaction {
     consider(this.drops.raycast(o, _dir, reach), 'drop');
     consider(this.fallen.raycast(o, _dir, reach + 0.4), 'log');
     consider(this.ruins.raycast(o, _dir, reach), 'chest');
+    consider(this.ruins.raycastRunes(o, _dir, reach + 1.5), 'rune');
     consider(this.structures.raycast(o, _dir, reach), 'piece');
     if (this.mobs) consider(this.mobs.raycast(o, _dir, reach + 2), 'mob');
     return best;
@@ -97,6 +99,7 @@ export class Interaction {
     if (target.kind === 'chest') {
       return target.obj.chest.opened ? { name: 'Tyhjä arkku', action: '' } : { name: 'Arkku', action: '[E] Avaa' };
     }
+    if (target.kind === 'rune') return { name: target.obj.rune.name, action: 'PAINA E KÄÄNTÄÄKSESI', rune: true };
     if (target.kind === 'drop') {
       const d = target.obj;
       return { name: ITEMS[d.item].name + (d.count > 1 ? ` ×${d.count}` : ''), action: '[E] Poimi' };
@@ -131,6 +134,10 @@ export class Interaction {
   }
 
   _tryPickup(target) {
+    if (target.kind === 'rune') {
+      if (this.readRune) this.readRune(target.obj);
+      return true;
+    }
     if (target.kind === 'piece') {
       if (PIECES[target.obj.type].bed && this.usePiece) this.usePiece(target.obj);
       return true;
@@ -176,7 +183,7 @@ export class Interaction {
     _hit.copy(this.camera.position).addScaledVector(this.camera.getWorldDirection(_dir), target.t);
     const playerPos = this.camera.position;
 
-    if (target.kind === 'drop' || target.kind === 'chest') return;
+    if (target.kind === 'drop' || target.kind === 'chest' || target.kind === 'rune' || target.kind === 'piece') return;
     if (target.kind === 'tumbleweed') {
       const tw = target.obj;
       tw.mesh.updateMatrixWorld(true);

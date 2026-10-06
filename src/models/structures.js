@@ -325,13 +325,67 @@ function shipwreck(out, colliders, rand, chestSpot) {
   if (chestSpot) chestSpot.push({ x: (rand() - 0.5) * L * 0.5, z: 4.6, rot: rand() * 0.6 - 0.3 });
 }
 
+// Riimukivi: korkea, karkea kivipaasi; etupinnalla kaiverrus (rune-taso
+// lisätään erikseen tekstuurina, ks. ruins.js).
+function runestone(out, colliders, rand, style) {
+  const g = new THREE.BoxGeometry(0.78, 1.95, 0.34, 3, 6, 2);
+  displace(g, (x, y, z) => {
+    const edge = Math.abs(x) > 0.3 || Math.abs(y) > 0.9 ? 1 : 0.3;
+    return [(rand() - 0.5) * 0.06 * edge, (rand() - 0.5) * 0.04, z < 0 ? (rand() - 0.5) * 0.08 : (rand() - 0.5) * 0.015];
+  });
+  // Yläpää kapenee ja pyöristyy
+  displace(g, (x, y) => [y > 0.7 ? -x * (y - 0.7) * 0.35 : 0, 0, 0]);
+  g.translate(0, 0.9, 0);
+  const col = style === 'jungle' ? 0x6f6a58 : style === 'stone' ? 0x7d756c : 0x8a7a68;
+  out.push(paint(flatNormals(g), col, { rand, jitter: 0.08, shade: (x, y) => (y < 0.15 ? 0.8 : 1) }));
+  // Kivenmurikoita juurella
+  for (let i = 0; i < 4; i++) {
+    const a = rand() * Math.PI * 2, r = 0.45 + rand() * 0.3;
+    const b = new THREE.DodecahedronGeometry(0.1 + rand() * 0.08, 0);
+    b.scale(1.2, 0.6, 1);
+    b.translate(Math.cos(a) * r, 0.04, Math.sin(a) * r);
+    out.push(paint(flatNormals(b), col, { rand, jitter: 0.12 }));
+  }
+  if (style === 'jungle') {
+    const moss = new THREE.BoxGeometry(0.8, 0.12, 0.36, 3, 1, 1);
+    displace(moss, () => [(rand() - 0.5) * 0.05, (rand() - 0.5) * 0.05, (rand() - 0.5) * 0.03]);
+    moss.translate(0, 1.82, 0);
+    out.push(paint(moss, 0x4f6e30, { rand }));
+  }
+  colliders.push({ seg: true, ax: -0.35, az: 0, bx: 0.35, bz: 0, r: 0.22, top: 1.9 });
+  return { x: 0, y: 1.0, z: 0.178, rx: 0, w: 0.58, h: 1.42, size: 0.9 };
+}
+
+// Riimutaulu: pieni, maahan kallistunut kivilaatta, kaiverrus yläpinnassa.
+function runeTablet(out, colliders, rand) {
+  const tilt = 0.18 + rand() * 0.12;
+  const g = new THREE.BoxGeometry(0.66, 0.12, 0.46, 3, 1, 2);
+  displace(g, () => [(rand() - 0.5) * 0.03, (rand() - 0.5) * 0.015, (rand() - 0.5) * 0.03]);
+  g.rotateX(-tilt);
+  g.translate(0, 0.1, 0);
+  out.push(paint(flatNormals(g), 0x8a8072, { rand, jitter: 0.1 }));
+  for (let i = 0; i < 3; i++) {
+    const a = rand() * Math.PI * 2, r = 0.4 + rand() * 0.2;
+    const b = new THREE.DodecahedronGeometry(0.06 + rand() * 0.05, 0);
+    b.translate(Math.cos(a) * r, 0.03, Math.sin(a) * r);
+    out.push(paint(flatNormals(b), 0x8a8072, { rand, jitter: 0.12 }));
+  }
+  colliders.push({ x: 0, z: 0, r: 0.3 });
+  return { x: 0, y: 0.1 + 0.066 * Math.cos(tilt), z: -0.066 * Math.sin(tilt), rx: -Math.PI / 2 - tilt, w: 0.56, h: 0.36, size: 0.55 };
+}
+
 export function buildStructure(st) {
   const rand = mulberry32(st.seed);
   const style = STYLE[st.style] || STYLE.mud;
   const out = [];
   const colliders = [];
   const chestSpot = st.chest ? [] : null;
-  if (st.type === 'stoneCircle') {
+  let rune = null;
+  if (st.type === 'runestone') {
+    rune = runestone(out, colliders, rand, st.style);
+  } else if (st.type === 'runeTablet') {
+    rune = runeTablet(out, colliders, rand);
+  } else if (st.type === 'stoneCircle') {
     stoneCircle(out, colliders, rand, chestSpot);
   } else if (st.type === 'camp') {
     camp(out, colliders, rand, chestSpot);
@@ -371,7 +425,7 @@ export function buildStructure(st) {
     }
   }
   const geometry = merge(out);
-  return { geometry, colliders, chest: chestSpot && chestSpot[0] ? chestSpot[0] : null };
+  return { geometry, colliders, chest: chestSpot && chestSpot[0] ? chestSpot[0] : null, rune };
 }
 
 // Arkku: runko ja kansi erikseen (kansi aukeaa saranan ympäri).

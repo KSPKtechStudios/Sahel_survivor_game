@@ -46,6 +46,7 @@ import { BigMap } from './ui/bigMap.js';
 import { GuideUI } from './ui/guideUI.js';
 import { InventoryUI } from './ui/inventoryUI.js';
 import { BuildMenu } from './ui/buildMenu.js';
+import { RunePanel } from './ui/runePanel.js';
 import { Menu } from './ui/menu.js';
 import { DevTools } from './ui/devtools.js';
 
@@ -145,6 +146,13 @@ function useSlot(i) {
   }
 }
 interaction.useItem = useSlot;
+
+// Riimukivet: [E] kääntää tekstin suomeksi.
+const runePanel = new RunePanel();
+interaction.readRune = (a) => {
+  runePanel.toggle(ruins.translate(a), a.st.id, a.rune.world);
+  viewmodel.pickup();
+};
 
 // Makuualusta: yöllä nukutaan aamuun, aina asetetaan herätyspaikaksi.
 let sleepT = 0;
@@ -254,6 +262,7 @@ function setState(s) {
   $('hud').classList.toggle('hidden', !inGame);
   if (s !== 'inventory') invUI.hide();
   if (s !== 'build') buildMenu.hide();
+  if (s === 'menu' || s === 'loading') runePanel.hide();
   if (s !== 'map') bigMap.hide();
   if (s !== 'dev') devtools.hide();
   if (s === 'playing') {
@@ -729,6 +738,7 @@ function frame(now) {
     viewmodel.setItem(inventory.selectedItem ? inventory.selectedItem.id : null);
     viewmodel.update(simDt, player, input, env, camera, fireNear * 1.5);
     guide.update(simDt);
+    runePanel.update(dt, player.position);
     hud.update(dt, { prompt: interaction.prompt, player, env, visible: state === 'playing', cooldown: combat.cooldownFrac });
     explored.update(dt, player.position.x, player.position.z);
     minimap.update(dt, player);

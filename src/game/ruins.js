@@ -7,6 +7,7 @@ import { mulberry32 } from '../noise.js';
 import { structuresNear } from '../world/terrain.js';
 import { buildStructure, makeChestModels } from '../models/structures.js';
 import { events } from './events.js';
+import { LORE, drawRunes, loreFor } from './lore.js';
 
 const BUILD_RANGE = 300;
 const COMMON = [
@@ -19,7 +20,23 @@ const VALUABLE = [['gold_nugget', 1, 3], ['cowrie', 3, 8], ['bronze_bracelet', 1
 
 export const STRUCT_NAMES = {
   stoneCircle: 'Kivikehä', camp: 'Hylätty leiri', ruinHouse: 'Talon rauniot', ruinVillage: 'Kylän rauniot', shipwreck: 'Laivanhylky',
+  runestone: 'Riimukivi', runeTablet: 'Riimutaulu',
 };
+
+// Kaiverrustekstuuri: riimut vaalealle pohjalle (läpinäkyvä tausta).
+function runeTexture(text, w, h) {
+  const px = 256;
+  const c = document.createElement('canvas');
+  c.width = px;
+  c.height = Math.round((px * h) / w);
+  const g = c.getContext('2d');
+  drawRunes(g, text, c.width * 0.08, c.height * 0.06, c.width * 0.84, c.height * 0.88, {
+    lineW: c.width * 0.032, color: 'rgba(16,11,7,0.96)', light: 'rgba(255,246,228,0.6)',
+  });
+  const tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 4;
+  return tex;
+}
 
 // Arkun sisältö on siemenestä laskettu, joten se on joka kerta sama.
 export function rollLoot(st) {
@@ -50,8 +67,9 @@ const _v = new THREE.Vector3();
 export class Ruins {
   constructor({ scene, world, drops, bursts }) {
     Object.assign(this, { scene, world, drops, bursts });
-    this.active = new Map(); // id -> { st, group, colliders, chest }
+    this.active = new Map(); // id -> { st, group, colliders, chest, rune }
     this.opened = new Set();
+    this.read = new Set();   // käännetyt riimukivet
     this.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
     this.chestModels = makeChestModels();
     this.timer = 0;
@@ -60,6 +78,7 @@ export class Ruins {
   clear() {
     for (const id of [...this.active.keys()]) this._remove(id);
     this.opened = new Set();
+    this.read = new Set();
   }
 
   update(dt, playerPos) {
@@ -139,7 +158,24 @@ export class Ruins {
       colliders.push(cc);
       this.world.extraColliders.push(cc);
     }
-    this.active.set(st.id, { st, group, colliders, chest });
+    // Riimut: kaiverrustaso kiven pinnalle (oma tekstuuri jokaiselle kivelle)
+    let rune = null;
+    if (built.rune) {
+      const r = built.rune;
+      const idx = loreFor(st.seed);
+      const tex = runeTexture(LORE[idx], r.w, r.h);
+      const mat = new THREE.MeshStandardMaterial({
+        map: tex, transparent: true, depthWrite: false, roughness: 1,
+        polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+      });
+      const plane = new THREE.Mesh(new THREE.PlaneGeometry(r.w, r.h), mat);
+      plane.position.set(r.x, r.y, r.z);
+      plane.rotation.x = r.rx;
+      group.add(plane);
+      group.updateMatrixWorld(true);
+      rune = { mesh: plane, idx, size: r.size, world: plane.getWorldPosition(new THREE.Vector3()), name: STRUCT_NAMES[st.type] };
+    }
+    this.active.set(st.id, { st, group, colliders, chest, rune });
   }
 
   _remove(id) {
@@ -147,6 +183,11 @@ export class Ruins {
     if (!a) return;
     this.scene.remove(a.group);
     a.group.children[0].geometry.dispose();
+    if (a.rune) {
+      a.rune.mesh.geometry.dispose();
+      a.rune.mesh.material.map.dispose();
+      a.rune.mesh.material.dispose();
+    }
     for (const col of a.colliders) {
       const i = this.world.extraColliders.indexOf(col);
       if (i >= 0) this.world.extraColliders.splice(i, 1);
@@ -173,6 +214,31 @@ export class Ruins {
     return best;
   }
 
+  // Säde riimukiveen. Palauttaa { obj: { ruin }, t }.
+  raycastRunes(origin, dir, maxDist) {
+    let best = null;
+    for (const a of this.active.values()) {
+      if (!a.rune) continue;
+      const oc = _v.copy(a.rune.world).sub(origin);
+      const r = a.rune.size;
+      const tca = oc.dot(dir);
+      if (tca < -r) continue;
+      const d2 = oc.lengthSq() - tca * tca;
+      if (d2 > r * r) continue;
+      const t = Math.max(0, tca - Math.sqrt(r * r - d2));
+      if (t <= maxDist && (!best || t < best.t)) best = { obj: a, t };
+    }
+    return best;
+  }
+
+  // Kivi käännetty: teksti ja tieto, oliko se jo luettu.
+  translate(a) {
+    const first = !this.read.has(a.st.id);
+    this.read.add(a.st.id);
+    events.emit('runeRead', { first, idx: a.rune.idx });
+    return { text: LORE[a.rune.idx], first, name: a.rune.name, count: this.read.size };
+  }
+
   open(a) {
     if (!a.chest || a.chest.opened) return false;
     a.chest.opened = true;
@@ -190,10 +256,13 @@ export class Ruins {
   }
 
   serialize() {
-    return [...this.opened];
+    return { opened: [...this.opened], read: [...this.read] };
   }
 
-  load(list) {
-    this.opened = new Set(Array.isArray(list) ? list : []);
+  load(data) {
+    // Vanha tallennus: pelkkä lista avatuista arkuista.
+    const opened = Array.isArray(data) ? data : data && Array.isArray(data.opened) ? data.opened : [];
+    this.opened = new Set(opened);
+    this.read = new Set(data && Array.isArray(data.read) ? data.read : []);
   }
 }
