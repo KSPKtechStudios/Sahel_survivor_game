@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="fi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sahel (prototyyppi)</title>
+  <link rel="stylesheet" href="styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/three.module.min.js",
+        "three/addons/": "./vendor/three/addons/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="weather-tint"></div>
+
+  <div id="hud">
+    <div id="crosshair"></div>
+    <div id="target">
+      <div class="name"></div>
+      <div class="action"></div>
+      <div class="hpbar"><i></i></div>
+    </div>
+
+    <div id="minimap">
+      <canvas id="minimap-canvas" width="176" height="176"></canvas>
+      <div id="biome-name"></div>
+    </div>
+
+    <div id="guide">
+      <div class="g-head"><span class="g-label">Opas</span><span class="g-step"></span></div>
+      <div class="g-title"></div>
+      <div class="g-text"></div>
+      <ul class="g-goals"></ul>
+      <div class="g-hint"></div>
+    </div>
+
+    <div id="notifications"></div>
+    <div id="message"></div>
+    <div id="item-name"></div>
+    <div id="stamina"><i></i></div>
+    <div id="hotbar"></div>
+  </div>
+
+  <div id="inventory" class="hidden">
+    <div class="inv-card">
+      <div class="inv-col">
+        <h2>Reppu</h2>
+        <div id="inv-grid"></div>
+        <div id="inv-info"></div>
+      </div>
+      <div class="inv-col craft">
+        <h2>Valmistus</h2>
+        <div id="recipes"></div>
+      </div>
+      <div class="inv-close">[Tab] sulje</div>
+    </div>
+  </div>
+  <div id="drag-cursor"><img alt=""></div>
+
+  <div id="menu" class="overlay">
+    <div class="menu-card">
+      <h1>SAHEL</h1>
+      <div class="subtitle">työnimi · prototyyppi</div>
+      <div id="menu-status"></div>
+      <button id="btn-play" class="primary" disabled>Ladataan…</button>
+      <div class="menu-cols">
+        <section>
+          <h3>Ohjaimet</h3>
+          <dl class="keys">
+            <dt>W A S D</dt><dd>liiku</dd>
+            <dt>Shift</dt><dd>juokse</dd>
+            <dt>Välilyönti</dt><dd>hyppää</dd>
+            <dt>Hiiri 1</dt><dd>lyö / hakkaa (pidä pohjassa)</dd>
+            <dt>E</dt><dd>poimi</dd>
+            <dt>Hiiri 2</dt><dd>aseta (esim. nuotio)</dd>
+            <dt>1–8 / rulla</dt><dd>valitse esine</dd>
+            <dt>Tab tai I</dt><dd>reppu ja valmistus</dd>
+            <dt>Esc</dt><dd>tauko</dd>
+          </dl>
+        </section>
+        <section>
+          <h3>Testaus</h3>
+          <div class="test-row"><span>Sää</span><div class="btns" id="weather-btns"></div></div>
+          <div class="test-row"><span>Aika</span><div class="btns" id="time-btns"></div></div>
+          <div class="test-note">Pikanäppäimet: [O] seuraava sää, [L] +1 tunti</div>
+          <button id="btn-reset" class="danger">Aloita uusi peli</button>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="loading" class="overlay">
+    <div class="load-card">
+      <div class="load-title">SAHEL</div>
+      <div class="load-text">Rakennetaan maailmaa…</div>
+      <div class="load-bar"><i id="load-fill"></i></div>
+    </div>
+  </div>
+
+  <div id="error" class="overlay hidden"><div class="menu-card"><h3>Virhe</h3><pre id="error-text"></pre></div></div>
+
+  <script>
+    window.addEventListener('error', function (e) {
+      var el = document.getElementById('error');
+      el.classList.remove('hidden');
+      document.getElementById('error-text').textContent = (e.message || e) + '\n' + (e.filename || '') + ':' + (e.lineno || '');
+    });
+  </script>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
