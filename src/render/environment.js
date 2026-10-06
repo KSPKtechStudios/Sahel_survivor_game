@@ -38,6 +38,7 @@ export const WEATHER_KEYS = Object.keys(WEATHER);
 // Päävalikon taustan tunnelmallinen auringonlasku (ei satunnaisessa säässä).
 WEATHER.menu = { name: 'Selkeä', cloud: 0.5, vis: 330, sunMul: 1.0, wind: 0.25, dust: 0.08, haze: 0.04, tint: 0xffffff, tintAmt: 0, grey: 0 };
 const HUMID_TINT = new THREE.Color(0xa9b5a2);
+const CANOPY_GREEN = new THREE.Color(0x6f9a5a);
 
 const NUMERIC = ['cloud', 'vis', 'sunMul', 'wind', 'dust', 'haze', 'tintAmt', 'grey'];
 
@@ -239,7 +240,9 @@ export class Environment {
     const fogC = tinted(lerpC('fog', this.scene.fog.color));
     u.uFogColor.value.copy(fogC);
     // Selkeällä/pilvisellä säällä näkyvyys = näköetäisyys, usvassa ja myrskyssä sään oma.
-    const vis = Math.min(w.vis >= 290 ? this.maxVis : w.vis, this.maxVis);
+    let vis = Math.min(w.vis >= 290 ? this.maxVis : w.vis, this.maxVis);
+    // Sademetsässä näkyvyys on lyhyt (tiheä kasvillisuus ja kosteus).
+    if (this.humid > 0.001) vis = lerp(vis, Math.min(vis, 95), this.humid * 0.9);
     this.scene.fog.far = vis;
     this.scene.fog.near = vis < 100 ? 0 : vis * 0.12;
 
@@ -255,6 +258,8 @@ export class Environment {
       intensity = 0.55 * smoothstep(0.0, 0.15, this.moonDir.y) * (1 - w.cloud * 0.6) * (1 - w.haze * 0.6);
       this.sun.color.copy(_moonCol);
     }
+    // Latvusto varjostaa sademetsässä.
+    intensity *= 1 - 0.45 * this.humid;
     this.sun.intensity = intensity;
     this.lightColor.copy(this.sun.color);
     this.lightIntensity = intensity;
@@ -265,7 +270,8 @@ export class Environment {
     tinted(lerpC('hemiG', this.hemi.groundColor));
     const hemiI = lerp(A.hemiI, B.hemiI, f);
     // Pilvisellä säällä hajavaloa on suhteessa enemmän.
-    this.hemi.intensity = hemiI * (1 + greyAmt * 0.25 + w.haze * 0.15);
+    this.hemi.intensity = hemiI * (1 + greyAmt * 0.25 + w.haze * 0.15) * (1 - 0.2 * this.humid);
+    if (this.humid > 0.001) this.hemi.color.lerp(_c2.copy(CANOPY_GREEN).multiplyScalar(dayLum), 0.35 * this.humid);
 
     // Varjokamera seuraa pelaajaa, ja sen paikka lukitaan tekseliruudukkoon
     // (vähentää varjojen värinää liikkuessa).

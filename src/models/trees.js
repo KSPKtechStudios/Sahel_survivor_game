@@ -285,3 +285,75 @@ export function makePalm(seed, q = 1) {
     height: H + 1, fallLen: H - cutY + 1.5, logR: 0.22,
   });
 }
+
+// --- Sademetsän keskikerroksen puu (tiheä, pyöreä latvus) --------------------------
+
+export function makeCanopyTree(seed, q = 1) {
+  const rand = mulberry32(seed);
+  let k = 0;
+  const jr = () => partRand(seed, k++);
+  const parts = [];
+  const bark = [0x6a5a48, 0x5c4f40, 0x74644e][seed % 3];
+  const leaves = [0x2e5a22, 0x3a6a28, 0x44752c, 0x335f25];
+  const H = 7 + rand() * 2.5;
+  const base = V(0, -0.3, 0);
+  const top = V((rand() - 0.5) * 0.8, H * 0.78, (rand() - 0.5) * 0.8);
+  const cutY = 0.9;
+  parts.push(...trunkParts(base, top, 0.34, 0.2, cutY, q, bark, jr, 7));
+  const nb = 3 + Math.floor(rand() * 2);
+  const tips = [];
+  for (let i = 0; i < nb; i++) {
+    const a = (i / nb) * Math.PI * 2 + rand() * 0.7;
+    const hb = top.y * (0.7 + rand() * 0.25);
+    const b0 = V(top.x * (hb / top.y), hb, top.z * (hb / top.y));
+    const len = 1.6 + rand() * 1.4;
+    const tip = V(b0.x + Math.cos(a) * len, hb + 1.2 + rand() * 1.0, b0.z + Math.sin(a) * len);
+    const j = jr();
+    if (q) parts.push(paint(limb(b0, tip, 0.13, 0.06, 5), bark, { rand: j }));
+    tips.push(tip);
+  }
+  const crowns = [{ p: V(top.x, H, top.z), s: V(2.6 + rand(), 1.7, 2.6 + rand()) }];
+  for (const t of tips) crowns.push({ p: V(t.x, t.y + 0.4, t.z), s: V(2.0 + rand() * 0.9, 1.4 + rand() * 0.4, 2.0 + rand() * 0.9) });
+  crowns.forEach((c, i) => {
+    const rot = rand() * Math.PI;
+    if (!q && i > 2) { jr(); return; }
+    // Lähiversiossa vain keskimmäinen latvus tarkkana (puita on sademetsässä paljon).
+    const detail = q === 2 || (q === 1 && i === 0) ? 1 : 0;
+    parts.push(blob(c.p, c.s, detail, leaves[i % leaves.length], jr, c.p.y - c.s.y * 0.35, rot));
+  });
+  return treeMeta(merge(parts), {
+    kind: 'canopy', base: base.toArray(), top: top.toArray(), r0: 0.34, r1: 0.2, cutY,
+    height: H + 1.7, fallLen: H - cutY + 1.2, logR: 0.32,
+  });
+}
+
+// --- Kuollut puu (aavikko): vaalea, lehdetön ja kiemurainen ----------------------------
+
+export function makeDeadTree(seed, q = 1) {
+  const rand = mulberry32(seed);
+  let k = 0;
+  const jr = () => partRand(seed, k++);
+  const parts = [];
+  const col = [0xb9ab96, 0xa8987f, 0xc4b8a4][seed % 3];
+  const H = 2.6 + rand() * 1.6;
+  const top = V((rand() - 0.5) * 1.0, H, (rand() - 0.5) * 1.0);
+  parts.push(paint(limb(V(0, -0.2, 0), top, 0.17, 0.09, q ? 6 : 4), col, { rand: jr() }));
+  const nb = 4 + Math.floor(rand() * 3);
+  for (let i = 0; i < nb; i++) {
+    const t = 0.45 + rand() * 0.5;
+    const b0 = V(top.x * t, (H + 0.2) * t - 0.2, top.z * t);
+    const a = rand() * Math.PI * 2;
+    const len = 0.8 + rand() * 1.4;
+    const tip = V(b0.x + Math.cos(a) * len, b0.y + 0.4 + rand() * 1.0, b0.z + Math.sin(a) * len);
+    const j = jr();
+    parts.push(paint(limb(b0, tip, 0.07, 0.025, q ? 4 : 3), col, { rand: j }));
+    const tw = rand() < 0.6;
+    const a2 = a + (rand() - 0.5) * 1.5;
+    const j2 = jr();
+    if (tw && q) {
+      const m = b0.clone().lerp(tip, 0.65);
+      parts.push(paint(limb(m, V(m.x + Math.cos(a2) * 0.6, m.y + 0.5, m.z + Math.sin(a2) * 0.6), 0.03, 0.01, 3), col, { rand: j2 }));
+    }
+  }
+  return merge(parts);
+}

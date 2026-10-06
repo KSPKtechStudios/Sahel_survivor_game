@@ -115,6 +115,46 @@ function itemCampfire() {
   return g;
 }
 
+function itemNugget() {
+  const rand = mulberry32(19);
+  const parts = [];
+  for (let i = 0; i < 3; i++) {
+    let g = new THREE.DodecahedronGeometry(0.05 + rand() * 0.03, 0);
+    displace(g, () => [(rand() - 0.5) * 0.02, (rand() - 0.5) * 0.02, (rand() - 0.5) * 0.02]);
+    g.translate((rand() - 0.5) * 0.07, 0.04 + rand() * 0.04, (rand() - 0.5) * 0.07);
+    parts.push(paint(flatNormals(g), i === 0 ? 0xe8b830 : 0xd4a020, { rand, jitter: 0.15 }));
+  }
+  return merge(parts);
+}
+
+function itemCowrie() {
+  const rand = mulberry32(23);
+  const parts = [];
+  for (let i = 0; i < 3; i++) {
+    let g = new THREE.SphereGeometry(0.035, 8, 6);
+    g.scale(1.4, 0.75, 1);
+    g.rotateY(rand() * 3);
+    g.translate((rand() - 0.5) * 0.08, 0.03 + i * 0.02, (rand() - 0.5) * 0.08);
+    parts.push(paint(g, 0xf2ead8, { rand, jitter: 0.05, shade: (x, y) => (y > 0.03 + i * 0.02 ? 1.05 : 0.8) }));
+  }
+  return merge(parts);
+}
+
+function itemBracelet() {
+  const rand = mulberry32(29);
+  const g = new THREE.TorusGeometry(0.07, 0.014, 6, 16);
+  g.rotateX(Math.PI / 2.4);
+  g.translate(0, 0.06, 0);
+  const parts = [paint(g, 0xb07a3a, { rand, jitter: 0.12 })];
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2;
+    let k = new THREE.IcosahedronGeometry(0.018, 0);
+    k.translate(Math.cos(a) * 0.07, 0.06 + Math.sin(a) * 0.07 * Math.sin(Math.PI / 2.4) * 0, Math.sin(a) * 0.07 * Math.cos(Math.PI / 2.4));
+    parts.push(paint(flatNormals(k), 0xc8902f, { rand }));
+  }
+  return merge(parts);
+}
+
 export function createItemModels() {
   return {
     stick: itemStick(),
@@ -124,5 +164,8 @@ export function createItemModels() {
     stone_axe: itemStoneAxe(),
     stone_pick: itemStonePick(),
     campfire: itemCampfire(),
+    gold_nugget: itemNugget(),
+    cowrie: itemCowrie(),
+    bronze_bracelet: itemBracelet(),
   };
 }

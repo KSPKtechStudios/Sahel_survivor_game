@@ -2,6 +2,20 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-06 (sessio 4)
+**Tehtiin**
+- Käyttäjä pyysi: (1) pehmeämmät valikko-, juoksu- ja työkaluanimaatiot, (2) karttaesikatselu pois maailman luonnista; pelissä tyhjä karttapohja, joka piirtyy tutkiessa, ja M:stä iso interaktiivinen kartta merkkeineen (raksi, pallukka, talo…), (3) biomien hiominen (sademetsä tiheäksi ja vaikeakulkuiseksi, vuoristo ja muut paremmiksi), (4) satunnaiset rakennelmat: kivikehät Saheliin, hylätyt leirit aavikolle, harvinaiset talon/kylän rauniot kaikkialle; 45 % arkku tavallisella saaliilla, 10 % arkuista arvoesineitä. Kirjattu `DESIGN.md`:hen.
+- Toteutettiin kaikki (ks. `CHANGELOG.md`). Uudet tiedostot: `src/world/chunkGen.js`, `genWorker.js`, `genPool.js` (generointi taustasäikeissä), `src/models/structures.js`, `src/game/ruins.js` (rakennelmat ja arkut), `src/ui/explored.js` (tutkittu kartta ja merkit), `src/ui/bigMap.js` (iso kartta). `minimap.js`, `viewmodel.js`, `instancePool.js`, `world.js` ja `objectTypes.js` kirjoitettiin pitkälti uusiksi.
+- Testattiin headless-Chromiumilla: kartan paljastuminen, merkkien lisäys/poisto, zoom ja vieritys, tallennus ja lataus; rakennelmat ja arkun avaus (saaliit putoavat maahan); biomikuvat; käden animaation jatkuvuus mitattiin ruutu kerrallaan (juoksuun siirtymän suurin hyppäys 0,35 rad → 0,03 rad); valikon käärön auki/kiinni-asennot; vanha toiminnallinen regressiotesti (hakkaaminen, kaatuminen, saaliit, tallennus). Ei konsolivirheitä.
+
+**Huomiot**
+- Headless-selaimessa CSS-animaatiot käynnistyvät hitaasti, joten testissä kartan koko pitää lukea vasta animaation jälkeen. Peli itse lukee koon ilman animaation skaalausta.
+- Todellista ruudunpäivitystä ei voi mitata ilman GPU:ta; käyttäjän kannattaa kertoa, tuntuuko kävely ja valikko nyt sulavalta.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute kartasta, rakennelmista, sademetsästä ja animaatioista.
+- Avoimet kysymykset: arvoesineiden käyttö, onko kartta aina käytössä, uusiutuvatko arkut.
+
 ## 2026-10-06 (sessio 3)
 **Tehtiin**
 - Käyttäjä kehui prototyyppiä ja pyysi jatkokehitystä: hajoaminen ja putoavat saaliit, puiden kaatuminen ja lovet, mallikuvan mukainen päävalikko (Pelaa + Asetukset, pehmeät animaatiot) sekä valtava, joka kerta omalla siemenellä generoitava vyöhykkeellinen maailma (luonnos: spawn, tier 1 Sahel, tier 2 aavikko + sademetsä, vuoristoreuna). Kirjattu `DESIGN.md`:hen.

@@ -3,9 +3,9 @@
 // Väliaikaisia malleja: jokainen malli on BufferGeometry (position, normal,
 // color). Kun grafiikkaa jalostetaan, nämä voi korvata glTF-malleilla samoilla
 // nimillä (ks. docs/DECISIONS.md).
-import { makeAcacia, makeBaobab, makeJungleTree, makePalm } from './trees.js';
-import { makeBush, makeFern, makeTumbleweed, makeGrassTuft } from './plants.js';
-import { makeGroundStick, makeStone, makeBoulder, makeTermiteMound } from './rocks.js';
+import { makeAcacia, makeBaobab, makeJungleTree, makePalm, makeCanopyTree, makeDeadTree } from './trees.js';
+import { makeBush, makeFern, makeTumbleweed, makeGrassTuft, makeBamboo, makeThicket, makeEuphorbia, makeReeds, makeUndergrowth } from './plants.js';
+import { makeGroundStick, makeStone, makeBoulder, makeTermiteMound, makeOutcrop, makeSpire } from './rocks.js';
 import { makeCampfireBase, createItemModels } from './items.js';
 
 const VARIANTS = {
@@ -21,11 +21,20 @@ const VARIANTS = {
   termite: [makeTermiteMound, 2, 7],
   grass: [(s) => makeGrassTuft(s, 'dry'), 3, 8],
   grassGreen: [(s) => makeGrassTuft(s, 'green'), 3, 41],
+  canopy: [makeCanopyTree, 4, 51],
+  deadTree: [makeDeadTree, 3, 61],
+  bamboo: [makeBamboo, 2, 71],
+  thicket: [makeThicket, 3, 81],
+  euphorbia: [makeEuphorbia, 2, 91],
+  outcrop: [makeOutcrop, 3, 111],
+  spire: [makeSpire, 3, 121],
+  reeds: [makeReeds, 2, 131],
+  undergrowth: [makeUndergrowth, 3, 141],
 };
 // Mallit, joilla on kevyt kaukoversio (ilman varjoa).
-const HAS_FAR = new Set(['acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite']);
+const HAS_FAR = new Set(['acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire']);
 // Mallit, joista tehdään tiheärunkoinen versio hakkaamista varten.
-const HAS_HI = new Set(['acacia', 'jungle', 'palm']);
+const HAS_HI = new Set(['acacia', 'jungle', 'palm', 'canopy']);
 
 function seedsFor(model) {
   const [, n, base] = VARIANTS[model];

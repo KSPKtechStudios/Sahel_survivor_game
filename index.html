@@ -60,6 +60,20 @@
       <div class="inv-close">[Tab] sulje</div>
     </div>
   </div>
+  <div id="bigmap" class="hidden">
+    <div class="bm-card">
+      <canvas id="bigmap-canvas"></canvas>
+      <div class="bm-top">
+        <h2>Kartta</h2>
+        <div id="bm-symbols"></div>
+        <button class="bm-btn" id="bm-center" type="button">Keskitä</button>
+      </div>
+      <div class="bm-bottom">
+        <span id="bm-coords"></span>
+        <span class="bm-help">Klikkaa: lisää merkki · Klikkaa merkkiä: poista · Vedä: liikuta · Rulla: zoomaa · [M] sulje</span>
+      </div>
+    </div>
+  </div>
   <div id="drag-cursor"><img alt=""></div>
 
   <!-- ===================== Valikon osat (mallit) ===================== -->
@@ -73,8 +87,8 @@
           <h1 class="scroll-title">Sahel</h1>
           <div class="scroll-sub"></div>
         </div>
-        <div class="roll left"></div>
-        <div class="roll right"></div>
+        <div class="roll-track left"><div class="roll left"></div></div>
+        <div class="roll-track right"><div class="roll right"></div></div>
       </div>
     </div>
   </template>
@@ -112,15 +126,7 @@
                       </button>
                     </span>
                   </label>
-                  <div class="map-preview">
-                    <canvas id="nw-map" width="168" height="168"></canvas>
-                    <div class="map-legend">
-                      <span><i style="background:#b89a60"></i>Sahel</span>
-                      <span><i style="background:#e6bd84"></i>Aavikko</span>
-                      <span><i style="background:#4a6a2c"></i>Sademetsä</span>
-                      <span><i style="background:#7a6a60"></i>Vuoristo</span>
-                    </div>
-                  </div>
+                  <p class="nw-hint">Kartta on aluksi tyhjä: maailma piirtyy siihen vasta, kun tutkit sitä.</p>
                   <button class="wood-btn small" id="nw-create"><span class="label">Luo maailma</span></button>
                 </div>
               </div>
@@ -183,6 +189,7 @@
           <dt>Hiiri 2</dt><dd>aseta</dd>
           <dt>1–8 / rulla</dt><dd>valitse esine</dd>
           <dt>Tab / I</dt><dd>reppu</dd>
+          <dt>M</dt><dd>kartta</dd>
         </dl>
       </div>
       <div class="side-card">

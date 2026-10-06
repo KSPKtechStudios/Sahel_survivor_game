@@ -1,9 +1,14 @@
 // Yksi InstancedMesh, johon chunkit lisäävät ja josta ne poistavat
 // instansseja. Näin samaa mallia piirretään yhdellä draw callilla koko
 // näkyvälle alueelle. Kapasiteetti kasvaa tarvittaessa.
+//
+// Pooli pysyy tiiviinä: poistetun instanssin paikalle siirretään viimeinen,
+// joten piirrettäviä instansseja on vain niin monta kuin oikeasti näkyy.
+// Jokaisella instanssilla on omistaja-olio, jonka .slot päivitetään siirrossa.
+
 import * as THREE from 'three';
 
-const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
+const _arr = new Float32Array(16);
 
 export class InstancePool {
   constructor(scene, geometry, material, { capacity = 256, castShadow = false, receiveShadow = true } = {}) {
@@ -12,8 +17,8 @@ export class InstancePool {
     this.material = material;
     this.castShadow = castShadow;
     this.receiveShadow = receiveShadow;
-    this.free = [];
-    this.used = 0; // korkein käytetty paikka + 1
+    this.owners = [];
+    this.used = 0;
     this.mesh = this._createMesh(capacity);
   }
 
@@ -39,15 +44,13 @@ export class InstancePool {
     this.mesh = next;
   }
 
-  add(matrix) {
-    let slot;
-    if (this.free.length) {
-      slot = this.free.pop();
-    } else {
-      if (this.used >= this.mesh.instanceMatrix.count) this._grow();
-      slot = this.used++;
-      this.mesh.count = this.used;
-    }
+  // Lisää instanssi; owner.slot asetetaan.
+  add(matrix, owner) {
+    if (this.used >= this.mesh.instanceMatrix.count) this._grow();
+    const slot = this.used++;
+    this.owners[slot] = owner;
+    owner.slot = slot;
+    this.mesh.count = this.used;
     this.mesh.setMatrixAt(slot, matrix);
     this.mesh.instanceMatrix.needsUpdate = true;
     return slot;
@@ -60,14 +63,25 @@ export class InstancePool {
 
   // Tyhjennä kaikki instanssit (maailman vaihto).
   clear() {
-    this.free = [];
+    this.owners.length = 0;
     this.used = 0;
     this.mesh.count = 0;
   }
 
   remove(slot) {
-    this.mesh.setMatrixAt(slot, ZERO);
+    const last = this.used - 1;
+    if (slot < 0 || slot > last) return;
+    if (slot !== last) {
+      const a = this.mesh.instanceMatrix.array;
+      for (let i = 0; i < 16; i++) _arr[i] = a[last * 16 + i];
+      a.set(_arr, slot * 16);
+      const moved = this.owners[last];
+      this.owners[slot] = moved;
+      moved.slot = slot;
+    }
+    this.owners[last] = undefined;
+    this.used = last;
+    this.mesh.count = this.used;
     this.mesh.instanceMatrix.needsUpdate = true;
-    this.free.push(slot);
   }
 }

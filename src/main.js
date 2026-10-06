@@ -20,12 +20,15 @@ import { Structures } from './game/structures.js';
 import { Drops } from './game/drops.js';
 import { FallenTrees } from './game/fallen.js';
 import { Breakables } from './game/breakables.js';
+import { Ruins } from './game/ruins.js';
 import { Interaction } from './game/interaction.js';
 import { events } from './game/events.js';
 import { loadWorldData, saveWorldData, loadSettings } from './game/save.js';
 import { renderItemIcons } from './ui/icons.js';
 import { Hud } from './ui/hud.js';
 import { Minimap } from './ui/minimap.js';
+import { ExploredMap } from './ui/explored.js';
+import { BigMap } from './ui/bigMap.js';
 import { GuideUI } from './ui/guideUI.js';
 import { InventoryUI } from './ui/inventoryUI.js';
 import { Menu } from './ui/menu.js';
@@ -63,17 +66,20 @@ const drops = new Drops(scene, models.items);
 const fallen = new FallenTrees({ scene, world, models, material: activeMaterial, debris, drops, bursts });
 const breakables = new Breakables({ world, models, debris, drops, fallen, material: activeMaterial });
 const structures = new Structures(scene, models, world);
+const ruins = new Ruins({ scene, world, drops, bursts });
 
 const inventory = new Inventory();
 const guide = new Guide();
 const player = new Player(camera);
 const input = new Input(canvas);
 const viewmodel = new ViewModel(models.items);
-const interaction = new Interaction({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables });
+const interaction = new Interaction({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins });
 
 const icons = renderItemIcons(models.items);
 const hud = new Hud(inventory, icons);
-const minimap = new Minimap();
+const explored = new ExploredMap(world.gen);
+const minimap = new Minimap(explored);
+const bigMap = new BigMap(explored, player);
 new GuideUI(guide);
 const invUI = new InventoryUI(inventory, icons);
 
@@ -115,16 +121,18 @@ function applySettings(s) {
 applySettings(settings);
 
 // --- Tila ---------------------------------------------------------------------------
-let state = 'boot'; // boot | menu | loading | ready | playing | paused | inventory
+let state = 'boot'; // boot | menu | loading | ready | playing | paused | inventory | map
 let currentWorld = null;
 let wantInventory = false;
+let wantMap = false;
 const menuCam = { x: 0, z: 0, t: 0 };
 
 function setState(s) {
   state = s;
-  const inGame = s === 'playing' || s === 'paused' || s === 'inventory';
+  const inGame = s === 'playing' || s === 'paused' || s === 'inventory' || s === 'map';
   $('hud').classList.toggle('hidden', !inGame);
   if (s !== 'inventory') invUI.hide();
+  if (s !== 'map') bigMap.hide();
   if (s === 'playing') {
     menu.hidePause();
     menu.hideLoading();
@@ -144,31 +152,27 @@ function fmtTime(h) {
   return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
 }
 
-function clearWorldState() {
-  world.reset();
+function clearWorldState(seed) {
+  setWorldSeed(seed);
+  world.reset(seed);
   structures.clear();
+  ruins.clear();
   drops.clear();
   fallen.clear();
   debris.clear();
   tumbleweeds.clear();
+  explored.clear();
 }
 
-async function buildAround(x, z, onProgress) {
-  world.update(x, z, 0, 0);
-  const total = world.queue.length || 1;
-  while (world.queue.length) {
-    world.update(x, z, 0, 5);
-    onProgress?.(1 - world.queue.length / total);
-    await nextFrame();
-  }
+function buildAround(x, z, onProgress) {
+  return world.ensureLoaded(x, z, onProgress, nextFrame);
 }
 
 // Päävalikko: tausta on oikea pelimaailma auringonlaskussa.
 async function enterMenu(first = false) {
   state = 'loading';
   $('hud').classList.add('hidden');
-  setWorldSeed(MENU_SEED);
-  clearWorldState();
+  clearWorldState(MENU_SEED);
   env.frozen = true;
   env.setTime(MENU_SPOT.time);
   env.setWeather('menu', true);
@@ -193,8 +197,7 @@ async function startWorld(meta) {
   menu.showLoading(data ? `Ladataan maailmaa ”${meta.name}”…` : `Luodaan maailmaa ”${meta.name}”…`);
   await nextFrame();
   currentWorld = meta;
-  setWorldSeed(meta.seed);
-  clearWorldState();
+  clearWorldState(meta.seed);
   env.frozen = false;
   inventory.load(data ? data.inventory : { slots: [] });
   guide.load(data ? data.guide : { step: 0, stats: {} });
@@ -212,6 +215,8 @@ async function startWorld(meta) {
   structures.load(data ? data.structures : []);
   drops.load(data ? data.drops : []);
   fallen.load(data ? data.fallen : []);
+  ruins.load(data ? data.ruins : []);
+  explored.load(data ? data.map : null);
   player.update(0, input, world);
   state = 'ready';
   menu.loadingReady('Maailma on valmis', () => input.lock());
@@ -229,6 +234,8 @@ function persist() {
     structures: structures.serialize(),
     drops: drops.serialize(),
     fallen: fallen.serialize(),
+    ruins: ruins.serialize(),
+    map: explored.serialize(),
   });
 }
 
@@ -237,6 +244,7 @@ async function quitToMenu() {
   currentWorld = null;
   menu.hidePause();
   invUI.hide();
+  bigMap.hide();
   menu.showLoading('Palataan päävalikkoon…');
   await nextFrame();
   await enterMenu();
@@ -248,18 +256,22 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) persi
 // --- Hiiren lukitus ja näppäimet ---------------------------------------------------
 document.addEventListener('pointerlockchange', () => {
   if (input.locked) {
-    if (state === 'ready' || state === 'paused' || state === 'inventory') setState('playing');
+    if (state === 'ready' || state === 'paused' || state === 'inventory' || state === 'map') setState('playing');
   } else if (wantInventory) {
     wantInventory = false;
     setState('inventory');
     invUI.show();
+  } else if (wantMap) {
+    wantMap = false;
+    setState('map');
+    bigMap.show();
   } else if (state === 'playing') {
     persist();
     setState('paused');
   }
 });
 document.addEventListener('pointerlockerror', () => {
-  if (state === 'inventory') setState('paused');
+  if (state === 'inventory' || state === 'map') setState('paused');
 });
 canvas.addEventListener('click', () => { if (state === 'playing' && !input.locked) input.lock(); });
 
@@ -273,6 +285,15 @@ window.addEventListener('keydown', (e) => {
     invUI.hide();
     input.lock();
     setTimeout(() => { if (state === 'inventory' && !input.locked) setState('paused'); }, 600);
+  } else if (state === 'playing' && e.code === 'KeyM') {
+    e.preventDefault();
+    wantMap = true;
+    input.unlock();
+  } else if (state === 'map' && (e.code === 'KeyM' || e.code === 'Escape')) {
+    e.preventDefault();
+    bigMap.hide();
+    input.lock();
+    setTimeout(() => { if (state === 'map' && !input.locked) setState('paused'); }, 600);
   } else if (e.code === 'Escape') {
     if (state === 'paused') menu.back(menu.pause);
     else if (state === 'menu') menu.back(menu.main);
@@ -309,7 +330,7 @@ for (const [label, key] of [['Sahel', 'savanna'], ['Dyynit', 'dunes'], ['Aavikko
     $('pm-status').textContent = 'Siirrytään…';
     await nextFrame();
     player.teleport(p.x, p.z);
-    world.buildAllNow(p.x, p.z);
+    await buildAround(p.x, p.z);
     player.update(0, input, world);
     refreshTestButtons();
   });
@@ -341,6 +362,8 @@ let last = performance.now();
 let elapsed = 0;
 let saveTimer = CONFIG.autosaveSec;
 let edgeMsgTimer = 0;
+let drawTimer = 0;
+let menuShadowTimer = 0;
 const fps = { frames: 0, t: 0, value: 0 };
 const _s = {};
 
@@ -380,8 +403,8 @@ function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
-  const inGame = state === 'playing' || state === 'inventory' || state === 'paused' || state === 'ready';
-  const running = state === 'playing' || state === 'inventory';
+  const inGame = state === 'playing' || state === 'inventory' || state === 'paused' || state === 'ready' || state === 'map';
+  const running = state === 'playing' || state === 'inventory' || state === 'map';
   const simDt = running || state === 'menu' ? dt : 0;
   elapsed += simDt;
   input.enabled = state === 'playing';
@@ -394,12 +417,17 @@ function frame(now) {
   if (state !== 'boot') world.update(player.position.x, player.position.z, simDt);
   sampleTerrain(player.position.x, player.position.z, _s);
   env.setLocalHumidity(_s.rainforest);
+  // Sademetsä: hidas eteneminen ja lyhyt piirtoetäisyys (näkyvyys on muutenkin lyhyt).
+  player.speedMul = 1 - 0.3 * _s.rainforest;
+  if (env.humid > 0.6) world.setDetailRange(2.2);
+  else if (env.humid < 0.4) world.setDetailRange(Infinity);
   env.update(simDt, player.position, elapsed);
   tumbleweeds.update(simDt, player.position, env.w.wind, env.windDir);
   if (state === 'playing') interaction.update(simDt, input);
   else structures.showGhost(null);
 
   structures.update(simDt, elapsed, player.position);
+  ruins.update(running || state === 'menu' ? dt : 0, player.position);
   drops.update(running ? dt : 0, elapsed, player, inventory);
   fallen.update(running || state === 'menu' ? dt : 0);
   debris.update(running ? dt : 0);
@@ -419,7 +447,9 @@ function frame(now) {
     viewmodel.update(simDt, player, input, env, camera, fireNear * 1.5);
     guide.update(simDt);
     hud.update(dt, { prompt: interaction.prompt, player, env, visible: state === 'playing' });
+    explored.update(dt, player.position.x, player.position.z);
     minimap.update(dt, player);
+    bigMap.update();
     if (player.atEdge && state === 'playing') {
       edgeMsgTimer -= dt;
       if (edgeMsgTimer <= 0) { events.emit('message', { text: 'Maailman reuna' }); edgeMsgTimer = 3; }
@@ -428,11 +458,23 @@ function frame(now) {
     hud.update(dt, { prompt: null, player, env, visible: false });
   }
 
-  renderer.clear();
-  renderer.render(scene, camera);
-  if (inGame) {
-    renderer.clearDepth();
-    renderer.render(viewmodel.scene, viewmodel.camera);
+  // Valikossa aurinko on paikallaan: varjokartta päivitetään harvoin, jotta
+  // valikon animaatioille jää aikaa. Taukovalikossa maailma on pysähdyksissä,
+  // joten sitä piirretään vain muutaman kerran sekunnissa.
+  renderer.shadowMap.autoUpdate = state !== 'menu';
+  if (state === 'menu') {
+    menuShadowTimer -= dt;
+    if (menuShadowTimer <= 0) { menuShadowTimer = 0.5; renderer.shadowMap.needsUpdate = true; }
+  }
+  drawTimer -= dt;
+  if (state !== 'paused' || drawTimer <= 0) {
+    drawTimer = 0.25;
+    renderer.clear();
+    renderer.render(scene, camera);
+    if (inGame) {
+      renderer.clearDepth();
+      renderer.render(viewmodel.scene, viewmodel.camera);
+    }
   }
   input.endFrame();
 
@@ -458,6 +500,6 @@ enterMenu(true);
 // Testausta ja vianetsintää varten (selaimen konsolissa: sahel.env.setWeather('sandstorm', true)).
 window.sahel = {
   THREE, renderer, scene, camera, env, world, player, input, inventory, invUI, guide, structures, tumbleweeds,
-  viewmodel, interaction, drops, fallen, debris, breakables, menu, fps, events, persist, models,
+  viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
   startWorld, enterMenu, quitToMenu, setState: (s) => setState(s), get state() { return state; },
 };

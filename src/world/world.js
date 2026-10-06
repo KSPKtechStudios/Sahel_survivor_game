@@ -1,5 +1,7 @@
 // Avoin maailma chunkeina: maasto, vesi ja esineet ladataan pelaajan ympärille
-// ja puretaan kauempaa. Generointi on deterministista (maailman siemen), joten
+// ja puretaan kauempaa. Raskas laskenta (maasto, esineiden sijoittelu) tehdään
+// generointisäikeessä (genPool.js); tässä vain rakennetaan valmiista datasta
+// verkot ja instanssit. Generointi on deterministista (maailman siemen), joten
 // poistetut esineet ja kannot muistetaan pelkillä tunnisteilla.
 //
 // Esineet piirretään instansseina. Etäisyyden mukaan esine on
@@ -8,16 +10,17 @@
 // Hakattava esine irrotetaan poolista omaksi Meshikseen (obj.active).
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
-import { mulberry32, hashSeed } from '../noise.js';
-import { sampleTerrain, heightAt, groundColor, getWorldSeed, WATER_LEVEL, BIOME_KEYS } from './terrain.js';
+import { WATER_LEVEL } from './terrain.js';
 import { OBJECT_TYPES, OBJECT_TYPE_KEYS, DECOR_TYPES } from './objectTypes.js';
 import { InstancePool } from './instancePool.js';
+import { GenPool } from './genPool.js';
+import { OBJ_STRIDE, DECOR_STRIDE } from './chunkGen.js';
 import { splitTree } from '../game/treeCut.js';
 
 const SIZE = CONFIG.chunkSize;
 const SEG = CONFIG.chunkSegments;
-const STEP = SIZE / SEG;
 const LOD_NEAR = 1.6; // chunkia: tätä lähempänä tarkka malli + varjo
+const APPLY_BUDGET_MS = 4; // valmiiden chunkkien rakentaminen / ruutu
 
 const _m = new THREE.Matrix4();
 const _q = new THREE.Quaternion();
@@ -47,37 +50,42 @@ export class World {
     this.materials = materials;
     this.models = models;
     this.chunks = new Map();
-    this.queue = [];
+    this.requested = new Set();
+    this.ready = [];
+    this.needed = [];
     this.removed = new Set();
     this.stumps = new Set();
     this.centerKey = null;
     this.center = null;
     this.viewRadius = CONFIG.viewRadius;
+    this.detailRange = Infinity; // sademetsässä esineitä piirretään lyhyemmälle
     this.terrainIndex = createTerrainIndex();
     // Vesitaso jaettu pienempiin kolmioihin: isot kolmiot kameran alla piirtyivät
     // osalla renderöijistä väärin (vesi näkyi maan päällä).
     this.waterGeo = new THREE.PlaneGeometry(SIZE, SIZE, 16, 16).rotateX(-Math.PI / 2);
     this.shakes = [];
-    this.extraColliders = []; // pelaajan rakennelmat, kaatuneet rungot
+    this.extraColliders = []; // pelaajan rakennelmat, kaatuneet rungot, rauniot
 
     // Poolit: lähi- ja kaukomallit per tyyppi ja variantti, sekä kannot.
     this.pools = {};
     this.stumpPools = {};
-    this.stumpGeos = {};
+    const variantCounts = {};
     for (const type of OBJECT_TYPE_KEYS) {
       const def = OBJECT_TYPES[type];
       const near = models.world[def.model];
       const far = models.far[def.model];
+      variantCounts[def.model] = near.length;
       const mat = materials[def.material];
       this.pools[type] = {
         near: near.map((geo) => new InstancePool(scene, geo, mat, { capacity: def.decorative ? 4096 : 256, castShadow: def.castShadow })),
         far: far ? far.map((geo) => new InstancePool(scene, geo, mat, { capacity: 512, castShadow: false })) : null,
       };
       if (def.kind === 'tree') {
-        this.stumpGeos[type] = near.map((_, v) => splitTree(models.hi(def.model, v)).stump);
-        this.stumpPools[type] = this.stumpGeos[type].map((geo) => new InstancePool(scene, geo, materials.solid, { capacity: 64, castShadow: true }));
+        this.stumpPools[type] = near.map((_, v) => new InstancePool(scene, splitTree(models.hi(def.model, v)).stump, materials.solid, { capacity: 64, castShadow: true }));
       }
     }
+    this.gen = new GenPool(variantCounts);
+    this.gen.onChunk = (data) => this.ready.push(data);
   }
 
   key(cx, cz) {
@@ -86,11 +94,13 @@ export class World {
 
   // --- Maailman vaihto ----------------------------------------------------------
 
-  // Tyhjennä kaikki (uusi siemen asetetaan terrain.js:n setWorldSeed:llä).
-  reset() {
+  // Tyhjennä kaikki ja vaihda siemen (terrain.js:n setWorldSeed asetetaan erikseen).
+  reset(seed) {
     for (const [k, ch] of [...this.chunks]) this._disposeChunk(k, ch);
     this.chunks.clear();
-    this.queue = [];
+    this.requested.clear();
+    this.ready = [];
+    this.needed = [];
     this.removed = new Set();
     this.stumps = new Set();
     this.centerKey = null;
@@ -102,6 +112,7 @@ export class World {
       if (P.far) for (const pool of P.far) pool.clear();
     }
     for (const list of Object.values(this.stumpPools)) for (const pool of list) pool.clear();
+    if (seed !== undefined) this.gen.setSeed(seed);
   }
 
   setViewRadius(r) {
@@ -109,9 +120,16 @@ export class World {
     this.centerKey = null;
   }
 
+  // Sademetsässä näkyvyys on lyhyt: piirretään esineet vain lähelle.
+  setDetailRange(chunks) {
+    if (Math.abs(chunks - this.detailRange) < 0.01) return;
+    this.detailRange = chunks;
+    for (const ch of this.chunks.values()) this._applyLod(ch);
+  }
+
   // --- Streamaus -------------------------------------------------------------
 
-  update(px, pz, dt, budget = CONFIG.chunksPerFrame) {
+  update(px, pz, dt, budgetMs = APPLY_BUDGET_MS) {
     const ccx = Math.floor(px / SIZE);
     const ccz = Math.floor(pz / SIZE);
     const ck = this.key(ccx, ccz);
@@ -119,15 +137,25 @@ export class World {
       this.centerKey = ck;
       this._refresh(ccx, ccz);
     }
-    let built = 0;
-    while (this.queue.length && built < budget) {
-      const { cx, cz } = this.queue.shift();
-      if (this.chunks.has(this.key(cx, cz))) continue;
-      this._buildChunk(cx, cz);
-      built++;
+    this.gen.pump(budgetMs);
+    // Rakenna valmiit chunkit lähimmät ensin, aikabudjetin puitteissa.
+    if (this.ready.length) {
+      const t0 = performance.now();
+      this.ready.sort((a, b) => this._distTo(a.cx, a.cz) - this._distTo(b.cx, b.cz));
+      while (this.ready.length && performance.now() - t0 < budgetMs) {
+        const data = this.ready.shift();
+        const k = this.key(data.cx, data.cz);
+        this.requested.delete(k);
+        if (this.chunks.has(k) || this._distTo(data.cx, data.cz) > this.viewRadius + 1.5) continue;
+        this._buildChunk(data);
+      }
     }
     this._updateShakes(dt);
-    return built;
+  }
+
+  _distTo(cx, cz) {
+    if (!this.center) return 0;
+    return Math.hypot(cx - this.center.cx, cz - this.center.cz);
   }
 
   _refresh(ccx, ccz) {
@@ -137,14 +165,17 @@ export class World {
     for (let dz = -R; dz <= R; dz++) {
       for (let dx = -R; dx <= R; dx++) {
         if (dx * dx + dz * dz > (R + 0.5) * (R + 0.5)) continue;
-        const cx = ccx + dx;
-        const cz = ccz + dz;
-        if (!this.chunks.has(this.key(cx, cz))) need.push({ cx, cz, d: dx * dx + dz * dz });
+        need.push({ cx: ccx + dx, cz: ccz + dz, d: dx * dx + dz * dz });
       }
     }
     need.sort((a, b) => a.d - b.d);
-    this.queue = need;
-
+    this.needed = need;
+    for (const n of need) {
+      const k = this.key(n.cx, n.cz);
+      if (this.chunks.has(k) || this.requested.has(k)) continue;
+      this.requested.add(k);
+      this.gen.requestChunk(n.cx, n.cz);
+    }
     const unloadR = (R + 1.5) * (R + 1.5);
     for (const [k, ch] of [...this.chunks]) {
       const dx = ch.cx - ccx;
@@ -154,9 +185,33 @@ export class World {
     for (const ch of this.chunks.values()) this._applyLod(ch);
   }
 
+  // Montako tarvittavista chunkeista on valmiina (latausruutua varten).
+  loadProgress() {
+    if (!this.needed.length) return 1;
+    let n = 0;
+    for (const c of this.needed) if (this.chunks.has(this.key(c.cx, c.cz))) n++;
+    return n / this.needed.length;
+  }
+
+  // Odota, että pisteen ympäristö on rakennettu (lataus, siirtyminen).
+  async ensureLoaded(x, z, onProgress, nextFrame) {
+    this.centerKey = null;
+    this.update(x, z, 0);
+    for (;;) {
+      this.update(x, z, 0, 30);
+      const p = this.loadProgress();
+      onProgress?.(p);
+      if (p >= 1) break;
+      await nextFrame();
+    }
+  }
+
+  isReady(px, pz) {
+    return this.chunks.has(this.key(Math.floor(px / SIZE), Math.floor(pz / SIZE)));
+  }
+
   _chunkDist(ch) {
-    if (!this.center) return 0;
-    return Math.hypot(ch.cx - this.center.cx, ch.cz - this.center.cz);
+    return this._distTo(ch.cx, ch.cz);
   }
 
   // Valitse jokaiselle esineelle oikea pooli etäisyyden mukaan.
@@ -164,7 +219,7 @@ export class World {
     if (obj.active) return null;
     const def = OBJECT_TYPES[obj.type];
     if (obj.stump) return dist <= 3.5 ? this.stumpPools[obj.type][obj.variant] : null;
-    if (dist > def.drawDist + 0.5) return null;
+    if (dist > Math.min(def.drawDist, this.detailRange) + 0.5) return null;
     const P = this.pools[obj.type];
     if (P.far && dist > LOD_NEAR) return P.far[obj.variant];
     return P.near[obj.variant];
@@ -181,88 +236,24 @@ export class World {
     if (want === obj.pool) return;
     if (obj.pool) obj.pool.remove(obj.slot);
     obj.pool = want;
-    obj.slot = want ? want.add(this._matrixFor(obj)) : -1;
+    obj.slot = -1;
+    if (want) want.add(this._matrixFor(obj), obj);
   }
 
-  // Rakenna kaikki lähimmät chunkit heti.
-  buildAllNow(px, pz) {
-    this.centerKey = null;
-    this.update(px, pz, 0, 0);
-    while (this.queue.length) this.update(px, pz, 0, 64);
-  }
+  // --- Chunkin rakennus valmiista datasta --------------------------------------
 
-  isReady(px, pz) {
-    return this.chunks.has(this.key(Math.floor(px / SIZE), Math.floor(pz / SIZE)));
-  }
-
-  // --- Chunkin rakennus ------------------------------------------------------
-
-  _buildChunk(cx, cz) {
+  _buildChunk(data) {
+    const { cx, cz } = data;
     const x0 = cx * SIZE;
     const z0 = cz * SIZE;
-    const row = SEG + 1;
-    const B = SEG + 3;
-
-    const heights = new Float32Array(B * B);
-    const samples = new Array(row * row);
-    for (let j = -1; j <= SEG + 1; j++) {
-      for (let i = -1; i <= SEG + 1; i++) {
-        const inside = i >= 0 && j >= 0 && i <= SEG && j <= SEG;
-        const s = sampleTerrain(x0 + i * STEP, z0 + j * STEP, {});
-        heights[(j + 1) * B + (i + 1)] = s.h;
-        if (inside) samples[j * row + i] = s;
-      }
-    }
-
-    // Verkko chunkin omissa koordinaateissa (tarkkuus säilyy kaukana keskeltä).
-    const positions = new Float32Array(row * row * 3);
-    const normals = new Float32Array(row * row * 3);
-    const colors = new Float32Array(row * row * 3);
-    const uvs = new Float32Array(row * row * 2);
-    const col = [0, 0, 0];
-    const uvOx = Math.floor(x0 / 3) * 3;
-    const uvOz = Math.floor(z0 / 3) * 3;
-    let minH = Infinity;
-    for (let j = 0; j <= SEG; j++) {
-      for (let i = 0; i <= SEG; i++) {
-        const v = j * row + i;
-        const x = x0 + i * STEP;
-        const z = z0 + j * STEP;
-        const h = heights[(j + 1) * B + (i + 1)];
-        minH = Math.min(minH, h);
-        positions[v * 3] = i * STEP;
-        positions[v * 3 + 1] = h;
-        positions[v * 3 + 2] = j * STEP;
-
-        const hl = heights[(j + 1) * B + i];
-        const hr = heights[(j + 1) * B + (i + 2)];
-        const hd = heights[j * B + (i + 1)];
-        const hu = heights[(j + 2) * B + (i + 1)];
-        let nx = hl - hr, ny = 2 * STEP, nz = hd - hu;
-        const nl = Math.hypot(nx, ny, nz);
-        nx /= nl; ny /= nl; nz /= nl;
-        normals[v * 3] = nx;
-        normals[v * 3 + 1] = ny;
-        normals[v * 3 + 2] = nz;
-
-        groundColor(x, z, samples[v], 1 - ny, col);
-        colors[v * 3] = col[0];
-        colors[v * 3 + 1] = col[1];
-        colors[v * 3 + 2] = col[2];
-        uvs[v * 2] = (x - uvOx) / 3;
-        uvs[v * 2 + 1] = (z - uvOz) / 3;
-      }
-    }
-
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geo.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
-    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+    geo.setAttribute('position', new THREE.BufferAttribute(data.positions, 3));
+    geo.setAttribute('normal', new THREE.BufferAttribute(data.normals, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(data.colors, 3));
+    geo.setAttribute('uv', new THREE.BufferAttribute(data.uvs, 2));
     geo.setIndex(this.terrainIndex);
     geo.computeBoundingSphere();
     geo.computeBoundingBox();
-
     const mesh = new THREE.Mesh(geo, this.materials.terrain);
     mesh.position.set(x0, 0, z0);
     mesh.receiveShadow = true;
@@ -271,7 +262,7 @@ export class World {
     this.scene.add(mesh);
 
     let water = null;
-    if (minH < WATER_LEVEL) {
+    if (data.minH < WATER_LEVEL) {
       water = new THREE.Mesh(this.waterGeo, this.materials.water);
       water.position.set(x0 + SIZE / 2, WATER_LEVEL, z0 + SIZE / 2);
       water.updateMatrix();
@@ -280,103 +271,46 @@ export class World {
       this.scene.add(water);
     }
 
-    const chunk = { cx, cz, mesh, water, objects: [], colliders: [], decor: null };
-    this._spawnObjects(chunk);
+    const chunk = { cx, cz, mesh, water, objects: [], colliders: [], decor: null, decorData: data.decor, rain: data.rain };
+    const o = data.objects;
+    for (let n = 0; n < o.length; n += OBJ_STRIDE) {
+      const type = OBJECT_TYPE_KEYS[o[n]];
+      const def = OBJECT_TYPES[type];
+      const id = `${cx},${cz},${type},${o[n + 1]}`;
+      const isStump = this.stumps.has(id);
+      if (this.removed.has(id) && !isStump) continue;
+      const obj = {
+        id, type, x: o[n + 2], y: o[n + 3], z: o[n + 4], rot: o[n + 5], scale: o[n + 6], variant: o[n + 7],
+        hp: def.harvest?.hp ?? 1, chunk, slot: -1, pool: null, active: null, stump: isStump,
+      };
+      chunk.objects.push(obj);
+      const cr = isStump ? 0.25 : def.collider;
+      if (cr > 0) chunk.colliders.push({ x: obj.x, z: obj.z, r: cr * obj.scale, obj });
+    }
     this.chunks.set(this.key(cx, cz), chunk);
     this._applyLod(chunk);
     return chunk;
   }
 
-  _spawnObjects(chunk) {
-    const { cx, cz } = chunk;
-    const x0 = cx * SIZE;
-    const z0 = cz * SIZE;
-    const s = {};
-    const seed = getWorldSeed();
-    for (let t = 0; t < OBJECT_TYPE_KEYS.length; t++) {
-      const type = OBJECT_TYPE_KEYS[t];
-      const def = OBJECT_TYPES[type];
-      if (def.decorative) continue;
-      const rand = mulberry32(hashSeed(seed, cx, cz, t + 1));
-      const maxD = Math.max(...Object.values(def.density));
-      const candidates = Math.floor(maxD) + (rand() < maxD % 1 ? 1 : 0);
-      for (let i = 0; i < candidates; i++) {
-        const x = x0 + rand() * SIZE;
-        const z = z0 + rand() * SIZE;
-        const r1 = rand(), r2 = rand(), r3 = rand(), r4 = rand();
-        const id = `${cx},${cz},${type},${i}`;
-        const isStump = this.stumps.has(id);
-        if (this.removed.has(id) && !isStump) continue;
-        sampleTerrain(x, z, s);
-        let p = 0;
-        for (const b of BIOME_KEYS) p += (def.density[b] || 0) * s[b];
-        if (r1 >= p / maxD) continue;
-        if (s.h < WATER_LEVEL + 0.15) continue;
-        if (def.maxSlope < 1 && this._slope(x, z, s.h) > def.maxSlope) continue;
-
-        const obj = {
-          id,
-          type,
-          x,
-          y: s.h - (def.kind === 'pickup' ? 0.02 : 0.05),
-          z,
-          rot: r2 * Math.PI * 2,
-          scale: def.scale[0] + r3 * (def.scale[1] - def.scale[0]),
-          variant: Math.floor(r4 * this.pools[type].near.length),
-          hp: def.harvest?.hp ?? 1,
-          chunk,
-          slot: -1,
-          pool: null,
-          active: null,
-          stump: isStump,
-        };
-        chunk.objects.push(obj);
-        const cr = isStump ? 0.25 : def.collider;
-        if (cr > 0) chunk.colliders.push({ x, z, r: cr * obj.scale, obj });
-      }
-    }
-  }
-
-  // Koriste-esineet (ruoho) vain lähimpiin chunkeihin.
+  // Koriste-esineet (ruoho ym.) vain lähimpiin chunkeihin.
   _setDecor(chunk, on) {
     if (on && !chunk.decor) {
-      const x0 = chunk.cx * SIZE;
-      const z0 = chunk.cz * SIZE;
-      const s = {};
       chunk.decor = [];
-      DECOR_TYPES.forEach((type, ti) => {
-        const def = OBJECT_TYPES[type];
-        const rand = mulberry32(hashSeed(getWorldSeed(), chunk.cx, chunk.cz, 900 + ti));
-        const maxD = Math.max(...Object.values(def.density));
-        const pools = this.pools[type].near;
-        for (let i = 0; i < maxD; i++) {
-          const x = x0 + rand() * SIZE;
-          const z = z0 + rand() * SIZE;
-          const r1 = rand(), r2 = rand(), r3 = rand(), r4 = rand();
-          sampleTerrain(x, z, s);
-          let p = 0;
-          for (const b of BIOME_KEYS) p += (def.density[b] || 0) * s[b];
-          if (r1 >= p / maxD) continue;
-          if (s.h < WATER_LEVEL + 0.05) continue;
-          const pool = pools[Math.floor(r4 * pools.length)];
-          const sc = def.scale[0] + r3 * (def.scale[1] - def.scale[0]);
-          _p.set(x, s.h - 0.03, z);
-          _q.setFromAxisAngle(THREE.Object3D.DEFAULT_UP, r2 * Math.PI * 2);
-          _s.set(sc, sc * (0.8 + s.mare * 0.5), sc);
-          _m.compose(_p, _q, _s);
-          chunk.decor.push([pool, pool.add(_m)]);
-        }
-      });
+      const d = chunk.decorData;
+      for (let n = 0; n < d.length; n += DECOR_STRIDE) {
+        const pool = this.pools[DECOR_TYPES[d[n]]].near[d[n + 1]];
+        _p.set(d[n + 2], d[n + 3], d[n + 4]);
+        _q.setFromAxisAngle(THREE.Object3D.DEFAULT_UP, d[n + 5]);
+        _s.set(d[n + 6], d[n + 7], d[n + 6]);
+        _m.compose(_p, _q, _s);
+        const e = { pool, slot: -1 };
+        pool.add(_m, e);
+        chunk.decor.push(e);
+      }
     } else if (!on && chunk.decor) {
-      for (const [pool, slot] of chunk.decor) pool.remove(slot);
+      for (const e of chunk.decor) e.pool.remove(e.slot);
       chunk.decor = null;
     }
-  }
-
-  _slope(x, z, h) {
-    const nx = h - heightAt(x + 1, z);
-    const nz = h - heightAt(x, z + 1);
-    return 1 - 1 / Math.hypot(nx, 1, nz);
   }
 
   _matrixFor(obj, wobble = 0) {
@@ -426,10 +360,15 @@ export class World {
   }
 
   // Puu kaatui: tilalle jää kanto.
-  toStump(obj) {
+  toStump(obj, mesh = null) {
     if (obj.active) {
       this.scene.remove(obj.active);
       obj.active = null;
+    }
+    // Loveutunut kanto näkyy omana Meshinään, kunnes chunk puretaan.
+    if (mesh) {
+      obj.active = mesh;
+      this.scene.add(mesh);
     }
     obj.stump = true;
     this.removed.add(obj.id);

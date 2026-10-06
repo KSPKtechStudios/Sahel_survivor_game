@@ -10,6 +10,9 @@ const ICON_POSE = {
   stone_axe: [0.2, -0.5, -0.75],
   stone_pick: [0.2, -0.5, -0.75],
   campfire: [0.55, 0.3, 0],
+  gold_nugget: [0.6, 0.4, 0],
+  cowrie: [0.7, 0.3, 0],
+  bronze_bracelet: [0.3, 0.2, 0],
 };
 
 export function renderItemIcons(itemGeometries, size = 96) {

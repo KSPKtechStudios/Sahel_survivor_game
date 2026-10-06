@@ -14,6 +14,10 @@ const CHIP = {
   bush: [0x93806a, 0xa48e58],
   fern: [0x4f7d2e, 0x66953a],
   baobab: [0x9a8a78, 0x8b7c6c],
+  canopy: [0xd2b48a, 0x6a5a48],
+  deadTree: [0xd8ccb6, 0xb9ab96],
+  thicket: [0x3b6a2a, 0x4a3a28],
+  bamboo: [0x9ab04a, 0x6d8c34],
 };
 
 // Kiven materiaali, johon piirtyy säröjä vaurion kasvaessa (uDamage 0..1).

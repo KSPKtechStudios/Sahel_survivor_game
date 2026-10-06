@@ -20,6 +20,9 @@ const HOLD = {
   stone_axe: { pos: [0, -0.07, 0], rot: [0, Math.PI / 2, 0], s: 0.78 },
   stone_pick: { pos: [0, -0.07, 0], rot: [0, Math.PI / 2, 0], s: 0.78 },
   campfire: { pos: [0, 0.03, -0.1], rot: [0.2, 0, 0], s: 0.85 },
+  gold_nugget: { pos: [0.0, 0.03, -0.035], rot: [0.4, 0.3, 0], s: 1.1 },
+  cowrie: { pos: [0.0, 0.03, -0.035], rot: [0.4, 0.3, 0], s: 1.1 },
+  bronze_bracelet: { pos: [0.0, 0.0, -0.04], rot: [0.6, 0, 0], s: 1.1 },
 };
 
 function colorize(geo, hex) {
@@ -122,8 +125,13 @@ export class ViewModel {
     this.pending = undefined;
     this.equipT = 1;
     this.action = null; // { type, t, dur, hitAt, onHit, hitDone }
-    this.sway = new THREE.Vector2();
     this.time = 0;
+    // Pehmennetyt tilat: kaikki siirtymät liukuvat, mikään ei hyppää.
+    this.sway = new THREE.Vector2();     // hiiren liikkeen viive
+    this.swayVel = new THREE.Vector2();
+    this.look = new THREE.Vector2();     // suodatettu hiiren nopeus
+    this.sprintBlend = 0;
+    this.airBlend = 0;
   }
 
   get busy() {
@@ -172,7 +180,7 @@ export class ViewModel {
 
     // Esineen vaihto: käsi laskee alas, esine vaihtuu, käsi nousee.
     if (this.pending !== undefined) {
-      this.equipT += dt / 0.14;
+      this.equipT += dt / 0.16;
       if (this.equipT >= 1) {
         if (this.current && this.items[this.current]) this.items[this.current].visible = false;
         this.current = this.pending;
@@ -181,33 +189,53 @@ export class ViewModel {
         this.equipT = 0;
       }
     } else if (this.equipT < 1) {
-      this.equipT = Math.min(1, this.equipT + dt / 0.2);
+      this.equipT = Math.min(1, this.equipT + dt / 0.24);
     }
-    const lowered = this.pending !== undefined ? this.equipT : 1 - this.equipT;
+    const lowered = smooth(this.pending !== undefined ? this.equipT : 1 - this.equipT);
 
-    // Hiiren liikkeen viive (sway)
-    const tx = THREE.MathUtils.clamp(-input.mouseDX * 0.0006, -0.05, 0.05);
-    const ty = THREE.MathUtils.clamp(input.mouseDY * 0.0006, -0.05, 0.05);
-    this.sway.x += (tx - this.sway.x) * Math.min(1, dt * 10);
-    this.sway.y += (ty - this.sway.y) * Math.min(1, dt * 10);
+    // Hiiren liikkeen viive: nopeus (ei ruutukohtainen siirtymä) suodatetaan,
+    // ja käsi seuraa sitä vaimennetulla jousella.
+    const idt = dt > 0 ? 1 / dt : 0;
+    const lk = 1 - Math.exp(-dt * 14);
+    this.look.x += (THREE.MathUtils.clamp(input.mouseDX * idt, -3000, 3000) - this.look.x) * lk;
+    this.look.y += (THREE.MathUtils.clamp(input.mouseDY * idt, -3000, 3000) - this.look.y) * lk;
+    const tx = THREE.MathUtils.clamp(-this.look.x * 0.000011, -0.045, 0.045);
+    const ty = THREE.MathUtils.clamp(this.look.y * 0.000011, -0.045, 0.045);
+    if (dt > 0) {
+      const sdt = Math.min(dt, 1 / 30);
+      const K = 160, C = 2 * Math.sqrt(K) * 0.85; // lähes kriittisesti vaimennettu
+      this.swayVel.x += ((tx - this.sway.x) * K - this.swayVel.x * C) * sdt;
+      this.swayVel.y += ((ty - this.sway.y) * K - this.swayVel.y * C) * sdt;
+      this.sway.x += this.swayVel.x * sdt;
+      this.sway.y += this.swayVel.y * sdt;
+    }
 
-    // Perusasento + kävelyheilunta + hengitys
+    // Juoksu ja ilmassa olo liukuvat sisään ja ulos.
+    this.sprintBlend += ((player.sprinting && player.bobAmount > 0.3 ? 1 : 0) - this.sprintBlend) * (1 - Math.exp(-dt * 7));
+    this.airBlend += ((player.onGround ? 0 : 1) - this.airBlend) * (1 - Math.exp(-dt * 6));
+    const sp = this.sprintBlend;
+
+    // Perusasento + kävelyheilunta (pehmeä kahdeksikko) + hengitys
     const bob = player.bobAmount;
-    const sprint = player.sprinting ? 1 : 0;
     const ph = player.bobPhase;
-    const breathe = Math.sin(this.time * 1.6) * 0.004;
+    const sinP = Math.sin(ph), cosP = Math.cos(ph);
+    const step = sinP * sinP; // askelrytmi ilman terävää pohjaa
+    const amp = bob * (1 + 0.9 * sp);
+    const breathe = Math.sin(this.time * 1.6) * 0.004 * (1 - bob * 0.6);
+    const idleX = Math.sin(this.time * 0.9) * 0.0025 * (1 - bob);
     this.root.position.set(
-      this.basePos.x + Math.cos(ph) * 0.012 * bob * (1 + sprint) + this.sway.x,
-      this.basePos.y + Math.abs(Math.sin(ph)) * -0.014 * bob * (1 + sprint) + breathe + this.sway.y - lowered * 0.35 - sprint * 0.03,
-      this.basePos.z,
+      this.basePos.x + cosP * 0.011 * amp + this.sway.x + idleX + sp * 0.01,
+      this.basePos.y - step * 0.016 * amp + breathe + this.sway.y - lowered * 0.35 - sp * 0.035
+        - (player.landDip || 0) * 0.35 + this.airBlend * 0.012,
+      this.basePos.z + sinP * 0.02 * sp,
     );
     this.root.rotation.set(
-      this.baseRot.x - sprint * 0.35,
-      this.baseRot.y + sprint * 0.25,
-      this.baseRot.z + Math.cos(ph) * 0.03 * bob,
+      this.baseRot.x - sp * 0.34 + sinP * 0.1 * sp + step * 0.015 * bob + lowered * 0.5 + this.sway.y * 1.2,
+      this.baseRot.y + sp * 0.24 - this.sway.x * 1.4,
+      this.baseRot.z + cosP * 0.028 * bob + this.sway.x * 0.8,
     );
 
-    // Toiminta-animaatiot
+    // Toiminta-animaatiot avainkehyksistä pehmeillä siirtymillä
     this.anim.position.set(0, 0, 0);
     this.anim.rotation.set(0, 0, 0);
     const a = this.action;
@@ -215,27 +243,16 @@ export class ViewModel {
       a.t += dt / a.dur;
       const t = Math.min(1, a.t);
       if (a.type === 'swing') {
-        // Taakse - isku eteen-alas - palautus
-        let rx, py, pz;
-        if (t < 0.35) {
-          const k = easeOut(t / 0.35);
-          rx = 0.7 * k; py = 0.06 * k; pz = 0.05 * k;
-        } else if (t < 0.6) {
-          const k = easeIn((t - 0.35) / 0.25);
-          rx = 0.7 - 1.9 * k; py = 0.06 - 0.16 * k; pz = 0.05 - 0.2 * k;
-        } else {
-          const k = easeInOut((t - 0.6) / 0.4);
-          rx = -1.2 * (1 - k); py = -0.1 * (1 - k); pz = -0.15 * (1 - k);
-        }
+        const [rx, py, pz] = keyframes(SWING, t);
         this.anim.rotation.x = rx;
         this.anim.rotation.z = -rx * 0.15;
         this.anim.position.set(-0.04 * Math.max(0, -rx), py, pz);
       } else if (a.type === 'punch') {
-        const k = t < 0.4 ? easeOut(t / 0.4) : 1 - easeInOut((t - 0.4) / 0.6);
+        const [k, kr] = keyframes(PUNCH, t);
         this.anim.position.set(-0.1 * k, 0.04 * k, -0.25 * k);
-        this.anim.rotation.set(-0.3 * k, 0.15 * k, 0);
+        this.anim.rotation.set(-0.3 * k, 0.15 * k + kr * 0.1, kr * -0.15);
       } else if (a.type === 'pickup') {
-        const k = Math.sin(t * Math.PI);
+        const k = (1 - Math.cos(t * Math.PI * 2)) / 2;
         this.anim.position.set(-0.05 * k, -0.12 * k, -0.1 * k);
         this.anim.rotation.set(0.5 * k, 0, 0.2 * k);
       }
@@ -248,6 +265,39 @@ export class ViewModel {
   }
 }
 
-function easeOut(t) { return 1 - (1 - t) * (1 - t); }
-function easeIn(t) { return t * t; }
-function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+// Avainkehykset: [aika, arvot, siirtymän pehmennys kohti tätä kehystä].
+// Isku osuu kehykseen 0.5 (hitAt), josta pieni takaisinpomppu.
+const SWING = [
+  [0, [0, 0, 0]],
+  [0.3, [0.72, 0.065, 0.055], 'inOut'],
+  [0.5, [-1.22, -0.1, -0.16], 'strike'],
+  [0.6, [-1.08, -0.085, -0.13], 'out'],
+  [1, [0, 0, 0], 'inOut'],
+];
+const PUNCH = [
+  [0, [0, 0]],
+  [0.18, [-0.18, 0.3], 'inOut'],
+  [0.42, [1, 1], 'strike'],
+  [0.54, [0.88, 0.9], 'out'],
+  [1, [0, 0], 'inOut'],
+];
+const EASE = {
+  // Kiihtyy pehmeästi ja osuu vielä vauhdilla, mutta ilman nykäisyä.
+  strike: (t) => 2 * t * t - t * t * t,
+  out: (t) => 1 - Math.pow(1 - t, 3),
+  inOut: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
+};
+
+function keyframes(keys, t) {
+  let i = 1;
+  while (i < keys.length - 1 && t > keys[i][0]) i++;
+  const [t0, a] = keys[i - 1];
+  const [t1, b, ease] = keys[i];
+  const k = EASE[ease]((t - t0) / (t1 - t0));
+  return a.map((v, j) => v + (b[j] - v) * Math.min(1, Math.max(0, k)));
+}
+
+function smooth(t) {
+  t = Math.min(1, Math.max(0, t));
+  return t * t * (3 - 2 * t);
+}

@@ -11,6 +11,10 @@ export const ITEMS = {
   stone_axe: { name: 'Kivikirves', stack: 1, tool: 'axe', damage: 1, desc: 'Puiden kaatamiseen.' },
   stone_pick: { name: 'Kivihakku', stack: 1, tool: 'pickaxe', damage: 1, desc: 'Lohkareiden louhimiseen.' },
   campfire: { name: 'Nuotio', stack: 5, place: 'campfire', desc: 'Valoa ja lämpöä yöhön. Aseta hiiren oikealla.' },
+  // Arvoesineet (arkuista). Käyttötarkoitus on vielä avoin (esim. kauppa).
+  gold_nugget: { name: 'Kultahippu', stack: 20, valuable: true, desc: 'Arvokas kultahippu. Sahelin kulta on ollut haluttua vuosisatoja.' },
+  cowrie: { name: 'Kaurikotilo', stack: 50, valuable: true, desc: 'Kaurikotiloita käytettiin Länsi-Afrikassa rahana.' },
+  bronze_bracelet: { name: 'Pronssirannerengas', stack: 5, valuable: true, desc: 'Vanha, koristeellinen pronssikoru.' },
 };
 
 export const RECIPES = [

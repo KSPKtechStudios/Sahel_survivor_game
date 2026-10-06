@@ -2,6 +2,21 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-06 (sessio 4)
+- **Kartta paljastuu ruuduittain (512 m, 4 m/pikseli), ja maasto lasketaan generointisäikeessä.** Syy: pääsäikeessä tehty minikarttalaskenta nyki kävellessä. Ruutuja pyydetään vain piirtoa varten, korkeintaan kaksi kerrallaan, jotteivät chunkit jää jonoon.
+- **Tallennukseen menee vain karkea bittikartta (16 m solut) tutkitusta alueesta**, ja pehmeä maski rakennetaan siitä latauksessa. Syy: tallennus pysyy pienenä (n. 170 merkkiä / ruutu). Ladattu alue on hieman reunoiltaan pienempi kuin pelatessa piirretty.
+- **Minikartta kääntyy pelaajan mukana, iso kartta on pohjoinen ylöspäin.** Syy: minikartassa katsesuunta on luontevasti ylös (kuten ennen), isossa kartassa merkkien asettelu on helpompaa kiinteällä suunnalla.
+- **Merkkisymbolit: raksi, pallukka, talo, lippu, tähti.** Syy: käyttäjä mainitsi raksin, pallukan ja talon esimerkkeinä; lippu ja tähti lisättiin, koska "paria erilaista" -merkkiä varten pieni valikoima on kätevä. Helppo muuttaa (`src/ui/explored.js`).
+- **Isossa kartassa maailma jatkaa kulkuaan** (kuten repussakin). Syy: selviytymispeleissä tapana; tauko on erikseen [Esc].
+- **Chunkien generointi siirrettiin Web Workeriin** (2 säiettä, varajärjestelmänä pääsäie). Syy: chunkin laskenta kesti 15–20 ms ja aiheutti nykimistä kävellessä. Säikeissä ei voi käyttää import mapia, joten generointikoodi ei tuo three.js:ää.
+- **Instanssipoolit tiivistetään** (poistettu instanssi korvataan viimeisellä). Syy: pooleihin jäi nollamatriiseja, jotka piirrettiin silti, ja kolmiomäärä kasvoi kävellessä yli miljoonaan.
+- **Rakennelmien paikat tulevat siemenestä 320 m soluista** (24 % soluista, biomin mukaan painotettu tyyppi), ja maasto tasoitetaan rakennelman kohdalta. Arkun sisältö lasketaan rakennelman siemenestä, joten se on joka kerta sama; avatut arkut tallennetaan. Syy: deterministinen kuten muukin maailma, ei tarvitse tallentaa rakennelmia.
+- **Rauniot ovat kaikissa biomeissa harvinaisia (n. 7–8 % soluista)**; Sahelissa yleisimpiä ovat kivikehät ja aavikolla leirit. Syy: käyttäjä pyysi kivikehiä Saheliin, leirejä aavikolle ja harvinaisia raunioita kaikkialle.
+- **Arvoesineet (kultahippu, kaurikotilo, pronssirannerengas) ovat toistaiseksi vain kerättäviä.** Syy: käyttötarkoitusta ei ole päätetty (avoin kysymys). Kaurikotilo ja pronssi valittiin, koska ne sopivat Länsi-Afrikan historiaan (kotilorahat, pronssityöt).
+- **Sademetsä on tiheä, ja raskaus hoidetaan lyhyellä piirtoetäisyydellä sumun sisällä.** Syy: käyttäjä halusi tiheän, vaikeakulkuisen sademetsän; sumu (n. 95 m) peittää piirtoetäisyyden rajan. Kulku on 30 % hitaampaa.
+- **Käden animaatiot lasketaan pehmennetyistä tiloista** (juoksu, ilmassa olo ja hiiren liike liukuvat; iskut avainkehyksistä). Syy: käyttäjä koki juoksu- ja työkaluanimaatiot nykiviksi; mittauksessa juoksuun siirtyminen hyppäsi 0,35 rad yhdessä ruudussa, nyt alle 0,03.
+- **Valikon animaatiot vain transformilla ja läpinäkyvyydellä.** Syy: sumennus, clip-path ja left/right-animaatiot lasketaan pääsäikeessä, joka piirtää samalla 3D-taustaa, joten ne nykivät. Transform/opacity-animaatiot pyörivät näytönohjaimella.
+
 ## 2026-10-06 (sessio 3)
 - **Maailma on vyöhykkeellinen ympyrä (säde 10 km), ja joka maailmalla on oma siemen.** Syy: käyttäjän luonnos (spawn -> tier 1 Sahel -> tier 2 aavikko/sademetsä -> vuoristoreuna) ja toive valtavasta maailmasta. Vyöhykkeiden rajat vääristetään kohinalla, jotta ne ovat epäsäännöllisiä ja joka siemenellä erilaisia.
 - **Aavikko ja sademetsä painottuvat maailman vastakkaisille puolille** (suunta arvotaan siemenestä). Syy: pelkkä kohina sekoitti ne pieniksi läikiksi; näin syntyy yhtenäisiä alueita, vähän kuin Sahara pohjoisessa ja Guinean metsät etelässä.

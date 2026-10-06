@@ -8,7 +8,7 @@ import { events } from './events.js';
 
 const PICK_RADIUS = 1.5;    // automaattinen poiminta
 // Kuinka korkealla maasta esine lepää (mallin paksuus makuuasennossa).
-const REST_Y = { stick: 0.025, stone: 0.07, fiber: 0.03, wood: 0.09, stone_axe: 0.03, stone_pick: 0.03, campfire: 0.05 };
+const REST_Y = { stick: 0.025, stone: 0.07, fiber: 0.03, wood: 0.09, stone_axe: 0.03, stone_pick: 0.03, campfire: 0.05, gold_nugget: 0.02, cowrie: 0.02, bronze_bracelet: 0.02 };
 const MAX_DROPS = 250;
 const LIE = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 const _q = new THREE.Quaternion();
@@ -26,6 +26,14 @@ export class Drops {
       roughness: 0.8,
       emissive: 0xffd9a0,
       emissiveIntensity: 0.06,
+    });
+    // Arvoesineet kiiltävät ja hehkuvat kullanvärisinä.
+    this.valuableMaterial = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.35,
+      metalness: 0.6,
+      emissive: 0xffc040,
+      emissiveIntensity: 0.25,
     });
     this.fullWarned = 0;
   }
@@ -45,7 +53,7 @@ export class Drops {
 
   _add(item, count, pos, vel, resting) {
     if (this.list.length >= MAX_DROPS) this._remove(this.list[0]);
-    const mesh = new THREE.Mesh(this.geos[item], this.material);
+    const mesh = new THREE.Mesh(this.geos[item], ITEMS[item].valuable ? this.valuableMaterial : this.material);
     mesh.castShadow = true;
     mesh.position.copy(pos);
     const yaw = Math.random() * Math.PI * 2;
@@ -76,6 +84,7 @@ export class Drops {
 
   update(dt, elapsed, player, inventory) {
     this.material.emissiveIntensity = 0.05 + (Math.sin(elapsed * 3) * 0.5 + 0.5) * 0.08;
+    this.valuableMaterial.emissiveIntensity = 0.2 + (Math.sin(elapsed * 4) * 0.5 + 0.5) * 0.35;
     const chest = _v.copy(player.position);
     chest.y += 1.0;
     for (let i = this.list.length - 1; i >= 0; i--) {

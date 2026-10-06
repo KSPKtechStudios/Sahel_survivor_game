@@ -41,28 +41,48 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
   - **ulkoreuna**: vuoristobiomi (harvinainen)
   - Ulkoreuna on epäsäännöllinen (rosoinen ääriviiva).
 
+## Kartta (käyttäjän kertoma, 2026-10-06, sessio 4)
+- Maailmaa luodessa **karttaa ei saa näkyä**, koska se spoilaa kokonaisuuden.
+- Peliin tultaessa kartassa näkyy **pelkkä tyhjä karttapohja**, ja kartta **"renderöityy" eli piirtyy sitä mukaa kuin pelaaja tutkii alueita**.
+- **M-napista avautuu suuri, interaktiivinen kartta.** Siihen voi laittaa **paria erilaista waypointtia**, joilla on **omat symbolit** (esim. pelkkä raksi, pallukka, talon kuva).
+
+## Rakennelmat ja arkut (käyttäjän kertoma, 2026-10-06, sessio 4)
+- Joka maailman generoinnissa syntyy **satunnaisesti pieniä rakennelmia**:
+  - **Saheliin** Stonehengen tyylisiä kivikasoja / kivikehiä
+  - **aavikolle** hylättyjä leirejä
+  - **kaikkiin biomeihin harvoin** talon tai pienen kylän raunioita
+- **45 %:n todennäköisyydellä** rakennelmassa on **arkku**, jossa on vähän tavallista saalista.
+- **10 %:n todennäköisyydellä** arkussa on **arvoesine tai -esineitä**.
+
+## Biomit ja sulavuus (käyttäjän kertoma, 2026-10-06, sessio 4)
+- Biomeja hiotaan paljon: **sademetsän pitää olla tiheä ja vaikeakulkuinen** (ei harva ja savannimainen), myös vuoristoa ja muita biomeja parannetaan.
+- Valikon animaatioiden sekä käden juoksu- ja työkaluanimaatioiden pitää olla **pehmeämpiä** (eivät saa nykiä).
+
 ## Teknologia
 - Selaimessa toimiva peli: three.js (WebGL), ei käännösvaihetta. Ks. `DECISIONS.md`.
 - Kohdealusta toistaiseksi tietokoneen selain (hiiri + näppäimistö).
 
 ## Toteutettu
 - Päävalikko (pergamenttikäärö, puunapit, pehmeät siirtymät ja hiekkapöllähdys), taustalla elävä pelimaailma auringonlaskussa.
-- Maailmojen valinta: useita tallennettuja maailmoja, uuden maailman luonti nimellä ja siemenellä, koko maailman karttaesikatselu.
+- Maailmojen valinta: useita tallennettuja maailmoja, uuden maailman luonti nimellä ja siemenellä (ei karttaesikatselua).
 - Asetukset: hiiren herkkyys, pystyakselin kääntö, näkökenttä, näköetäisyys, varjot, renderöintitarkkuus, FPS-näyttö.
 - Vyöhykkeellinen maailma (säde 10 km), 8 biomia, epäsäännölliset rajat, maailman reuna vuoristona.
 - Ensimmäisen persoonan liikkuminen, näkyvä käsi ja esine kädessä animaatioineen.
 - Vuorokausi (20 min) ja neljä säätä; sademetsässä hiekkailmiöt muuttuvat sumuksi.
 - Hakkaaminen: lovet puissa, puu kaatuu ja pomppaa maahan, kaatunut runko pilkotaan; kiviin säröjä ja ne murskautuvat; pensaat rytisevät ja hajoavat. Palat lentävät fysiikalla.
 - Saaliit putoavat maahan, [E] tai automaattinen poiminta.
-- Reppu (8 + 24 paikkaa), valmistus, nuotio, opas, minikartta, tallennus maailmakohtaisesti.
+- Reppu (8 + 24 paikkaa), valmistus, nuotio, opas, tallennus maailmakohtaisesti.
+- Tutkittava kartta: minikartta piirtyy kuljetusta alueesta, iso kartta [M] merkkeineen.
+- Rakennelmat (kivikehät, leirit, talon ja kylän rauniot) ja arkut saaliineen, arvoesineet.
+- Tiheä sademetsä, keitaat, uusittu vuoristo.
 
 ## Paikkamerkit (Clauden valitsemia, voi muuttaa vapaasti)
 - **Maailman koko:** säde 10 km. Spawn-alue n. 2,4 km, tier 1 n. 6 km asti, tier 2 n. 9,3 km asti, sen jälkeen vuoristoreuna. Reunan takana on läpäisemätön vuoriseinämä.
 - **Tier 1 -biomit:** Sahelin savanni, Hiekkadyynit, Laterittitasanko (punainen), Kausilampi (vesi), Akasiametsikkö. Spawn-alueella ei ole dyynejä.
-- **Tier 2:** Aavikko (valtavat dyynit) ja Sademetsä (kapokkipuut, palmut, saniaiset). Aavikko painottuu toiselle puolelle maailmaa ja sademetsä vastakkaiselle (suunta vaihtelee siemenen mukaan).
+- **Tier 2:** Aavikko (valtavat dyynit, keitaat) ja Sademetsä (tiheä: sademetsäpuut, kapokkipuut, tiheiköt, bambu, saniaiset). Aavikko painottuu toiselle puolelle maailmaa ja sademetsä vastakkaiselle (suunta vaihtelee siemenen mukaan).
 - **Ulkoreuna:** Vuoristo (punertavaa kalliota, lohkareita).
-- **Maailman esineet:** akasia, kapokkipuu, palmu, baobab (ei kaadettava), kuivunut pensas, saniainen, tumbleweed, risu, kivi, lohkare, termiittikeko, ruoho.
-- **Hakkaaminen:** akasia 5 iskua + runko 4, kapokkipuu 8 + 6, palmu 4 + 3, lohkare 4 (hakku), pensas 3 (kirves 2x). Lovi tulee aina samaan kaatokohtaan sille puolelle, josta lyödään.
+- **Maailman esineet:** akasia, kapokkipuu, sademetsäpuu, palmu, baobab (ei kaadettava), kuollut puu, kuivunut pensas, tiheikkö, bambu, saniainen, kandelaaberipuu, tumbleweed, risu, kivi, lohkare, kalliomuodostelma, kalliotorni, termiittikeko, ruoho, aluskasvillisuus, ruoko.
+- **Hakkaaminen:** akasia 5 iskua + runko 4, kapokkipuu 8 + 6, sademetsäpuu 6 + 4, palmu 4 + 3, kuollut puu 3 (kirves), lohkare 4 (hakku), pensas/tiheikkö 3, bambu 4, saniainen 2 (kirves 2x). Lovi tulee aina samaan kaatokohtaan sille puolelle, josta lyödään.
 - **Kaatumissuunta:** satunnainen, mutta jos se osoittaisi suoraan pelaajaa kohti, suunta käännetään (ettei puu kaadu päälle).
 - **Esineet:** risu, kivi, kuitu, puu, kivikirves, kivihakku, nuotio.
 - **Reseptit:** kivikirves (3 risua, 2 kiveä, 2 kuitua), kivihakku (3 risua, 3 kiveä, 2 kuitua), nuotio (3 puuta, 5 kiveä, 3 risua).
@@ -70,9 +90,20 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - **Kestävyys (stamina):** kuluu juostessa, hypätessä ja lyödessä.
 - **Hahmo:** tummaihoinen käsi ja indigonsininen hiha (koska peli sijoittuu Burkina Fasoon).
 - **Valikon fontit:** Eagle Lake (otsikko), Permanent Marker (napit), Alegreya (teksti).
-- **Ohjaimet:** WASD, Shift, välilyönti, hiiri 1/2, E, 1–8, Tab/I, Esc.
+- **Ohjaimet:** WASD, Shift, välilyönti, hiiri 1/2, E, 1–8, Tab/I, M, Esc.
+- **Kartta:** paljastuu n. 100 m säteeltä. Merkkisymbolit: raksi, pallukka, talo (käyttäjän esimerkit) sekä lippu ja tähti. Minikartta kääntyy katsesuunnan mukaan, iso kartta on pohjoinen ylöspäin. Kartta on aina käytössä (ei erillistä esinettä).
+- **Rakennelmat:** kivikehä (Sahel: savanni, laterittitasanko, akasiametsikkö, dyynit), hylätty leiri (aavikko, dyynit, keidas), talon rauniot ja kylän rauniot (kaikki biomit, harvinaisia). Vuoristossa rauniot ovat kiveä, sademetsässä köynnösten peittämiä. Noin 500 rakennelmaa / maailma.
+- **Arkun tavallinen saalis:** 2–3 seuraavista: risuja 3–8, kiviä 2–6, kuitua 2–6, puuta 1–4.
+- **Arvoesineet:** kultahippu (1–3), kaurikotilo (3–8), pronssirannerengas (1); arkussa 1–2 näistä. Ei vielä käyttöä.
+- **Sademetsän kasvit:** sademetsäpuu (6 iskua + runko 4), kapokkipuu, tiheikkö, bambu (risuja), saniainen, aluskasvillisuus, ruoko. Kulku 30 % hitaampaa.
+- **Aavikko:** keitaat (vesi, palmut, ruo'ot), kuolleet puut (kirves, puuta + risuja).
+- **Vuoristo:** kalliomuodostelmat, kalliotornit, lohkareet, kandelaaberipuut (euphorbia), kerrostuneet kallion värit.
 
 ## Avoimet kysymykset
+- Mihin arvoesineitä (kultahippu, kaurikotilo, pronssirannerengas) käytetään: kaupankäynti, valmistus, pisteet?
+- Pitäisikö kartan olla esine, joka pitää ensin valmistaa / löytää, vai aina käytössä (nyt aina)?
+- Pitäisikö rakennelmissa olla muuta (esim. vihollisia, tarinaa, erikoissaaliita)?
+- Uusiutuvatko arkut, vai avataanko kukin vain kerran (nyt kerran)?
 - Mitä maailman reunan takana on: läpäisemättömät vuoret (nyt), meri vai jotain muuta?
 - Haluatko valikon taustaksi mallikuvan kaltaisen maalauksen (esim. kuva ilman logoa ja nappeja) vai elävän 3D-maailman (nyt)?
 - Pitäisikö kantojen olla poistettavissa / antaa puuta?

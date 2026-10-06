@@ -257,3 +257,64 @@ html, body {
   #inv-grid .slot img { width: 32px; height: 32px; }
   #guide { width: 230px; }
 }
+
+/* ---------- Iso kartta [M] ---------- */
+#bigmap {
+  position: fixed; inset: 0;
+  background: rgba(10, 6, 2, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: auto;
+  animation: bmFade 0.22s ease-out;
+}
+#bigmap.hidden { display: none; }
+@keyframes bmFade { from { opacity: 0; } to { opacity: 1; } }
+.bm-card {
+  position: relative;
+  width: min(1100px, calc(100vw - 32px));
+  height: min(760px, calc(100vh - 32px));
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 0 3px #5a3b1e, 0 0 0 6px rgba(255, 220, 170, 0.25), 0 20px 50px rgba(0, 0, 0, 0.6);
+  animation: bmIn 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+  will-change: transform;
+}
+@keyframes bmIn { from { transform: scale(0.96) translateY(10px); } to { transform: none; } }
+#bigmap-canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
+#bigmap-canvas.dragging { cursor: grabbing; }
+.bm-top {
+  position: absolute; left: 12px; right: 12px; top: 12px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  pointer-events: none;
+}
+.bm-top h2 {
+  margin: 0 6px 0 4px;
+  font: 400 26px 'Eagle Lake', Georgia, serif; color: #4a2f15;
+  text-shadow: 0 1px 0 rgba(255, 245, 220, 0.8);
+}
+#bm-symbols { display: flex; gap: 6px; pointer-events: auto; }
+.bm-sym, .bm-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 9px 4px 5px;
+  font: 700 13px 'Alegreya', Georgia, serif; color: #4a2f15;
+  background: rgba(255, 248, 230, 0.78);
+  border: 1px solid rgba(110, 75, 35, 0.45);
+  border-radius: 8px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.bm-btn { padding: 6px 12px; }
+.bm-sym canvas { width: 26px; height: 26px; }
+.bm-sym:hover, .bm-btn:hover { background: rgba(255, 252, 240, 0.95); transform: translateY(-1px); }
+.bm-sym.on { background: #fff6dc; box-shadow: 0 0 0 2px #c58a32; }
+.bm-bottom {
+  position: absolute; right: 14px; bottom: 10px;
+  display: flex; gap: 16px; align-items: baseline;
+  font: 600 13px 'Alegreya', Georgia, serif; color: #4a2f15;
+  text-shadow: 0 1px 0 rgba(255, 245, 220, 0.8);
+  pointer-events: none;
+}
+#bm-coords { font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) {
+  .bm-sym span, .bm-help { display: none; }
+}

@@ -65,3 +65,58 @@ export function makeTermiteMound(seed, q = 1) {
   }
   return merge(parts);
 }
+
+// Tuulen kuluttama kalliomuodostelma (aavikko, vuoristo).
+export function makeOutcrop(seed, q = 1) {
+  const rand = mulberry32(seed);
+  const parts = [];
+  const col = [0xb07a52, 0x9a6a4a, 0xc49064][seed % 3];
+  const n = 2 + Math.floor(rand() * 3);
+  for (let i = 0; i < n; i++) {
+    const w = 1.2 + rand() * 1.4;
+    const h = 1.5 + rand() * 3;
+    let g = new THREE.CylinderGeometry(w * (0.6 + rand() * 0.3), w, h, q ? 7 : 5, q ? 3 : 1);
+    const jr = partRand(seed, i + 3);
+    displace(g, (x, y, z) => {
+      const kk = 0.85 + jr() * 0.3;
+      // Kerroksellinen eroosio: kapeampi keskeltä
+      const waist = 1 - Math.exp(-Math.pow((y / h) * 2.2, 2)) * 0.15;
+      return [x * (kk * waist - 1), (jr() - 0.5) * 0.15, z * (kk * waist - 1)];
+    });
+    g.translate((rand() - 0.5) * 2, h / 2 - 0.3, (rand() - 0.5) * 2);
+    g.rotateY(rand() * Math.PI);
+    parts.push(paint(flatNormals(g), col, { rand: jr, jitter: 0.08, shade: (x, y) => 0.85 + ((Math.floor(y * 1.5) % 2) ? 0.1 : 0) }));
+  }
+  return merge(parts);
+}
+
+// Hiekkakivitorni (vuoristo), kuin Hombori-vuorten pylväät.
+export function makeSpire(seed, q = 1) {
+  const rand = mulberry32(seed);
+  const parts = [];
+  const H = 7 + rand() * 9;
+  const R = 1.3 + rand() * 0.8;
+  const prof = [[R * 1.25, -0.5], [R * 1.1, H * 0.15], [R * 0.95, H * 0.4], [R, H * 0.6], [R * 0.85, H * 0.85], [R * 0.95, H * 0.95], [R * 0.5, H]]
+    .map(([r, y]) => new THREE.Vector2(r, y));
+  const g = new THREE.LatheGeometry(prof, q ? 8 : 5);
+  const jr = partRand(seed, 2);
+  displace(g, (x, y, z) => {
+    const kk = 0.85 + jr() * 0.3;
+    return [x * (kk - 1), (jr() - 0.5) * 0.2, z * (kk - 1)];
+  });
+  const bands = [0xa86a48, 0x8e5a40, 0xc08a62, 0x7a5a4a];
+  parts.push(paint(flatNormals(g), 0xffffff, { rand: jr, jitter: 0.06 }));
+  // Värivyöhykkeet korkeuden mukaan
+  const geo = parts[0];
+  const pos = geo.attributes.position;
+  const colAttr = geo.attributes.color;
+  const c = new THREE.Color();
+  for (let i = 0; i < pos.count; i += 3) {
+    const y = (pos.getY(i) + pos.getY(i + 1) + pos.getY(i + 2)) / 3;
+    const bi = Math.floor(y / 1.6);
+    c.set(bands[((bi % bands.length) + bands.length) % bands.length]);
+    const j = 0.92 + jr() * 0.16;
+    for (let kk = 0; kk < 3; kk++) colAttr.setXYZ(i + kk, c.r * j, c.g * j, c.b * j);
+  }
+  return merge(parts);
+}

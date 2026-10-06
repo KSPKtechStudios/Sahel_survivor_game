@@ -2,7 +2,7 @@
 
 > Pelin työnimi. Nimi ei ole vielä lopullinen ja voi muuttua.
 
-Valheim- ja Minecraft-tyyppinen selviytymispeli, joka sijoittuu Burkina Fason Sahel-alueelle. 3D avoin maailma (20 km, generoidaan joka kerta omalla siemenellä), ensimmäisen persoonan kuvakulma, reppu ja valmistus, vuorokausisykli ja sää (selkeä, pilvinen, hiekkausva, hiekkamyrsky). Puut kaatuvat ja kivet murskautuvat, ja saaliit putoavat maahan.
+Valheim- ja Minecraft-tyyppinen selviytymispeli, joka sijoittuu Burkina Fason Sahel-alueelle. 3D avoin maailma (20 km, generoidaan joka kerta omalla siemenellä), ensimmäisen persoonan kuvakulma, reppu ja valmistus, vuorokausisykli ja sää (selkeä, pilvinen, hiekkausva, hiekkamyrsky). Puut kaatuvat ja kivet murskautuvat, ja saaliit putoavat maahan. Kartta piirtyy sitä mukaa kuin maailmaa tutkii, ja maailmasta löytyy kivikehiä, hylättyjä leirejä ja raunioita arkkuineen.
 
 ## Pelaa
 
@@ -28,6 +28,7 @@ Haarojen testauslinkit: `https://raw.githack.com/KSPKtech/sahel/<haara>/index.ht
 | Hiiri 2 | aseta (esim. nuotio) |
 | 1–8 / rulla | valitse esine |
 | Tab tai I | reppu ja valmistus |
+| M | iso kartta (klikkaa: merkki, vedä: liikuta, rulla: zoomaa) |
 | Esc | tauko (asetukset, päävalikko, testaustyökalut: sää, aika, siirry biomiin) |
 | O / L | testaus: seuraava sää / +1 tunti |
 
@@ -36,14 +37,14 @@ Haarojen testauslinkit: `https://raw.githack.com/KSPKtech/sahel/<haara>/index.ht
 | Polku | Sisältö |
 |---|---|
 | `index.html`, `styles.css`, `menu.css` | Sivu, HUD:n ja valikoiden tyylit |
-| `src/main.js` | Käynnistys, tilat (valikko/lataus/peli/tauko), pääsilmukka |
+| `src/main.js` | Käynnistys, tilat (valikko/lataus/peli/tauko/reppu/kartta), pääsilmukka |
 | `src/config.js` | Säädettävät arvot (näkyvyys, vuorokauden pituus, nopeudet…) |
-| `src/world/` | Maailman generointi (vyöhykkeet, biomit, siemen), chunkit ja LOD, esinetyypit, tumbleweedit |
+| `src/world/` | Maailman generointi (vyöhykkeet, biomit, siemen, rakennelmien paikat), chunkit ja LOD, generointisäikeet (`genWorker.js`), esinetyypit, tumbleweedit |
 | `src/render/` | Taivas, vuorokausi ja sää, materiaalit, hiukkaset, sirpaleet, tekstuurit |
-| `src/models/` | Proseduraaliset 3D-mallit: puut, kasvit, kivet, esineet (korvattavissa glTF-malleilla) |
+| `src/models/` | Proseduraaliset 3D-mallit: puut, kasvit, kivet, esineet, rakennelmat ja arkku (korvattavissa glTF-malleilla) |
 | `src/player/` | Ohjaus, liikkuminen, käsi ja esine kädessä |
-| `src/game/` | Esineet, reppu, valmistus, opas, hakkaaminen, kaatuminen, saaliit, rakennelmat, tallennus |
-| `src/ui/` | Valikot, HUD, minikartta, opas, reppuikkuna, kuvakkeet |
+| `src/game/` | Esineet, reppu, valmistus, opas, hakkaaminen, kaatuminen, saaliit, nuotio, rauniot ja arkut (`ruins.js`), tallennus |
+| `src/ui/` | Valikot, HUD, tutkittu kartta (`explored.js`), minikartta, iso kartta (`bigMap.js`), opas, reppuikkuna, kuvakkeet |
 | `assets/fonts/` | Valikon fontit (OFL/Apache) |
 | `vendor/three/` | three.js r186 (MIT) |
 
@@ -59,4 +60,4 @@ Haarojen testauslinkit: `https://raw.githack.com/KSPKtech/sahel/<haara>/index.ht
 
 ## Tila
 
-Pelattava prototyyppi: päävalikko, maailmojen luonti siemenellä, vyöhykkeellinen maailma, keräys, hakkaaminen ja valmistus. Grafiikka on vielä yksinkertaista low-poly-paikkamerkkiä, ja sitä on tarkoitus jalostaa myöhemmin.
+Pelattava prototyyppi: päävalikko, maailmojen luonti siemenellä, vyöhykkeellinen maailma, tutkittava kartta, rakennelmat ja arkut, keräys, hakkaaminen ja valmistus. Grafiikka on vielä yksinkertaista low-poly-paikkamerkkiä, ja sitä on tarkoitus jalostaa myöhemmin.

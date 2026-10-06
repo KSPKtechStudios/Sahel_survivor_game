@@ -1,6 +1,6 @@
 // Pää- ja taukovalikko, maailmojen valinta, asetukset ja latausruutu.
 import { listWorlds, createWorld, deleteWorld, saveSettings } from '../game/save.js';
-import { seedFromString, randomSeed, setWorldSeed, getWorldSeed, drawWorldMap } from '../world/terrain.js';
+import { seedFromString, randomSeed } from '../world/terrain.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -193,18 +193,9 @@ export class Menu {
   _bindWorlds() {
     this.nameInput = $('nw-name');
     this.seedInput = $('nw-seed');
-    this.mapCanvas = $('nw-map');
-    this.mapCtx = this.mapCanvas.getContext('2d');
     this.randomSeed = randomSeed();
-    let timer = 0;
-    this.seedInput.addEventListener('input', () => {
-      clearTimeout(timer);
-      this.mapCanvas.classList.add('busy');
-      timer = setTimeout(() => this._drawPreview(), 280);
-    });
     $('nw-dice').addEventListener('click', () => {
       this.seedInput.value = String(randomSeed());
-      this._drawPreview();
     });
     $('nw-create').addEventListener('click', () => {
       const seed = this._currentSeed();
@@ -223,24 +214,6 @@ export class Menu {
   _currentSeed() {
     const txt = this.seedInput.value.trim();
     return txt ? seedFromString(txt) : this.randomSeed;
-  }
-
-  _drawPreview() {
-    const seed = this._currentSeed();
-    const prev = getWorldSeed();
-    setWorldSeed(seed);
-    drawWorldMap(this.mapCtx, this.mapCanvas.width);
-    setWorldSeed(prev);
-    const ctx = this.mapCtx;
-    const c = this.mapCanvas.width / 2;
-    ctx.beginPath();
-    ctx.arc(c, c, 4, 0, Math.PI * 2);
-    ctx.fillStyle = '#ff8a2a';
-    ctx.strokeStyle = '#2a1405';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fill();
-    this.mapCanvas.classList.remove('busy');
   }
 
   _renderWorlds() {
@@ -280,8 +253,6 @@ export class Menu {
     this.randomSeed = randomSeed();
     this.seedInput.value = '';
     this.seedInput.placeholder = `satunnainen (${this.randomSeed})`;
-    this.mapCanvas.classList.add('busy');
-    setTimeout(() => this._drawPreview(), 60);
   }
 
   // --- Asetukset ------------------------------------------------------------------

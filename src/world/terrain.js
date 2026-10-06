@@ -33,6 +33,7 @@ export const BIOMES = {
   mare: { name: 'Kausilampi', map: '#7a7448' },
   woodland: { name: 'Akasiametsikkö', map: '#9a8a52' },
   desert: { name: 'Aavikko', map: '#e6bd84' },
+  oasis: { name: 'Keidas', map: '#6f8f48' },
   rainforest: { name: 'Sademetsä', map: '#4a6a2c' },
   mountains: { name: 'Vuoristo', map: '#7a6a60' },
 };
@@ -49,6 +50,7 @@ const BIOME_MAP_RGB = Object.fromEntries(
 let SEED = 0;
 let N = null;
 let desertAngle = 0;
+const structCache = new Map();
 
 // Merkkijono tai luku -> 32-bittinen siemen.
 export function seedFromString(text) {
@@ -69,8 +71,9 @@ export function setWorldSeed(seed) {
   N = {
     base: n(1), detail: n(2), duneField: n(3), dune: n(4), ripple: n(5), lat: n(6), rock: n(7),
     mare: n(8), wood: n(9), color: n(10), warp: n(11), zoneWarp: n(12), edge: n(13), dr: n(14),
-    bigDune: n(15), hills: n(16), mount: n(17), mount2: n(18),
+    bigDune: n(15), hills: n(16), mount: n(17), mount2: n(18), oasis: n(19), gully: n(20), strata: n(21),
   };
+  structCache.clear();
   // Aavikko painottuu yhdelle puolelle ja sademetsä vastakkaiselle (kuten
   // Sahara pohjoisessa ja Guinean metsät etelässä), suunta vaihtelee siemenen mukaan.
   desertAngle = mulberry32(SEED ^ 0x5eed)() * Math.PI * 2;
@@ -97,8 +100,8 @@ function zones(x, z, out) {
   return out;
 }
 
-// Kenttä, josta sekä korkeus että biomipainot lasketaan.
-export function sampleTerrain(x, z, out = {}) {
+// Kenttä, josta sekä korkeus että biomipainot lasketaan (ilman rakennelmien tasoitusta).
+function sampleTerrainRaw(x, z, out) {
   zones(x, z, out);
   const { d, dEdge } = out;
 
@@ -145,7 +148,7 @@ export function sampleTerrain(x, z, out = {}) {
   }
 
   // --- Tier 2: aavikko ja sademetsä
-  let desert = 0, rainforest = 0, hDesert = 0, hRain = 0;
+  let desert = 0, rainforest = 0, oasis = 0, hDesert = 0, hRain = 0;
   if (t2 > 0.0005) {
     const ang = Math.atan2(z, x);
     const side = Math.cos(ang - desertAngle) * 0.6;
@@ -160,9 +163,21 @@ export function sampleTerrain(x, z, out = {}) {
       const r1 = 1 - Math.abs(N.bigDune(u / 230 + N.warp(x / 500, z / 500) * 0.5, v / 520));
       const r2 = 1 - Math.abs(N.bigDune(u / 70 + 13, v / 140 - 7));
       hDesert = 3 + r1 * r1 * 22 + r2 * r2 * 3.5 + fbm(N.base, x / 600, z / 600, 2) * 3 + N.ripple(u / 2.5, v / 10) * 0.06;
+      // Keidas: harvinainen painanne, jossa on vettä ja vehreyttä.
+      const of = fbm(N.oasis, x / 650, z / 650, 3);
+      const ow = smoothstep(0.42, 0.56, of);
+      if (ow > 0.001) {
+        const bowl = smoothstep(0.46, 0.66, of);
+        hDesert = hDesert * (1 - ow) + (2.2 - bowl * 4.4) * ow;
+        oasis = desert * smoothstep(0.42, 0.5, of);
+        desert -= oasis;
+      }
     }
     if (rainforest > 0.0005) {
-      hRain = 3 + fbm(N.hills, x / 320, z / 320, 4) * 7 + N.detail(x / 40, z / 40) * 0.6;
+      // Kumpuileva, rosoinen maasto ja purojen uomat.
+      const gw = N.gully(x / 260 + N.warp(x / 500, z / 500) * 0.6, z / 260);
+      const gully = Math.pow(1 - Math.min(1, Math.abs(gw) * 3.2), 3);
+      hRain = 3.4 + fbm(N.hills, x / 320, z / 320, 4) * 8 + Math.abs(N.detail(x / 30, z / 30)) * 1.2 - gully * 4.6;
     }
   }
 
@@ -184,19 +199,122 @@ export function sampleTerrain(x, z, out = {}) {
     if (dEdge > 1.0) hMount += (dEdge - 1.0) * 6000;
   }
 
-  out.h = t1 * hSahel + desert * hDesert + rainforest * hRain + mountains * hMount;
+  out.h = t1 * hSahel + (desert + oasis) * hDesert + rainforest * hRain + mountains * hMount;
   out.savanna = savanna;
   out.dunes = dunes;
   out.laterite = laterite;
   out.mare = mare;
   out.woodland = woodland;
   out.desert = desert;
+  out.oasis = oasis;
   out.rainforest = rainforest;
   out.mountains = mountains;
   out.plateau = plateau;
   out.basin = basin;
   out.spawn = spawnW;
   return out;
+}
+
+// Rakennelmien alla maasto tasoitetaan.
+export function sampleTerrain(x, z, out = {}) {
+  sampleTerrainRaw(x, z, out);
+  const st = structureInCell(Math.floor(x / STRUCT_CELL), Math.floor(z / STRUCT_CELL));
+  if (st) {
+    const d = Math.hypot(x - st.x, z - st.z);
+    const r = st.radius;
+    if (d < r * 1.5) {
+      const w = 1 - smoothstep(r * 0.75, r * 1.5, d);
+      out.h += (st.baseH - out.h) * w;
+    }
+  }
+  return out;
+}
+
+// --- Rakennelmat (rauniot, kivikehät, leirit) --------------------------------------
+// Maailma jaetaan soluihin; joka solussa voi olla yksi rakennelma. Kaikki on
+// siemenestä laskettua, joten sijainnit ja arkkujen sisällöt pysyvät samoina.
+
+export const STRUCT_CELL = 320;
+const STRUCT_CHANCE = 0.24;
+export const STRUCT_RADIUS = { stoneCircle: 8, camp: 10, ruinHouse: 7, ruinVillage: 21 };
+// Painot biomeittain; null = ei rakennelmaa. Talon ja kylän rauniot ovat
+// kaikissa biomeissa harvinaisia (n. 7–8 % soluista), muut ovat biomin omia.
+const STRUCT_TABLE = {
+  savanna: [['stoneCircle', 5], ['ruinHouse', 2], ['ruinVillage', 0.6]],
+  woodland: [['stoneCircle', 4], ['ruinHouse', 2.2], ['ruinVillage', 0.7]],
+  laterite: [['stoneCircle', 6], ['ruinHouse', 2], ['ruinVillage', 0.6]],
+  dunes: [['camp', 3], ['stoneCircle', 2], ['ruinHouse', 1.2], [null, 1]],
+  mare: [['ruinHouse', 1.5], ['ruinVillage', 0.6], [null, 5]],
+  desert: [['camp', 6.5], ['ruinHouse', 1.5], ['ruinVillage', 0.6]],
+  oasis: [['camp', 4], ['ruinVillage', 1.2], [null, 1]],
+  rainforest: [['ruinHouse', 2.2], ['ruinVillage', 0.8], [null, 7]],
+  mountains: [['ruinHouse', 2.2], ['ruinVillage', 0.8], [null, 7]],
+};
+
+const _sraw = {};
+export function structureInCell(ix, iz) {
+  const key = ix * 131071 + iz;
+  if (structCache.has(key)) return structCache.get(key);
+  let result = null;
+  const rand = mulberry32((Math.imul(ix, 73856093) ^ Math.imul(iz, 19349663) ^ Math.imul(SEED + 7, 83492791)) >>> 0);
+  if (rand() < STRUCT_CHANCE) {
+    // Kokeile muutamaa paikkaa ja valitse tasaisin.
+    let best = null;
+    for (let k = 0; k < 3; k++) {
+      const x = (ix + 0.15 + rand() * 0.7) * STRUCT_CELL;
+      const z = (iz + 0.15 + rand() * 0.7) * STRUCT_CELL;
+      sampleTerrainRaw(x, z, _sraw);
+      if (_sraw.h < WATER_LEVEL + 0.8 || _sraw.dEdge > 0.97) continue;
+      let rough = 0;
+      for (let a = 0; a < 6; a++) {
+        const hx = sampleTerrainRaw(x + Math.cos(a) * 12, z + Math.sin(a) * 12, _sraw).h;
+        rough += Math.abs(hx - _sraw.h);
+      }
+      sampleTerrainRaw(x, z, _sraw);
+      if (!best || rough < best.rough) best = { x, z, rough, h: _sraw.h, biome: biomeOf(_sraw), spawn: _sraw.spawn };
+    }
+    let type = null;
+    if (best && Math.hypot(best.x, best.z) > 60) {
+      const table = STRUCT_TABLE[best.biome] || STRUCT_TABLE.savanna;
+      let total = 0;
+      for (const [, w] of table) total += w;
+      let r = rand() * total;
+      type = table[0][0];
+      for (const [t, w] of table) { r -= w; if (r <= 0) { type = t; break; } }
+    }
+    if (type) {
+      const seed = (rand() * 4294967296) >>> 0;
+      const chest = rand() < 0.45;
+      const valuables = chest && rand() < 0.1;
+      const style = best.biome === 'mountains' ? 'stone' : best.biome === 'rainforest' ? 'jungle' : 'mud';
+      result = {
+        id: `s${ix},${iz}`, ix, iz, type, x: best.x, z: best.z, rot: rand() * Math.PI * 2,
+        radius: STRUCT_RADIUS[type], baseH: best.h, seed, chest, valuables, biome: best.biome, style,
+      };
+    }
+  }
+  structCache.set(key, result);
+  return result;
+}
+
+// Rakennelmat, jotka ovat säteen r sisällä pisteestä (x, z).
+export function structuresNear(x, z, r) {
+  const out = [];
+  const i0 = Math.floor((x - r) / STRUCT_CELL), i1 = Math.floor((x + r) / STRUCT_CELL);
+  const j0 = Math.floor((z - r) / STRUCT_CELL), j1 = Math.floor((z + r) / STRUCT_CELL);
+  for (let j = j0; j <= j1; j++) {
+    for (let i = i0; i <= i1; i++) {
+      const st = structureInCell(i, j);
+      if (st && Math.hypot(st.x - x, st.z - z) < r + st.radius) out.push(st);
+    }
+  }
+  return out;
+}
+
+// Onko piste rakennelman alueella (esineitä ei sijoiteta sinne).
+export function insideStructure(x, z, margin = 2) {
+  const st = structureInCell(Math.floor(x / STRUCT_CELL), Math.floor(z / STRUCT_CELL));
+  return !!st && Math.hypot(x - st.x, z - st.z) < st.radius + margin;
 }
 
 const _tmp = {};
@@ -238,6 +356,8 @@ const C = {
   desA: srgb(0xecc48c), desB: srgb(0xdca46a), desRock: srgb(0xa47a58),
   rainA: srgb(0x55602e), rainB: srgb(0x404a22), rainLitter: srgb(0x6c5832), rainMoss: srgb(0x5d7330),
   mntA: srgb(0x8a7a6c), mntB: srgb(0x6e5e54), mntSand: srgb(0x9c6a4c), mntScree: srgb(0x958a7e),
+  strata: [srgb(0xa86a48), srgb(0x8e5a40), srgb(0xc08a62), srgb(0x7a5a4a), srgb(0xb47a52), srgb(0x94786a)],
+  oasA: srgb(0x6f7a3c), oasB: srgb(0x58652e), oasWet: srgb(0x4a4430), oasSand: srgb(0xd8b27a),
   cliff: srgb(0x8a4a2c), cliffRock: srgb(0x5e5049),
 };
 
@@ -279,6 +399,14 @@ export function groundColor(x, z, s, slope, out) {
     mix3(_c1, _c1, C.desRock, smoothstep(0.78, 0.95, n2) * 0.6);
     add(_c1, s.desert);
   }
+  if (s.oasis > 0) {
+    const wet = 1 - smoothstep(WATER_LEVEL, WATER_LEVEL + 1.0, s.h);
+    const dry = smoothstep(1.4, 2.6, s.h);
+    mix3(_c1, C.oasA, C.oasB, n1);
+    mix3(_c1, _c1, C.oasWet, wet);
+    mix3(_c1, _c1, C.oasSand, dry * 0.8);
+    add(_c1, s.oasis);
+  }
   if (s.rainforest > 0) {
     mix3(_c1, C.rainA, C.rainB, n1);
     mix3(_c1, _c1, C.rainLitter, smoothstep(0.5, 0.8, n2) * 0.7);
@@ -286,9 +414,15 @@ export function groundColor(x, z, s, slope, out) {
     add(_c1, s.rainforest);
   }
   if (s.mountains > 0) {
-    mix3(_c1, C.mntA, C.mntB, n1);
-    mix3(_c1, _c1, C.mntSand, smoothstep(0.55, 0.85, n2) * 0.6);
-    mix3(_c1, _c1, C.mntScree, smoothstep(0.7, 0.95, 1 - n2) * 0.4);
+    // Kerrostunut hiekkakivi: värivyöhykkeet korkeuden mukaan.
+    const band = s.h / 4.5 + N.strata(x / 140, z / 140) * 1.6;
+    const bi = Math.floor(band);
+    const bf = band - bi;
+    const ca = C.strata[((bi % 6) + 6) % 6];
+    const cb = C.strata[(((bi + 1) % 6) + 6) % 6];
+    mix3(_c1, ca, cb, smoothstep(0.75, 1, bf));
+    mix3(_c1, _c1, C.mntB, n1 * 0.35);
+    mix3(_c1, _c1, C.mntScree, smoothstep(0.7, 0.95, 1 - n2) * 0.45 * (1 - slope));
     add(_c1, s.mountains);
   }
 
@@ -339,7 +473,7 @@ export function findSpawn() {
       const x = Math.cos(a) * r;
       const z = Math.sin(a) * r;
       sampleTerrain(x, z, s);
-      if (biomeOf(s) === 'savanna' && s.h > WATER_LEVEL + 1 && s.plateau < 0.05) return { x, z };
+      if (biomeOf(s) === 'savanna' && s.h > WATER_LEVEL + 1 && s.plateau < 0.05 && !insideStructure(x, z, 6)) return { x, z };
     }
   }
   return { x: 0, z: 0 };
@@ -366,27 +500,4 @@ export function findBiome(key, fromX = 0, fromZ = 0) {
     if (best) return best;
   }
   return best;
-}
-
-// Koko maailman kartta canvasille (esikatselu uuden maailman luonnissa).
-export function drawWorldMap(ctx, size) {
-  const img = ctx.createImageData(size, size);
-  const R = WORLD.radius * 1.04;
-  const col = [0, 0, 0];
-  const s = {};
-  for (let j = 0; j < size; j++) {
-    for (let i = 0; i < size; i++) {
-      const x = ((i + 0.5) / size * 2 - 1) * R;
-      const z = ((j + 0.5) / size * 2 - 1) * R;
-      const o = (j * size + i) * 4;
-      zones(x, z, s);
-      if (s.dEdge > 1.0) {
-        img.data[o] = 34; img.data[o + 1] = 24; img.data[o + 2] = 16; img.data[o + 3] = 255;
-        continue;
-      }
-      mapColorRGB(x, z, col);
-      img.data[o] = col[0]; img.data[o + 1] = col[1]; img.data[o + 2] = col[2]; img.data[o + 3] = 255;
-    }
-  }
-  ctx.putImageData(img, 0, 0);
 }

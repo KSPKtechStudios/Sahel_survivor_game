@@ -25,6 +25,7 @@ export class Player {
     this.landDip = 0;
     this.speedNow = 0;
     this.atEdge = false;
+    this.speedMul = 1; // esim. sademetsän tiheä aluskasvillisuus hidastaa
   }
 
   get eye() {
@@ -65,6 +66,7 @@ export class Player {
     }
 
     let speed = this.sprinting ? CONFIG.sprintSpeed : CONFIG.walkSpeed;
+    speed *= this.speedMul;
     if (this.inWater === 1) speed *= 0.7;
     if (this.inWater === 2) speed *= 0.5;
 

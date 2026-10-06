@@ -13,8 +13,8 @@ const _place = new THREE.Vector3();
 const _cols = [];
 
 export class Interaction {
-  constructor({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables }) {
-    Object.assign(this, { camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables });
+  constructor({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins }) {
+    Object.assign(this, { camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins });
     this.target = null; // { obj, t, kind: 'object'|'tumbleweed'|'drop'|'log' }
     this.prompt = null;
     this.placeValid = false;
@@ -32,6 +32,7 @@ export class Interaction {
     consider(this.tumbleweeds.raycast(o, _dir, reach), 'tumbleweed');
     consider(this.drops.raycast(o, _dir, reach), 'drop');
     consider(this.fallen.raycast(o, _dir, reach + 0.4), 'log');
+    consider(this.ruins.raycast(o, _dir, reach), 'chest');
     return best;
   }
 
@@ -63,6 +64,9 @@ export class Interaction {
   _promptFor(target, def) {
     if (!target) return null;
     if (target.kind === 'tumbleweed') return { name: 'Tumbleweed', action: '[Hiiri 1] Hakkaa' };
+    if (target.kind === 'chest') {
+      return target.obj.chest.opened ? { name: 'Tyhjä arkku', action: '' } : { name: 'Arkku', action: '[E] Avaa' };
+    }
     if (target.kind === 'drop') {
       const d = target.obj;
       return { name: ITEMS[d.item].name + (d.count > 1 ? ` ×${d.count}` : ''), action: '[E] Poimi' };
@@ -91,6 +95,10 @@ export class Interaction {
   }
 
   _tryPickup(target) {
+    if (target.kind === 'chest') {
+      if (this.ruins.open(target.obj)) this.viewmodel.pickup();
+      return true;
+    }
     if (target.kind === 'drop') {
       this.viewmodel.pickup();
       this.drops.pick(target.obj, true);
@@ -129,7 +137,7 @@ export class Interaction {
     _hit.copy(this.camera.position).addScaledVector(this.camera.getWorldDirection(_dir), target.t);
     const playerPos = this.camera.position;
 
-    if (target.kind === 'drop') return;
+    if (target.kind === 'drop' || target.kind === 'chest') return;
     if (target.kind === 'tumbleweed') {
       const tw = target.obj;
       tw.mesh.updateMatrixWorld(true);
