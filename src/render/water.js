@@ -6,7 +6,7 @@
 // vesi on). Pelaajan ympärillä vesi väreilee (ripples.js), ja väreily näkyy
 // sekä pinnan muodossa että valaistuksessa.
 import * as THREE from 'three';
-import { WAVES } from '../world/waves.js';
+import { WAVES, VERTEX_WAVES } from '../world/waves.js';
 
 export { waveHeight } from '../world/waves.js';
 
@@ -65,51 +65,62 @@ function createNormalTexture(size = 256) {
 const wavesGLSL = WAVES.map(([a, L, f, , p]) => `vec4(${a.toFixed(3)}, ${L.toFixed(3)}, ${f.toFixed(3)}, ${p.toFixed(3)})`).join(',\n  ');
 const steepGLSL = WAVES.map((w) => w[3].toFixed(3)).join(', ');
 
+// Aaltojen taulukko ja suunta: ensimmäinen kohti maailman keskustaa (rantaa),
+// muut kiinteistä suunnista tuulen keskisuunnan ympäriltä.
+const wavesCommon = /* glsl */ `
+const vec4 WAVES[${WAVES.length}] = vec4[](
+  ${wavesGLSL}
+);
+const float STEEP[${WAVES.length}] = float[](${steepGLSL});
+vec2 waveDir(int i, vec2 p, float a) {
+  if (i == 0) {
+    float l = length(p);
+    return l > 1.0 ? -p / l : vec2(1.0, 0.0);
+  }
+  float c = cos(a), s = sin(a);
+  return vec2(uSwellDir.x * c - uSwellDir.y * s, uSwellDir.x * s + uSwellDir.y * c);
+}
+`;
+
 const vertexShader = /* glsl */ `
 #include <common>
 #include <fog_pars_vertex>
 uniform float uTime;
 uniform float uWaveAmp;
-uniform vec2 uWindDir;
+uniform vec2 uSwellDir;
 uniform sampler2D uRipple;
 uniform vec4 uRippleRect;   // x0, z0, koko, voimakkuus
 attribute vec4 aData;       // syvyys, avoimuus, virtaus x, virtaus z
 attribute vec3 aDeep;
 attribute vec3 aShallow;
 varying vec3 vWorld;
+varying vec2 vBase;
+varying float vAmp;
 varying vec4 vData;
 varying vec3 vDeep;
 varying vec3 vShallow;
-varying vec3 vWaveN;
 varying float vCrest;
 
-const vec4 WAVES[${WAVES.length}] = vec4[](
-  ${wavesGLSL}
-);
-const float STEEP[${WAVES.length}] = float[](${steepGLSL});
+${wavesCommon}
 
 void main() {
   vec4 wp = modelMatrix * vec4(position, 1.0);
   float amp = aData.y * uWaveAmp;
   vec3 disp = vec3(0.0);
-  vec3 n = vec3(0.0, 1.0, 0.0);
   float crest = 0.0;
+  vBase = wp.xz;
   if (amp > 0.0005) {
-    for (int i = 0; i < ${WAVES.length}; i++) {
+    for (int i = 0; i < ${VERTEX_WAVES}; i++) {
       vec4 W = WAVES[i];
-      float c = cos(W.x), s = sin(W.x);
-      vec2 d = vec2(uWindDir.x * c - uWindDir.y * s, uWindDir.x * s + uWindDir.y * c);
+      vec2 d = waveDir(i, wp.xz, W.x);
       float k = 6.2831853 / W.y;
       float w = sqrt(9.81 * k);
       float A = amp * W.z;
       float ph = k * dot(d, wp.xz) - w * uTime + W.w;
       float sn = sin(ph), cs = cos(ph);
-      float Q = STEEP[i] / max(k * A * ${WAVES.length}.0, 1e-4);
-      Q = min(Q, 1.0);
+      float Q = min(STEEP[i] / max(k * A * ${WAVES.length}.0, 1e-4), 1.0);
       disp.xz += Q * A * d * cs;
       disp.y += A * sn;
-      n.xz -= d * k * A * cs;
-      n.y -= Q * k * A * sn;
       crest += sn * W.z;
     }
   }
@@ -127,8 +138,8 @@ void main() {
   vData = aData;
   vDeep = aDeep;
   vShallow = aShallow;
-  vWaveN = n;
-  vCrest = crest / 2.36;
+  vAmp = amp * smoothstep(-0.2, 0.6, aData.x);
+  vCrest = crest / 2.02;
   vec4 mvPosition = viewMatrix * wp;
   gl_Position = projectionMatrix * mvPosition;
   #include <fog_vertex>
@@ -140,7 +151,8 @@ const fragmentShader = /* glsl */ `
 #include <fog_pars_fragment>
 uniform float uTime;
 uniform float uWaveAmp;
-uniform vec2 uWindDir;
+uniform vec2 uSwellDir;
+uniform vec2 uScroll;
 uniform sampler2D uNormalMap;
 uniform sampler2D uRipple;
 uniform vec4 uRippleRect;
@@ -155,11 +167,14 @@ uniform vec3 uLightColor;
 uniform float uLightI;
 uniform vec3 uAmbient;
 varying vec3 vWorld;
+varying vec2 vBase;
+varying float vAmp;
 varying vec4 vData;
 varying vec3 vDeep;
 varying vec3 vShallow;
-varying vec3 vWaveN;
 varying float vCrest;
+
+${wavesCommon}
 
 vec2 nrm(vec2 uv) {
   return texture2D(uNormalMap, uv).xy * 2.0 - 1.0;
@@ -171,8 +186,23 @@ void main() {
   vec2 flow = vData.zw;
   float flowSpeed = length(flow);
 
+  // Aaltojen normaali (kaikki aallot, myös lyhyet) laskettuna pikselikohtaisesti.
+  vec3 waveN = vec3(0.0, 1.0, 0.0);
+  if (vAmp > 0.0005) {
+    for (int i = 0; i < ${WAVES.length}; i++) {
+      vec4 W = WAVES[i];
+      vec2 d = waveDir(i, vBase, W.x);
+      float k = 6.2831853 / W.y;
+      float w = sqrt(9.81 * k);
+      float A = vAmp * W.z;
+      float ph = k * dot(d, vBase) - w * uTime + W.w;
+      float Q = min(STEEP[i] / max(k * A * ${WAVES.length}.0, 1e-4), 1.0);
+      waveN.xz -= d * k * A * cos(ph);
+      waveN.y -= Q * k * A * sin(ph);
+    }
+  }
+
   // Pienet väreet: kaksi liikkuvaa kerrosta normaalikartasta, joissa virtaus.
-  vec2 wind = uWindDir * (0.02 + uWaveAmp * 0.03);
   vec2 p = vWorld.xz;
   vec2 dn;
   if (flowSpeed > 0.02) {
@@ -184,7 +214,7 @@ void main() {
     vec2 b = nrm(base * 2.3 - flow * ph0 * 2.0 + 0.3) * wA + nrm(base * 2.3 - flow * ph1 * 2.0 + 0.8) * (1.0 - wA);
     dn = a * 0.55 + b * 0.35;
   } else {
-    dn = nrm(p / 7.0 + wind * uTime) * 0.5 + nrm(p / 2.9 - wind.yx * uTime * 1.6) * 0.35 + nrm(p / 1.3 + vec2(wind.x, -wind.y) * uTime * 2.4) * 0.15;
+    dn = nrm(p / 7.0 + uScroll) * 0.5 + nrm(p / 2.9 - uScroll.yx * 1.6) * 0.35 + nrm(p / 1.3 + vec2(uScroll.x, -uScroll.y) * 2.4) * 0.15;
   }
   float calm = 0.3 + 0.7 * clamp(vData.y * 1.5 + flowSpeed * 0.35 + 0.15, 0.0, 1.0);
   dn *= calm * (0.55 + uWaveAmp * 0.25);
@@ -204,7 +234,7 @@ void main() {
     rippleFoam = smoothstep(0.05, 0.25, length(g)) * 0.6;
   }
 
-  vec3 n = normalize(vec3(vWaveN.x + dn.x, vWaveN.y, vWaveN.z + dn.y));
+  vec3 n = normalize(vec3(waveN.x + dn.x, waveN.y, waveN.z + dn.y));
   if (dot(n, V) < 0.02) n = normalize(n + V * (0.02 - dot(n, V)));
 
   // Heijastus: taivaan väri heijastussuunnassa + aurinko.
@@ -240,7 +270,13 @@ void main() {
   shore *= mix(0.12, 1.0, smoothstep(0.15, 0.5, vData.y));
   shore *= smoothstep(0.35, 0.65, fn * 0.6 + fn2 * 0.4 + 0.15 * sin(uTime * 1.3 + p.x * 0.4 + p.y * 0.3));
   float crestFoam = smoothstep(0.45, 0.85, vCrest) * smoothstep(0.35, 1.2, uWaveAmp) * vData.y * smoothstep(0.4, 0.7, fn2);
-  float rapids = smoothstep(1.1, 1.6, flowSpeed) * smoothstep(0.5, 0.75, fn2) * 0.4;
+  float rapids = smoothstep(1.3, 1.8, flowSpeed) * smoothstep(0.5, 0.75, fn2) * 0.25;
+  // Jyrkkä pinta (pieni putous kahden vesistön välissä) kuohuu valkoisena.
+  vec3 geoN = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
+  float steep = (1.0 - smoothstep(0.75, 0.93, abs(geoN.y))) * (1.0 - smoothstep(0.1, 0.5, vData.y));
+  // Putoava vesi: pystysuuntaiset juovat liikkuvat alaspäin.
+  float streak = texture2D(uNormalMap, vec2((p.x + p.y) * 0.9, vWorld.y * 0.45 + uTime * 0.8)).g;
+  rapids += steep * (0.25 + 0.45 * smoothstep(0.35, 0.75, streak));
   float foam = clamp(shore + crestFoam + rippleFoam + rapids, 0.0, 1.0);
   vec3 foamCol = uAmbient * 1.1 + uLightColor * uLightI * (0.35 + 0.5 * lightUp);
   col = mix(col, foamCol, foam * 0.85);
@@ -264,7 +300,8 @@ export function createWaterMaterial(sky) {
     ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog),
     uTime: { value: 0 },
     uWaveAmp: { value: 0.3 },
-    uWindDir: { value: new THREE.Vector2(-0.7071, 0.7071) },
+    uSwellDir: { value: new THREE.Vector2(-0.7071, 0.7071) },
+    uScroll: { value: new THREE.Vector2() },
     uNormalMap: { value: createNormalTexture() },
     uRipple: { value: null },
     uRippleRect: { value: new THREE.Vector4(0, 0, 1, 0) },
@@ -291,10 +328,14 @@ export function createWaterMaterial(sky) {
 }
 
 // Päivitä veden uniformit ympäristöstä (kutsutaan joka ruudulla).
-export function updateWaterMaterial(mat, env, elapsed) {
+export function updateWaterMaterial(mat, env, elapsed, dt) {
   const u = mat.uniforms;
   u.uTime.value = elapsed;
-  u.uWindDir.value.copy(env.windDir);
+  u.uSwellDir.value.copy(env.swellDir);
+  // Pienten väreiden liike kertyy ajan mukana (ei hyppää tuulen kääntyessä).
+  const sp = (0.02 + env.waveAmp * 0.03) * dt;
+  u.uScroll.value.x = (u.uScroll.value.x + env.windDir.x * sp) % 1000;
+  u.uScroll.value.y = (u.uScroll.value.y + env.windDir.y * sp) % 1000;
   u.uWaveAmp.value = env.waveAmp;
   u.uLightDir.value.copy(env.lightDir);
   u.uLightColor.value.copy(env.lightColor);

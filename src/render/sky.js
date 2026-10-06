@@ -27,7 +27,7 @@ uniform vec3 uCloudShade;
 uniform vec3 uFogColor;
 uniform float uHaze;
 uniform float uTime;
-uniform vec2 uCloudWind;
+uniform vec2 uCloudOffset;
 varying vec3 vDir;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
@@ -89,7 +89,7 @@ void main() {
   // Pilvet: projisoidaan tasolle taivaalla.
   float cloud = 0.0;
   if (y > 0.0) {
-    vec2 cp = dir.xz / (y + 0.08) * 1.6 + uCloudWind * uTime;
+    vec2 cp = dir.xz / (y + 0.08) * 1.6 + uCloudOffset;
     float n = fbm(cp * 0.55);
     float n2 = fbm(cp * 1.7 + 3.3);
     float dens = n * 0.75 + n2 * 0.25;
@@ -135,7 +135,7 @@ export class Sky {
       uFogColor: { value: new THREE.Color() },
       uHaze: { value: 0 },
       uTime: { value: 0 },
-      uCloudWind: { value: new THREE.Vector2(-0.01, 0.01) },
+      uCloudOffset: { value: new THREE.Vector2() },
     };
     const mat = new THREE.ShaderMaterial({
       uniforms: this.uniforms,

@@ -194,10 +194,25 @@ function buildWater(samples, row) {
     for (let i = 0; i <= SEG; i++) {
       const v = j * row + i;
       const s = samples[v];
+      // Kuivan kulman korkeus: enintään märän naapurin pinta ja aina hieman
+      // maan alla. Näin eri korkuisten vesien rajalle ei synny pystyseinämiä.
+      let y = s.wl;
+      if (!wet[v]) {
+        let m = -Infinity;
+        for (let dj = -1; dj <= 1; dj++) {
+          for (let di = -1; di <= 1; di++) {
+            const ii = i + di, jj = j + dj;
+            if (ii < 0 || jj < 0 || ii > SEG || jj > SEG) continue;
+            const k = jj * row + ii;
+            if (wet[k] && samples[k].wl > m) m = samples[k].wl;
+          }
+        }
+        if (m > -Infinity) y = Math.min(m, s.h - 0.05);
+      }
       positions[v * 3] = i * STEP;
-      positions[v * 3 + 1] = s.wl;
+      positions[v * 3 + 1] = y;
       positions[v * 3 + 2] = j * STEP;
-      const depth = s.wl - s.h;
+      const depth = y - s.h;
       // Avoimuus: meri aaltoilee, järvet vähän, joet tuskin lainkaan.
       data[v * 4] = depth;
       data[v * 4 + 1] = openFactor(s.wtype, depth, s.ocean + s.beach, s.lakeR);

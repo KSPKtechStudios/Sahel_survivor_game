@@ -97,6 +97,8 @@ export class Environment {
     this.lightDir = new THREE.Vector3(0, 1, 0); // suunta kohti valonlähdettä
     this.lightIntensity = 1;
     this.waveAmp = 0.3; // meren aaltojen korkeus (m), kasvaa tuulen mukana
+    // Aaltojen pääsuunta on vakio (tuulen keskisuunta); ks. world/waves.js.
+    this.swellDir = new THREE.Vector2(Math.cos(this.windAngle), Math.sin(this.windAngle));
   }
 
   setTime(hour) {
@@ -186,7 +188,8 @@ export class Environment {
     this.windDir.set(Math.cos(ang), Math.sin(ang));
     windUniforms.uTime.value = elapsed;
     windUniforms.uWindDir.value.copy(this.windDir);
-    windUniforms.uWindStrength.value = this.w.wind * (0.85 + Math.sin(elapsed * 0.4) * 0.15);
+    // Pieni huojunta myös tyynellä säällä (ja sademetsän suojassa).
+    windUniforms.uWindStrength.value = Math.max(0.16, this.w.wind) * (0.85 + Math.sin(elapsed * 0.4) * 0.15);
 
     // --- Aurinko ja kuu
     const a = ((this.time - 6) / 12) * Math.PI;
@@ -229,7 +232,10 @@ export class Environment {
     u.uCloudCover.value = w.cloud;
     u.uHaze.value = w.haze;
     u.uTime.value = elapsed;
-    u.uCloudWind.value.set(this.windDir.x, this.windDir.y).multiplyScalar(0.004 + w.wind * 0.02);
+    // Pilvien siirtymä kertyy ajan mukana (ei hyppää tuulen kääntyessä).
+    const co = u.uCloudOffset.value;
+    co.x = (co.x + this.windDir.x * (0.004 + w.wind * 0.02) * dt) % 500;
+    co.y = (co.y + this.windDir.y * (0.004 + w.wind * 0.02) * dt) % 500;
     // Pilvien värit
     const cl = u.uCloudLit.value;
     lerpC('hor', cl).lerp(_c2.setRGB(1, 1, 1).multiplyScalar(dayLum), 0.55);

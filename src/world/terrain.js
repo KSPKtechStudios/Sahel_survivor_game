@@ -353,7 +353,9 @@ function sampleBase(x, z, out) {
 // --- Joet ja purot ---------------------------------------------------------------
 // Uoma kulkee kohinakentän nollakohtaa pitkin (domain warp tekee mutkat).
 // Etäisyys uomasta arvioidaan kentän arvosta ja gradientista. Veden pinta
-// seuraa maaston loivaa muotoa (smoothRef), ja maastoon kaivetaan uoma ja laakso.
+// seuraa maaston loivaa muotoa (smoothRef) selvästi maan pinnan alapuolella,
+// joten joet virtaavat laaksoissa. Maastoon kaivetaan uoma ja laakso; jos maa
+// olisi rannalla pinnan alapuolella (rotko), sitä täytetään loivasti.
 
 const RIVER_S = 4000;  // jokiverkon mittakaava (m)
 const STREAM_S = 1400; // puroverkon mittakaava (m)
@@ -366,7 +368,7 @@ function channelField(noise, warp, S, x, z) {
 }
 
 // Etäisyys uoman keskilinjasta metreinä (Infinity, jos kauempana kuin maxD).
-// Kentän gradientti jää muuttujiin _cgx, _cgz (uoman suunta on sitä vastaan kohtisuora).
+// Kentän gradientti (per metri) jää muuttujiin _cgx, _cgz.
 let _cgx = 0, _cgz = 0;
 function channelDist(noise, warp, S, x, z, maxD) {
   const f0 = channelField(noise, warp, S, x, z);
@@ -378,22 +380,6 @@ function channelDist(noise, warp, S, x, z, maxD) {
   _cgz = fz;
   const g = Math.max(Math.hypot(fx, fz), 1.1 / S);
   return Math.abs(f0) / g;
-}
-
-// Virtaus uoman suuntaan, alamäkeen (veden pinta on loiva vertailukorkeus).
-const _fl = {};
-function setFlow(out, x, z, gx, gz, wl, speedMul) {
-  let tx = -gz, tz = gx;
-  const len = Math.hypot(tx, tz);
-  if (len < 1e-9) return;
-  tx /= len; tz /= len;
-  Object.assign(_fl, out);
-  const ahead = smoothRef(x + tx * 6, z + tz * 6, _fl) - 0.8;
-  const drop = (wl - ahead) / 6;
-  if (drop < 0) { tx = -tx; tz = -tz; }
-  const speed = Math.min(1.5, 0.3 + Math.abs(drop) * 12) * speedMul;
-  out.flowX = tx * speed;
-  out.flowZ = tz * speed;
 }
 
 // Loiva vertailukorkeus (maaston suuret muodot) veden pinnaksi.
@@ -411,20 +397,40 @@ function smoothRef(x, z, s) {
   return h;
 }
 
+// Virtaus uoman suuntaan alamäkeen.
+const _fl = {};
+function setFlow(out, x, z, gx, gz, ref, speedMul) {
+  let tx = -gz, tz = gx;
+  const len = Math.hypot(tx, tz);
+  if (len < 1e-9) return;
+  tx /= len; tz /= len;
+  Object.assign(_fl, out);
+  const ahead = smoothRef(x + tx * 6, z + tz * 6, _fl);
+  const drop = (ref - ahead) / 6;
+  if (drop < 0) { tx = -tx; tz = -tz; }
+  const speed = Math.min(1.5, 0.3 + Math.abs(drop) * 12) * speedMul;
+  out.flowX = tx * speed;
+  out.flowZ = tz * speed;
+}
+
 // Kaiva uoma ja laakso. w = veden puolileveys, V = laakson puolileveys.
 function carveChannel(out, dc, w, V, wl, depth) {
+  const raw = out.h;
   let target;
   if (dc < w) {
     const u = dc / w;
     target = wl - depth * (1 - u * u);
   } else {
-    target = wl + (dc - w) * 0.3;
+    target = wl + 0.15 + (dc - w) * 0.35;
   }
-  let hc = Math.min(out.h, target);
-  // Penger: veden reunan takana maa on aina pinnan yläpuolella (vesi ei valu yli).
-  if (dc >= w && dc < w + 4) hc = Math.max(hc, wl + 0.12);
-  const keep = smoothstep(V * 0.6, V, dc);
-  out.h = hc + (out.h - hc) * keep;
+  let h = Math.min(raw, target);
+  h = h + (raw - h) * smoothstep(V * 0.6, V, dc);
+  // Rotkon kohdalla ranta täytetään loivasti pinnan yläpuolelle (ei seinämiä).
+  // Lampien ja meren kohdalla ei täytetä.
+  if (dc >= w && h < wl + 0.15 && raw > WATER_LEVEL) {
+    h += (wl + 0.15 - h) * (1 - smoothstep(w + 3, Math.max(V, w + 9), dc));
+  }
+  out.h = h;
 }
 
 const _sx = {}, _sz = {};
@@ -443,47 +449,53 @@ function applyRivers(x, z, out) {
   const wS = (rf * 2.9 + mt * 2.6) * notRock * vary;
   if (wR < 0.3 && wS < 0.3) return;
 
-  const VR = wR * 2 + 10 * Math.min(1, wR / 3);
-  const VS = wS * 2.5 + 5 * Math.min(1, wS / 1.5);
+  const VR = wR * 2.4 + 12 * Math.min(1, wR / 3);
+  const VS = wS * 3 + 7 * Math.min(1, wS / 1.5);
   const dR = wR > 0.3 ? channelDist(N.river, N.rwarp, RIVER_S, x, z, VR) : Infinity;
   const rgx = _cgx, rgz = _cgz;
   const dS = wS > 0.3 ? channelDist(N.stream, N.swarp, STREAM_S, x, z, VS) : Infinity;
   const sgx = _cgx, sgz = _cgz;
   if (dR >= VR && dS >= VS) return;
 
-  const wl = smoothRef(x, z, out) - 0.8;
+  const ref = smoothRef(x, z, out);
+  // Alangoilla pinta lähestyy merenpintaa, muualla se on laakson pohjalla.
+  const low = 1 - smoothstep(WATER_LEVEL + 1, WATER_LEVEL + 4, ref);
+  const raw = out.h;
   if (dR < VR) {
+    const wl = Math.max(WATER_LEVEL, ref - 2.0 * (1 - low) - 0.8 * low);
     // Kapenevan joen pohja nousee pinnan yläpuolelle: vesi loppuu pehmeästi
     // ja uoma jatkuu kuivana.
     const depth = (0.6 + wR * 0.2) * smoothstep(1.0, 3.0, wR) - 0.25 * (1 - smoothstep(1.0, 3.0, wR));
     carveChannel(out, dR, wR, VR, wl, depth);
-    if (dR < wR + 2.5 && wl > out.wl) {
+    if (dR < wR + 1.5 && wl > out.wl && raw > WATER_LEVEL) {
       out.wl = wl;
       out.wtype = WATER.RIVER;
-      if (out.h < wl) setFlow(out, x, z, rgx, rgz, wl, 1);
+      setFlow(out, x, z, rgx, rgz, ref, 1);
     }
     out.chan = Math.max(out.chan, 1 - smoothstep(wR, VR, dR));
   }
   if (dS < VS) {
+    // Sama taso kuin joilla, jotta risteyksiin ei tule porrasta.
+    const wl = Math.max(WATER_LEVEL, ref - 2.0 * (1 - low) - 0.8 * low);
     let w = wS;
     // Vuoristossa purot vain loivissa kohdissa (jyrkässä rinteessä uoma kuivuu).
     if (mt > 0.05) {
       Object.assign(_sx, out);
       Object.assign(_sz, out);
-      const gx = smoothRef(x + 4, z, _sx) - (wl + 0.8);
-      const gz = smoothRef(x, z + 4, _sz) - (wl + 0.8);
+      const gx = smoothRef(x + 4, z, _sx) - ref;
+      const gz = smoothRef(x, z + 4, _sz) - ref;
       const slope = Math.hypot(gx, gz) / 4;
       w *= 1 - mt * smoothstep(0.08, 0.2, slope);
     }
     if (w > 0.3) {
-      const V = w * 2.5 + 5 * Math.min(1, w / 1.5);
+      const V = w * 3 + 7 * Math.min(1, w / 1.5);
       if (dS < V) {
         const depth = (0.35 + w * 0.15) * smoothstep(1.0, 2.2, w) - 0.2 * (1 - smoothstep(1.0, 2.2, w));
         carveChannel(out, dS, w, V, wl, depth);
-        if (dS < w + 2.5 && wl > out.wl) {
+        if (dS < w + 1.5 && wl > out.wl && raw > WATER_LEVEL) {
           out.wl = wl;
           out.wtype = WATER.STREAM;
-          if (out.h < wl) setFlow(out, x, z, sgx, sgz, wl, 1.2);
+          setFlow(out, x, z, sgx, sgz, ref, 1.2);
         }
         out.chan = Math.max(out.chan, 1 - smoothstep(w, V, dS));
       }
@@ -498,8 +510,8 @@ const _lb = {};
 
 // Onko pisteen lähellä joki tai puro (järvet eivät osu uomiin).
 function nearChannel(x, z, margin) {
-  return channelDist(N.river, N.rwarp, RIVER_S, x, z, margin + 30) < margin + 30
-    || channelDist(N.stream, N.swarp, STREAM_S, x, z, margin + 12) < margin + 12;
+  return channelDist(N.river, N.rwarp, RIVER_S, x, z, margin + 45) < margin + 45
+    || channelDist(N.stream, N.swarp, STREAM_S, x, z, margin + 28) < margin + 28;
 }
 
 function lakeInCell(ix, iz) {
@@ -561,7 +573,8 @@ function applyLakes(x, z, out) {
       const t = d / Rw;
       const target = t < 1 ? L.wl - L.depth * (1 - t * t) : L.wl + (t - 1) * L.R * 0.22;
       let h = Math.min(out.h, target);
-      if (t >= 1 && t < 1.3) h = Math.max(h, L.wl + 0.15);
+      // Pehmeä penger rannan takana (ei pystysuoria seinämiä)
+      if (t >= 1 && h < L.wl + 0.15) h += (L.wl + 0.15 - h) * (1 - smoothstep(1.15, 1.4, t));
       out.h = h + (out.h - h) * smoothstep(1.3, 1.7, t);
       if (t < 1.25 && L.wl > out.wl) {
         out.wl = L.wl;

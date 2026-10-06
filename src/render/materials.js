@@ -64,7 +64,7 @@ export function createSharedMaterials(groundDetail) {
 
   const vegetation = addWind(
     new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 }),
-    0.0035,
+    0.0045,
   );
   const bush = addWind(
     new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 }),

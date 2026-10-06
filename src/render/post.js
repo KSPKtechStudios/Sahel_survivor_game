@@ -88,10 +88,13 @@ uniform float uMaxR;
 varying vec2 vUv;
 float coc(vec2 uv, float focus) {
   float z = -perspectiveDepthToViewZ(texture2D(tDepth, uv).r, uNear, uFar);
-  float c = abs(1.0 - focus / max(z, 0.05));
-  // Kauempana kuin tarkennus sumenee pehmeämmin, lähellä nopeammin.
-  c = z > focus ? min(c, 1.0) * 0.8 : min(c, 1.0);
-  return c;
+  // Hienovarainen syväterävyys: tarkennettu alue on leveä, ja vain selvästi
+  // tarkennusta kauempana oleva tausta (tai hyvin lähellä oleva) sumenee.
+  float farStart = focus * 2.5 + 6.0;
+  float farC = smoothstep(farStart, farStart * 4.0 + 60.0, z) * 0.55;
+  float nearEnd = focus * 0.45;
+  float nearC = nearEnd > 0.3 ? (1.0 - smoothstep(nearEnd * 0.4, nearEnd, z)) * 0.6 : 0.0;
+  return max(farC, nearC);
 }
 void main() {
   float focus = texture2D(tFocus, vec2(0.5)).r;
@@ -141,7 +144,7 @@ vec3 sceneAt(vec2 uv) {
   vec3 c = texture2D(tColor, uv).rgb;
   if (uUseDof > 0.5) {
     vec4 d = texture2D(tDof, uv);
-    c = mix(c, d.rgb, smoothstep(0.08, 0.5, d.a));
+    c = mix(c, d.rgb, smoothstep(0.12, 0.6, d.a));
   }
   return c;
 }
@@ -241,7 +244,7 @@ export class PostFX {
     }, { toneMapped: false });
     this.dofMat = mat(dofFS, {
       tColor: { value: null }, tDepth: { value: depthTexture }, tFocus: { value: null }, uTexel: { value: new THREE.Vector2() },
-      uNear: { value: 0.1 }, uFar: { value: 1500 }, uMaxR: { value: 6 },
+      uNear: { value: 0.1 }, uFar: { value: 1500 }, uMaxR: { value: 4 },
     }, { toneMapped: false });
     this.compMat = mat(compositeFS, {
       tColor: { value: null }, tDepth: { value: depthTexture }, tRays: { value: null }, tDof: { value: null },

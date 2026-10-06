@@ -1,8 +1,13 @@
 // Aaltojen yhteiset kaavat (ei three.js:ää, joten käy myös generointisäikeelle).
 // Shader (render/water.js) käyttää samoja aaltoja, joten uiva pelaaja ja
 // kelluvat esineet nousevat ja laskevat samassa tahdissa kuin pinta.
+//
+// Ensimmäinen aalto (maininki) kulkee aina kohti maailman keskustaa eli kohti
+// rantaa. Muut tulevat kiinteistä suunnista tuulen keskisuunnan ympäriltä.
+// Suunnat eivät saa muuttua ajan mukana: meri on n. 9 km päässä keskeltä, ja
+// pienikin suunnan muutos siirtäisi koko aallokkoa salamannopeasti.
 
-// [suunta tuulesta (rad), aallonpituus (m), suhteellinen korkeus, jyrkkyys, vaihe]
+// [suunta pääsuunnasta (rad), aallonpituus (m), suhteellinen korkeus, jyrkkyys, vaihe]
 export const WAVES = [
   [0.0, 42, 1.0, 0.5, 0.0],
   [0.45, 27, 0.62, 0.55, 1.7],
@@ -10,6 +15,9 @@ export const WAVES = [
   [1.1, 10.5, 0.22, 0.5, 4.6],
   [-1.4, 6.2, 0.12, 0.45, 2.2],
 ];
+// Pinnan muotoon vain pitkät aallot; lyhyet näkyvät valaistuksessa
+// (2 m verkko ei riitä lyhyille aalloille ilman sahalaitaa).
+export const VERTEX_WAVES = 3;
 
 function smooth(d, a, b) {
   const t = Math.min(1, Math.max(0, (d - a) / (b - a)));
@@ -24,13 +32,22 @@ export function openFactor(type, depth, sea, lakeR) {
 }
 
 // Aaltojen pystysuuntainen poikkeama pisteessä (sama kaava kuin shaderissa).
-export function waveHeight(x, z, t, amp, windX, windZ) {
+// swellX/Z = tuulen keskisuunta (vakio).
+export function waveHeight(x, z, t, amp, swellX, swellZ) {
   if (amp <= 0.0001) return 0;
   let y = 0;
-  for (const [a, L, f, , p] of WAVES) {
-    const c = Math.cos(a), s = Math.sin(a);
-    const dx = windX * c - windZ * s;
-    const dz = windX * s + windZ * c;
+  const len = Math.hypot(x, z) || 1;
+  for (let i = 0; i < VERTEX_WAVES; i++) {
+    const [a, L, f, , p] = WAVES[i];
+    let dx, dz;
+    if (i === 0) {
+      dx = -x / len;
+      dz = -z / len;
+    } else {
+      const c = Math.cos(a), s = Math.sin(a);
+      dx = swellX * c - swellZ * s;
+      dz = swellX * s + swellZ * c;
+    }
     const k = (2 * Math.PI) / L;
     const w = Math.sqrt(9.81 * k);
     y += amp * f * Math.sin(k * (dx * x + dz * z) - w * t + p);

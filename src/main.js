@@ -486,11 +486,11 @@ function frame(now) {
   // Vesi: aallot, väreily ja roiskeet
   const waves = player.waves;
   waves.amp = env.waveAmp;
-  waves.windX = env.windDir.x;
-  waves.windZ = env.windDir.y;
+  waves.windX = env.swellDir.x;
+  waves.windZ = env.swellDir.y;
   waves.t = elapsed;
   drops.waves = waves;
-  updateWaterMaterial(materials.water, env, elapsed);
+  updateWaterMaterial(materials.water, env, elapsed, simDt);
   if (state !== 'boot') ripples.update(simDt, player.position.x, player.position.z);
   materials.water.uniforms.uRipple.value = ripples.texture;
   materials.water.uniforms.uRippleRect.value = ripples.rect;
