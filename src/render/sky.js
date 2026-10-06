@@ -1,4 +1,4 @@
-// Taivaskupu: väriliukuma, aurinko, kuu, tähdet ja proseduraaliset pilvet.
+// Taivaskupu: väriliukuma, aurinko, kuu, tähdet, linnunrata ja proseduraaliset pilvet.
 // Kaikki arvot tulevat Environment-luokalta (vuorokausi + sää).
 import * as THREE from 'three';
 
@@ -28,6 +28,9 @@ uniform vec3 uFogColor;
 uniform float uHaze;
 uniform float uTime;
 uniform vec2 uCloudOffset;
+uniform vec3 uGalaxyN;   // linnunradan tason normaali
+uniform vec3 uGalaxyC;   // galaksin keskustan suunta (tasossa)
+uniform float uFlash;    // salaman välähdys 0..1
 varying vec3 vDir;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
@@ -67,9 +70,28 @@ void main() {
   col += uSunColor * pow(sd, 3.0) * pow(1.0 - clamp(y, 0.0, 1.0), 6.0) * 0.45 * lowSun * uSunVisible;
   float disc = smoothstep(0.99955, 0.99975, sd);
 
-  // Tähdet
+  // Tähdet ja linnunrata (selkeinä öinä)
   float starAmt = 0.0;
-  if (uStars > 0.001 && y > 0.0) {
+  vec3 milky = vec3(0.0);
+  if (uStars > 0.001 && y > -0.02) {
+    // Linnunradan vyö: etäisyys tasosta ja sijainti vyön suunnassa.
+    float b = dot(dir, uGalaxyN);
+    vec3 gu = uGalaxyC;
+    vec3 gv = cross(uGalaxyN, gu);
+    float along = atan(dot(dir, gv), dot(dir, gu));
+    float band = exp(-b * b / 0.012);
+    float halo = exp(-b * b / 0.05);
+    float core = exp(-along * along / 0.7);
+    vec2 gp = vec2(along * 6.0, b * 26.0);
+    float clouds = fbm(gp * 0.9 + 3.0);
+    float dust = fbm(gp * vec2(1.6, 2.6) + 11.0);
+    // Pölyvyöhykkeet: tumma repaleinen kaista vyön keskellä.
+    float lane = smoothstep(0.45, 0.62, dust) * exp(-b * b / 0.003) * 0.8;
+    float knots = pow(clouds, 2.5);
+    float glow = (band * (0.25 + 1.1 * knots) * (1.0 - lane) + halo * 0.08) * (0.45 + core * 1.1);
+    vec3 mwCol = mix(vec3(0.55, 0.62, 0.9), vec3(1.0, 0.88, 0.72), clamp(core * band, 0.0, 1.0));
+    milky = mwCol * glow * 0.068 * smoothstep(-0.02, 0.15, y);
+    // Kirkkaat tähdet
     vec3 sp = dir * 220.0;
     vec3 cell = floor(sp);
     float h = hash3(cell);
@@ -78,6 +100,15 @@ void main() {
       float d = length(sp - c);
       float tw = 0.7 + 0.3 * sin(uTime * (2.0 + h * 40.0) + h * 100.0);
       starAmt = smoothstep(0.45, 0.0, d) * tw * (h - 0.9965) / 0.0035;
+    }
+    // Himmeät tähdet, tiheimmillään linnunradan vyössä
+    vec3 sp2 = dir * 520.0;
+    vec3 cell2 = floor(sp2);
+    float h2 = hash3(cell2 + 17.0);
+    float thr = 0.993 - band * 0.03 * (0.6 + clouds);
+    if (h2 > thr) {
+      float d2 = length(sp2 - cell2 - 0.5);
+      starAmt += smoothstep(0.42, 0.0, d2) * 0.45 * (0.6 + 0.4 * sin(uTime * 3.0 + h2 * 50.0));
     }
   }
 
@@ -105,6 +136,9 @@ void main() {
   col += vec3(disc) * uSunColor * 6.0 * uSunVisible * (1.0 - cloud * 0.9);
   col += vec3(0.95, 0.95, 0.88) * moon * 1.4 * (1.0 - cloud);
   col += vec3(starAmt) * uStars * (1.0 - cloud);
+  col += milky * uStars * (1.0 - cloud);
+  // Salama valaisee pilvet ja taivaan.
+  col += vec3(0.75, 0.8, 1.0) * uFlash * (0.25 + cloud * 0.9);
 
   // Usva/pöly peittää horisontin (sama väri kuin maaston sumu).
   float hazeMask = mix(pow(1.0 - clamp(y, 0.0, 1.0), 4.0), 1.0, uHaze * uHaze);
@@ -136,6 +170,9 @@ export class Sky {
       uHaze: { value: 0 },
       uTime: { value: 0 },
       uCloudOffset: { value: new THREE.Vector2() },
+      uGalaxyN: { value: new THREE.Vector3(0.35, 0.3, 0.88).normalize() },
+      uGalaxyC: { value: new THREE.Vector3(1, 0, 0) },
+      uFlash: { value: 0 },
     };
     const mat = new THREE.ShaderMaterial({
       uniforms: this.uniforms,

@@ -12,6 +12,7 @@ import { Ripples } from './render/ripples.js';
 import { Splashes } from './render/splash.js';
 import { FireFx } from './render/fire.js';
 import { Blood } from './render/blood.js';
+import { Rain } from './render/rain.js';
 import { PostFX } from './render/post.js';
 import { Music, BIOME_MUSIC } from './audio/music.js';
 import { createModelLibrary } from './models/models.js';
@@ -89,6 +90,8 @@ const post = new PostFX(renderer);
 const splashes = new Splashes(scene);
 const fire = new FireFx(scene);
 const blood = new Blood(scene);
+const rain = new Rain(scene);
+env.onStrike = (angle, dist) => rain.strike(camera, angle, dist);
 const music = new Music();
 // Selain sallii äänen vasta käyttäjän ensimmäisen klikkauksen tai näppäimen jälkeen.
 for (const ev of ['pointerdown', 'keydown']) window.addEventListener(ev, () => music.unlock(), { capture: true });
@@ -356,6 +359,7 @@ async function startWorld(meta) {
   }
   player.stamina = CONFIG.staminaMax;
   await buildAround(player.position.x, player.position.z, (p) => menu.setLoading(p));
+  env.snapClimate();
   structures.load(data ? data.structures : []);
   drops.load(data ? data.drops : []);
   fallen.load(data ? data.fallen : []);
@@ -534,6 +538,7 @@ events.on('playerDied', () => {
 // Siirtyminen: maailma rakennetaan uuden paikan ympärille ennen kuin jatketaan.
 async function teleportTo(x, z, look = null) {
   player.teleport(x, z);
+  env.snapClimate();
   player.velocity.set(0, 0, 0);
   if (look) player.yaw = Math.atan2(-(look.x - x), -(look.z - z));
   await buildAround(x, z);
@@ -630,11 +635,22 @@ function frame(now) {
   // Häivytykset todellisessa ajassa (eivät hidastu, vaikka ruudunpäivitys olisi hidas).
   music.update(Math.min(0.25, rawDt), musicMode === 'game' ? BIOME_MUSIC[displayBiome(_s)] || null : null);
   env.setLocalHumidity(_s.rainforest);
+  env.setClimate(_s);
   // Sademetsä: hidas eteneminen ja lyhyt piirtoetäisyys (näkyvyys on muutenkin lyhyt).
   player.speedMul = 1 - 0.3 * _s.rainforest;
   if (env.humid > 0.6) world.setDetailRange(2.2);
   else if (env.humid < 0.4) world.setDetailRange(Infinity);
-  env.update(simDt, player.position, elapsed);
+  // Vuorokausi ja sään vaihtuminen todellisessa ajassa (10 min päivä + 10 min yö).
+  env.update(simDt, player.position, elapsed, running || state === 'menu' ? Math.min(0.25, rawDt) : 0);
+  // Sade ja sadepisaroiden väreet vedessä
+  const rainAmt = inGame && state !== 'menu' ? env.w.rain : 0;
+  rain.update(simDt, camera, rainAmt, env.windDir, 0.2 + 0.8 * env.daylight, Math.min(0.25, rawDt));
+  if (rainAmt > 0.1 && simDt > 0) {
+    for (let i = 0, n = Math.floor(rainAmt * 6 + Math.random()); i < n; i++) {
+      const a = Math.random() * Math.PI * 2, r = Math.random() * 14;
+      ripples.disturb(player.position.x + Math.cos(a) * r, player.position.z + Math.sin(a) * r, 0.18, 0.05 + rainAmt * 0.05);
+    }
+  }
   // Vesi: aallot, väreily ja roiskeet
   const waves = player.waves;
   waves.amp = env.waveAmp;

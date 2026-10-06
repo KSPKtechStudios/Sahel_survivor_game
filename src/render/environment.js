@@ -1,4 +1,10 @@
 // Vuorokausi ja sää: aurinko/kuu, valot, sumu, taivaan värit ja tuuli.
+//
+// Sessio 9: vuorokausi kuluu todellisessa ajassa (10 min päivä + 10 min yö
+// myös hitaalla koneella). Sää on alueellinen: jokaisella ilmastovyöhykkeellä
+// (aavikko, Sahel, sademetsä, vuoristo, meri) on oma säänsä, ja pelaajan
+// kohdalla näkyy vyöhykkeiden painotettu sekoitus. Sademetsässä ei siis ole
+// hiekkamyrskyjä vaan sadetta ja ukkosta.
 import * as THREE from 'three';
 import { SunLight } from 'three/addons/lights/SunLight.js';
 import { CONFIG } from '../config.js';
@@ -30,18 +36,38 @@ const KEYS = [
 }));
 
 export const WEATHER = {
-  clear: { name: 'Selkeä', cloud: 0.12, vis: 330, sunMul: 1.0, wind: 0.22, dust: 0.05, haze: 0.0, tint: 0xffffff, tintAmt: 0, grey: 0 },
-  cloudy: { name: 'Pilvinen', cloud: 0.82, vis: 300, sunMul: 0.32, wind: 0.42, dust: 0.06, haze: 0.12, tint: 0xa6aab0, tintAmt: 0.35, grey: 0.6 },
-  haze: { name: 'Hiekkausva', cloud: 0.25, vis: 150, sunMul: 0.55, wind: 0.4, dust: 0.35, haze: 0.6, tint: 0xe2b85e, tintAmt: 0.75, grey: 0 },
-  sandstorm: { name: 'Hiekkamyrsky', cloud: 0.65, vis: 34, sunMul: 0.18, wind: 1.0, dust: 1.0, haze: 1.0, tint: 0xb87a3e, tintAmt: 0.92, grey: 0 },
+  clear: { name: 'Selkeä', cloud: 0.12, vis: 330, sunMul: 1.0, wind: 0.22, dust: 0.05, haze: 0.0, tint: 0xffffff, tintAmt: 0, grey: 0, rain: 0, thunder: 0 },
+  cloudy: { name: 'Pilvinen', cloud: 0.82, vis: 300, sunMul: 0.32, wind: 0.42, dust: 0.06, haze: 0.12, tint: 0xa6aab0, tintAmt: 0.35, grey: 0.6, rain: 0, thunder: 0 },
+  haze: { name: 'Hiekkausva', cloud: 0.25, vis: 150, sunMul: 0.55, wind: 0.4, dust: 0.35, haze: 0.6, tint: 0xe2b85e, tintAmt: 0.75, grey: 0, rain: 0, thunder: 0 },
+  sandstorm: { name: 'Hiekkamyrsky', cloud: 0.65, vis: 34, sunMul: 0.18, wind: 1.0, dust: 1.0, haze: 1.0, tint: 0xb87a3e, tintAmt: 0.92, grey: 0, rain: 0, thunder: 0 },
+  rain: { name: 'Sade', cloud: 0.95, vis: 150, sunMul: 0.24, wind: 0.5, dust: 0, haze: 0.22, tint: 0x8a9298, tintAmt: 0.4, grey: 0.75, rain: 0.65, thunder: 0 },
+  thunder: { name: 'Ukkosmyrsky', cloud: 1.0, vis: 100, sunMul: 0.1, wind: 0.85, dust: 0, haze: 0.3, tint: 0x6a727c, tintAmt: 0.55, grey: 0.85, rain: 1.0, thunder: 1 },
+  mist: { name: 'Sumu', cloud: 0.6, vis: 65, sunMul: 0.45, wind: 0.08, dust: 0, haze: 0.85, tint: 0xc8ccd0, tintAmt: 0.55, grey: 0.45, rain: 0, thunder: 0 },
 };
 export const WEATHER_KEYS = Object.keys(WEATHER);
 // Päävalikon taustan tunnelmallinen auringonlasku (ei satunnaisessa säässä).
-WEATHER.menu = { name: 'Selkeä', cloud: 0.5, vis: 330, sunMul: 1.0, wind: 0.25, dust: 0.08, haze: 0.04, tint: 0xffffff, tintAmt: 0, grey: 0 };
+WEATHER.menu = { name: 'Selkeä', cloud: 0.5, vis: 330, sunMul: 1.0, wind: 0.25, dust: 0.08, haze: 0.04, tint: 0xffffff, tintAmt: 0, grey: 0, rain: 0, thunder: 0 };
 const HUMID_TINT = new THREE.Color(0xa9b5a2);
 const CANOPY_GREEN = new THREE.Color(0x6f9a5a);
 
-const NUMERIC = ['cloud', 'vis', 'sunMul', 'wind', 'dust', 'haze', 'tintAmt', 'grey'];
+const NUMERIC = ['cloud', 'vis', 'sunMul', 'wind', 'dust', 'haze', 'tintAmt', 'grey', 'rain', 'thunder'];
+
+// Ilmastovyöhykkeet ja niiden säät (painot). Hiekkamyrskyt ovat aavikon ja
+// Sahelin, sateet ja ukkonen sademetsän, sumu vuorten ja meren.
+export const CLIMATES = {
+  desert: { name: 'Aavikko', table: { clear: 4, haze: 3, sandstorm: 1.6, cloudy: 0.5 } },
+  sahel: { name: 'Savanni', table: { clear: 4, cloudy: 3, haze: 2, sandstorm: 0.4, rain: 1, thunder: 0.3 } },
+  wet: { name: 'Sademetsä', table: { clear: 2, cloudy: 3, rain: 3, thunder: 1.5, mist: 1.5 } },
+  mountain: { name: 'Vuoristo', table: { clear: 3, cloudy: 3, mist: 2, rain: 1, thunder: 0.4 } },
+  sea: { name: 'Meri', table: { clear: 3, cloudy: 2, rain: 1.5, thunder: 0.6, mist: 0.5 } },
+};
+const CLIMATE_KEYS = Object.keys(CLIMATES);
+
+// Linnunradan asento: taivas kiertyy taivaannavan ympäri (n. 12° pohjoista leveyttä).
+const LAT = 0.21;
+const POLE = new THREE.Vector3(0, Math.sin(LAT), -Math.cos(LAT));
+const GAL_C0 = new THREE.Vector3(0.2, 0.55, 0.81).normalize();
+const GAL_N0 = new THREE.Vector3().crossVectors(GAL_C0, new THREE.Vector3(1, 0.05, 0)).normalize();
 
 const _c = new THREE.Color();
 const _c2 = new THREE.Color();
@@ -75,17 +101,27 @@ export class Environment {
 
     scene.fog = new THREE.Fog(0xcccccc, 50, 330);
 
-    // Sää
+    // Sää: jokaisella ilmastovyöhykkeellä oma tila (vaihtuu pehmeästi),
+    // gw = pelaajan kohdan sekoitus, w = paikallinen tehollinen sää.
+    this.zones = {};
+    for (const k of CLIMATE_KEYS) {
+      this.zones[k] = { target: 'clear', timer: 120 + Math.random() * 300, s: { ...WEATHER.clear, tint: new THREE.Color(WEATHER.clear.tint) } };
+    }
+    this.climate = { desert: 0, sahel: 1, wet: 0, mountain: 0, sea: 0 };
+    this.climateTarget = { ...this.climate };
+    this.targetKey = 'clear'; // hallitsevan vyöhykkeen sää (nimi ja tallennus)
     this.weatherKey = 'clear';
-    this.targetKey = 'clear';
-    // gw = koko maailman sää (vaihtuu pehmeästi), w = paikallinen tehollinen sää
     this.gw = { ...WEATHER.clear, tint: new THREE.Color(WEATHER.clear.tint) };
     this.w = { ...WEATHER.clear, tint: new THREE.Color(WEATHER.clear.tint) };
     this.humid = 0;
     this.humidTarget = 0;
     this.frozen = false; // päävalikossa aika ja sää eivät etene
     this.maxVis = 330;   // näköetäisyysasetuksen mukaan
-    this.weatherTimer = 240 + Math.random() * 180;
+    // Salamat
+    this.flash = 0;
+    this.flashT = 0;
+    this.strikeTimer = 8;
+    this.onStrike = null; // (suunta) main.js: salaman kuva
     this.windDir = new THREE.Vector2(-0.7071, 0.7071);
     this.windAngle = Math.atan2(0.7071, -0.7071);
 
@@ -105,31 +141,37 @@ export class Environment {
     this.time = ((hour % 24) + 24) % 24;
   }
 
-  setWeather(key, instant = false) {
+  // Pakota sää (kehittäjätyökalut, valikko, tallennus): zone = vain yksi
+  // vyöhyke, muuten kaikki.
+  setWeather(key, instant = false, zone = null) {
     if (!WEATHER[key]) return;
-    this.targetKey = key;
-    this.weatherTimer = this._durationFor(key);
-    if (instant) {
+    for (const k of zone ? [zone] : CLIMATE_KEYS) {
+      const z = this.zones[k];
+      z.target = key;
+      z.timer = this._durationFor(key);
+      if (instant) Object.assign(z.s, WEATHER[key], { tint: new THREE.Color(WEATHER[key].tint) });
+    }
+    if (!zone) this.targetKey = key;
+    if (instant && !zone) {
       this.weatherKey = key;
       Object.assign(this.gw, WEATHER[key], { tint: new THREE.Color(WEATHER[key].tint) });
     }
   }
 
   _durationFor(key) {
-    if (key === 'sandstorm') return 90 + Math.random() * 120;
-    if (key === 'haze') return 150 + Math.random() * 200;
+    if (key === 'sandstorm' || key === 'thunder') return 90 + Math.random() * 120;
+    if (key === 'haze' || key === 'mist') return 150 + Math.random() * 200;
     return 200 + Math.random() * 280;
   }
 
-  _pickNextWeather() {
-    // Hiekkamyrsky tulee yleensä usvan kautta.
-    const from = this.targetKey;
-    const table = {
-      clear: { clear: 3, cloudy: 3, haze: 3, sandstorm: 0.5 },
-      cloudy: { clear: 4, cloudy: 1, haze: 2, sandstorm: 0.5 },
-      haze: { clear: 3, cloudy: 1, haze: 1, sandstorm: 3 },
-      sandstorm: { clear: 1, cloudy: 1, haze: 4, sandstorm: 0 },
-    }[from] || { clear: 3, cloudy: 1, haze: 1, sandstorm: 0 };
+  _pickNextWeather(zone) {
+    const z = this.zones[zone];
+    const table = { ...CLIMATES[zone].table };
+    // Ei samaa uudelleen heti; hiekkamyrsky yleensä usvan kautta, ukkonen sateen kautta.
+    if (table[z.target]) table[z.target] *= 0.3;
+    if (z.target === 'haze' && table.sandstorm) table.sandstorm *= 2.5;
+    if (z.target === 'rain' && table.thunder) table.thunder *= 2;
+    if (z.target === 'clear') { delete table.sandstorm; delete table.thunder; }
     let total = 0;
     for (const k in table) total += table[k];
     let r = Math.random() * total;
@@ -144,26 +186,89 @@ export class Environment {
     return WEATHER[this.targetKey].name;
   }
 
-  // Paikallinen kosteus 0..1 (sademetsä): hiekka-ilmiöt muuttuvat sumuksi.
+  // Paikallinen kosteus 0..1 (sademetsän latvusto: näkyvyys ja valo).
   setLocalHumidity(h) {
     this.humidTarget = h;
   }
 
-  update(dt, playerPos, elapsed) {
+  // Siirtymän jälkeen vyöhykkeet vaihtuvat heti (ei liukua).
+  snapClimate() {
+    this.climateSnap = true;
+  }
+
+  // Pelaajan kohdan ilmastovyöhykkeet maastonäytteestä (terrain.js).
+  setClimate(s) {
+    const c = this.climateTarget;
+    c.desert = (s.desert || 0) + (s.dunes || 0) + (s.oasis || 0) * 0.5;
+    c.wet = (s.rainforest || 0) + (s.oasis || 0) * 0.5;
+    c.mountain = s.mountains || 0;
+    c.sea = (s.ocean || 0) + (s.beach || 0) * 0.6;
+    c.sahel = Math.max(0, (s.t1 || 0) - (s.dunes || 0)) + (s.beach || 0) * 0.4;
+    let sum = 0;
+    for (const k of CLIMATE_KEYS) sum += c[k];
+    if (sum < 1e-3) { c.sahel = 1; sum = 1; }
+    for (const k of CLIMATE_KEYS) c[k] /= sum;
+  }
+
+  // clockDt = todellinen aika (vuorokausi ja sään vaihtuminen eivät hidastu,
+  // vaikka ruudunpäivitys olisi hidas).
+  update(dt, playerPos, elapsed, clockDt = dt) {
     if (!this.frozen) {
-      this.time += dt * this.timeScale;
+      this.time += clockDt * this.timeScale;
       if (this.time >= 24) { this.time -= 24; this.day++; }
-      this.weatherTimer -= dt;
-      if (this.weatherTimer <= 0) this.setWeather(this._pickNextWeather());
+      for (const k of CLIMATE_KEYS) {
+        const z = this.zones[k];
+        z.timer -= clockDt;
+        if (z.timer <= 0) this.setWeather(this._pickNextWeather(k), false, k);
+      }
     }
 
-    // --- Sään pehmeä siirtymä
-    const target = WEATHER[this.targetKey];
-    const k = 1 - Math.exp(-dt / 9); // n. 25-30 s täyteen siirtymään
+    // --- Vyöhykkeiden sään pehmeä siirtymä ja sekoitus pelaajan kohdalla
+    const k = 1 - Math.exp(-clockDt / 9); // n. 25-30 s täyteen siirtymään
+    const ck = this.climateSnap ? 1 : 1 - Math.exp(-clockDt / 2.5);
+    this.climateSnap = false;
     const g = this.gw;
-    for (const n of NUMERIC) g[n] = lerp(g[n], target[n], k);
-    g.tint.lerp(_c.set(target.tint), k);
-    if (Math.abs(g.vis - target.vis) < 1) this.weatherKey = this.targetKey;
+    for (const n of NUMERIC) g[n] = 0;
+    g.tint.setRGB(0, 0, 0);
+    let best = 'sahel';
+    for (const key of CLIMATE_KEYS) {
+      this.climate[key] += (this.climateTarget[key] - this.climate[key]) * ck;
+      const z = this.zones[key];
+      const target = WEATHER[z.target];
+      for (const n of NUMERIC) z.s[n] = lerp(z.s[n], target[n], k);
+      z.s.tint.lerp(_c.set(target.tint), k);
+      const wgt = this.climate[key];
+      for (const n of NUMERIC) g[n] += z.s[n] * wgt;
+      g.tint.r += z.s.tint.r * wgt; g.tint.g += z.s.tint.g * wgt; g.tint.b += z.s.tint.b * wgt;
+      if (wgt > this.climate[best]) best = key;
+    }
+    let wsum = 0;
+    for (const key of CLIMATE_KEYS) wsum += this.climate[key];
+    if (wsum > 1e-4 && Math.abs(wsum - 1) > 1e-4) {
+      for (const n of NUMERIC) g[n] /= wsum;
+      g.tint.multiplyScalar(1 / wsum);
+    }
+    this.targetKey = this.zones[best].target;
+    this.weatherKey = this.targetKey;
+
+    // --- Salamat ukkosella: välähdyksiä ja kaukaisia iskuja
+    if (g.thunder > 0.4 && !this.frozen) {
+      this.strikeTimer -= clockDt * g.thunder;
+      if (this.strikeTimer <= 0) {
+        this.strikeTimer = 5 + Math.random() * 14;
+        this.flashT = 0.55;
+        const a = Math.random() * Math.PI * 2;
+        if (this.onStrike) this.onStrike(a, 250 + Math.random() * 350);
+      }
+    }
+    if (this.flashT > 0) {
+      this.flashT = Math.max(0, this.flashT - clockDt);
+      // Muutama nopea välähdys
+      const t = 0.55 - this.flashT;
+      this.flash = Math.max(0, Math.sin(t * 34) * Math.exp(-t * 5)) + (t < 0.06 ? 1 : 0);
+    } else {
+      this.flash = 0;
+    }
 
     // --- Paikallinen tehollinen sää
     this.humid += (this.humidTarget - this.humid) * Math.min(1, dt * 0.5);
@@ -229,6 +334,11 @@ export class Environment {
     u.uSunVisible.value = smoothstep(-0.05, 0.02, this.sunDir.y) * (1 - w.haze * 0.75) * (0.3 + w.sunMul * 0.7);
     u.uMoonVisible.value = smoothstep(-0.02, 0.1, this.moonDir.y) * (1 - w.haze * 0.9);
     u.uStars.value = (1 - smoothstep(-0.2, 0.02, this.sunDir.y)) * (1 - w.haze) * (1 - w.cloud * 0.7);
+    // Linnunrata kiertyy taivaan mukana yön aikana.
+    const rot = (this.time / 24) * Math.PI * 2;
+    u.uGalaxyN.value.copy(GAL_N0).applyAxisAngle(POLE, rot);
+    u.uGalaxyC.value.copy(GAL_C0).applyAxisAngle(POLE, rot);
+    u.uFlash.value = this.flash;
     u.uCloudCover.value = w.cloud;
     u.uHaze.value = w.haze;
     u.uTime.value = elapsed;
@@ -276,7 +386,7 @@ export class Environment {
     tinted(lerpC('hemiG', this.hemi.groundColor));
     const hemiI = lerp(A.hemiI, B.hemiI, f);
     // Pilvisellä säällä hajavaloa on suhteessa enemmän.
-    this.hemi.intensity = hemiI * (1 + greyAmt * 0.25 + w.haze * 0.15) * (1 - 0.2 * this.humid);
+    this.hemi.intensity = hemiI * (1 + greyAmt * 0.25 + w.haze * 0.15) * (1 - 0.2 * this.humid) + this.flash * 1.6;
     if (this.humid > 0.001) this.hemi.color.lerp(_c2.copy(CANOPY_GREEN).multiplyScalar(dayLum), 0.35 * this.humid);
 
     // Valon suunta (SunLight valaisee sijainnistaan origoa kohti).
@@ -290,13 +400,21 @@ export class Environment {
   }
 
   serialize() {
-    return { time: this.time, day: this.day, weather: this.targetKey };
+    const zones = {};
+    for (const k of CLIMATE_KEYS) zones[k] = this.zones[k].target;
+    return { time: this.time, day: this.day, weather: this.targetKey, zones };
   }
 
   load(data) {
     if (!data) return;
     if (typeof data.time === 'number') this.time = data.time;
     if (typeof data.day === 'number') this.day = data.day;
-    if (data.weather && WEATHER[data.weather]) this.setWeather(data.weather, true);
+    if (data.zones) {
+      for (const k of CLIMATE_KEYS) if (WEATHER[data.zones[k]]) this.setWeather(data.zones[k], true, k);
+    } else if (data.weather && WEATHER[data.weather]) {
+      // Vanha tallennus: sama sää kaikkialla, sademetsässä hiekkasää vaihtuu sateeksi.
+      this.setWeather(data.weather, true);
+      if (data.weather === 'sandstorm' || data.weather === 'haze') this.setWeather('rain', true, 'wet');
+    }
   }
 }
