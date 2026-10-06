@@ -9,6 +9,8 @@ import {
 import { OBJECT_TYPES, OBJECT_TYPE_KEYS, DECOR_TYPES } from './objectTypes.js';
 import { openFactor } from './waves.js';
 
+// Tiheyden avaimet: biomit sekä muodostumat (graniittikallio, pöytävuori).
+const DENSITY_KEYS = [...BIOME_KEYS, 'rock', 'mesa'];
 const SIZE = CONFIG.chunkSize;
 const SEG = CONFIG.chunkSegments;
 const STEP = SIZE / SEG;
@@ -97,7 +99,10 @@ export function generateChunk(cx, cz, variantCounts) {
       const r1 = rand(), r2 = rand(), r3 = rand(), r4 = rand();
       sampleTerrain(x, z, s);
       let p = 0;
-      for (const b of BIOME_KEYS) p += (def.density[b] || 0) * s[b];
+      for (const b of DENSITY_KEYS) p += (def.density[b] || 0) * s[b];
+      // Kalliolla ja pöytävuorella kasvaa vähemmän (paitsi niille tarkoitetut).
+      if (!def.density.rock) p *= 1 - s.rock * 0.85;
+      if (!def.density.mesa) p *= 1 - s.mesa * 0.75;
       if (r1 >= p / maxD) continue;
       if (s.h < s.wl + 0.15) continue;
       if (def.maxSlope < 1 && slope(x, z, s.h) > def.maxSlope) continue;
@@ -120,14 +125,20 @@ export function generateChunk(cx, cz, variantCounts) {
       const r1 = rand(), r2 = rand(), r3 = rand(), r4 = rand();
       sampleTerrain(x, z, s);
       let p = 0;
-      for (const b of BIOME_KEYS) p += (def.density[b] || 0) * s[b];
+      for (const b of DENSITY_KEYS) p += (def.density[b] || 0) * s[b];
       if (r1 >= p / maxD) continue;
-      if (def.nearWater) {
+      let y = s.h - 0.03;
+      if (def.onWater) {
+        // Kelluu tyynellä vedellä (ei joissa eikä meressä), 0.3..2.2 m syvyydessä.
+        const depth = s.wl - s.h;
+        if (depth < 0.3 || depth > 2.2 || s.wtype === 3 || s.wtype === 4 || s.ocean + s.beach > 0.2) continue;
+        y = s.wl + 0.005;
+      } else if (def.nearWater) {
         if (s.h < s.wl - 0.35 || s.h > s.wl + 0.9) continue;
       } else if (s.h < s.wl + 0.05) continue;
       if (insideStructure(x, z, -1)) continue;
       const sc = def.scale[0] + r3 * (def.scale[1] - def.scale[0]);
-      decor.push(ti, Math.floor(r4 * nv), x, s.h - 0.03, z, r2 * Math.PI * 2, sc, sc * (0.8 + s.mare * 0.5));
+      decor.push(ti, Math.floor(r4 * nv), x, y, z, r2 * Math.PI * 2, sc, def.onWater ? sc : sc * (0.8 + s.mare * 0.5));
     }
   });
 

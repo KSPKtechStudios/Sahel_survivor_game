@@ -7,6 +7,10 @@ import { makeAcacia, makeBaobab, makeJungleTree, makePalm, makeCanopyTree, makeD
 import { makeBush, makeFern, makeTumbleweed, makeGrassTuft, makeBamboo, makeThicket, makeEuphorbia, makeReeds, makeUndergrowth } from './plants.js';
 import { makeGroundStick, makeStone, makeBoulder, makeTermiteMound, makeOutcrop, makeSpire } from './rocks.js';
 import { makeCampfireBase, createItemModels } from './items.js';
+import {
+  makeSheaTree, makeDoumPalm, makeLog, makeBanana, makeDesertShrub, makeCoconutPalm, makeDriftwood,
+  makeTallGrass, makeFlowers, makeMushrooms, makeLilies, makeSeaweed, makeBones, makeScree,
+} from './flora.js';
 
 const VARIANTS = {
   acacia: [makeAcacia, 4, 1],
@@ -30,11 +34,26 @@ const VARIANTS = {
   spire: [makeSpire, 3, 121],
   reeds: [makeReeds, 2, 131],
   undergrowth: [makeUndergrowth, 3, 141],
+  shea: [makeSheaTree, 3, 151],
+  doum: [makeDoumPalm, 3, 161],
+  coconut: [makeCoconutPalm, 3, 171],
+  log: [(s) => makeLog(s, false), 2, 181],
+  mossyLog: [(s) => makeLog(s, true), 2, 191],
+  banana: [makeBanana, 3, 201],
+  desertShrub: [makeDesertShrub, 3, 211],
+  driftwood: [makeDriftwood, 3, 221],
+  tallGrass: [makeTallGrass, 3, 231],
+  flowers: [makeFlowers, 4, 241],
+  mushrooms: [makeMushrooms, 3, 251],
+  lilies: [makeLilies, 3, 261],
+  seaweed: [makeSeaweed, 2, 271],
+  bones: [makeBones, 2, 281],
+  scree: [makeScree, 3, 291],
 };
 // Mallit, joilla on kevyt kaukoversio (ilman varjoa).
-const HAS_FAR = new Set(['acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire']);
+const HAS_FAR = new Set(['acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut']);
 // Mallit, joista tehdään tiheärunkoinen versio hakkaamista varten.
-const HAS_HI = new Set(['acacia', 'jungle', 'palm', 'canopy']);
+const HAS_HI = new Set(['acacia', 'jungle', 'palm', 'canopy', 'shea', 'doum', 'coconut']);
 
 function seedsFor(model) {
   const [, n, base] = VARIANTS[model];

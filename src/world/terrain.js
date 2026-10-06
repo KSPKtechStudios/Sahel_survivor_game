@@ -155,7 +155,7 @@ function sampleLand(x, z, out) {
   const rim = smoothstep(WORLD.rimR - 0.015, WORLD.rimR + 0.015, dEdge);
   const t1 = (1 - smoothstep(WORLD.tier1R - 0.02, WORLD.tier1R + 0.02, d)) * (1 - rim);
   const mountW = rim * (1 - sea);
-  const coastW = sea * smoothstep(-0.016, 0.002, c);
+  const coastW = sea * smoothstep(-0.009, 0.002, c);
   const t2 = Math.max(0, 1 - t1 - mountW - coastW);
   const spawnW = 1 - smoothstep(WORLD.spawnR - 0.03, WORLD.spawnR + 0.03, d);
 
@@ -865,8 +865,8 @@ export function groundColor(x, z, s, slope, out) {
     mix3(_c1, _c1, C.pebble, rocky);
     mix3(_c1, _c1, C.sandWet, sandy);
     const wet = smoothstep(-0.8, 0.05, under);
-    mix3(out, out, _c1, wet * 0.75);
-    const k = 1 - smoothstep(0.2, 4, under) * 0.45;
+    mix3(out, out, _c1, wet * 0.55);
+    const k = 1 - smoothstep(0.2, 4, under) * 0.35;
     out[0] *= k; out[1] *= k; out[2] *= k;
   }
   const b = 0.94 + n2 * 0.12;
