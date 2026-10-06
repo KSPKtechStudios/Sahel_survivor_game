@@ -13,7 +13,7 @@ export const ITEMS = {
   stone_pick: { name: 'Kivihakku', stack: 1, tool: 'pickaxe', damage: 1, weapon: 'pick', desc: 'Lohkareiden louhimiseen.' },
   wooden_club: { name: 'Puunuija', stack: 1, weapon: 'club', desc: 'Raskas nuija. Kolmen iskun sarja: sivulle, takaisin ja murskaava isku ylhäältä.' },
   machete: { name: 'Viidakkoveitsi', stack: 1, tool: 'blade', weapon: 'machete', desc: 'Nopea terä. Kolmen iskun sarja päättyy pistoon. Raivaa myös pensaita.' },
-  shield: { name: 'Puukilpi', stack: 1, shield: true, desc: 'Pikapalkissa kilpi on vasemmassa kädessä. [Hiiri 2] torjuu lähes kaiken.' },
+  shield: { name: 'Puukilpi', stack: 1, shield: true, desc: 'Varusta kilpi vasempaan käteen (valitse se ja paina hiiren oikeaa, tai hiiren oikea repussa). Varustettuna [Hiiri 2] torjuu lähes kaiken.' },
   campfire: { name: 'Nuotio', stack: 5, place: 'campfire', desc: 'Valoa ja lämpöä yöhön. Aseta hiiren oikealla.' },
   // Arvoesineet (arkuista). Käyttötarkoitus on vielä avoin (esim. kauppa).
   gold_nugget: { name: 'Kultahippu', stack: 20, valuable: true, desc: 'Arvokas kultahippu. Sahelin kulta on ollut haluttua vuosisatoja.' },

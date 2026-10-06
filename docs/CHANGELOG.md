@@ -2,7 +2,18 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-06 (sessio 7): musiikki, kehittäjätyökalut, kombojen rajoitus, kilven varustaminen, palavat savipeikot
+- Musiikki: päävalikossa soi Deep Exploration normaalilla voimakkuudella; pelissä Sahelin savanneilla Savannah Dawn, aavikolla Caravan of the Desert ja merellä Grand Ocean Adventure hiljaa taustalla (12 dB valikkoa hiljempaa, tilaa tuleville äänitehosteille). Kappaleet soivat silmukkana ja on tasattu samaan äänekkyyteen. Biomin musiikki alkaa viiveellä (8 s, pelin alussa 4 s), vaihtuu pitkillä häivytyksillä (8 s hiljenee, 10 s voimistuu) ja soi vähintään 45 s ennen vaihtoa, joten biomien rajalla musiikki ei vaihtele. Musiikittomalle alueelle (sademetsä, vuoristo, ranta) musiikki hiljenee 15 s jälkeen.
+- Asetuksiin ääniosio: äänenvoimakkuus, musiikki ja äänitehosteet (tuleville äänille).
+- Pelin käynnistyessä "Klikkaa jatkaaksesi": selaimet sallivat äänen vasta käyttäjän klikkauksen jälkeen. Musiikki pysähtyy, kun välilehti on piilossa.
+- Hiekkadyynit yhdistetty aavikkoon: sama nimi (Aavikko), väri kartalla ja musiikki. Maaston muodot ennallaan.
+- Iskusarjojen rajoitus: sarja jatkuu vain, kun kestävyyttä on yli puolet, ja sarjan iskut ovat kalliimpia (nuija 10 + 15 + 24, viidakkoveitsi 8 + 14 + 24, nyrkit 4 + 12). Täydellä kestävyydellä ehtii yhden sarjan, sitten vain yksittäisiä iskuja, kunnes kestävyys palautuu. Kestävyyspalkissa merkki puolivälissä.
+- Kilpi pitää varustaa itse: valitse kilpi ja paina hiiren oikeaa, tai hiiren oikea repussa (myös riisuminen). Varustetussa kilvessä on merkki pikapalkissa ja repussa, ja tieto tallentuu.
+- Savipeikot aamulla: joutuvat paniikkiin, syttyvät itsestään palamaan, juoksevat liekeissä sinne tänne (huitovat käsillä) ja palavat muutamassa sekunnissa mustiksi hiiliksi ja tuhkaksi. Liekit, kipinät ja savu hiukkasina; palava savipeikko valaisee ympäristöä. Palaneista ei jää saalista.
+- Kehittäjätyökalut [F3]: tiedot (sijainti, biomi, aika, FPS, olennot, musiikin tila), lentäminen, nopeus 0,5–10×, kuolemattomuus, paranna / kuole, siirtyminen (biomit, vesistöt, aloituspaikka, lähin rakennelma tai avaamaton arkku, koordinaatit, karttamerkit), olentojen kutsuminen ja poisto, esineiden antaminen, sää ja aika (myös ajan pysäytys), koko kartan paljastus. Testaustyökalut poistettu taukovalikosta.
+
 ## 2026-10-06 (sessio 6): korjauksia, taistelu, pahkasika ja savipeikot, uinti ja hukkuminen
+- **Versio Alpha v0.1** = sessioiden 1–6 työ (commit 03a2b3b, käyttäjän nimeämä).
 - Syväterävyys (DOF) paljon hienovaraisempi: vain kaukainen tausta ja aivan lähellä olevat asiat pehmenevät hieman, ei enää koko kuvaa.
 - Kasvit ja puiden latvat huojuvat hieman myös tyynellä säällä.
 - Joet ja purot korjattu: ei enää maasta koholla olevia penkereitä eikä vettä reunojen yli. Veden pinta asettuu syvälle laaksoon, rannat loivenevat pehmeästi, kuivat reunapisteet painetaan maan alle, jyrkissä kohdissa vaahtoavia koskia.

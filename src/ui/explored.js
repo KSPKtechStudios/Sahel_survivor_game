@@ -8,6 +8,11 @@ export const TILE_PX = 128;    // 4 m / pikseli
 const CELL_M = 16;             // tallennettavan bittikartan solu
 const CELLS = TILE_M / CELL_M; // 32 x 32 solua / ruutu
 const REVEAL_M = 100;          // kuinka kauas ympäriltä kartta paljastuu
+// Koko kartan paljastus (kehittäjätyökalut): koko maailman yleiskuva yhtenä
+// karkeana kuvana (n. 40 m / pikseli); tarkat ruudut haetaan lähennettäessä.
+const OVERVIEW_R = 10240;
+const OVERVIEW_PX = 512;
+const DETAIL_SPAN = 6000;      // tarkat ruudut, kun näkymä on tätä pienempi (m)
 
 export const WAYPOINT_TYPES = [
   { type: 'cross', name: 'Raksi', color: '#b3261e' },
@@ -136,6 +141,9 @@ export class ExploredMap {
     this.want = new Set(); // ruudut, joiden maastoa tarvitaan piirtoon
     this.inFlight = 0;
     this.focus = { x: 0, z: 0 };
+    this.allRevealed = false;
+    this.overview = null;
+    this.overviewPending = false;
     gen.onTile = (key, data) => this._onTile(key, data);
   }
 
@@ -145,7 +153,33 @@ export class ExploredMap {
     this.inFlight = 0;
     this.waypoints = [];
     this.lastReveal = null;
+    this.allRevealed = false;
+    this.overview = null;
+    this.overviewPending = false;
     this.version++;
+  }
+
+  // Paljasta koko kartta (kehittäjätyökalut). Tallentuu maailman mukana.
+  revealAll() {
+    this.allRevealed = true;
+    for (const t of this.tiles.values()) this._fillMask(t);
+    this._requestOverview();
+    this.version++;
+  }
+
+  _fillMask(t) {
+    t.mctx.globalCompositeOperation = 'source-over';
+    t.mctx.fillStyle = '#000';
+    t.mctx.fillRect(0, 0, TILE_PX, TILE_PX);
+    t.bits.fill(255);
+    t.dirty = true;
+  }
+
+  _requestOverview() {
+    if (this.overview || this.overviewPending) return;
+    this.overviewPending = true;
+    this.inFlight++;
+    this.gen.requestTile('overview', -OVERVIEW_R, -OVERVIEW_R, OVERVIEW_PX, (2 * OVERVIEW_R) / OVERVIEW_PX);
   }
 
   _tile(tx, tz, create = true) {
@@ -160,12 +194,23 @@ export class ExploredMap {
         bits: new Uint8Array((CELLS * CELLS) / 8), dirty: true, requested: false,
       };
       this.tiles.set(key, t);
+      if (this.allRevealed) this._fillMask(t);
     }
     return t;
   }
 
   _onTile(key, data) {
     this.inFlight = Math.max(0, this.inFlight - 1);
+    if (key === 'overview') {
+      this.overviewPending = false;
+      if (!this.allRevealed) return;
+      const c = document.createElement('canvas');
+      c.width = c.height = OVERVIEW_PX;
+      c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(data.buffer || data), OVERVIEW_PX, OVERVIEW_PX), 0, 0);
+      this.overview = c;
+      this.version++;
+      return;
+    }
     const t = this.tiles.get(key);
     if (!t) return;
     const c = document.createElement('canvas');
@@ -273,6 +318,14 @@ export class ExploredMap {
   drawTiles(ctx, minX, minZ, maxX, maxZ) {
     const t0x = Math.floor(minX / TILE_M), t1x = Math.floor(maxX / TILE_M);
     const t0z = Math.floor(minZ / TILE_M), t1z = Math.floor(maxZ / TILE_M);
+    if (this.allRevealed) {
+      // Yleiskuva pohjalle; lähennettäessä tarkat ruudut sen päälle.
+      if (this.overview) ctx.drawImage(this.overview, -OVERVIEW_R, -OVERVIEW_R, OVERVIEW_R * 2, OVERVIEW_R * 2);
+      else this._requestOverview();
+      if (Math.max(maxX - minX, maxZ - minZ) < DETAIL_SPAN) {
+        for (let tz = t0z; tz <= t1z; tz++) for (let tx = t0x; tx <= t1x; tx++) this._tile(tx, tz);
+      }
+    }
     const many = (t1x - t0x + 1) * (t1z - t0z + 1) > this.tiles.size;
     const draw = (t) => {
       if (t.tx < t0x || t.tx > t1x || t.tz < t0z || t.tz > t1z) return;
@@ -296,6 +349,7 @@ export class ExploredMap {
   }
 
   isRevealed(x, z) {
+    if (this.allRevealed) return true;
     const tx = Math.floor(x / TILE_M), tz = Math.floor(z / TILE_M);
     const t = this.tiles.get(`${tx},${tz}`);
     if (!t) return false;
@@ -338,7 +392,8 @@ export class ExploredMap {
     for (const t of this.tiles.values()) {
       if (t.bits.some((b) => b)) tiles[t.key] = toB64(t.bits);
     }
-    return { tiles, waypoints: this.waypoints.map((w) => ({ ...w })) };
+    // Kokonaan paljastetusta kartasta ei tarvitse tallentaa ruutuja.
+    return { tiles: this.allRevealed ? {} : tiles, all: this.allRevealed || undefined, waypoints: this.waypoints.map((w) => ({ ...w })) };
   }
 
   load(data) {
@@ -369,6 +424,7 @@ export class ExploredMap {
       t.mctx.drawImage(small, 0, 0, TILE_PX, TILE_PX);
       t.dirty = true;
     }
+    if (data.all) this.revealAll();
     this.version++;
   }
 }

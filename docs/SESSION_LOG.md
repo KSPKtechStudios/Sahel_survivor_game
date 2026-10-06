@@ -2,6 +2,22 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-06 (sessio 7)
+**Tehtiin**
+- Käyttäjä pyysi: iskusarjojen rajoitus (yli 50 % kestävyydestä tai yksi sarja tyhjentää), kilpi varustetaan itse, savipeikot joutuvat aamulla paniikkiin ja syttyvät palamaan, F3-kehittäjätyökalut (siirtyminen, kutsuminen, lentäminen, nopeus, koko kartta) ja testityökalut pois valikosta, musiikki biomeittain ja päävalikkoon (luettelo, pelissä hiljaa, valikossa normaalisti, viive ja pitkät häivytykset), ääniasetukset, aavikko ja dyynit yhdeksi biomiksi. Kesken työn: versio nimetään GitHubissa Alpha v0.1:ksi. Kirjattu `DESIGN.md`:hen.
+- Uudet tiedostot: `src/audio/music.js` (musiikki), `src/ui/devtools.js` (kehittäjätyökalut), `src/render/fire.js` (liekki-, kipinä- ja savuhiukkaset), `assets/music/` (viisi kappaletta, kansikuvat poistettu ilman uudelleenpakkausta). Muutettu: `combat.js` (sarjan raja ja hinnat), `inventory.js` + `inventoryUI.js` + `hud.js` + `interaction.js` + `viewmodel.js` (kilven varustus ja merkki), `mobs.js` (paniikki ja palaminen), `structures.js` (tulien valot jaetaan myös palaville olennoille), `explored.js` (koko kartan yleiskuva), `player.js` (lentäminen, kuolemattomuus, nopeus), `terrain.js` (`displayBiome`, dyynit = aavikko), `main.js` (F3-tila, musiikki, käynnistysklikkaus), `menu.js` + `save.js` + `index.html` + `styles.css` + `menu.css` (ääniasetukset, paneelit).
+- Musiikin äänekkyys mitattiin (ffmpeg, EBU R128) ja kappaleet tasattiin samaan voimakkuuteen; kappaleiden alut ja loput häivyttyvät itsestään, joten tavallinen silmukka soi luontevasti.
+- Testattiin headless-Chromiumilla: käynnistysruutu ja valikon musiikki, ääniasetukset (tallentuvat ja vaikuttavat heti), musiikin tilakone simuloituna (valikko → lataus → savanni → aavikko 45 s pidolla → 60 s rajalla edestakaisin ilman vaihtoa → sademetsä hiljenee → takaisin savanniin → valikkoon), musiikki oikeassa pelissä, F3-paneeli ja siirtyminen aavikolle, lentäminen, koko kartan paljastus (kuva), kilven varustus ja torjunta, kombo (yksi sarja, sitten yksittäiset iskut), savipeikon paniikki, palaminen ja tuhka (kuvat), vanhat taistelu-, hakkuu- ja toimintatestit. Ei konsolivirheitä.
+
+**Huomiot**
+- GitHub-tagin `alpha-v0.1` pushaus estettiin (403: tämä ympäristö saa pushata vain kehityshaaraan), eikä julkaisun luontiin ollut työkalua. Käyttäjälle annettiin ohjeet ja valmis julkaisuteksti.
+- Selaimet päästävät äänen soimaan vasta klikkauksen jälkeen, siksi käynnistyksessä on "Klikkaa jatkaaksesi".
+- Hiekan jäljet -kappale on repossa (`assets/music/hiekan-jaljet.mp3`), mutta ei käytössä, koska se ei ollut luettelossa.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute musiikin voimakkuuksista ja ajoituksista, kehittäjätyökaluista, kombojen rajoituksesta ja palavista savipeikoista.
+- Avoimet kysymykset: Hiekan jäljet -kappaleen paikka, musiikki muihin biomeihin ja tapahtumiin, äänitehosteet.
+
 ## 2026-10-06 (sessio 6)
 **Tehtiin**
 - Käyttäjän palaute sessiosta 5: DOF liian voimakas, kasvien pieni huojunta pitää säilyä myös tyynellä, purot ja joet olivat paikoin maasta koholla ja vesi valui reunojen yli, meren aallot käyttäytyivät oudosti. Kaikki korjattiin (ks. `CHANGELOG.md` ja `DECISIONS.md`).

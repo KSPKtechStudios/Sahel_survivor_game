@@ -2,6 +2,21 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-06 (sessio 7)
+- **Alpha v0.1 on commit 03a2b3b** (session 6 versio, jota käyttäjä testasi). Tagia ei voitu pushata tästä Claude-ympäristöstä (vain kehityshaaraan saa pushata), joten käyttäjä luo GitHub-julkaisun itse valmiilla tekstillä.
+- **Iskusarjojen rajoitus: sarja jatkuu vain, kun kestävyyttä on yli 50 %, ja sarjan iskut ovat kalliimpia.** Syy: käyttäjä ehdotti joko 50 %:n rajaa tai yhden sarjan kokoista kulutusta; yhdistelmällä täydellä kestävyydellä ehtii juuri yhden sarjan, mutta kestävyyttä jää vielä torjuntaan tai pakoon (pelkkä nollaan kuluttaminen jättäisi pelaajan puolustuskyvyttömäksi). Yksittäisiä iskuja voi lyödä edelleen.
+- **Kilpi varustetaan hiiren oikealla, kun kilpi on valittuna, tai hiiren oikealla repussa.** Varustus on pinon lippu (`eq`), joka kulkee pinon mukana ja tallentuu. Syy: käyttäjä ei halunnut kilpeä automaattisesti käteen; hiiren oikea on jo "käytä esinettä" (esim. nuotion asetus).
+- **Savipeikko aamulla: paniikki (0,5–1,4 s) → syttyy → palaa 3,5–6 s → hiiltyneet palat ja tuhka, ei saalista.** Syy: käyttäjän toive. Palavat savipeikot käyttävät nuotioiden kolmea valoa (lähimmät tulet saavat valon), joten valojen määrä ei muutu eikä shadereita käännetä uudelleen.
+- **Kehittäjätyökalut ovat oma paneelinsa [F3]; maailma jatkaa kulkuaan sen takana.** Pikanäppäimet [O] ja [L] säilytettiin. Lentäminen: välilyönti ylös, Ctrl/C alas, Shift nopeammin, ei törmäyksiä. Syy: käyttäjä halusi testityökalut pois valikosta.
+- **Koko kartan paljastus: koko maailmasta lasketaan yksi karkea yleiskuva (512 px, n. 40 m/px) generointisäikeessä, ja tarkat ruudut haetaan, kun karttaa lähennetään.** Tallennukseen menee vain lippu. Syy: 1 500 tarkan ruudun laskeminen kerralla kestäisi minuutteja.
+- **Dyynit yhdistettiin aavikkoon vain nimen, kartan värin ja musiikin osalta; maaston generointi on ennallaan.** Syy: käyttäjän ehdotus; näin vanhat maailmat eivät muutu.
+- **Musiikki soitetaan HTML-audioelementeillä (striimaus), ei purettuna muistiin.** Syy: 3–4 min kappale vie purettuna n. 60 Mt muistia; striimattuna vain vähän.
+- **Kappaleet tasataan samaan äänekkyyteen (mitattu EBU R128: −14,1…−15,2 LUFS, tasataan −16 LUFS:iin), valikko soi täydellä ja peli 12 dB hiljempaa.** Syy: käyttäjä halusi pelin musiikin hiljaiseksi taustaksi ja tilaa äänitehosteille, mutta valikon normaalilla voimakkuudella. Oletukset: äänenvoimakkuus 100 %, musiikki 80 %.
+- **Biomin musiikki: 8 s viive (pelin alussa 4 s), 8 s häivytys, 2,5 s tauko, 10 s voimistuminen, kappale soi vähintään 45 s; musiikittomalle alueelle hiljenee 15 s jälkeen.** Syy: käyttäjän toive viiveestä ja pitkistä häivytyksistä, ettei musiikki vaihdu rajoilla.
+- **Musiikki biomeittain käyttäjän luettelon mukaan:** savanni = Sahelin savanni, laterittitasanko, kausilampi ja akasiametsikkö; aavikko = aavikko, dyynit ja keitaat; meri = vain meri (ei ranta). Sademetsässä, vuoristossa ja rannalla ei soi musiikkia. **Hiekan jäljet -kappale on repossa, mutta sille ei ole vielä paikkaa** (ei ollut luettelossa; kysytään).
+- **Ensimmäisellä käynnistyksellä "Klikkaa jatkaaksesi".** Syy: selaimet estävät äänen ennen käyttäjän elettä; muuten valikon musiikki alkaisi vasta ensimmäisestä napin painalluksesta.
+- **Musiikin häivytykset lasketaan todellisessa ajassa** (eivät hidastu matalalla ruudunpäivityksellä), ja musiikki pysähtyy, kun välilehti on piilossa.
+
 ## 2026-10-06 (sessio 6)
 - **Jokien pinta asetetaan maaston loivan muodon alle (2 m), ja penkereet täytetään pehmeästi.** Syy: kova penger (vesi + 0,12 m) teki maasta koholla olevia seiniä; reunojen kuivat vesipisteet painetaan maan alle, jottei vesi näy reunan yli.
 - **Aaltojen suunnat ovat kiinteät (pääaalto aina kohti maailman keskustaa, eli rantaa), ja tekstuurien liike kertyy ajan mukana.** Syy: aaltojen vaihe riippui tuulen suunnasta kerrottuna sijainnilla; 9 km päässä keskeltä pienikin tuulen kääntyminen liikutti aaltoja holtittomasti.

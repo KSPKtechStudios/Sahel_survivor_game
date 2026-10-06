@@ -40,6 +40,8 @@ export class Structures {
     this.ghost.visible = false;
     scene.add(this.ghost);
     this.nearestFire = Infinity;
+    // Muut tulenlähteet (esim. palavat savipeikot) jakavat samat valot.
+    this.extraFires = [];
   }
 
   add(type, x, y, z, rot = 0) {
@@ -76,11 +78,15 @@ export class Structures {
         f.position.y = 0.32 + (0.85 * k) * 0.35;
       });
     }
-    // Valot lähimmille nuotioille
+    // Valot lähimmille nuotioille (ja muille tulille)
     const sorted = this.list
       .map((st) => ({ st, d: (st.x - playerPos.x) ** 2 + (st.z - playerPos.z) ** 2 }))
       .sort((a, b) => a.d - b.d);
     this.nearestFire = sorted.length ? Math.sqrt(sorted[0].d) : Infinity;
+    if (this.extraFires.length) {
+      for (const f of this.extraFires) sorted.push({ st: f, d: (f.x - playerPos.x) ** 2 + (f.z - playerPos.z) ** 2 });
+      sorted.sort((a, b) => a.d - b.d);
+    }
     this.lights.forEach((l, i) => {
       const e = sorted[i];
       if (!e || e.d > 120 * 120) { l.intensity = 0; return; }

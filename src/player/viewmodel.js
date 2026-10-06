@@ -32,9 +32,9 @@ const HOLD = {
   raw_meat: { pos: [0.0, 0.0, -0.04], rot: [0.4, 0.3, 0], s: 0.85 },
   hide: { pos: [0.0, 0.0, -0.05], rot: [1.2, 0, 0.3], s: 0.75 },
   clay: { pos: [0.0, 0.0, -0.035], rot: [0.4, 0.3, 0], s: 0.85 },
+  // Varustamaton kilpi kädessä (varustettuna se on vasemmassa kädessä).
+  shield: { pos: [-0.02, 0.06, -0.05], rot: [0.15, Math.PI - 0.5, 0.25], s: 0.42 },
 };
-// Esineet, joita ei näytetä oikeassa kädessä (kilpi on vasemmassa).
-const NOT_IN_RIGHT = new Set(['shield']);
 
 function colorize(geo, hex) {
   geo = geo.index ? geo.toNonIndexed() : geo;
@@ -223,7 +223,8 @@ export class ViewModel {
   }
 
   setItem(id) {
-    const want = id && this.items[id] && !NOT_IN_RIGHT.has(id) ? id : null;
+    // Varustettu kilpi on vasemmassa kädessä, ei oikeassa.
+    const want = id && this.items[id] && !(id === 'shield' && this.hasShield) ? id : null;
     if (want === this.current && this.pending === undefined) return;
     if (want === this.pending) return;
     // Jatka laskua siitä korkeudesta, jossa käsi juuri on.

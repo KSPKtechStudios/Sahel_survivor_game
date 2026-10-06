@@ -132,12 +132,13 @@ export class Menu {
   }
 
   // Lataus valmis: odota klikkausta (hiiren lukitus vaatii käyttäjän eleen).
-  loadingReady(text, onEnter) {
+  loadingReady(text, onEnter, label = 'Klikkaa pelaamaan') {
     // Näytä valmis maailma taustalla.
     this.loading.classList.add('over-world');
     $('load-text').textContent = text;
     $('load-fill').parentElement.classList.add('hidden');
     const btn = $('btn-enter');
+    btn.querySelector('.label').textContent = label;
     btn.classList.remove('hidden');
     btn.onclick = () => onEnter();
   }
@@ -272,6 +273,9 @@ export class Menu {
     bindRange('set-fov', 'fov', (v) => `${v}°`);
     bindRange('set-view', 'viewDistance', (v) => `${v * 64} m`);
     bindRange('set-scale', 'renderScale', (v) => `${Math.round(v * 100)} %`);
+    bindRange('set-master', 'masterVolume', (v) => `${Math.round(v * 100)} %`);
+    bindRange('set-music', 'musicVolume', (v) => `${Math.round(v * 100)} %`);
+    bindRange('set-sfx', 'sfxVolume', (v) => `${Math.round(v * 100)} %`);
     $('set-invert').addEventListener('change', (e) => { s.invertY = e.target.checked; this._changed(); });
     $('set-fps').addEventListener('change', (e) => { s.showFps = e.target.checked; this._changed(); });
     $('set-rays').addEventListener('change', (e) => { s.godRays = e.target.checked; this._changed(); });
@@ -304,6 +308,9 @@ export class Menu {
     set('set-fov', s.fov, `${s.fov}°`);
     set('set-view', s.viewDistance, `${s.viewDistance * 64} m`);
     set('set-scale', s.renderScale, `${Math.round(s.renderScale * 100)} %`);
+    set('set-master', s.masterVolume, `${Math.round(s.masterVolume * 100)} %`);
+    set('set-music', s.musicVolume, `${Math.round(s.musicVolume * 100)} %`);
+    set('set-sfx', s.sfxVolume, `${Math.round(s.sfxVolume * 100)} %`);
     $('set-invert').checked = !!s.invertY;
     $('set-fps').checked = !!s.showFps;
     for (const b of $('set-shadows').children) b.classList.toggle('on', b.dataset.v === s.shadows);

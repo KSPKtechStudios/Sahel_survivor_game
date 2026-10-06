@@ -1,5 +1,6 @@
 // Reppu- ja valmistusikkuna [Tab]. Esineitä siirretään klikkaamalla:
 // ensimmäinen klikkaus nostaa pinon, toinen laskee sen (tai vaihtaa paikkaa).
+// Hiiren oikea kilven päällä varustaa / riisuu sen.
 import { CONFIG } from '../config.js';
 import { ITEMS, RECIPES } from '../game/items.js';
 import { events } from '../game/events.js';
@@ -22,6 +23,14 @@ export class InventoryUI {
       el.className = 'slot' + (i < CONFIG.hotbarSize ? ' hot' : '');
       el.innerHTML = `${i < CONFIG.hotbarSize ? `<span class="key">${i + 1}</span>` : ''}<img alt=""><span class="count"></span>`;
       el.addEventListener('click', () => this.clickSlot(i));
+      el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const s = this.inventory.slots[i];
+        if (s && ITEMS[s.id].shield && this.held < 0) {
+          this.inventory.toggleEquip(i);
+          this.showInfo(i);
+        }
+      });
       el.addEventListener('mouseenter', () => this.showInfo(i));
       el.addEventListener('mouseleave', () => this.showInfo(-1));
       this.grid.appendChild(el);
@@ -69,8 +78,8 @@ export class InventoryUI {
     if (s) {
       const d = ITEMS[s.id];
       this.info.innerHTML = `<b></b><span></span>`;
-      this.info.querySelector('b').textContent = d.name;
-      this.info.querySelector('span').textContent = d.desc || '';
+      this.info.querySelector('b').textContent = d.name + (s.eq ? ' (varustettu)' : '');
+      this.info.querySelector('span').textContent = (d.desc || '') + (d.shield ? (s.eq ? ' Hiiren oikea: riisu.' : ' Hiiren oikea: varusta.') : '');
     } else {
       this.info.innerHTML = '<span class="muted">Klikkaa esinettä siirtääksesi sitä. Ylin rivi on pikapalkki.</span>';
     }
@@ -83,6 +92,7 @@ export class InventoryUI {
       const img = el.querySelector('img');
       el.classList.toggle('held', i === this.held);
       el.classList.toggle('selected', i === inv.selected);
+      el.classList.toggle('equipped', !!(s && s.eq));
       if (s) {
         img.src = this.icons[s.id] || '';
         img.style.visibility = 'visible';

@@ -116,6 +116,23 @@ export class Inventory {
     events.emit('inventory');
   }
 
+  // Kilpi pitää varustaa erikseen (vasempaan käteen). Varustettu pino
+  // merkitään eq-lipulla, joka kulkee pinon mukana repussa.
+  equippedShield() {
+    return this.slots.findIndex((s) => s && s.eq && ITEMS[s.id].shield);
+  }
+
+  toggleEquip(i) {
+    const s = this.slots[i];
+    if (!s || !ITEMS[s.id].shield) return false;
+    const on = !s.eq;
+    for (const o of this.slots) if (o && o.eq) delete o.eq;
+    if (on) s.eq = true;
+    events.emit('inventory');
+    events.emit('equip', { item: s.id, on });
+    return true;
+  }
+
   serialize() {
     return { slots: this.slots, selected: this.selected };
   }
@@ -124,7 +141,10 @@ export class Inventory {
     if (!data || !Array.isArray(data.slots)) return;
     this.slots = new Array(this.size).fill(null);
     data.slots.forEach((s, i) => {
-      if (i < this.size && s && ITEMS[s.id] && s.count > 0) this.slots[i] = { id: s.id, count: s.count };
+      if (i < this.size && s && ITEMS[s.id] && s.count > 0) {
+        this.slots[i] = { id: s.id, count: s.count };
+        if (s.eq && ITEMS[s.id].shield && this.equippedShield() < 0) this.slots[i].eq = true;
+      }
     });
     this.selected = Math.min(Math.max(0, data.selected | 0), CONFIG.hotbarSize - 1);
     events.emit('inventory');

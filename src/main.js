@@ -4,17 +4,19 @@ import { CONFIG } from './config.js';
 import { createGroundDetailTexture } from './render/textures.js';
 import { createSharedMaterials } from './render/materials.js';
 import { Sky } from './render/sky.js';
-import { Environment, WEATHER, WEATHER_KEYS } from './render/environment.js';
+import { Environment, WEATHER_KEYS } from './render/environment.js';
 import { Dust, Bursts } from './render/particles.js';
 import { Debris } from './render/debris.js';
 import { createWaterMaterial, updateWaterMaterial } from './render/water.js';
 import { Ripples } from './render/ripples.js';
 import { Splashes } from './render/splash.js';
+import { FireFx } from './render/fire.js';
 import { PostFX } from './render/post.js';
+import { Music, BIOME_MUSIC } from './audio/music.js';
 import { createModelLibrary } from './models/models.js';
 import { World } from './world/world.js';
 import { Tumbleweeds } from './world/tumbleweeds.js';
-import { findSpawn, findBiome, findWater, setWorldSeed, seedFromString, sampleTerrain, heightAt, WATER } from './world/terrain.js';
+import { findSpawn, setWorldSeed, seedFromString, sampleTerrain, heightAt, displayBiome } from './world/terrain.js';
 import { Player } from './player/player.js';
 import { Input } from './player/input.js';
 import { ViewModel } from './player/viewmodel.js';
@@ -38,6 +40,7 @@ import { BigMap } from './ui/bigMap.js';
 import { GuideUI } from './ui/guideUI.js';
 import { InventoryUI } from './ui/inventoryUI.js';
 import { Menu } from './ui/menu.js';
+import { DevTools } from './ui/devtools.js';
 
 const $ = (id) => document.getElementById(id);
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
@@ -77,13 +80,17 @@ const ruins = new Ruins({ scene, world, drops, bursts });
 const ripples = new Ripples(renderer);
 const post = new PostFX(renderer);
 const splashes = new Splashes(scene);
+const fire = new FireFx(scene);
+const music = new Music();
+// Selain sallii äänen vasta käyttäjän ensimmäisen klikkauksen tai näppäimen jälkeen.
+for (const ev of ['pointerdown', 'keydown']) window.addEventListener(ev, () => music.unlock(), { capture: true });
 
 const inventory = new Inventory();
 const guide = new Guide();
 const player = new Player(camera);
 const input = new Input(canvas);
 const viewmodel = new ViewModel(models.items);
-const mobs = new Mobs({ scene, world, drops, debris, bursts, player, env, structures });
+const mobs = new Mobs({ scene, world, drops, debris, bursts, player, env, structures, fire });
 const interaction = new Interaction({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs });
 const combat = new Combat({ camera, player, inventory, viewmodel, interaction, mobs, debris, bursts });
 mobs.combat = combat;
@@ -155,22 +162,25 @@ function applySettings(s) {
   post.godRays = s.godRays !== false;
   post.motionBlur = s.motionBlur === 'high' ? 2 : s.motionBlur === 'low' ? 1 : 0;
   post.dof = !!s.dof;
+  music.setVolumes(s.masterVolume ?? 1, s.musicVolume ?? 0.8);
 }
 applySettings(settings);
 
 // --- Tila ---------------------------------------------------------------------------
-let state = 'boot'; // boot | menu | loading | ready | playing | paused | inventory | map
+let state = 'boot'; // boot | menu | loading | ready | playing | paused | inventory | map | dev
 let currentWorld = null;
 let wantInventory = false;
 let wantMap = false;
+let wantDev = false;
 const menuCam = { x: 0, z: 0, t: 0 };
 
 function setState(s) {
   state = s;
-  const inGame = s === 'playing' || s === 'paused' || s === 'inventory' || s === 'map';
+  const inGame = s === 'playing' || s === 'paused' || s === 'inventory' || s === 'map' || s === 'dev';
   $('hud').classList.toggle('hidden', !inGame);
   if (s !== 'inventory') invUI.hide();
   if (s !== 'map') bigMap.hide();
+  if (s !== 'dev') devtools.hide();
   if (s === 'playing') {
     menu.hidePause();
     menu.hideLoading();
@@ -201,6 +211,7 @@ function clearWorldState(seed) {
   tumbleweeds.clear();
   explored.clear();
   splashes.clear();
+  fire.clear();
   mobs.clear();
   combat.reset();
 }
@@ -226,9 +237,18 @@ async function enterMenu(first = false) {
   player.teleport(sp.x, sp.z);
   if (first) menu.showLoading('Ladataan…');
   await buildAround(sp.x, sp.z, (p) => menu.setLoading(p));
-  menu.hideLoading();
   state = 'menu';
-  menu.showMain();
+  if (first && !music.unlocked) {
+    // Ensimmäisellä kerralla klikkaus: selain päästää musiikin soimaan vasta sen jälkeen.
+    menu.loadingReady('Tervetuloa Saheliin', () => {
+      music.unlock();
+      menu.hideLoading();
+      menu.showMain();
+    }, 'Klikkaa jatkaaksesi');
+  } else {
+    menu.hideLoading();
+    menu.showMain();
+  }
 }
 
 async function startWorld(meta) {
@@ -311,7 +331,11 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) persi
 // --- Hiiren lukitus ja näppäimet ---------------------------------------------------
 document.addEventListener('pointerlockchange', () => {
   if (input.locked) {
-    if (state === 'ready' || state === 'paused' || state === 'inventory' || state === 'map') setState('playing');
+    if (state === 'ready' || state === 'paused' || state === 'inventory' || state === 'map' || state === 'dev') setState('playing');
+  } else if (wantDev) {
+    wantDev = false;
+    setState('dev');
+    devtools.show();
   } else if (wantInventory) {
     wantInventory = false;
     setState('inventory');
@@ -326,12 +350,27 @@ document.addEventListener('pointerlockchange', () => {
   }
 });
 document.addEventListener('pointerlockerror', () => {
-  if (state === 'inventory' || state === 'map') setState('paused');
+  if (state === 'inventory' || state === 'map' || state === 'dev') setState('paused');
 });
 canvas.addEventListener('click', () => { if (state === 'playing' && !input.locked) input.lock(); });
 
 window.addEventListener('keydown', (e) => {
-  if (state === 'playing' && (e.code === 'Tab' || e.code === 'KeyI')) {
+  // F3 avaa selaimessa haun; pelissä se avaa kehittäjätyökalut.
+  if (e.code === 'F3') e.preventDefault();
+  if (state === 'playing' && e.code === 'F3') {
+    if (input.locked) {
+      wantDev = true;
+      input.unlock();
+    } else {
+      setState('dev');
+      devtools.show();
+    }
+  } else if (state === 'dev' && (e.code === 'F3' || e.code === 'Escape')) {
+    e.preventDefault();
+    devtools.hide();
+    input.lock();
+    setTimeout(() => { if (state === 'dev' && !input.locked) setState('paused'); }, 600);
+  } else if (state === 'playing' && (e.code === 'Tab' || e.code === 'KeyI')) {
     e.preventDefault();
     wantInventory = true;
     input.unlock();
@@ -401,66 +440,18 @@ events.on('playerDied', () => {
   persist();
 });
 
-// --- Testaustyökalut taukovalikossa -----------------------------------------------------
-function refreshTestButtons() {
-  for (const b of $('weather-btns').children) b.classList.toggle('on', b.dataset.key === env.targetKey);
-  $('pm-status').textContent = statusText();
+// --- Kehittäjätyökalut [F3] -----------------------------------------------------------------
+// Siirtyminen: maailma rakennetaan uuden paikan ympärille ennen kuin jatketaan.
+async function teleportTo(x, z, look = null) {
+  player.teleport(x, z);
+  player.velocity.set(0, 0, 0);
+  if (look) player.yaw = Math.atan2(-(look.x - x), -(look.z - z));
+  await buildAround(x, z);
+  player.update(0, input, world);
 }
-for (const k of WEATHER_KEYS) {
-  const b = document.createElement('button');
-  b.className = 'mini-btn';
-  b.textContent = WEATHER[k].name;
-  b.dataset.key = k;
-  b.addEventListener('click', () => { env.setWeather(k, true); refreshTestButtons(); });
-  $('weather-btns').appendChild(b);
-}
-for (const [label, h] of [['Aamu', 7], ['Päivä', 12.5], ['Ilta', 17.8], ['Yö', 23], ['+1 h', null]]) {
-  const b = document.createElement('button');
-  b.className = 'mini-btn';
-  b.textContent = label;
-  b.addEventListener('click', () => { env.setTime(h === null ? env.time + 1 : h); refreshTestButtons(); });
-  $('time-btns').appendChild(b);
-}
-const TP_PLACES = [
-  ['Sahel', 'savanna'], ['Dyynit', 'dunes'], ['Aavikko', 'desert'], ['Sademetsä', 'rainforest'], ['Vuoristo', 'mountains'],
-  ['Ranta', 'beach'], ['Järvi', WATER.LAKE], ['Joki', WATER.RIVER], ['Puro', WATER.STREAM],
-];
-for (const [label, fn] of [
-  ['Pahkasika', () => mobs.spawnInFront('warthog', 10)],
-  ['Savipeikko', () => mobs.spawnInFront('clay', 8)],
-  ['Aseet', () => {
-    for (const id of ['wooden_club', 'machete', 'shield']) if (inventory.count(id) === 0) inventory.add(id, 1);
-  }],
-  ['Paranna', () => { player.health = CONFIG.healthMax; player.stamina = CONFIG.staminaMax; }],
-]) {
-  const b = document.createElement('button');
-  b.className = 'mini-btn';
-  b.textContent = label;
-  b.addEventListener('click', () => {
-    const r = fn();
-    $('pm-status').textContent = r === null ? 'Paikkaa ei löytynyt' : `${label}: ok`;
-  });
-  $('spawn-btns').appendChild(b);
-}
-for (const [label, key] of TP_PLACES) {
-  const b = document.createElement('button');
-  b.className = 'mini-btn';
-  b.textContent = label;
-  b.addEventListener('click', async () => {
-    const px = player.position.x, pz = player.position.z;
-    const p = key === 'savanna' ? findSpawn() : typeof key === 'number' ? findWater(key, px, pz) : findBiome(key, px, pz);
-    if (!p) { $('pm-status').textContent = 'Paikkaa ei löytynyt'; return; }
-    $('pm-status').textContent = 'Siirrytään…';
-    await nextFrame();
-    player.teleport(p.x, p.z);
-    // Vesistön rannalla katsotaan veteen päin.
-    if (p.wx !== undefined) player.yaw = Math.atan2(-(p.wx - p.x), -(p.wz - p.z));
-    await buildAround(p.x, p.z);
-    player.update(0, input, world);
-    refreshTestButtons();
-  });
-  $('tp-btns').appendChild(b);
-}
+const devtools = new DevTools({
+  player, env, world, mobs, inventory, explored, ruins, drops, fps: null, teleport: teleportTo, fmtTime, music,
+});
 
 // --- Koko ------------------------------------------------------------------------------
 function resize() {
@@ -526,10 +517,11 @@ function updateMenuCamera(dt) {
 
 function frame(now) {
   requestAnimationFrame(frame);
-  const dt = Math.min(0.05, (now - last) / 1000);
+  const rawDt = (now - last) / 1000;
+  const dt = Math.min(0.05, rawDt);
   last = now;
-  const inGame = state === 'playing' || state === 'inventory' || state === 'paused' || state === 'ready' || state === 'map';
-  const running = state === 'playing' || state === 'inventory' || state === 'map';
+  const inGame = state === 'playing' || state === 'inventory' || state === 'paused' || state === 'ready' || state === 'map' || state === 'dev';
+  const running = state === 'playing' || state === 'inventory' || state === 'map' || state === 'dev';
   const simDt = running || state === 'menu' ? dt : 0;
   elapsed += simDt;
   input.enabled = state === 'playing';
@@ -541,6 +533,11 @@ function frame(now) {
 
   if (state !== 'boot') world.update(player.position.x, player.position.z, simDt);
   sampleTerrain(player.position.x, player.position.z, _s);
+  // Musiikki: päävalikko, pelissä biomin mukaan (viiveet ja häivytykset music.js:ssä).
+  const musicMode = state === 'menu' ? 'menu' : currentWorld && state !== 'boot' && (state !== 'loading' || respawning) ? 'game' : 'none';
+  music.setMode(musicMode);
+  // Häivytykset todellisessa ajassa (eivät hidastu, vaikka ruudunpäivitys olisi hidas).
+  music.update(Math.min(0.25, rawDt), musicMode === 'game' ? BIOME_MUSIC[displayBiome(_s)] || null : null);
   env.setLocalHumidity(_s.rainforest);
   // Sademetsä: hidas eteneminen ja lyhyt piirtoetäisyys (näkyvyys on muutenkin lyhyt).
   player.speedMul = 1 - 0.3 * _s.rainforest;
@@ -559,6 +556,7 @@ function frame(now) {
   materials.water.uniforms.uRipple.value = ripples.texture;
   materials.water.uniforms.uRippleRect.value = ripples.rect;
   splashes.update(simDt, env.lightColor, materials.water.uniforms.uAmbient.value);
+  fire.update(simDt, materials.water.uniforms.uAmbient.value);
   tumbleweeds.update(simDt, player.position, env.w.wind, env.windDir);
   if (state === 'playing' && !player.dead) interaction.update(simDt, input);
   else { structures.showGhost(null); interaction.prompt = null; }
@@ -593,6 +591,7 @@ function frame(now) {
     explored.update(dt, player.position.x, player.position.z);
     minimap.update(dt, player);
     bigMap.update();
+    devtools.update(dt);
     if (player.atEdge && state === 'playing') {
       edgeMsgTimer -= dt;
       if (edgeMsgTimer <= 0) {
@@ -632,6 +631,7 @@ function frame(now) {
   fps.frames++;
   fps.t += (now - (frame.prev || now)) / 1000;
   frame.prev = now;
+  devtools.ctx.fps = fps;
   if (fps.t >= 1) {
     fps.value = fps.frames / fps.t;
     fps.frames = 0;
@@ -648,6 +648,6 @@ enterMenu(true);
 window.sahel = {
   THREE, renderer, scene, camera, env, world, player, input, inventory, invUI, guide, structures, tumbleweeds,
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
-  ripples, splashes, waterFx, materials, post, mobs, combat, hud,
+  ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music,
   startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
 };

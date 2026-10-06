@@ -89,6 +89,9 @@ export const DEFAULT_SETTINGS = {
   godRays: true,      // valonsäteet ja ilmakehän hehku
   motionBlur: 'off',  // off | low | high
   dof: false,         // syväterävyys
+  masterVolume: 1,    // äänenvoimakkuus 0..1
+  musicVolume: 0.8,   // musiikki 0..1 (pelissä musiikki soi lisäksi hiljaa taustalla)
+  sfxVolume: 1,       // äänitehosteet 0..1 (tuleville äänille)
 };
 
 export function loadSettings() {

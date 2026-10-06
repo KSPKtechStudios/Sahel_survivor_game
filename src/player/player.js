@@ -53,6 +53,10 @@ export class Player {
     this.drowning = 0;                // 0..1 (HUD:n sininen reunus)
     this.drownTimer = 0;
     this.swimTime = 0;
+    // Kehittäjätyökalut [F3]
+    this.flying = false;
+    this.god = false;                 // ei vahinkoa, kestävyys ei kulu
+    this.speedBoost = 1;
   }
 
   get eye() {
@@ -60,6 +64,7 @@ export class Player {
   }
 
   useStamina(amount) {
+    if (this.god) return true;
     if (this.stamina < amount * 0.5) return false;
     this.stamina = Math.max(0, this.stamina - amount);
     this.staminaDelay = CONFIG.staminaRegenDelay;
@@ -68,7 +73,7 @@ export class Player {
 
   // Vahinko. opts: { cause, fromX, fromZ, knock, up }
   hurt(amount, opts = {}) {
-    if (this.dead || amount <= 0) return;
+    if (this.dead || amount <= 0 || this.god) return;
     this.health = Math.max(0, this.health - amount);
     this.healthDelay = CONFIG.healthRegenDelay;
     this.hurtKick = Math.min(0.09, 0.025 + amount * 0.003);
@@ -135,6 +140,12 @@ export class Player {
     const moving = _wish.lengthSq() > 0;
     if (moving) _wish.normalize();
 
+    if (this.flying && alive) {
+      this._fly(dt, input);
+      this._post(dt, alive);
+      return;
+    }
+
     // Kyykky [Ctrl] tai [C] (päälle/pois). Juoksu tai hyppy nostaa ylös.
     if (alive && input.enabled && (input.pressed.has('ControlLeft') || input.pressed.has('ControlRight') || input.pressed.has('KeyC'))) {
       this.crouching = !this.crouching && this.inWater < 2;
@@ -150,7 +161,7 @@ export class Player {
     }
 
     let speed = this.sprinting ? CONFIG.sprintSpeed : CONFIG.walkSpeed;
-    speed *= this.speedMul * this.moveMul;
+    speed *= this.speedMul * this.moveMul * this.speedBoost;
     if (this.crouching) speed *= CONFIG.crouchSpeed;
     if (this.inWater === 1) speed *= 0.7;
     if (this.inWater === 2) speed *= this.stamina > 0 ? 0.5 : 0.35;
@@ -271,6 +282,45 @@ export class Player {
       }
     }
 
+    this._post(dt, alive);
+  }
+
+  // Lentäminen (kehittäjätyökalut): Välilyönti ylös, Ctrl/C alas, Shift nopeammin.
+  // Ei painovoimaa eikä törmäyksiä; pysyy maan ja veden pinnan yläpuolella.
+  _fly(dt, input) {
+    const p = this.position;
+    let up = 0;
+    if (input.down('Space')) up += 1;
+    if (input.down('ControlLeft') || input.down('ControlRight') || input.down('KeyC')) up -= 1;
+    const fast = input.down('ShiftLeft') || input.down('ShiftRight');
+    const speed = 12 * this.speedBoost * (fast ? 2.5 : 1);
+    const k = 1 - Math.exp(-dt * 8);
+    this.velocity.x += (_wish.x * speed - this.velocity.x) * k;
+    this.velocity.z += (_wish.z * speed - this.velocity.z) * k;
+    this.velocity.y += (up * speed * 0.7 - this.velocity.y) * k;
+    p.addScaledVector(this.velocity, dt);
+    const edge = edgeFactor(p.x, p.z);
+    this.atEdge = edge > 0.985;
+    if (this.atEdge) {
+      const len = Math.hypot(p.x, p.z) || 1;
+      const push = (edge - 0.985) * 400 * dt + 0.02;
+      p.x -= (p.x / len) * push;
+      p.z -= (p.z / len) * push;
+    }
+    const w = waterAt(p.x, p.z, _wq);
+    const floor = Math.max(w.h, w.wl);
+    if (p.y < floor) { p.y = floor; if (this.velocity.y < 0) this.velocity.y = 0; }
+    this.onGround = p.y <= floor + 0.02;
+    this.inWater = 0;
+    this.surface = w.wl > w.h ? w.wl : -Infinity;
+    this.waterDepth = 0;
+    this.crouching = false;
+    this.sprinting = false;
+  }
+
+  // Kestävyys, terveys, uinnin kulutus ja kamera (joka ruudulla lopuksi).
+  _post(dt, alive) {
+    const p = this.position;
     // --- Uinti kuluttaa kestävyyttä; kun se loppuu, alkaa hukkuminen.
     if (this.inWater === 2 && alive) {
       this.swimTime += dt;
@@ -284,7 +334,7 @@ export class Player {
         if (this.drownTimer >= 1) {
           this.drownTimer -= 1;
           this.hurt(CONFIG.drownPerSec, { cause: 'drown' });
-          if (!this.dead) this.onWater?.('wake', p.x, surface, p.z, 1);
+          if (!this.dead) this.onWater?.('wake', p.x, this.surface, p.z, 1);
         }
       } else {
         this.drowning = Math.max(0, this.drowning - dt * 0.8);
@@ -297,6 +347,7 @@ export class Player {
     }
 
     // --- Kestävyyden ja terveyden palautuminen
+    if (this.god && alive) { this.stamina = CONFIG.staminaMax; this.health = CONFIG.healthMax; }
     if (this.staminaDelay > 0) this.staminaDelay -= dt;
     else this.stamina = Math.min(CONFIG.staminaMax, this.stamina + CONFIG.staminaRegenPerSec * this.staminaRegenMul * dt);
     if (alive) {

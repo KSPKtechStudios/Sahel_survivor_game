@@ -84,6 +84,7 @@ export class Hud {
       const img = el.querySelector('img');
       const count = el.querySelector('.count');
       el.classList.toggle('selected', i === inv.selected);
+      el.classList.toggle('equipped', !!(s && s.eq));
       if (s) {
         img.src = this.icons[s.id] || '';
         img.style.visibility = 'visible';
@@ -166,6 +167,7 @@ export class Hud {
     this.staminaFill.style.width = `${st * 100}%`;
     this.stamina.classList.toggle('full', st >= 0.995);
     this.stamina.classList.toggle('low', st < 0.25);
+    this.stamina.classList.toggle('nocombo', st <= 0.5 && st >= 0.25);
     this.stamina.classList.toggle('out', st <= 0.001 && player.inWater === 2);
 
     // Osuma (punainen reunus), matala terveys sykkii, hukkuminen (sininen).

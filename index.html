@@ -47,7 +47,7 @@
         <div class="bar"><b></b><i></i></div>
         <span class="num"></span>
       </div>
-      <div class="vital st" id="stamina" title="Kestävyys">
+      <div class="vital st" id="stamina" title="Kestävyys (iskusarja jatkuu vain, kun kestävyyttä on yli puolet)">
         <svg class="ico" viewBox="0 0 24 24"><path d="M13.5 2 4 13.5h6.5L9 22l10-12h-6.6z"/></svg>
         <div class="bar"><i></i></div>
       </div>
@@ -101,6 +101,7 @@
     </div>
   </div>
   <div id="drag-cursor"><img alt=""></div>
+  <div id="devtools" class="hidden"></div>
 
   <!-- ===================== Valikon osat (mallit) ===================== -->
   <template id="tpl-scroll">
@@ -189,6 +190,11 @@
           <label class="set-row"><span>Syväterävyys (DOF)</span><input type="checkbox" id="set-dof" class="toggle"><output></output></label>
           <label class="set-row"><span>Tarkkuus</span><input type="range" id="set-scale" min="0.5" max="1" step="0.05"><output id="out-scale"></output></label>
           <label class="set-row"><span>Näytä FPS</span><input type="checkbox" id="set-fps" class="toggle"><output></output></label>
+          <div class="set-head">Äänet</div>
+          <label class="set-row"><span>Äänenvoimakkuus</span><input type="range" id="set-master" min="0" max="1" step="0.05"><output id="out-master"></output></label>
+          <label class="set-row"><span>Musiikki</span><input type="range" id="set-music" min="0" max="1" step="0.05"><output id="out-music"></output></label>
+          <label class="set-row"><span>Äänitehosteet</span><input type="range" id="set-sfx" min="0" max="1" step="0.05"><output id="out-sfx"></output></label>
+          <div class="set-note">Pelissä musiikki soi hiljaa taustalla; päävalikossa normaalisti.</div>
         </div>
       </div>
     </div>
@@ -225,16 +231,13 @@
           <dt>Tab / I</dt><dd>reppu</dd>
           <dt>Q</dt><dd>heitä esine</dd>
           <dt>M</dt><dd>kartta</dd>
+          <dt>F3</dt><dd>kehittäjätyökalut</dd>
         </dl>
       </div>
       <div class="side-card">
-        <h3>Testaus</h3>
+        <h3>Peli</h3>
         <div id="pm-status" class="pm-status"></div>
-        <div class="test-row"><span>Sää</span><div class="btns" id="weather-btns"></div></div>
-        <div class="test-row"><span>Aika</span><div class="btns" id="time-btns"></div></div>
-        <div class="test-row"><span>Siirry</span><div class="btns" id="tp-btns"></div></div>
-        <div class="test-row"><span>Kutsu</span><div class="btns" id="spawn-btns"></div></div>
-        <div class="test-note">Pikanäppäimet: [O] sää, [L] +1 h</div>
+        <div class="test-note">Kehittäjätyökalut (siirtyminen, olennot, esineet, lentäminen, sää, aika): [F3] pelin aikana</div>
       </div>
     </aside>
   </div>

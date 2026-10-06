@@ -89,6 +89,21 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - Pelaaja voi mennä **veteen uimaan**, mutta **jos kestävyys ehtyy, alkaa hukkuminen**.
 - **Ctrl-näppäimestä kyykky.**
 
+## Musiikki, kehittäjätyökalut ja hiominen (käyttäjän kertoma, 2026-10-06, sessio 7)
+- **Komboa pitää rajoittaa:** jatkuva kombottaminen on epäreilua. Käyttäjän ehdotukset: kombo vaatii yli 50 % kestävyydestä, tai kombo kuluttaa kestävyyden nopeasti nollaan (esim. yksi kombo tyhjentää). Toteutettava mieleinen.
+- **Kilpi ei saa olla automaattisesti käytössä**, vaan pelaaja varustaa sen itse.
+- **Savipeikot aamulla:** kun tulee päivä, ne **joutuvat paniikkiin ja syttyvät spontaanisti tuleen** eivätkä vain kuole heti.
+- **F3 avaa kehittäjätyökalut**, joista teleportataan ja kutsutaan asioita. Testityökalut eivät enää ole valikossa vaan kehittäjätyökaluissa. Niissä myös **lentäminen, nopeus, koko kartan paljastus** tms.
+- **Musiikki soi silmukkana biomi- tai tapahtumakohtaisesti** (käyttäjän toimittamat kappaleet):
+  - savannilla **Savannah Dawn**
+  - valtamerellä **Grand Ocean Adventure**
+  - aavikolla / dyyneillä **Caravan of the Desert** (aavikko ja dyynit voi yhdistää yhdeksi aavikkobiomiksi)
+  - päävalikossa **Deep Exploration**
+- **Musiikin on oltava sopivan hiljaista** pelissä: taustaääntä, ei liian kovaa, ja tilaa tuleville äänitehosteille. **Päävalikko on ainoa paikka, jossa musiikki soi normaalilla voimakkuudella.**
+- **Asetuksiin ääniasetukset.**
+- **Biomin musiikki alkaa vähän viiveellä** biomiin astumisen jälkeen, ja siinä on **pitkät häivytykset sisään ja ulos**, ettei musiikki vaihdu hervotonta tahtia biomien välissä.
+- Versio nimetään GitHubissa **Alpha v0.1**:ksi.
+
 ## Teknologia
 - Selaimessa toimiva peli: three.js (WebGL), ei käännösvaihetta. Ks. `DECISIONS.md`.
 - Kohdealusta toistaiseksi tietokoneen selain (hiiri + näppäimistö).
@@ -114,10 +129,13 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - Pahkasika (villieläin) ja savipeikko (yön vihollinen).
 - Uinti kuluttaa kestävyyttä, hukkuminen. Kyykky.
 - Karttamerkkien nimet.
+- Musiikki (päävalikko ja kolme biomia), ääniasetukset.
+- Kehittäjätyökalut [F3].
+- Iskusarjojen rajoitus kestävyydellä, kilven varustaminen, savipeikot palavat aamulla.
 
 ## Paikkamerkit (Clauden valitsemia, voi muuttaa vapaasti)
 - **Maailman koko:** säde 10 km. Spawn-alue n. 2,4 km, tier 1 n. 6 km asti, tier 2 n. 9,3 km asti, sen jälkeen vuoristoreuna. Vuorten takana on läpäisemätön vuoriseinämä, meren puolella virta vie takaisin. Rannikko alkaa n. 8,85 km päästä keskeltä.
-- **Tier 1 -biomit:** Sahelin savanni, Hiekkadyynit, Laterittitasanko (punainen), Kausilampi (vesi), Akasiametsikkö. Spawn-alueella ei ole dyynejä.
+- **Tier 1 -biomit:** Sahelin savanni, Laterittitasanko (punainen), Kausilampi (vesi), Akasiametsikkö sekä dyynikentät, jotka kuuluvat nyt aavikkoon (nimi "Aavikko"). Spawn-alueella ei ole dyynejä.
 - **Tier 2:** Aavikko (valtavat dyynit, keitaat) ja Sademetsä (tiheä: sademetsäpuut, kapokkipuut, tiheiköt, bambu, saniaiset). Aavikko painottuu toiselle puolelle maailmaa ja sademetsä vastakkaiselle (suunta vaihtelee siemenen mukaan).
 - **Ulkoreuna:** Vuoristo aavikon puolella (punertavaa kalliota, lohkareita, vuoristojärviä ja puroja), meri ja hiekkarannat sademetsän puolella.
 - **Maailman esineet:** akasia, kapokkipuu, sademetsäpuu, palmu, baobab (ei kaadettava), kuollut puu, kuivunut pensas, tiheikkö, bambu, saniainen, kandelaaberipuu, tumbleweed, risu, kivi, lohkare, kalliomuodostelma, kalliotorni, termiittikeko, ruoho, aluskasvillisuus, ruoko.
@@ -129,7 +147,13 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - **Kestävyys (stamina):** kuluu juostessa, hypätessä ja lyödessä.
 - **Hahmo:** tummaihoinen käsi ja indigonsininen hiha (koska peli sijoittuu Burkina Fasoon).
 - **Valikon fontit:** Eagle Lake (otsikko), Permanent Marker (napit), Alegreya (teksti).
-- **Ohjaimet:** WASD, Shift, välilyönti, Ctrl/C (kyykky päälle/pois), hiiri 1 (lyö, sarjat), hiiri 2 (torju / aseta), E, Q (heitä esine), 1–8, Tab/I, M, Esc.
+- **Ohjaimet:** WASD, Shift, välilyönti, Ctrl/C (kyykky päälle/pois), hiiri 1 (lyö, sarjat), hiiri 2 (torju / aseta / varusta kilpi), E, Q (heitä esine), 1–8, Tab/I, M, F3 (kehittäjätyökalut), Esc.
+- **Iskusarjojen rajoitus:** sarja jatkuu vain yli 50 %:n kestävyydellä; sarjan iskut: nuija 10 + 15 + 24, viidakkoveitsi 8 + 14 + 24, nyrkit 4 + 12 kestävyyttä.
+- **Kilpi:** varustetaan hiiren oikealla (kilpi valittuna) tai hiiren oikealla repussa.
+- **Savipeikko aamulla:** paniikki 0,5–1,4 s, palaa 3,5–6 s, palaneista ei saalista.
+- **Musiikin voimakkuudet:** kappaleet tasattu −16 LUFS:iin; valikko täysi, peli −12 dB. Oletukset: äänenvoimakkuus 100 %, musiikki 80 %, äänitehosteet 100 %.
+- **Musiikin ajoitus:** viive 8 s (pelin alussa 4 s), häivytys 8 s, tauko 2,5 s, voimistuminen 10 s, vähintään 45 s ennen vaihtoa, musiikittomalle alueelle 15 s.
+- **Musiikki biomeittain:** savanni = Sahelin savanni, laterittitasanko, kausilampi, akasiametsikkö; aavikko = aavikko, dyynit, keitaat; meri = meri. Sademetsä, vuoristo ja ranta ilman musiikkia.
 - **Terveys:** 100, palautuu 1,5 / s, kun osumasta on 6 s. Kuollessa herätään maailman aloituspaikasta, reppu säilyy.
 - **Kestävyys:** 100; juoksu 14 / s, hyppy 10, iskut 4–13, uinti 4,5 / s (paikallaan 1,5 / s). Hukkuminen 9 terveyttä / s, kun kestävyys on loppu syvässä vedessä.
 - **Kyykky:** silmät 1,08 m (seisten 1,65 m), nopeus puolet, eläimet huomaavat 45 % lähempää.
@@ -156,6 +180,8 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - **Vuoristo:** kalliomuodostelmat, kalliotornit, lohkareet, kandelaaberipuut (euphorbia), kerrostuneet kallion värit.
 
 ## Avoimet kysymykset
+- Mihin **Hiekan jäljet** -kappale laitetaan? (Se oli liitteissä, mutta ei luettelossa.)
+- Soiko sademetsässä, vuoristossa, rannalla, yöllä tai taistelussa jokin musiikki (käyttäjä toimittaa)?
 - Mitä meren takana on (nyt virta vie takaisin)? Pitäisikö merellä voida liikkua veneellä?
 - Voiko veden alle sukeltaa? (Uinti kuluttaa nyt kestävyyttä, ja sen loputtua alkaa hukkuminen.)
 - Pitäisikö vesistöissä olla kaloja tai muuta elämää (kalastus)?

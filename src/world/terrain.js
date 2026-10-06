@@ -35,7 +35,9 @@ export const WATER_LEVEL = CONFIG.waterLevel;
 // Biomien nimet näkyvät minikartassa. Värit (sRGB) ovat karttoja varten.
 export const BIOMES = {
   savanna: { name: 'Sahelin savanni', map: '#b89a60' },
-  dunes: { name: 'Hiekkadyynit', map: '#dcb36f' },
+  // Dyynit on yhdistetty aavikkoon (sama nimi, väri ja musiikki); maaston
+  // muoto lasketaan edelleen omana painonaan.
+  dunes: { name: 'Aavikko', map: '#e6bd84' },
   laterite: { name: 'Laterittitasanko', map: '#94502f' },
   mare: { name: 'Kausilampi', map: '#7a7448' },
   woodland: { name: 'Akasiametsikkö', map: '#9a8a52' },
@@ -731,6 +733,12 @@ export function biomeOf(sample) {
     if (sample[k] > bestW) { bestW = sample[k]; best = k; }
   }
   return best;
+}
+
+// Biomi pelaajalle näytettävänä (nimi, musiikki): dyynit kuuluvat aavikkoon.
+export function displayBiome(sample) {
+  const b = biomeOf(sample);
+  return b === 'dunes' ? 'desert' : b;
 }
 
 export function biomeAt(x, z) {

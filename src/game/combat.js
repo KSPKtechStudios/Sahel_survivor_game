@@ -1,6 +1,8 @@
 // Taistelu: iskusarjat (kombot) [Hiiri 1], torjunta [Hiiri 2], täydellinen
 // torjunta (parry) heti torjunnan alussa, tönäisyt ja osumat olentoihin.
 // Jos isku ei osu olentoon, se hakkaa maailmaa kuten ennen (interaction.js).
+// Sarja jatkuu vain, kun kestävyyttä on yli puolet (COMBO_MIN), ja sarjan
+// iskut ovat kalliita: täydellä kestävyydellä ehtii yhden sarjan.
 //
 // HUOM: arvot ovat prototyypin paikkamerkkejä (ks. docs/DESIGN.md).
 import * as THREE from 'three';
@@ -16,7 +18,7 @@ export const WEAPONS = {
   fist: {
     name: 'Nyrkit', block: 'fist', reach: 1.9, combo: [
       { anim: 'punch', dur: 0.36, hitAt: 0.42, chain: 0.6, dmg: 4, kb: 2.5, stam: 4, arc: 0.6 },
-      { anim: 'hook', dur: 0.42, hitAt: 0.45, chain: 0.75, dmg: 6, kb: 4.5, stam: 5, arc: 0.75 },
+      { anim: 'hook', dur: 0.42, hitAt: 0.45, chain: 0.75, dmg: 6, kb: 4.5, stam: 12, arc: 0.75 },
     ],
   },
   stick: {
@@ -36,16 +38,16 @@ export const WEAPONS = {
   },
   club: {
     name: 'Puunuija', block: 'weapon', reach: 2.5, combo: [
-      { anim: 'slashR', dur: 0.55, hitAt: 0.5, chain: 0.64, dmg: 11, kb: 5, stam: 8, arc: 0.85, multi: true },
-      { anim: 'slashL', dur: 0.55, hitAt: 0.5, chain: 0.64, dmg: 11, kb: 5, stam: 8, arc: 0.85, multi: true },
-      { anim: 'smash', dur: 0.85, hitAt: 0.6, chain: 0.92, dmg: 24, kb: 9, up: 3, stam: 13, arc: 0.55, stagger: 1.0, heavy: true },
+      { anim: 'slashR', dur: 0.55, hitAt: 0.5, chain: 0.64, dmg: 11, kb: 5, stam: 10, arc: 0.85, multi: true },
+      { anim: 'slashL', dur: 0.55, hitAt: 0.5, chain: 0.64, dmg: 11, kb: 5, stam: 15, arc: 0.85, multi: true },
+      { anim: 'smash', dur: 0.85, hitAt: 0.6, chain: 0.92, dmg: 24, kb: 9, up: 3, stam: 24, arc: 0.55, stagger: 1.0, heavy: true },
     ],
   },
   machete: {
     name: 'Viidakkoveitsi', block: 'weapon', reach: 2.4, combo: [
-      { anim: 'slashR', dur: 0.36, hitAt: 0.5, chain: 0.62, dmg: 9, kb: 2.5, stam: 5, arc: 0.9, multi: true },
-      { anim: 'slashL', dur: 0.36, hitAt: 0.5, chain: 0.62, dmg: 9, kb: 2.5, stam: 5, arc: 0.9, multi: true },
-      { anim: 'thrust', dur: 0.46, hitAt: 0.48, chain: 0.9, dmg: 17, kb: 5, stam: 8, arc: 0.35, reach: 0.5, stagger: 0.5 },
+      { anim: 'slashR', dur: 0.36, hitAt: 0.5, chain: 0.62, dmg: 9, kb: 2.5, stam: 8, arc: 0.9, multi: true },
+      { anim: 'slashL', dur: 0.36, hitAt: 0.5, chain: 0.62, dmg: 9, kb: 2.5, stam: 14, arc: 0.9, multi: true },
+      { anim: 'thrust', dur: 0.46, hitAt: 0.48, chain: 0.9, dmg: 17, kb: 5, stam: 24, arc: 0.35, reach: 0.5, stagger: 0.5 },
     ],
   },
 };
@@ -60,6 +62,7 @@ export const BLOCKS = {
 };
 
 const COMBO_RESET = 0.55; // näin pitkän tauon jälkeen sarja alkaa alusta
+export const COMBO_MIN = 0.5; // sarjan jatkaminen vaatii yli puolet kestävyydestä
 const BUFFER = 0.35;      // ennakkoon painettu isku muistetaan näin kauan
 const _dir = new THREE.Vector3();
 const _hits = [];
@@ -78,6 +81,7 @@ export class Combat {
     this.attacking = null;   // käynnissä olevan iskun tiedot
     this.stun = 0;           // torjunnan murtuminen: ei voi lyödä eikä torjua
     this.elapsed = 0;
+    this.comboMsgT = 0;      // ilmoitus "kestävyys ei riitä sarjaan" harvoin
   }
 
   weaponKey(def) {
@@ -87,12 +91,9 @@ export class Combat {
     return 'fist';
   }
 
+  // Kilpi on käytössä vain, kun se on varustettu (ks. Inventory.toggleEquip).
   hasShield() {
-    for (let i = 0; i < CONFIG.hotbarSize; i++) {
-      const s = this.inventory.slots[i];
-      if (s && ITEMS[s.id].shield) return true;
-    }
-    return false;
+    return this.inventory.equippedShield() >= 0;
   }
 
   reset() {
@@ -115,6 +116,7 @@ export class Combat {
     const shield = this.hasShield();
     vm.setShield(shield);
     this.stun = Math.max(0, this.stun - dt);
+    this.comboMsgT = Math.max(0, this.comboMsgT - dt);
     this.sinceAttack += dt;
     if (this.attacking && !vm.action) this.attacking = null;
 
@@ -123,8 +125,9 @@ export class Combat {
     const weapon = WEAPONS[wkey];
     this.blockType = shield ? 'shield' : weapon.block;
 
-    // --- Torjunta [Hiiri 2] (paitsi kun kädessä on asetettava esine)
-    const wantBlock = can && this.stun <= 0 && input.buttons.has(2) && !(def && def.place);
+    // --- Torjunta [Hiiri 2] (paitsi kun kädessä on asetettava esine tai
+    // varustamaton kilpi: silloin hiiren oikea asettaa / varustaa)
+    const wantBlock = can && this.stun <= 0 && input.buttons.has(2) && !(def && def.place) && !(def && def.shield && !shield);
     if (wantBlock && !this.blocking) {
       const a = vm.action;
       // Iskun alkuvaihetta ei voi perua, palautumisen voi.
@@ -151,11 +154,20 @@ export class Combat {
       if (this.comboWeapon !== wkey) { this.comboIdx = 0; this.comboWeapon = wkey; }
       const a = vm.action;
       const cur = this.attacking;
+      const comboOk = player.stamina > COMBO_MIN * CONFIG.staminaMax;
       let start = false;
       if (!a) start = true;
-      else if (cur && a === cur.action && a.hitDone && a.t >= cur.step.chain) start = true;
+      else if (cur && a === cur.action && a.hitDone && a.t >= cur.step.chain) {
+        // Sarjan seuraava isku heti, jos kestävyys riittää; muuten odotetaan,
+        // että isku päättyy, ja aloitetaan alusta.
+        if (this.comboIdx > 0 && !comboOk) {
+          this._comboDenied(weapon);
+          this.comboIdx = 0;
+        } else start = true;
+      }
       if (start) {
         if (!cur && this.sinceAttack > COMBO_RESET) this.comboIdx = 0;
+        if (this.comboIdx > 0 && !comboOk) { this._comboDenied(weapon); this.comboIdx = 0; }
         const step = weapon.combo[this.comboIdx % weapon.combo.length];
         if (!player.useStamina(step.stam)) {
           events.emit('message', { text: 'Olet liian väsynyt' });
@@ -177,6 +189,12 @@ export class Combat {
     // Torjuessa ja lyödessä liikutaan hitaammin; torjuessa kestävyys palautuu hitaasti.
     player.moveMul = this.blocking ? 0.5 : this.attacking ? (this.attacking.step.heavy ? 0.55 : 0.8) : 1;
     player.staminaRegenMul = this.blocking ? 0.35 : 1;
+  }
+
+  _comboDenied(weapon) {
+    if (weapon.combo.length < 2 || this.comboMsgT > 0) return;
+    this.comboMsgT = 8;
+    events.emit('message', { text: 'Sarjaan tarvitaan yli puolet kestävyydestä' });
   }
 
   // Iskun osumahetki: ensin olennot kaaressa, muuten maailma (hakkuu).

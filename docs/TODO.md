@@ -1,6 +1,9 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä luo GitHubiin julkaisun **Alpha v0.1** (tagi `alpha-v0.1`, commit 03a2b3b); tagin pushaus oli estetty tästä ympäristöstä
+- [ ] Käyttäjä testaa musiikin (voimakkuudet, viiveet, häivytykset), ääniasetukset, kehittäjätyökalut [F3], kombojen rajoituksen, kilven varustamisen ja palavat savipeikot
+- [ ] Vastaus: mihin Hiekan jäljet -kappale; musiikki sademetsään, vuoristoon, rannalle, yöhön tai taisteluun?
 - [ ] Käyttäjä testaa taistelun (iskusarjat nuijalla ja viidakkoveitsellä, torjunta, parry, tönäisyt), pahkasian, savipeikot yöllä, uinnin ja hukkumisen, kyykyn, karttamerkkien nimet sekä korjatut joet, aallot ja DOF:n
 - [ ] Vastaus: mihin liha, nahka ja savi; mistä viidakkoveitsi; mitä kuollessa tapahtuu (reppu, herätyspaikka)?
 - [ ] Käyttäjä kertoo, pyöriikö peli sujuvasti (varjokaskadit ja jälkikäsittely lisäävät näytönohjaimen työtä)
@@ -11,7 +14,7 @@
 - [ ] Vastaus: mitä maailman reunan takana on (nyt läpäisemättömät vuoret)?
 - [ ] Vastaus: valikon tausta maalauksena (mallikuva ilman logoa/nappeja) vai elävä 3D-maailma (nyt)?
 - [ ] Vastaukset muihin avoimiin kysymyksiin (`DESIGN.md`): selviytymismittarit, eläimet/viholliset, rakentaminen, hahmo
-- [ ] Musiikki ja ambient-äänet (käyttäjä toimittaa)
+- [ ] Ambient-äänet ja äänitehosteet (käyttäjä toimittaa; musiikki tehty sessiossa 7)
 
 ## Seuraavaksi (ehdotuksia)
 - [ ] Äänet osumiin, torjuntaan ja olentoihin (kun käyttäjä toimittaa äänet)
@@ -38,6 +41,9 @@
 - [ ] Päätä lopullinen nimi (Sahel vai jokin muu)
 
 ## Valmis
+- [x] Musiikki (päävalikko, savanni, aavikko, meri) viiveillä ja häivytyksillä, ääniasetukset (2026-10-06, sessio 7)
+- [x] Kehittäjätyökalut [F3]: lentäminen, nopeus, kuolemattomuus, siirtyminen, olennot, esineet, sää, aika, koko kartta (2026-10-06, sessio 7)
+- [x] Iskusarjojen rajoitus, kilven varustaminen, savipeikot palavat aamulla, dyynit yhdistetty aavikkoon (2026-10-06, sessio 7)
 - [x] Korjaukset käyttäjän palautteesta: DOF hienovaraisemmaksi, huojunta myös tyynellä, jokien penkereet, meren aallot (2026-10-06, sessio 6)
 - [x] Terveys ja kestävyys, kuolema ja herääminen, uinti ja hukkuminen, kyykky (2026-10-06, sessio 6)
 - [x] Taistelu: iskusarjat, torjunta, parry, tönäisyt; puunuija, viidakkoveitsi, puukilpi (2026-10-06, sessio 6)

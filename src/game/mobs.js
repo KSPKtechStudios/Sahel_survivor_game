@@ -5,10 +5,12 @@
 // tulee lähelle (kyykyssä pääsee lähemmäs); lyötynä hyökkää takaisin ja
 // pakenee haavoittuneena.
 // Savipeikko: heikko vihamielinen olento, joka nousee maasta öisin missä
-// tahansa biomissa ja murenee aamulla.
+// tahansa biomissa. Aamulla se joutuu paniikkiin, syttyy itsestään palamaan,
+// juoksee liekeissä sinne tänne ja palaa lopuksi tuhkaksi.
 import * as THREE from 'three';
 import { waterAt, sampleTerrain, insideStructure } from '../world/terrain.js';
 import { makeWarthog, makeClayGolem } from '../models/creatures.js';
+import { createFlameTexture } from '../render/textures.js';
 import { events } from './events.js';
 
 export const MOB_TYPES = {
@@ -34,6 +36,25 @@ const _s = {};
 const _cols = [];
 const _v = new THREE.Vector3();
 const _m = new THREE.Matrix4();
+const _w = new THREE.Vector3();
+
+// Hiiltynyt versio geometriasta (palanut savipeikko murenee mustina paloina).
+const charred = new Map();
+function charredGeometry(geo) {
+  let g = charred.get(geo);
+  if (!g) {
+    g = geo.clone();
+    const c = g.attributes.color;
+    if (c) {
+      for (let i = 0; i < c.count; i++) {
+        const k = 0.16 + ((i * 2654435761) % 997) / 997 * 0.1;
+        c.setXYZ(i, c.getX(i) * k + 0.03, c.getY(i) * k + 0.025, c.getZ(i) * k + 0.02);
+      }
+    }
+    charred.set(geo, g);
+  }
+  return g;
+}
 
 // Mallit rakennetaan kerran (3 muunnelmaa / laji) ja kopioidaan jaetuilla
 // geometrioilla; joka olennolla on oma materiaali (osumavälähdys).
@@ -72,10 +93,14 @@ function smooth(t) {
 }
 
 export class Mobs {
-  constructor({ scene, world, drops, debris, bursts, player, env, structures }) {
-    Object.assign(this, { scene, world, drops, debris, bursts, player, env, structures });
+  constructor({ scene, world, drops, debris, bursts, player, env, structures, fire }) {
+    Object.assign(this, { scene, world, drops, debris, bursts, player, env, structures, fire });
     this.list = [];
     this.eyeMaterial = new THREE.MeshBasicMaterial({ color: 0xffb347 });
+    this.flameMat = new THREE.SpriteMaterial({
+      map: createFlameTexture(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: true,
+    });
+    this.fires = []; // palavat olennot nuotioiden valoille (structures.extraFires)
     this.spawnTimer = 3;
     this.clayTimer = 6;
     this.combat = null; // asetetaan main.js:ssä (osumat pelaajaan)
@@ -122,7 +147,8 @@ export class Mobs {
       phase: Math.random() * 6,
       stuckT: 0, detourT: 0, detour: 0,
       deadT: 0,
-      crumbleAt: -1,
+      panicAt: -1,           // aamu: milloin paniikki alkaa
+      burning: false, burnT: 0, burnDur: 0, flames: null,
       yOff: emerge ? -1.4 : 0,
     };
     model.group.position.copy(m.pos);
@@ -140,6 +166,7 @@ export class Mobs {
 
   clear() {
     for (const m of this.list.slice()) this.remove(m);
+    this.fires.length = 0;
     this.spawnTimer = 3;
     this.clayTimer = 6;
   }
@@ -189,7 +216,7 @@ export class Mobs {
 
   // Vahinko olentoon. opts: { fromX, fromZ, knock, up, stagger }
   damage(m, amount, opts = {}) {
-    if (m.state === 'dead' || m.state === 'crumble') return false;
+    if (m.state === 'dead') return false;
     if (m.vulnerable) amount *= 1.5;
     m.hp -= amount;
     m.flash = 1;
@@ -209,7 +236,7 @@ export class Mobs {
         if (m.state !== 'windup' && m.state !== 'attack' && m.state !== 'stagger') this._set(m, 'chase');
       }
     }
-    if (m.state === 'emerge') return true;
+    if (m.state === 'emerge' || m.state === 'panic') return true;
     const st = opts.stagger || (amount >= def.poise ? 0.45 : 0);
     if (st > 0) this.stagger(m, st, false);
     return true;
@@ -217,7 +244,7 @@ export class Mobs {
 
   // Horjahdus: keskeyttää hyökkäyksen. Parryn jälkeen olento on haavoittuvainen.
   stagger(m, dur, vulnerable) {
-    if (m.state === 'dead' || m.state === 'crumble' || m.state === 'emerge') return;
+    if (m.state === 'dead' || m.state === 'panic' || m.state === 'emerge') return;
     m.staggerDur = dur;
     m.vulnerable = !!vulnerable;
     this._set(m, 'stagger');
@@ -249,7 +276,7 @@ export class Mobs {
     }
     events.emit('mobKilled', { type: m.type });
     if (m.type === 'clay') {
-      this._shatter(m);
+      this._shatter(m, m.burning);
       this.remove(m);
       return;
     }
@@ -258,18 +285,72 @@ export class Mobs {
     m.deathSide = Math.random() < 0.5 ? -1 : 1;
   }
 
-  // Savipeikko murenee paloiksi.
-  _shatter(m) {
+  // Savipeikko murenee paloiksi (palanut: mustiksi hiiliksi ja tuhkaksi).
+  _shatter(m, burnt = false) {
     m.model.group.updateMatrixWorld(true);
     let seed = 1;
     m.model.group.traverse((o) => {
       if (!o.isMesh || o.material === this.eyeMaterial) return;
       _m.copy(o.matrixWorld);
-      this.debris.shatter(o.geometry, _m, { pieces: 5, inner: 0x6e3018, power: 1.6, life: 2.2, seed: seed++, up: 0.6 });
+      const geo = burnt ? charredGeometry(o.geometry) : o.geometry;
+      this.debris.shatter(geo, _m, { pieces: 5, inner: burnt ? 0x2a2420 : 0x6e3018, power: burnt ? 1.1 : 1.6, life: burnt ? 2.8 : 2.2, seed: seed++, up: 0.6 });
     });
     _v.copy(m.pos);
     _v.y += 0.6;
-    this.bursts.spawn(_v, 0xa0603a, 16, 1.4);
+    if (burnt) {
+      this.bursts.spawn(_v, 0x5a5550, 22, 1.2);
+      if (this.fire) {
+        for (let i = 0; i < 14; i++) this.fire.smokePuff(m.pos.x, m.pos.y + 0.3 + Math.random() * 0.6, m.pos.z, 0.45, 1.4);
+        for (let i = 0; i < 10; i++) this.fire.ember(m.pos.x, m.pos.y + 0.5, m.pos.z);
+      }
+    } else {
+      this.bursts.spawn(_v, 0xa0603a, 16, 1.4);
+    }
+  }
+
+  // Aamu: savipeikko syttyy palamaan (leimahdus ja liekit vartaloon).
+  _ignite(m) {
+    m.burning = true;
+    m.burnT = 0;
+    m.burnDur = 3.5 + Math.random() * 2.5;
+    const md = m.model;
+    m.flames = [];
+    const spots = [[md.torso, 0, 0.22, 0.02, 1], [md.torso, 0.1, 0.4, -0.04, 0.8], [md.torso, -0.1, 0.38, 0.03, 0.85], [md.head, 0, 0.16, 0, 0.75]];
+    for (const [parent, x, y, z, s] of spots) {
+      const f = new THREE.Sprite(this.flameMat);
+      f.position.set(x, y, z);
+      f.scale.set(0.01, 0.01, 1);
+      f.userData = { s, y, seed: Math.random() * 10 };
+      parent.add(f);
+      m.flames.push(f);
+    }
+    if (this.fire) this.fire.burst(m.pos.x, m.pos.y + 0.7, m.pos.z, 0.35, 34);
+    events.emit('mobIgnite', { type: m.type });
+  }
+
+  // Palon tehosteet joka ruudulla: liekit, kipinät, savu, hiiltyminen.
+  _burnFx(m, dt, elapsed) {
+    const md = m.model;
+    const k = Math.min(1, m.burnT / m.burnDur);
+    const grow = Math.min(1, m.burnT / 0.5);
+    // Hiiltyy vähitellen; hehkuu oranssina ja lepattaa.
+    const flick = 0.75 + Math.sin(elapsed * 23 + m.phase) * 0.15 + Math.sin(elapsed * 37) * 0.1;
+    md.material.color.setScalar(1 - 0.78 * k);
+    md.material.emissive.setRGB(0.9 * flick * (1 - 0.4 * k), 0.32 * flick * (1 - 0.5 * k), 0.06);
+    for (const f of m.flames) {
+      const u = f.userData;
+      const t = elapsed * 9 + u.seed;
+      const q = (0.85 + Math.sin(t) * 0.12 + Math.sin(t * 2.3) * 0.08) * grow * u.s * (1 - 0.35 * k);
+      f.scale.set(0.42 * q, 0.75 * q, 1);
+      f.position.y = u.y + 0.75 * q * 0.3;
+    }
+    if (!this.fire) return;
+    // Hiukkaset maailman koordinaateissa vartalon kohdalta
+    md.torso.getWorldPosition(_w);
+    const n = Math.floor((dt * 55 + Math.random()) * grow);
+    for (let i = 0; i < n; i++) this.fire.flames(_w.x, _w.y + 0.15 + Math.random() * 0.4, _w.z, 0.22, 1.1 - 0.4 * k);
+    if (Math.random() < dt * 9) this.fire.ember(_w.x, _w.y + 0.4, _w.z);
+    if (Math.random() < dt * 10) this.fire.smokePuff(_w.x, _w.y + 0.7, _w.z, 0.2, 1 + k * 0.5);
   }
 
   update(dt, elapsed) {
@@ -297,12 +378,18 @@ export class Mobs {
     for (const m of this.list.slice()) {
       const d = Math.hypot(m.pos.x - p.x, m.pos.z - p.z);
       if (d > DESPAWN[m.type]) { this.remove(m); continue; }
-      // Aamulla savipeikot murenevat (eri aikaan).
-      if (m.type === 'clay' && this.env.daylight > 0.25 && m.state !== 'crumble' && m.state !== 'dead') {
-        if (m.crumbleAt < 0) m.crumbleAt = elapsed + Math.random() * 5;
-        else if (elapsed >= m.crumbleAt) this._set(m, 'crumble');
+      // Aamulla savipeikot joutuvat paniikkiin ja syttyvät palamaan (eri aikaan).
+      if (m.type === 'clay' && this.env.daylight > 0.18 && m.state !== 'panic' && m.state !== 'dead') {
+        if (m.panicAt < 0) m.panicAt = elapsed + Math.random() * 3.5;
+        else if (elapsed >= m.panicAt) {
+          this._set(m, 'panic');
+          m.igniteAt = 0.5 + Math.random() * 0.9;
+          m.panicT = 0;
+        }
       }
     }
+    // Palavat olennot valaisevat ympäristöään (nuotioiden valot jaetaan).
+    this.fires.length = 0;
 
     // --- Tekoäly, liike ja animaatio
     for (const m of this.list.slice()) {
@@ -313,7 +400,12 @@ export class Mobs {
         this._physics(m, dt);
       }
       this._animate(m, dt, elapsed);
+      if (m.burning) {
+        this._burnFx(m, dt, elapsed);
+        this.fires.push({ x: m.pos.x, y: m.pos.y, z: m.pos.z, seed: m.phase * 10 });
+      }
     }
+    if (this.structures) this.structures.extraFires = this.fires;
   }
 
   // --- Syntyminen -----------------------------------------------------------
@@ -536,10 +628,25 @@ export class Mobs {
         this._steer(m, 0, 0, 0, dt);
         if (m.stateT >= m.staggerDur) this._set(m, 'chase');
         break;
-      case 'crumble':
-        this._steer(m, 0, 0, 0, dt);
-        if (m.stateT > 0.8) { this._shatter(m); this.remove(m); }
+      case 'panic': {
+        // Paniikki: juoksee sinne tänne; syttyy hetken päästä palamaan ja
+        // palaa lopulta tuhkaksi.
+        m.yOff = Math.min(0, m.yOff + dt * 2.5);
+        m.panicT -= dt;
+        if (m.panicT <= 0) {
+          m.panicT = 0.3 + Math.random() * 0.5;
+          m.panicDir = Math.random() * Math.PI * 2;
+        }
+        this._steer(m, Math.sin(m.panicDir), Math.cos(m.panicDir), def.run * (m.burning ? 1.3 : 1.05), dt);
+        if (!m.burning) {
+          if (this.fire && Math.random() < dt * 5) this.fire.smokePuff(m.pos.x, m.pos.y + 1.1, m.pos.z, 0.15, 0.6);
+          if (m.stateT >= m.igniteAt) this._ignite(m);
+        } else {
+          m.burnT += dt;
+          if (m.burnT >= m.burnDur) { this._shatter(m, true); this.remove(m); }
+        }
         break;
+      }
       default:
         this._set(m, 'wander', 1);
     }
@@ -675,7 +782,7 @@ export class Mobs {
     md.group.position.set(m.pos.x, m.pos.y + m.yOff, m.pos.z);
     md.group.rotation.y = m.yaw;
     m.flash *= Math.exp(-dt * 9);
-    md.material.emissive.setRGB(m.flash * 0.85, m.flash * 0.22, m.flash * 0.12);
+    if (!m.burning) md.material.emissive.setRGB(m.flash * 0.85, m.flash * 0.22, m.flash * 0.12);
     const speed = Math.hypot(m.vel.x, m.vel.z);
     m.phase += speed * dt * (m.type === 'warthog' ? 4.4 : 3.2);
     if (m.type === 'warthog') this._animWarthog(m, md, speed, dt, elapsed);
@@ -749,10 +856,16 @@ export class Mobs {
     } else if (s === 'stagger') {
       armL = 0.6; armR = 0.4;
       lean = -0.15 + Math.sin(m.stateT * 18) * 0.06;
-    } else if (s === 'emerge' || s === 'crumble') {
+    } else if (s === 'emerge') {
       lean = 0.2 + Math.sin(elapsed * 30) * 0.05;
       armL = -0.4 + Math.sin(elapsed * 23) * 0.2;
       armR = -0.4 + Math.sin(elapsed * 27) * 0.2;
+    } else if (s === 'panic') {
+      // Huitoo käsillä pään yllä ja vapisee
+      lean = 0.15 + Math.sin(elapsed * 17 + m.phase) * 0.12;
+      armL = -2.3 + Math.sin(elapsed * 19 + m.phase) * 0.9;
+      armR = -2.3 + Math.sin(elapsed * 21 + m.phase + 2) * 0.9;
+      armZ = 0.3 + Math.sin(elapsed * 13) * 0.2;
     } else {
       armL += Math.sin(elapsed * 1.7 + m.phase) * 0.05;
       armR += Math.sin(elapsed * 1.9 + m.phase) * 0.05;
@@ -764,6 +877,7 @@ export class Mobs {
     md.torso.rotation.x += (lean - md.torso.rotation.x) * Math.min(1, dt * 10);
     md.torso.position.y = 0.5 + Math.abs(Math.sin(ph)) * 0.03 * Math.min(1, speed);
     md.head.rotation.x = -0.25 + Math.sin(elapsed * 2.1 + m.phase) * 0.05;
+    md.head.rotation.y = s === 'panic' ? Math.sin(elapsed * 14 + m.phase) * 0.6 : 0;
     // Silmien hehku sykkii hiukan
     const glow = 1 + Math.sin(elapsed * 5 + m.phase) * 0.12 + (s === 'windup' ? 0.35 : 0);
     for (const e of md.eyes) e.scale.setScalar(glow);
