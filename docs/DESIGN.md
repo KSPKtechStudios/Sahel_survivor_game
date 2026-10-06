@@ -58,6 +58,18 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - Biomeja hiotaan paljon: **sademetsän pitää olla tiheä ja vaikeakulkuinen** (ei harva ja savannimainen), myös vuoristoa ja muita biomeja parannetaan.
 - Valikon animaatioiden sekä käden juoksu- ja työkaluanimaatioiden pitää olla **pehmeämpiä** (eivät saa nykiä).
 
+## Vesistöt, meri ja veden fysiikka (käyttäjän kertoma, 2026-10-06, sessio 5)
+- Biomeissa saa olla **enemmän sisältöä**, ja **maastonmuotoja** saa olla enemmän.
+- **Sademetsään** (kosteampi biomi) **lampia, järviä, jokia ja puroja**.
+- **Saheliin** voi **joskus todella harvoin** tulla **pieniä jokia**, mutta ei liikaa, koska alue on kuiva.
+- **Vuoristoon** saa tulla **vuoristojärviä** ja **puroja**.
+- **Uusi biomi: meri / valtameri** (nimi vapaa).
+- Veden fysiikka "niin kuin vesi oikeasti toimii": **vedessä on aaltoja**, ja **meressä ne kasvavat sään mukaan**. Kun pelaaja **hyppää** tai **menee veteen** tai **heittää sinne esineen**, tulee **molskahdus** ja siitä lähtee **aaltoja**.
+
+## Grafiikka (käyttäjän kertoma, 2026-10-06, sessio 5)
+- **Kunnon realistiset varjot**, **ilmakehä (atmosfääri)**, **god rays** ja valonsäteet.
+- Asetuksiin mahdollisuus **liike-epäterävyydelle (motion blur)** ja **syväterävyydelle (DOF)**.
+
 ## Teknologia
 - Selaimessa toimiva peli: three.js (WebGL), ei käännösvaihetta. Ks. `DECISIONS.md`.
 - Kohdealusta toistaiseksi tietokoneen selain (hiiri + näppäimistö).
@@ -75,12 +87,15 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - Tutkittava kartta: minikartta piirtyy kuljetusta alueesta, iso kartta [M] merkkeineen.
 - Rakennelmat (kivikehät, leirit, talon ja kylän rauniot) ja arkut saaliineen, arvoesineet.
 - Tiheä sademetsä, keitaat, uusittu vuoristo.
+- Meri ja hiekkarannat, joet ja purot, järvet ja lammet; graniittikalliot ja pöytävuoret.
+- Vesi: aallot (meressä sään mukaan), väreily, roiskeet, kelluvat ja uppoavat esineet, uinti aaltojen mukana, esineen heitto [Q].
+- Grafiikka: kaskadoidut varjot, valonsäteet, ilmakehän hehku ja sironta, DOF ja liike-epäterävyys (asetuksista).
 
 ## Paikkamerkit (Clauden valitsemia, voi muuttaa vapaasti)
-- **Maailman koko:** säde 10 km. Spawn-alue n. 2,4 km, tier 1 n. 6 km asti, tier 2 n. 9,3 km asti, sen jälkeen vuoristoreuna. Reunan takana on läpäisemätön vuoriseinämä.
+- **Maailman koko:** säde 10 km. Spawn-alue n. 2,4 km, tier 1 n. 6 km asti, tier 2 n. 9,3 km asti, sen jälkeen vuoristoreuna. Vuorten takana on läpäisemätön vuoriseinämä, meren puolella virta vie takaisin. Rannikko alkaa n. 8,85 km päästä keskeltä.
 - **Tier 1 -biomit:** Sahelin savanni, Hiekkadyynit, Laterittitasanko (punainen), Kausilampi (vesi), Akasiametsikkö. Spawn-alueella ei ole dyynejä.
 - **Tier 2:** Aavikko (valtavat dyynit, keitaat) ja Sademetsä (tiheä: sademetsäpuut, kapokkipuut, tiheiköt, bambu, saniaiset). Aavikko painottuu toiselle puolelle maailmaa ja sademetsä vastakkaiselle (suunta vaihtelee siemenen mukaan).
-- **Ulkoreuna:** Vuoristo (punertavaa kalliota, lohkareita).
+- **Ulkoreuna:** Vuoristo aavikon puolella (punertavaa kalliota, lohkareita, vuoristojärviä ja puroja), meri ja hiekkarannat sademetsän puolella.
 - **Maailman esineet:** akasia, kapokkipuu, sademetsäpuu, palmu, baobab (ei kaadettava), kuollut puu, kuivunut pensas, tiheikkö, bambu, saniainen, kandelaaberipuu, tumbleweed, risu, kivi, lohkare, kalliomuodostelma, kalliotorni, termiittikeko, ruoho, aluskasvillisuus, ruoko.
 - **Hakkaaminen:** akasia 5 iskua + runko 4, kapokkipuu 8 + 6, sademetsäpuu 6 + 4, palmu 4 + 3, kuollut puu 3 (kirves), lohkare 4 (hakku), pensas/tiheikkö 3, bambu 4, saniainen 2 (kirves 2x). Lovi tulee aina samaan kaatokohtaan sille puolelle, josta lyödään.
 - **Kaatumissuunta:** satunnainen, mutta jos se osoittaisi suoraan pelaajaa kohti, suunta käännetään (ettei puu kaadu päälle).
@@ -90,7 +105,15 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - **Kestävyys (stamina):** kuluu juostessa, hypätessä ja lyödessä.
 - **Hahmo:** tummaihoinen käsi ja indigonsininen hiha (koska peli sijoittuu Burkina Fasoon).
 - **Valikon fontit:** Eagle Lake (otsikko), Permanent Marker (napit), Alegreya (teksti).
-- **Ohjaimet:** WASD, Shift, välilyönti, hiiri 1/2, E, 1–8, Tab/I, M, Esc.
+- **Ohjaimet:** WASD, Shift, välilyönti, hiiri 1/2, E, Q (heitä esine), 1–8, Tab/I, M, Esc.
+- **Meri:** ulkoreunalla sademetsän puolella (noin 43 % reunasta), rannat hiekkaa, harvoin saaria. Avomeren takana virta vie takaisin ("Virta on liian voimakas"). Aavikon puolella reuna on edelleen vuoria.
+- **Joet ja purot:** sademetsässä joet n. 14–20 m ja purot n. 5–7 m leveitä, Sahelissa harvoin 7–9 m jokia (n. 4–7 km koko Sahelin alueella), vuoristossa puroja vain loivissa kohdissa. Joki kapenee ja loppuu kuivaan uomaan.
+- **Järvet:** sademetsässä lampia ja järviä (säde 18–130 m), vuoristossa vuoristojärviä (25–80 m). Lumpeita järvillä ja lammilla.
+- **Aallot:** meren aaltojen korkeus 0,3 m (selkeä) – n. 1,8 m (hiekkamyrsky). Järvillä pieniä väreitä, joissa virtaus.
+- **Kelluvat esineet:** puu, risut, kuitu. Muut uppoavat.
+- **Uudet maastonmuodot:** graniittikalliot (Sahel, sademetsä; 10–40 m korkeita, lohkareita ympärillä), pöytävuoret aavikolla (16–46 m), Sahelin loivat kumpareet.
+- **Uudet kasvit ja esineet:** karitepuu (Sahel, 6 iskua + runko 4), doumpalmu (kausilammet, keitaat; 5 + 3), kookospalmu (ranta; 4 + 3), lahopuu ja sammaloitunut runko (kirves, puuta), villibanaani (kuitua), aavikkopensas, ajopuu (poimitaan: puuta), korkea heinä, kukat, sienet, lumpeet, merilevä, luut, kivikko.
+- **Grafiikka-asetukset:** Valonsäteet (oletus päällä), Liike-epäterävyys Pois/Kevyt/Vahva (oletus pois), Syväterävyys (oletus pois). Varjot: Normaali (170 m) / Tarkka (260 m).
 - **Kartta:** paljastuu n. 100 m säteeltä. Merkkisymbolit: raksi, pallukka, talo (käyttäjän esimerkit) sekä lippu ja tähti. Minikartta kääntyy katsesuunnan mukaan, iso kartta on pohjoinen ylöspäin. Kartta on aina käytössä (ei erillistä esinettä).
 - **Rakennelmat:** kivikehä (Sahel: savanni, laterittitasanko, akasiametsikkö, dyynit), hylätty leiri (aavikko, dyynit, keidas), talon rauniot ja kylän rauniot (kaikki biomit, harvinaisia). Vuoristossa rauniot ovat kiveä, sademetsässä köynnösten peittämiä. Noin 500 rakennelmaa / maailma.
 - **Arkun tavallinen saalis:** 2–3 seuraavista: risuja 3–8, kiviä 2–6, kuitua 2–6, puuta 1–4.
@@ -100,6 +123,10 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - **Vuoristo:** kalliomuodostelmat, kalliotornit, lohkareet, kandelaaberipuut (euphorbia), kerrostuneet kallion värit.
 
 ## Avoimet kysymykset
+- Mitä meren takana on (nyt virta vie takaisin)? Pitäisikö merellä voida liikkua veneellä?
+- Voiko veden alle sukeltaa? Kuluuko uidessa kestävyyttä tai happea?
+- Pitäisikö vesistöissä olla kaloja tai muuta elämää (kalastus)?
+- Pitäisikö vettä voida juoda tai kerätä (jano)?
 - Mihin arvoesineitä (kultahippu, kaurikotilo, pronssirannerengas) käytetään: kaupankäynti, valmistus, pisteet?
 - Pitäisikö kartan olla esine, joka pitää ensin valmistaa / löytää, vai aina käytössä (nyt aina)?
 - Pitäisikö rakennelmissa olla muuta (esim. vihollisia, tarinaa, erikoissaaliita)?

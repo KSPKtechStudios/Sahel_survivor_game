@@ -2,6 +2,25 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-06 (sessio 5)
+**Tehtiin**
+- Käyttäjä raportoi bambujen tärinän ja pyysi: lisää sisältöä ja maastonmuotoja biomeihin; sademetsään lampia, järviä, jokia ja puroja, Saheliin harvoin pieniä jokia, vuoristoon järviä ja puroja; uusi meribiomi; veden fysiikka (aallot sään mukaan, molskahdus ja aallot hypätessä, kävellessä ja esinettä heittäessä); realistiset varjot, ilmakehä, god rays; liike-epäterävyys ja DOF asetuksiin. Kirjattu `DESIGN.md`:hen.
+- Bambun korjaus: korkeille kasveille oma tuulimateriaali (`tall`), pisteittäinen lepatus pois.
+- Maasto (`terrain.js`) kirjoitettiin uusiksi: meri ja rannat, veden pinta (wl) jokaiselle pisteelle, joet ja purot (kohinan nollakohdat, uoma, penger, laakso, virtaus uoman suuntaan), järvet (reunan matalin kohta), graniittikalliot ja pöytävuoret, Sahelin kumpareet.
+- Vesi: `render/water.js` (Gerstner-aallot, heijastus, vaahto, virtaus), `render/ripples.js` (aaltoyhtälö näytönohjaimella), `render/splash.js` (roiskeet), `world/waves.js` (yhteiset aaltokaavat), vesiverkko chunkeittain (`chunkGen.js`). Pelaaja ui aaltojen mukana, esineet kelluvat tai uppoavat, [Q] heittää esineen.
+- Grafiikka: SunLight-varjokaskadit (three.js r186 addon kopioitu `vendor/three/addons/lights/`), `render/post.js` (valonsäteet, ilmakehän hehku, DOF, liike-epäterävyys), taivaan sironta. Asetuksiin kolme uutta valintaa.
+- Sisältö: `models/flora.js` (14 uutta mallia), uusia esinetyyppejä ja sijoittelusääntöjä (kallioille lohkareita, lumpeet veden pinnalle).
+- Testattiin headless-Chromiumilla: koko maailman kartat (vesistöjen määrät tilastona), kuvat rannasta, merestä (myös myrsky ja uinti), järvestä, joesta, purosta, väreilystä ja roiskeista, valonsäteistä (auringonlasku, sademetsä, usva), DOF:sta ja liike-epäterävyydestä sekä kaikista biomeista; fysiikkatesti aika-askelilla (puu kelluu, kivi uppoaa, risu ajelehtii joessa, hyppy veteen roiskuu); vanha toimintatesti. Ei konsolivirheitä.
+
+**Huomiot**
+- Kolmioita piirretään sademetsässä noin miljoona ruutua kohden (varjokaskadit mukaan lukien). Hitaalla koneella kannattaa laittaa varjot pois tai tehosteita pois.
+- Vanhat tallennetut maailmat näyttävät erilaisilta, koska generointi muuttui.
+- Joki voi paikoin kulkea loivasti ylämäkeen (veden pinta seuraa maaston loivaa muotoa), mutta virtaus näkyy aina alamäkeen.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute vesistöistä, merestä, veden fysiikasta, grafiikasta ja suorituskyvystä.
+- Avoimet kysymykset: meren takana, sukellus, kalat, juomavesi; aiemmat (arvoesineet, kartta esineenä, arkkujen uusiutuminen).
+
 ## 2026-10-06 (sessio 4)
 **Tehtiin**
 - Käyttäjä pyysi: (1) pehmeämmät valikko-, juoksu- ja työkaluanimaatiot, (2) karttaesikatselu pois maailman luonnista; pelissä tyhjä karttapohja, joka piirtyy tutkiessa, ja M:stä iso interaktiivinen kartta merkkeineen (raksi, pallukka, talo…), (3) biomien hiominen (sademetsä tiheäksi ja vaikeakulkuiseksi, vuoristo ja muut paremmiksi), (4) satunnaiset rakennelmat: kivikehät Saheliin, hylätyt leirit aavikolle, harvinaiset talon/kylän rauniot kaikkialle; 45 % arkku tavallisella saaliilla, 10 % arkuista arvoesineitä. Kirjattu `DESIGN.md`:hen.

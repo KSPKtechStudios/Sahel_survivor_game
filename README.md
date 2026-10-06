@@ -2,7 +2,7 @@
 
 > Pelin työnimi. Nimi ei ole vielä lopullinen ja voi muuttua.
 
-Valheim- ja Minecraft-tyyppinen selviytymispeli, joka sijoittuu Burkina Fason Sahel-alueelle. 3D avoin maailma (20 km, generoidaan joka kerta omalla siemenellä), ensimmäisen persoonan kuvakulma, reppu ja valmistus, vuorokausisykli ja sää (selkeä, pilvinen, hiekkausva, hiekkamyrsky). Puut kaatuvat ja kivet murskautuvat, ja saaliit putoavat maahan. Kartta piirtyy sitä mukaa kuin maailmaa tutkii, ja maailmasta löytyy kivikehiä, hylättyjä leirejä ja raunioita arkkuineen.
+Valheim- ja Minecraft-tyyppinen selviytymispeli, joka sijoittuu Burkina Fason Sahel-alueelle. 3D avoin maailma (20 km, generoidaan joka kerta omalla siemenellä), ensimmäisen persoonan kuvakulma, reppu ja valmistus, vuorokausisykli ja sää (selkeä, pilvinen, hiekkausva, hiekkamyrsky). Puut kaatuvat ja kivet murskautuvat, ja saaliit putoavat maahan. Kartta piirtyy sitä mukaa kuin maailmaa tutkii, ja maailmasta löytyy kivikehiä, hylättyjä leirejä ja raunioita arkkuineen. Sademetsän takana on meri, ja maailmassa on jokia, puroja ja järviä, joissa vesi aaltoilee ja roiskuu.
 
 ## Pelaa
 
@@ -25,6 +25,7 @@ Haarojen testauslinkit: `https://raw.githack.com/KSPKtech/sahel/<haara>/index.ht
 | Välilyönti | hyppää |
 | Hiiri 1 | lyö / hakkaa (pidä pohjassa) |
 | E | poimi |
+| Q | heitä valittu esine |
 | Hiiri 2 | aseta (esim. nuotio) |
 | 1–8 / rulla | valitse esine |
 | Tab tai I | reppu ja valmistus |
@@ -39,14 +40,14 @@ Haarojen testauslinkit: `https://raw.githack.com/KSPKtech/sahel/<haara>/index.ht
 | `index.html`, `styles.css`, `menu.css` | Sivu, HUD:n ja valikoiden tyylit |
 | `src/main.js` | Käynnistys, tilat (valikko/lataus/peli/tauko/reppu/kartta), pääsilmukka |
 | `src/config.js` | Säädettävät arvot (näkyvyys, vuorokauden pituus, nopeudet…) |
-| `src/world/` | Maailman generointi (vyöhykkeet, biomit, siemen, rakennelmien paikat), chunkit ja LOD, generointisäikeet (`genWorker.js`), esinetyypit, tumbleweedit |
-| `src/render/` | Taivas, vuorokausi ja sää, materiaalit, hiukkaset, sirpaleet, tekstuurit |
-| `src/models/` | Proseduraaliset 3D-mallit: puut, kasvit, kivet, esineet, rakennelmat ja arkku (korvattavissa glTF-malleilla) |
+| `src/world/` | Maailman generointi (vyöhykkeet, biomit, meri, joet ja järvet, siemen, rakennelmien paikat), chunkit ja LOD, generointisäikeet (`genWorker.js`), aaltojen kaavat (`waves.js`), esinetyypit, tumbleweedit |
+| `src/render/` | Taivas, vuorokausi ja sää, materiaalit, vesi (`water.js`), väreily (`ripples.js`), roiskeet (`splash.js`), jälkikäsittely (`post.js`: valonsäteet, DOF, liike-epäterävyys), hiukkaset, sirpaleet, tekstuurit |
+| `src/models/` | Proseduraaliset 3D-mallit: puut, kasvit (`flora.js`), kivet, esineet, rakennelmat ja arkku (korvattavissa glTF-malleilla) |
 | `src/player/` | Ohjaus, liikkuminen, käsi ja esine kädessä |
 | `src/game/` | Esineet, reppu, valmistus, opas, hakkaaminen, kaatuminen, saaliit, nuotio, rauniot ja arkut (`ruins.js`), tallennus |
 | `src/ui/` | Valikot, HUD, tutkittu kartta (`explored.js`), minikartta, iso kartta (`bigMap.js`), opas, reppuikkuna, kuvakkeet |
 | `assets/fonts/` | Valikon fontit (OFL/Apache) |
-| `vendor/three/` | three.js r186 (MIT) |
+| `vendor/three/` | three.js r186 (MIT), mukana BufferGeometryUtils ja SunLight (varjokaskadit) |
 
 ## Dokumentaatio
 
@@ -60,4 +61,4 @@ Haarojen testauslinkit: `https://raw.githack.com/KSPKtech/sahel/<haara>/index.ht
 
 ## Tila
 
-Pelattava prototyyppi: päävalikko, maailmojen luonti siemenellä, vyöhykkeellinen maailma, tutkittava kartta, rakennelmat ja arkut, keräys, hakkaaminen ja valmistus. Grafiikka on vielä yksinkertaista low-poly-paikkamerkkiä, ja sitä on tarkoitus jalostaa myöhemmin.
+Pelattava prototyyppi: päävalikko, maailmojen luonti siemenellä, vyöhykkeellinen maailma merineen ja vesistöineen, veden fysiikka, tutkittava kartta, rakennelmat ja arkut, keräys, hakkaaminen ja valmistus. Grafiikka on vielä yksinkertaista low-poly-paikkamerkkiä, ja sitä on tarkoitus jalostaa myöhemmin.

@@ -1,6 +1,9 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa vesistöt ja meren, veden fysiikan (aallot, roiskeet, kelluminen, [Q]-heitto), uuden grafiikan (varjot, valonsäteet, DOF, liike-epäterävyys) ja uuden sisällön ja antaa palautetta
+- [ ] Käyttäjä kertoo, pyöriikö peli sujuvasti (varjokaskadit ja jälkikäsittely lisäävät näytönohjaimen työtä)
+- [ ] Vastaus: mitä meren takana on, voiko sukeltaa, kalat, juomavesi?
 - [ ] Käyttäjä testaa kartan (minikartta + [M]), rakennelmat ja arkut, uudet biomit sekä animaatioiden sulavuuden ja antaa palautetta
 - [ ] Vastaus: mihin arvoesineitä käytetään?
 - [ ] Vastaus: onko kartta aina käytössä vai pitääkö se ensin valmistaa / löytää?
@@ -18,7 +21,10 @@
 - [ ] Resurssien uusiutuminen (risut, kivet, pensaat)
 - [ ] Esineen pudottaminen repusta maahan ja pinojen jakaminen
 - [ ] Kannon poistaminen / juurakon kaivaminen
-- [ ] Rinteen jyrkkyysraja kävelyyn (nyt mihin tahansa pääsee)
+- [ ] Rinteen jyrkkyysraja kävelyyn (nyt mihin tahansa pääsee, myös pöytävuorille ja kallioille)
+- [ ] Veden alla näkymä (jos sukellus lisätään): sumu ja väri veden alla
+- [ ] Varjojen kevennys: kevyemmät varjomallit puille tai varjojen harvempi päivitys kaukana
+- [ ] Vanhojen tallennusten esineiden tunnisteet säilyvät, kun esinetyyppejä lisätään (nyt uudet tyypit muuttavat järjestystä)
 
 ## Myöhemmin (grafiikan jalostus)
 - [ ] Oikeat CC0-tekstuurit maastoon (hiekka, lateriitti, kivi, sademetsän maa), normaalikartat
@@ -27,6 +33,10 @@
 - [ ] Päätä lopullinen nimi (Sahel vai jokin muu)
 
 ## Valmis
+- [x] Meri ja hiekkarannat, joet, purot, järvet ja lammet; graniittikalliot ja pöytävuoret (2026-10-06, sessio 5)
+- [x] Veden fysiikka: aallot sään mukaan, väreily, roiskeet, kelluminen, uinti aaltojen mukana, esineen heitto [Q] (2026-10-06, sessio 5)
+- [x] Grafiikka: kaskadoidut varjot, valonsäteet, ilmakehä, DOF ja liike-epäterävyys asetuksiin (2026-10-06, sessio 5)
+- [x] Lisää sisältöä biomeihin ja bambujen tärinän korjaus (2026-10-06, sessio 5)
 - [x] Tutkittava kartta: tyhjä minikartta piirtyy kulkiessa, iso kartta [M] merkkeineen, karttaesikatselu pois maailman luonnista (2026-10-06, sessio 4)
 - [x] Satunnaiset rakennelmat (kivikehät, leirit, rauniot), arkut 45 %, arvoesineet 10 % (2026-10-06, sessio 4)
 - [x] Biomit hiottu: tiheä sademetsä, keitaat, uusittu vuoristo (2026-10-06, sessio 4)

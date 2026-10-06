@@ -2,6 +2,21 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-06 (sessio 5): vesistöt ja meri, veden fysiikka, uusi grafiikka, lisää sisältöä
+- Bambujen tärinä korjattu: korkeat kasvit saivat matalille pensaille tarkoitetun tuulen, joka heilutti 9 m vartta liikaa ja pisteittäin eri tahtiin.
+- Uusi biomi: meri ja hiekkarannat. Sademetsän puolella maailman reunaa on avomeri (sen takana virta vie takaisin), rannoilla hiekkaa ja harvoin saaria.
+- Joet ja purot: sademetsässä runsaasti, Sahelissa harvoin pieniä jokia (muutama km koko alueella), vuoristossa puroja loivissa kohdissa. Kapeneva joki loppuu kuivaan uomaan.
+- Järvet ja lammet: sademetsässä ja vuoristossa (vuoristojärvet), oma pinnankorkeus. Lumpeita järvillä ja lammilla.
+- Uusia maastonmuotoja: graniittikalliot (inselbergit) Saheliin ja sademetsään, pöytävuoret aavikolle, loivat kumpareet Saheliin, korkeampi sademetsän maasto, jokilaaksot.
+- Vesi uusittu: aallot (meressä sään mukaan, myrskyssä metrien aallokko), taivaan heijastus, auringon kimallus, rantavaahto, läpinäkyvä matala vesi, virtaus joissa.
+- Veden fysiikka: väreily ja renkaat (aaltoyhtälö näytönohjaimella), roiskeet kun pelaaja hyppää veteen, kahlaa tai ui, ja kun esine putoaa tai heitetään veteen. Puu, risut ja kuitu kelluvat ja ajelehtivat virran mukana, kivet ja metallit uppoavat. Uiva pelaaja nousee ja laskee aaltojen mukana.
+- Uusi näppäin [Q]: heitä valittu esine.
+- Varjot: kaksi varjokaskadia (tarkat varjot lähellä, varjot kauas), pehmeät reunat.
+- Valonsäteet (god rays) puiden ja lehvästön läpi, ilmakehän hehku auringon suunnassa, taivaan sironta (hehku auringon ympärillä, lämmin horisonttivyö matalalla auringolla).
+- Asetuksiin: Valonsäteet, Liike-epäterävyys (Pois/Kevyt/Vahva), Syväterävyys (DOF).
+- Lisää sisältöä: karitepuu, doumpalmu, kookospalmu, lahopuut, sammaloituneet rungot, villibanaani, aavikkopensas, ajopuu, korkea heinä, kukat, sienet, merilevä, luut, kivikko; graniittikallioille lohkareita. Ruo'ot myös jokien ja järvien rannoilla.
+- Testaustyökaluihin siirtymät: Ranta, Järvi, Joki, Puro. Minikartta näyttää vesistön nimen, kun pelaaja on vedessä.
+
 ## 2026-10-06 (sessio 4): tutkittava kartta, rakennelmat ja arkut, biomit, sulavuus
 - Minikartta on aluksi tyhjä karttapohja (paperi + haalea ruudukko), ja maasto piirtyy siihen sitä mukaa kuin pelaaja kulkee (n. 100 m ympäriltä). Pohjoinen merkitty P:llä.
 - Iso interaktiivinen kartta [M]: vedä = liikuta, rulla = zoomaa, klikkaus = merkki valitulla symbolilla (raksi, pallukka, talo, lippu, tähti), klikkaus merkkiin = poista. Mittakaava ja etäisyys kursorin kohtaan. Merkit näkyvät myös minikartalla (kaukaiset reunalla).

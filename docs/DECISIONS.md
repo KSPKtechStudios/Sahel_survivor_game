@@ -2,6 +2,21 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-06 (sessio 5)
+- **Meri on maailman ulkoreunalla sademetsän puolella, vuoret aavikon puolella.** Syy: käyttäjä pyysi meribiomia; sademetsän takana oleva meri muistuttaa Guineanlahtea (aavikko ja vuoret pohjoisessa). Meri vie noin 43 % reunasta, ja siinä on rantahiekkaa sekä harvoin saaria.
+- **Joka pisteellä on veden pinta (wl).** Merenpinta on kaikkialla; lisäksi joet, purot ja järvet ovat omalla korkeudellaan. Piste on veden alla, jos maa on pintaa alempana. Syy: vuoristojärvet ja joet tarvitsevat muita pintoja kuin merenpinnan, ja sama tieto palvelee maastoa, vettä, esineitä, pelaajaa ja karttaa.
+- **Joet ja purot kulkevat kohinakentän nollakohtaa pitkin (mutkat domain warpilla).** Etäisyys uomasta arvioidaan kentän arvosta ja gradientista. Veden pinta seuraa maaston loivaa muotoa, ja maastoon kaivetaan uoma, penger ja laakso. Syy: deterministinen ja chunkeittain laskettava ilman koko maailman simulointia. Joki voi paikoin virrata loivasti ylämäkeen, koska virtausta ei simuloida; virtaus näytetään aina pintaa alas.
+- **Järven pinta asetetaan reunan matalimman kohdan alle**, ja rannalle tehdään matala penger. Järvet eivät osu jokiin. Syy: vesi ei saa näkyä valumassa reunan yli.
+- **Vesipinta on chunkeittain oma verkkonsa samalla ruudukolla kuin maasto**, ja pisteissä on syvyys, avoimuus, virtaus ja värit. Syy: rantaviiva syntyy maaston ja veden leikkauksesta siististi, ja vesi voi olla eri korkeuksilla.
+- **"Nestefysiikkamoottori" toteutettiin pelien tapaan:** aallot ovat Gerstner-aaltoja (korkeus tuulen mukaan), pelaajan ympärillä lasketaan aaltoyhtälöä näytönohjaimella (väreily ja renkaat), roiskeet ovat hiukkasia ja esineillä on noste. Syy: oikea 3D-nestesimulaatio (SPH/FLIP) koko avoimeen maailmaan ei ole selaimessa mahdollinen; tämä näyttää ja tuntuu oikealta ja on kevyt.
+- **Kelluvat esineet: puu, risut ja kuitu.** Kivet, työkalut ja metallit uppoavat. Syy: luonteva fysiikka; listaa on helppo muuttaa (items.js: floats).
+- **Esineen heitto [Q].** Syy: käyttäjä halusi heittää esineitä veteen; repusta ei ennen voinut pudottaa mitään.
+- **Aurinko on three.js:n SunLight (kaksi varjokaskadia).** Syy: tarkat varjot lähellä ja varjot myös kauas ilman omaa toteutusta; varjojen reunat pehmenevät etäisyyden mukaan. Kaskadit tuplaavat varjopiirron, joten heikolle koneelle on "Varjot: Pois".
+- **Jälkikäsittely omana kevyenä putkenaan (render/post.js):** maailma piirretään HDR-kuvaan syvyyksineen, sitten valonsäteet (säteittäinen sumennus kohti aurinkoa), ilmakehän hehku sumussa, DOF ja liike-epäterävyys, lopuksi sävytys. Käsi piirretään päälle ilman tehosteita. Syy: ei tarvita koko EffectComposeria, ja kaikki tehosteet saa pois (silloin piirretään suoraan kuten ennen).
+- **Oletusasetukset:** valonsäteet päällä, liike-epäterävyys ja DOF pois. Syy: säteet tekevät eniten tunnelmaa; DOF ja liike-epäterävyys ovat makuasioita.
+- **Uudet kasvit ja muodostumat ovat Burkina Fason luontoon sopivia paikkamerkkejä** (karitepuu ja doumpalmu ovat Sahelin tunnusomaisia puita, graniittikalliot kuten Sindoun ja Nahourin kalliot). Syy: käyttäjä pyysi lisää sisältöä biomeihin.
+- **Vanhojen maailmojen maasto muuttuu** (sama siemen, uusi generointi). Syy: maaston ja esineiden generointi muuttui; tallennus toimii, mutta maailma näyttää erilaiselta.
+
 ## 2026-10-06 (sessio 4)
 - **Kartta paljastuu ruuduittain (512 m, 4 m/pikseli), ja maasto lasketaan generointisäikeessä.** Syy: pääsäikeessä tehty minikarttalaskenta nyki kävellessä. Ruutuja pyydetään vain piirtoa varten, korkeintaan kaksi kerrallaan, jotteivät chunkit jää jonoon.
 - **Tallennukseen menee vain karkea bittikartta (16 m solut) tutkitusta alueesta**, ja pehmeä maski rakennetaan siitä latauksessa. Syy: tallennus pysyy pienenä (n. 170 merkkiä / ruutu). Ladattu alue on hieman reunoiltaan pienempi kuin pelatessa piirretty.
