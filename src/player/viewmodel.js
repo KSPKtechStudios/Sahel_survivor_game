@@ -181,7 +181,7 @@ export class ViewModel {
     this.left.add(this.leftAnim);
     this.leftArm = new THREE.Mesh(buildLeftArmGeometry(), this.material);
     this.leftArm.position.set(0, 0, 0.036);
-    this.shieldMesh = new THREE.Mesh(itemGeometries.shield, itemMat);
+    this.shieldMesh = new THREE.Mesh(itemGeometries.shield || new THREE.CylinderGeometry(0.3, 0.3, 0.03, 16).rotateX(Math.PI / 2), itemMat);
     this.shieldMesh.scale.setScalar(0.8);
     this.leftAnim.add(this.shieldMesh, this.leftArm);
     this.left.visible = false;
