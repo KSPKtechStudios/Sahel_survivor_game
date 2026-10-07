@@ -8,7 +8,11 @@
   --accent-2: #f2c66b;
   --good: #a9d06a;
   --bad: #ff8a6a;
-  --font: 'Eagle Lake', Georgia, serif;
+  /* Sessio 16: Philosopher (käyttäjän valinta; Eagle Lake jäi vain logoon). */
+  --font: 'Philosopher', 'Segoe UI', sans-serif;
+  /* Animaatiot (sessio 16): nopea alku, pehmeä loppu. */
+  --snap: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 * { box-sizing: border-box; }
@@ -19,8 +23,6 @@ html, body {
   background: #120c07;
   color: var(--text);
   font-family: var(--font);
-  /* Sessio 13: kaikki teksti Eagle Lake -fontilla (vain yksi paino, ei
-     keinotekoista lihavointia tai kursiivia). */
   font-synthesis: none;
   user-select: none;
   -webkit-user-select: none;
@@ -47,10 +49,10 @@ html, body {
   position: absolute; left: 50%; top: calc(50% + 26px);
   transform: translateX(-50%);
   text-align: center;
-  opacity: 0; transition: opacity 0.12s;
+  opacity: 0; transition: opacity 140ms ease-out;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
 }
-#target.show { opacity: 1; }
+#target.show { opacity: 1; transition: opacity 90ms ease-out; }
 /* Sessio 13: nimilappu kohteen kohdalla (ei tähtäimen alla). */
 #target.anchored { transform: translate(-50%, -100%); }
 #nameplates { position: absolute; inset: 0; pointer-events: none; }
@@ -162,18 +164,18 @@ html, body {
   font-size: 17px; font-weight: 700;
   color: var(--bad);
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
-  opacity: 0; transition: opacity 0.2s;
+  opacity: 0; transform: translate(-50%, 6px); transition: opacity 260ms ease-out, transform 320ms var(--snap);
 }
-#message.show { opacity: 1; }
+#message.show { opacity: 1; transform: translate(-50%, 0); transition: opacity 120ms ease-out, transform 220ms var(--snap); }
 
 #item-name {
   position: absolute; left: 50%; bottom: 146px;
   transform: translateX(-50%);
   font-size: 15px; font-weight: 700;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
-  opacity: 0; transition: opacity 0.3s;
+  opacity: 0; transform: translate(-50%, 4px); transition: opacity 300ms ease-out, transform 300ms var(--snap);
 }
-#item-name.show { opacity: 1; }
+#item-name.show { opacity: 1; transform: translate(-50%, 0); transition: opacity 110ms ease-out, transform 200ms var(--snap); }
 
 /* Terveys, ruoat ja kestävyys (sessio 15: rustiikkinen puu + moderni UI,
    käyttäjän valitsema vaihtoehto B "savulasi"): läpikuultava savulasipaneeli,
@@ -269,17 +271,18 @@ html, body {
 @keyframes hpPulse { 50% { box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6), 0 0 7px rgba(190, 50, 30, 0.85); } }
 .vital .num {
   min-width: 26px; margin-right: 13px; text-align: right; font-size: 14px; color: #efe2c6;
-  text-shadow: 0 1px 2px #000; font-variant-numeric: tabular-nums; opacity: 0.55; transition: opacity 0.6s, color 0.6s;
+  text-shadow: 0 1px 2px #000; font-variant-numeric: tabular-nums; opacity: 0.55; transition: opacity 600ms ease-out, color 600ms ease-out;
 }
-.vital .num.flash { opacity: 1; transition: opacity 0.1s; }
+.vital .num.flash { opacity: 1; transition: opacity 90ms ease-out, color 90ms ease-out; }
 .vital .num.flash.down { color: #e3a090; }
 .vital .num.flash.up { color: #cfe0a8; }
 /* Kestävyys keskellä (kuten Valheimissa): näkyy vain, kun sitä kuluu. */
 .vital.st {
   position: absolute; left: 50%; bottom: 88px; width: 176px; height: 22px; border-radius: 11px;
-  transform: translateX(-50%); opacity: 0; transition: opacity 0.6s; pointer-events: none;
+  transform: translate(-50%, 6px) scale(0.97); opacity: 0; pointer-events: none;
+  transition: opacity 420ms ease-in, transform 420ms ease-in;
 }
-.vital.st.shown { opacity: 1; transition: opacity 0.15s; }
+.vital.st.shown { opacity: 1; transform: translate(-50%, 0) scale(1); transition: opacity 130ms ease-out, transform 200ms var(--snap); }
 .vital.st .tag { width: 26px; height: 22px; }
 .vital.st .ico { width: 12px; height: 12px; }
 .vital.st .bar { height: 5px; margin: 0 11px 0 9px; }
@@ -290,12 +293,22 @@ html, body {
 /* Iskusarjan raja: puolet maksimista (sijainti asetetaan JS:ssä). */
 .vital.st .notch { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; z-index: 1; background: rgba(10, 6, 3, 0.8); }
 /* Syödyt ruoat: lasiympyrät, ohut kaari kertoo jäljellä olevan ajan. */
-#foods { display: flex; gap: 8px; margin-left: 2px; }
-.food { position: relative; width: 36px; height: 36px; border-radius: 50%; transition: opacity 0.5s, filter 0.5s; }
+#foods { position: relative; display: flex; gap: 8px; margin-left: 2px; min-height: 36px; }
+.food { position: relative; flex: none; width: 36px; height: 36px; border-radius: 50%; }
+/* Lopussa oleva ruoka: hento himmenevä välke ja pieni oranssi hehku. */
+.food::after {
+  content: ''; position: absolute; inset: -1px; border-radius: 50%; pointer-events: none; opacity: 0;
+  box-shadow: 0 0 9px 2px rgba(232, 138, 58, 0.5), inset 0 0 5px rgba(232, 138, 58, 0.3);
+  transition: opacity 400ms ease-out;
+}
+.food.ending { animation: foodEnding 1.9s ease-in-out infinite; }
+.food.ending::after { opacity: 1; animation: foodGlow 1.9s ease-in-out infinite; }
+@keyframes foodEnding { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@keyframes foodGlow { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 .food svg { position: absolute; inset: 0; transform: rotate(-90deg); }
 .food svg circle { fill: none; stroke-width: 2; }
 .food svg .bg { stroke: rgba(0, 0, 0, 0.35); }
-.food svg .arc { stroke: #e6d3a8; transition: stroke 0.5s; }
+.food svg .arc { stroke: #e6d3a8; stroke-linecap: round; transition: stroke 500ms ease-out; }
 .food.fading svg .arc { stroke: #c27a4a; }
 .food.fading img { filter: saturate(0.55) brightness(0.85) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7)); }
 .food img { position: absolute; left: 7px; top: 7px; width: 22px; height: 22px; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7)); }
@@ -328,7 +341,7 @@ html, body {
 }
 @keyframes deathIn { from { opacity: 0; } to { opacity: 1; } }
 .death-card { text-align: center; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9); }
-.death-card h2 { margin: 0; font: 400 64px 'Eagle Lake', Georgia, serif; color: #f2c0a0; letter-spacing: 0.04em; }
+.death-card h2 { margin: 0; font: 600 58px var(--font); color: #f2c0a0; letter-spacing: 0.04em; }
 .death-card .cause { margin: 6px 0 0; font-size: 17px; color: var(--muted); }
 .death-card .hint { margin: 26px 0 0; font-size: 15px; font-weight: 700; color: var(--accent-2); opacity: 0; transition: opacity 0.6s; }
 .death-card .hint.show { opacity: 1; }
@@ -346,8 +359,10 @@ html, body {
   border: 2px solid rgba(236, 200, 140, 0.22);
   border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
+  transition: transform 160ms var(--snap), border-color 140ms ease-out, background-color 140ms ease-out, box-shadow 200ms ease-out;
 }
-.slot img { width: 46px; height: 46px; pointer-events: none; }
+.slot img { width: 46px; height: 46px; pointer-events: none; transition: transform 180ms var(--snap); }
+#hotbar .slot.selected img { transform: scale(1.06); }
 .slot .key { position: absolute; left: 5px; top: 2px; font-size: 11px; color: var(--muted); }
 .slot .count { position: absolute; right: 5px; bottom: 2px; font-size: 13px; font-weight: 700; text-shadow: 0 1px 2px #000; }
 /* Varustettu (kilpi vasemmassa kädessä): merkki kulmassa */
@@ -357,7 +372,7 @@ html, body {
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7));
 }
 .slot.equipped { box-shadow: inset 0 0 0 1px rgba(242, 198, 107, 0.55); }
-#hotbar .slot.selected { border-color: var(--accent-2); background: rgba(70, 44, 18, 0.72); transform: translateY(-3px); box-shadow: 0 0 12px rgba(242, 198, 107, 0.35); }
+#hotbar .slot.selected { border-color: var(--accent-2); background: rgba(70, 44, 18, 0.72); transform: translateY(-4px); box-shadow: 0 0 12px rgba(242, 198, 107, 0.35); }
 
 /* ---------- Reppu ---------- */
 #inventory {
@@ -504,14 +519,14 @@ html, body {
 }
 .bm-top h2 {
   margin: 0 6px 0 4px;
-  font: 400 26px 'Eagle Lake', Georgia, serif; color: #4a2f15;
+  font: 600 26px var(--font); color: #4a2f15;
   text-shadow: 0 1px 0 rgba(255, 245, 220, 0.8);
 }
 #bm-symbols { display: flex; gap: 6px; pointer-events: auto; }
 .bm-sym, .bm-btn {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 4px 9px 4px 5px;
-  font: 400 13px 'Eagle Lake', Georgia, serif; color: #4a2f15;
+  font: 400 13px var(--font); color: #4a2f15;
   background: rgba(255, 248, 230, 0.78);
   border: 1px solid rgba(110, 75, 35, 0.45);
   border-radius: 8px;
@@ -526,7 +541,7 @@ html, body {
 .bm-bottom {
   position: absolute; right: 14px; bottom: 10px;
   display: flex; gap: 16px; align-items: baseline;
-  font: 400 13px 'Eagle Lake', Georgia, serif; color: #4a2f15;
+  font: 400 13px var(--font); color: #4a2f15;
   text-shadow: 0 1px 0 rgba(255, 245, 220, 0.8);
   pointer-events: none;
 }
@@ -544,7 +559,7 @@ html, body {
 @keyframes bmEditIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 #bm-name {
   width: 170px; padding: 5px 8px;
-  font: 400 14px 'Eagle Lake', Georgia, serif; color: #3e2610;
+  font: 400 14px var(--font); color: #3e2610;
   background: #fffaf0; border: 1px solid rgba(110, 75, 35, 0.45); border-radius: 6px;
   outline: none; user-select: text; -webkit-user-select: text;
 }
@@ -577,7 +592,7 @@ html, body {
 .dev-info {
   margin: 8px 0 4px; padding: 7px 9px;
   background: rgba(0, 0, 0, 0.35); border-radius: 7px;
-  font: 12px/1.45 'Eagle Lake', Georgia, serif; color: #e8dcc4;
+  font: 12px/1.45 var(--font); color: #e8dcc4;
   white-space: pre-wrap; user-select: text; -webkit-user-select: text;
 }
 .dev-status { min-height: 18px; font-size: 12px; color: var(--good); margin-bottom: 4px; }

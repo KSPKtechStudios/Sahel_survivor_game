@@ -45,26 +45,18 @@ export class Hud {
     this.hpLock = this.hp.querySelector('.lock');
     this.hpNum = this.hp.querySelector('.num');
     // Puiset kyltit ikoneille (piirretään kerran).
-    this.hp.querySelector('.tag').style.backgroundImage = `url(${woodPanel(46, 46, { seed: 8, r: 8 })})`;
-    this.stamina.querySelector('.tag').style.backgroundImage = `url(${woodPanel(26, 22, { seed: 6, r: 6 })})`;
+    this.hp.querySelector('.tag').style.backgroundImage = `url(${woodPanel(46, 46, { seed: 8, r: 8, nails: [[6, 6], [40, 6], [6, 40], [40, 40]] })})`;
+    this.stamina.querySelector('.tag').style.backgroundImage = `url(${woodPanel(26, 22, { seed: 6, r: 6, nails: [[5, 5], [5, 17]] })})`;
     this.numShown = -1;   // näytetty terveysarvo
     this.numT = 0;
     this.stShowT = 0;
-    // Syödyt ruoat: kiinteä joukko lasiympyröitä.
+    // Syödyt ruoat: oma lasiympyrä jokaiselle ruoalle (avain = ruoka-olio),
+    // jotta lisäys ja poisto voidaan animoida.
     this.foodsEl = $('foods');
-    this.foodEls = [];
-    const C = 2 * Math.PI * 16;
-    for (let i = 0; i < MAX_FOODS; i++) {
-      const el = document.createElement('div');
-      el.className = 'food glass';
-      el.innerHTML = '<svg viewBox="0 0 36 36"><circle class="bg" cx="18" cy="18" r="16"/><circle class="arc" cx="18" cy="18" r="16"/></svg><img alt=""><span class="more"></span>';
-      el.style.display = 'none';
-      this.foodsEl.appendChild(el);
-      const arc = el.querySelector('.arc');
-      arc.style.strokeDasharray = `0 ${C.toFixed(1)}`;
-      this.foodEls.push({ el, img: el.querySelector('img'), arc, more: el.querySelector('.more'), id: null, p: -1 });
-    }
-    this.foodCirc = C;
+    this.foodNodes = new Map();
+    // Näytetyt arvot pehmenevät kohti todellisia (nopea mutta ei hyppivä).
+    this.dHp = 1; this.dHpMax = 1; this.dSt = 1; this.dStMax = 1;
+    this.lastHealth = -1;
     this.hurtEl = $('hurt');
     this.drownEl = $('drown');
     this.flashEl = $('flash');
@@ -101,7 +93,14 @@ export class Hud {
     events.on('message', (d) => this.message(d.text));
     events.on('playerHurt', ({ amount }) => {
       this.hurtFlash = Math.min(1, Math.max(this.hurtFlash, 0.35 + amount / 25));
-      this.trailDelay = 0.55;
+      this.trailDelay = 0.45;
+      // Pieni, nopea tärähdys ja palkin välähdys (sessio 16).
+      const a = Math.min(3, 1 + amount / 12);
+      this.hp.animate([
+        { transform: 'translateX(0)' }, { transform: `translateX(${-a}px)` }, { transform: `translateX(${a * 0.7}px)` },
+        { transform: `translateX(${-a * 0.35}px)` }, { transform: 'translateX(0)' },
+      ], { duration: 260, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+      this.hpFill.animate([{ filter: 'brightness(1.9)' }, { filter: 'brightness(1)' }], { duration: 340, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
     });
     events.on('parry', () => { this.flash = 1; this.showCombatText('Parry!'); });
     events.on('blocked', ({ broken }) => {
@@ -109,6 +108,79 @@ export class Hud {
       if (broken) this.showCombatText('Torjunta murtui');
     });
     this.renderHotbar();
+  }
+
+  // Ruokaympyrät: uudet ponnahtavat esiin, loppuneet kutistuvat pois ja muut
+  // liukuvat paikoilleen (FLIP). Lopussa oleva ruoka välkkyy hennosti.
+  _syncFoods(foods, visible) {
+    const show = visible ? foods.slice(0, MAX_FOODS) : [];
+    const nodes = this.foodNodes;
+    let changed = show.length !== nodes.size;
+    if (!changed) for (const f of show) if (!nodes.has(f)) { changed = true; break; }
+    if (changed) {
+      const want = new Set(show);
+      const first = new Map();
+      for (const [f, n] of nodes) if (want.has(f)) first.set(n, n.el.offsetLeft);
+      for (const [f, n] of nodes) {
+        if (want.has(f)) continue;
+        nodes.delete(f);
+        const el = n.el;
+        el.style.left = `${el.offsetLeft}px`;
+        el.style.top = `${el.offsetTop}px`;
+        el.style.position = 'absolute';
+        el.animate([{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(0.55)' }],
+          { duration: visible ? 220 : 0, easing: 'cubic-bezier(0.4, 0, 1, 1)', fill: 'forwards' }).onfinish = () => el.remove();
+      }
+      for (const f of show) {
+        let n = nodes.get(f);
+        if (!n) {
+          n = this._foodNode(f);
+          nodes.set(f, n);
+          n.fresh = true;
+        }
+        this.foodsEl.appendChild(n.el);
+      }
+      for (const n of nodes.values()) {
+        if (n.fresh) {
+          n.fresh = false;
+          n.el.animate([{ opacity: 0, transform: 'scale(0.4)' }, { opacity: 1, transform: 'scale(1)' }],
+            { duration: 380, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+        } else if (first.has(n)) {
+          const dx = first.get(n) - n.el.offsetLeft;
+          if (dx) n.el.animate([{ transform: `translateX(${dx}px)` }, { transform: 'translateX(0)' }], { duration: 260, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+        }
+      }
+    }
+    const C = 2 * Math.PI * 16;
+    let i = 0;
+    for (const f of show) {
+      const n = nodes.get(f);
+      const p = Math.round(Math.max(0, f.t / f.dur) * 300) / 300;
+      if (p !== n.p) { n.p = p; n.arc.style.strokeDasharray = `${(p * C).toFixed(1)} ${C.toFixed(1)}`; }
+      n.el.classList.toggle('fading', Survival.weight(f) < 1);
+      // Viimeinen minuutti: hento himmenevä välke ja pieni oranssi hehku.
+      n.el.classList.toggle('ending', f.t < 60);
+      const extra = i === show.length - 1 ? foods.length - show.length : 0;
+      if (extra !== n.extra) {
+        n.extra = extra;
+        n.more.style.display = extra > 0 ? '' : 'none';
+        n.more.textContent = extra > 0 ? `+${extra}` : '';
+      }
+      i++;
+    }
+  }
+
+  _foodNode(f) {
+    const el = document.createElement('div');
+    el.className = 'food glass';
+    el.innerHTML = '<svg viewBox="0 0 36 36"><circle class="bg" cx="18" cy="18" r="16"/><circle class="arc" cx="18" cy="18" r="16"/></svg><img alt=""><span class="more"></span>';
+    const img = el.querySelector('img');
+    img.src = this.icons[f.id] || this.icons.fonio_porridge || '';
+    const v = foodValues(f.id);
+    el.title = v ? `${v.name}: terveys +${v.hp}, kestävyys +${v.st}` : '';
+    const more = el.querySelector('.more');
+    more.style.display = 'none';
+    return { el, img, arc: el.querySelector('.arc'), more, p: -1, extra: 0 };
   }
 
   renderHotbar() {
@@ -209,19 +281,30 @@ export class Hud {
       this.crosshair.classList.toggle('active', !!(prompt && visible));
     }
 
-    // Terveys: menetetty osa näkyy hetken vaaleana ennen kuin se kutistuu.
-    // Kehys vastaa arvoa 100; maksimin yläpuoli on lukittu.
+    // Terveys: näytetty arvo seuraa nopeasti (vahinko lähes heti, parannus
+    // pehmeämmin); menetetty osa näkyy hetken vaaleana ennen kuin se kutistuu.
+    // Palkki vastaa arvoa 100; maksimin yläpuoli on lukittu.
+    const ease = (rate) => 1 - Math.exp(-dt * rate);
     const hp = Math.max(0, player.health / MAX_CAP);
     const hpMax = player.maxHealth / MAX_CAP;
+    if (this.lastHealth < 0) { this.dHp = hp; this.trail = hp; this.dHpMax = hpMax; }
+    this.dHp += (hp - this.dHp) * ease(hp < this.dHp ? 32 : 9);
+    this.dHpMax += (hpMax - this.dHpMax) * ease(8);
     if (this.trailDelay > 0) this.trailDelay -= dt;
-    else this.trail += (hp - this.trail) * Math.min(1, dt * 5);
-    if (this.trail < hp) this.trail = hp;
-    this.hpFill.style.width = `${hp * 100}%`;
-    this.hpTrail.style.width = `${this.trail * 100}%`;
-    this.hpLock.style.width = `${(1 - hpMax) * 100}%`;
+    else this.trail += (this.dHp - this.trail) * ease(7);
+    if (this.trail < this.dHp) this.trail = this.dHp;
+    // Parannus (syöminen, voide): hento hehku palkissa.
+    if (this.lastHealth >= 0 && player.health > this.lastHealth + 1.5 && visible) {
+      this.hpFill.animate([{ filter: 'brightness(1.45) saturate(1.15)' }, { filter: 'brightness(1)' }], { duration: 520, easing: 'ease-out' });
+    }
+    this.lastHealth = player.health;
+    this.hpFill.style.width = `${(this.dHp * 100).toFixed(2)}%`;
+    this.hpTrail.style.width = `${(this.trail * 100).toFixed(2)}%`;
+    this.hpLock.style.width = `${((1 - this.dHpMax) * 100).toFixed(2)}%`;
     const rel = player.health / Math.max(1, player.maxHealth);
     this.hp.classList.toggle('low', rel < 0.25 && !player.dead);
-    // Numero on himmeä; kirkastuu hetkeksi, kun terveys muuttuu.
+    // Numero on himmeä; kirkastuu hetkeksi, kun terveys muuttuu (isompi
+    // muutos myös hypähtää).
     const hpInt = Math.ceil(player.health);
     if (hpInt !== this.numShown) {
       if (this.numShown >= 0 && visible) {
@@ -229,6 +312,9 @@ export class Hud {
         this.hpNum.classList.toggle('up', hpInt > this.numShown);
         this.hpNum.classList.add('flash');
         this.numT = 1.6;
+        if (Math.abs(hpInt - this.numShown) >= 2) {
+          this.hpNum.animate([{ transform: 'scale(1.25)' }, { transform: 'scale(1)' }], { duration: 260, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+        }
       }
       this.hpNum.textContent = hpInt;
       this.numShown = hpInt;
@@ -241,10 +327,12 @@ export class Hud {
     // Kestävyys (keskellä): näkyy vain kun sitä kuluu.
     const stMax = player.maxStamina / MAX_CAP;
     const stRel = player.stamina / Math.max(1, player.maxStamina);
-    this.staminaFill.style.width = `${(player.stamina / MAX_CAP) * 100}%`;
-    this.staminaLock.style.width = `${(1 - stMax) * 100}%`;
-    this.staminaNotch.style.left = `${stMax * 50}%`;
-    if (stRel < 0.995 && visible) this.stShowT = 1.2;
+    this.dSt += (player.stamina / MAX_CAP - this.dSt) * ease(22);
+    this.dStMax += (stMax - this.dStMax) * ease(8);
+    this.staminaFill.style.width = `${(this.dSt * 100).toFixed(2)}%`;
+    this.staminaLock.style.width = `${((1 - this.dStMax) * 100).toFixed(2)}%`;
+    this.staminaNotch.style.left = `${(this.dStMax * 50).toFixed(2)}%`;
+    if (stRel < 0.995 && visible) this.stShowT = 1.1;
     else this.stShowT = Math.max(0, this.stShowT - dt);
     this.stamina.classList.toggle('shown', this.stShowT > 0);
     this.stamina.classList.toggle('low', stRel < 0.25);
@@ -253,25 +341,7 @@ export class Hud {
 
     // Syödyt ruoat ja tilavaikutukset
     if (this.survival) {
-      const foods = this.survival.foods;
-      for (let i = 0; i < MAX_FOODS; i++) {
-        const f = foods[i];
-        const fe = this.foodEls[i];
-        if (!f || !visible) { if (fe.el.style.display !== 'none') fe.el.style.display = 'none'; continue; }
-        if (fe.el.style.display === 'none') fe.el.style.display = '';
-        if (fe.id !== f.id) {
-          fe.id = f.id;
-          fe.img.src = this.icons[f.id] || this.icons.fonio_porridge || '';
-          const v = foodValues(f.id);
-          fe.el.title = v ? `${v.name}: terveys +${v.hp}, kestävyys +${v.st}` : '';
-        }
-        const p = Math.round(Math.max(0, f.t / f.dur) * 200) / 200;
-        if (p !== fe.p) { fe.p = p; fe.arc.style.strokeDasharray = `${(p * this.foodCirc).toFixed(1)} ${this.foodCirc.toFixed(1)}`; }
-        fe.el.classList.toggle('fading', Survival.weight(f) < 1);
-        const extra = i === MAX_FOODS - 1 ? foods.length - MAX_FOODS : 0;
-        fe.more.style.display = extra > 0 ? '' : 'none';
-        if (extra > 0) fe.more.textContent = `+${extra}`;
-      }
+      this._syncFoods(this.survival.foods, visible);
       for (const [k, el] of Object.entries(this.effectEls)) {
         const e = this.survival.effects[k];
         if (e) el.querySelector('b').style.width = `${Math.max(0, e.t / e.max) * 100}%`;

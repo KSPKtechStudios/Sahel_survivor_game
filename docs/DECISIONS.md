@@ -2,6 +2,12 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-07 (sessio 16)
+- **Fontit vertailukuvina pelin käyttöliittymän päällä** (ensin 4 tavallista, sitten 6 omaperäisempää), käyttäjä valitsi Philosopherin. Fontit haetaan npm:n @fontsource-paketeista ja kopioidaan `assets/fonts`-kansioon (OFL-lisenssi mukana). Syy: peli toimii ilman verkkoyhteyttä.
+- **Logo jää Eagle Lakeksi.** Syy: käyttäjä piti logon fontista alun perin; ongelma oli käyttöliittymän tekstit.
+- **Animaatiot Web Animations API:lla ja CSS-siirtymillä, arvot eksponentiaalisella pehmennyksellä.** Syy: ei kirjastoja; pehmennys toimii ruudunpäivitysnopeudesta riippumatta.
+- **Välke vasta viimeisellä minuutilla** (hiipuminen alkaa jo 35 %:ssa). Syy: pitkillä ruoilla 35 % on useita minuutteja, ja jatkuva välke häiritsisi.
+
 ## 2026-10-07 (sessio 15)
 - **Vaihtoehdot näytettiin yhtenä vertailukuvana pelin taustan päällä** (A/B/C), ja käyttäjä valitsi yhdellä vastauksella. Syy: käyttäjä ei halunnut kierrättää edestakaisin.
 - **Terveysnumero näkyy aina himmeänä** (kirkastuu muuttuessa), vaikka sessiossa 14 sovittiin "vain kun muuttuu". Syy: valitussa mallikuvassa numero oli paneelissa näkyvissä, ja tyhjä kohta paneelissa näyttäisi keskeneräiseltä. Helppo muuttaa.

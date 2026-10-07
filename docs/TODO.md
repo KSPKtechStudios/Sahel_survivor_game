@@ -1,6 +1,7 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 16: Philosopher-fontti, naulat, animaatioiden tuntuma (nopeus vs. pehmeys), loppuvan ruoan välke ja hehku
 - [ ] Käyttäjä testaa sessiot 14–15: ruokajärjestelmä (maksimit, kesto, kylläisyys), savulasipaneeli ja puukyltti, ruokaympyrät, kestävyys keskellä, terveyden numero
 - [ ] Vastaus: sopivatko lähtöeväät, ruokien arvot ja se, että ruoat säilyvät kuoltaessa? Pitäisikö syömisen estyä vasta kun sekä terveys että kestävyys ovat 100?
 - [ ] Savulasi + puu -tyyli muuhun käyttöliittymään (pikapalkki, minikartta, nimilaput, viestit, reppu), jos käyttäjä haluaa

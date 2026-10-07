@@ -133,7 +133,7 @@ function cleanName(name) {
 export function drawWaypointName(ctx, name, x, y, size = 13) {
   if (!name) return;
   ctx.save();
-  ctx.font = `400 ${size}px 'Eagle Lake', Georgia, serif`;
+  ctx.font = `400 ${size}px 'Philosopher', sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.lineJoin = 'round';

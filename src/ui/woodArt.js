@@ -539,7 +539,7 @@ export function woodPanel(w, h, opts = {}) {
   ctx.putImageData(out, 0, 0);
   // Takorautaiset naulat
   for (const [nx, ny] of opts.nails || []) {
-    const x = nx * S, y = ny * S, r = 1.5 * S;
+    const x = nx * S, y = ny * S, r = (opts.nailR || Math.min(1.6, Math.min(w, h) / 16)) * S;
     const g = ctx.createRadialGradient(x - r * 0.3, y - r * 0.35, r * 0.1, x, y, r);
     g.addColorStop(0, '#8d8478'); g.addColorStop(0.5, '#4a4239'); g.addColorStop(1, '#1d1813');
     ctx.fillStyle = 'rgba(15,8,3,0.5)'; ctx.beginPath(); ctx.arc(x + 0.3 * S, y + 0.4 * S, r * 1.15, 0, Math.PI * 2); ctx.fill();

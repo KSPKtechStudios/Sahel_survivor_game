@@ -2,6 +2,13 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-07 (sessio 16): uusi fontti, naulat ja pehmeät animaatiot
+
+- **Uusi fontti Philosopher** koko pelissä (valikon Sahel-logo pysyy ennallaan).
+- **Naulat puukylttien kulmissa.**
+- **Pehmeät mutta napakat animaatiot:** palkit liukuvat uuteen arvoon (vahinko lähes heti, parannus pehmeästi), osumasta pieni tärähdys ja välähdys, terveysnumero hypähtää isommasta muutoksesta, kestävyys liukuu esiin ja häipyy, ruoat ponnahtavat esiin ja kutistuvat pois muiden liukuessa paikoilleen, pikapalkin valinta ja viestit liukuvat.
+- **Loppuva ruoka** (viimeinen minuutti) välkkyy hennosti himmeten, ja sen ympärillä on pieni oranssi hehku.
+
 ## 2026-10-07 (sessio 15): savulasi ja puukyltit
 
 - **Uusi ilme terveydelle, ruoille ja kestävyydelle:** moderni läpikuultava savulasipaneeli, jonka vasemmassa reunassa on rustiikkinen puukyltti ikonille. Palkit ovat ohuita ja siistejä, värit hillityt.

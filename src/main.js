@@ -120,7 +120,7 @@ const music = new Music();
 // Selain sallii äänen vasta käyttäjän ensimmäisen klikkauksen tai näppäimen jälkeen.
 const sfx = new Sfx();
 // Pelin fontti ladataan heti (kartat piirtävät tekstiä kankaalle).
-if (document.fonts) document.fonts.load("16px 'Eagle Lake'").catch(() => {});
+if (document.fonts) document.fonts.load("700 16px 'Philosopher'").catch(() => {});
 const lightningEl = document.getElementById('lightning');
 for (const ev of ['pointerdown', 'keydown']) window.addEventListener(ev, () => { music.unlock(); sfx.unlock(); }, { capture: true });
 

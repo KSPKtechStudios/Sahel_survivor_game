@@ -2,6 +2,18 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-07 (sessio 16)
+**Tehtiin**
+- Fontti: kaksi vertailukuvaa (Barlow, Signika, Cabin, Fira → liian tavallisia; Grenze, Alegreya Sans SC, Marcellus SC, Philosopher, Mohave, Special Elite), käyttäjä valitsi Philosopherin (`assets/fonts`, `menu.css`, `styles.css`, kartat, `main.js`). Logo jäi Eagle Lakeksi.
+- Naulat puukylttien kulmiin (`ui/woodArt.js`, `ui/hud.js`).
+- Animaatiot (`ui/hud.js`, `styles.css`): palkkien pehmennys, osuman tärähdys ja välähdys, parannuksen hehku, numeron hypähdys, kestävyyden liuku, ruokien sisään- ja ulostulo (FLIP), pikapalkki, viestit.
+- Loppuvan ruoan välke ja hehku.
+- Testattiin headless-Chromiumilla: kuvat (fontti, naulat, himmenevä ruoka), valikko, ESLint ja savutesti puhtaat. Huom: testiselain on liian hidas animaatioiden sulavuuden arviointiin, joten tuntuma pitää testata oikealla koneella.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute animaatioiden tuntumasta.
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-07 (sessio 15)
 **Tehtiin**
 - Käyttäjä halusi rustiikkisen puun ja modernin UI:n yhdistelmän. Tehtiin vertailukuva kolmesta vaihtoehdosta pelin taustan päällä (erillinen mallisivu), käyttäjä valitsi B:n (savulasi).
