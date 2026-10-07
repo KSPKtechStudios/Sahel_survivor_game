@@ -464,7 +464,8 @@ export class Environment {
     this.sun.shadow.intensity = smoothstep(0.03, 0.3, intensity);
 
     // Valotus: yöllä hieman enemmän, jotta peli on pelattava.
-    this.renderer.toneMappingExposure = lerp(1.35, 0.95, this.daylight);
+    // Ukkosmyrsky päivällä hämärtää maailman (sessio 12c).
+    this.renderer.toneMappingExposure = lerp(1.35, 0.95, this.daylight) * (1 - 0.42 * this.w.thunder * this.daylight);
   }
 
   serialize() {

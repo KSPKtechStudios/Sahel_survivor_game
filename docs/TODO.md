@@ -1,6 +1,7 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 12c: Haamun äänet (kuuluvatko nyt), ukkosen hämärä päivällä, haamut ukkosmyrskyssä, salaman isku maahan, aavikon tuuli ja myrskytuuli, heiton napsahdus, puun lyönnin ääni
 - [ ] Käyttäjä testaa session 12b: sumun pehmeys sateessa ja sademetsässä, lähisalamat (välähdys, salama, jyrähdys), Haamun äänet, puun äänen loppu, viidakon voimakkuus
 - [ ] Käyttäjä testaa session 12: taustaäänet (tuuli vuoristossa ja merellä, viidakko, sade, ukkonen), puun kaatumisääni, askeleet eri alustoilla, äänien voimakkuudet, sääkierto [O], kuiva vuoristo ja tumbleweedit siellä
 - [ ] Vastaus: saako tuuli kuulua hiekkamyrskyssä (Clauden lisäys)? Lisää äänitiedostoja (esim. lyönnit, eläimet, vesi, nuotio)?
@@ -65,6 +66,7 @@
 - [ ] Päätä lopullinen nimi (Sahel vai jokin muu)
 
 ## Valmis
+- [x] Haamun äänet kuuluviksi, ukkosen hämärä, haamuja myrskyssä, salaman isku maahan, aavikon tuuli, myrskytuuli, heiton ja puun lyönnin äänet (2026-10-07, sessio 12c)
 - [x] Pehmeämpi sumu (sadeverhot), lähisalamat äänineen, Haamun äänet, puun ja viidakon äänien hienosäätö (2026-10-07, sessio 12b)
 - [x] Äänitehosteet: tuuli, viidakko, sade, kaukainen ukkonen, puun kaatuminen; syntetisoidut askeleet (2026-10-07, sessio 12)
 - [x] Sääkierto [O] ei jää jumiin; vuoristo kuivaksi, tumbleweedit vuoristoon (sessio 12)

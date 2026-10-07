@@ -260,6 +260,22 @@ export class Rain {
     this.boltGlowMat = boltMat(0xa8bcff, 2.0, true);
     this.bolt = null;
     this.boltT = 0;
+
+    // Salaman iskukohdan pieni tulipallo (sessio 12c): ydin ja hehku.
+    this.fireballs = [];
+    this.fbGeo = new THREE.SphereGeometry(1, 14, 10);
+  }
+
+  // Salama osuu maahan kohdassa p: pieni leimahtava tulipallo.
+  impact(p) {
+    const mk = (color, op) => {
+      const m = new THREE.Mesh(this.fbGeo, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: op, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, fog: false }));
+      m.position.copy(p);
+      m.renderOrder = 7;
+      this.scene.add(m);
+      return m;
+    };
+    this.fireballs.push({ core: mk(0xffe2a0, 1), glow: mk(0xff7a20, 0.5), t: 0, life: 0.6 });
   }
 
   // amount = sateen voimakkuus 0..1, light = valoisuus (pisaroiden väri).
@@ -329,6 +345,29 @@ export class Rain {
       }
       if (n > 0) { pos.needsUpdate = true; birth.needsUpdate = true; }
       if (this.splashAcc > 12) this.splashAcc = 0;
+    }
+
+    for (let i = this.fireballs.length - 1; i >= 0; i--) {
+      const f = this.fireballs[i];
+      f.t += fadeDt;
+      const k = f.t / f.life;
+      if (k >= 1) {
+        this.scene.remove(f.core, f.glow);
+        f.core.material.dispose();
+        f.glow.material.dispose();
+        this.fireballs.splice(i, 1);
+        continue;
+      }
+      // Leimahtaa nopeasti, laajenee hieman ja nousee, sitten sammuu.
+      const grow = 0.35 + 0.9 * Math.sqrt(k);
+      f.core.scale.setScalar(grow * 0.55);
+      f.glow.scale.setScalar(grow * 1.4);
+      f.core.position.y += fadeDt * 0.8;
+      f.glow.position.y = f.core.position.y;
+      const fade = 1 - k * k;
+      f.core.material.opacity = fade;
+      f.glow.material.opacity = 0.5 * fade;
+      f.core.material.color.setRGB(1, 0.88 - 0.4 * k, 0.6 - 0.5 * k);
     }
 
     if (this.bolt) {

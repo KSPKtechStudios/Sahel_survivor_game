@@ -100,7 +100,10 @@ export class Breakables {
     const from = new THREE.Vector3().subVectors(playerPos, hitPoint).setY(0).normalize();
     const [c1, c2] = CHIP[obj.type] || [0x8a7a6a, 0x6a5a4a];
 
-    if (def.kind === 'tree') return this._hitTree(obj, from, hitPoint, c1, c2);
+    if (def.kind === 'tree') {
+      events.emit('woodHit', { x: hitPoint.x, z: hitPoint.z });
+      return this._hitTree(obj, from, hitPoint, c1, c2);
+    }
     if (def.kind === 'rock') return this._hitRock(obj, from, hitPoint, maxHp, c1, c2);
 
     // Pensaat: rytisee, oksia ja lehtiä lentää, lopuksi hajoaa.

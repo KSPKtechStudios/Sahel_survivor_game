@@ -2,6 +2,13 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-07 (sessio 12c)
+- **Haamun äänten etäisyysvaimennus alkaa 22 m:stä (kantama 95 m), ei 8 m:stä.** Syy: haamu ilmestyy 32–52 m:n päähän, joten ilmestymisääni vaimeni n. 14 %:iin eikä käyttäjä kuullut sitä.
+- **Ukkosen hämärä tehdään valotuksella (tone mapping exposure × (1 − 0,42 × paikallinen ukkonen × päivänvalo)).** Syy: koskee kaikkea (maasto, taivas, pilvet) tasaisesti, eikä vaadi materiaalimuutoksia; yöllä ei vaikutusta.
+- **Haamu ukkosella: tarkistus 15–30 s, 85 %, enintään 2.** Syy: käyttäjän toive "selvästi korkeammaksi"; edelleen vain öisin sademetsässä.
+- **Salaman iskukohdan hiukkaset ovat "salaman valaisemia" (ei sumua eikä sävykartoitusta), ja tulipallo on additiivinen pallo ilman valonlähdettä.** Syy: ukkosen hämärässä tavalliset hiukkaset hukkuivat maastoon; uusi valonlähde kääntäisi kaikki varjostimet uudelleen (nykäys).
+- **Taustatuuli ei enää soi hiekkamyrskyssä (Clauden aiempi lisäys poistettu); tilalla käyttäjän osoittamat aavikon tuuli ja myrskytuuli.** Myrskytuuli tulee hiekkamyrskyssä puuskittain (kahden hitaan siniaallon tulo), jotta se "välillä täydentää".
+
 ## 2026-10-07 (sessio 12b)
 - **Sadeverhojen säde = sumun kantama × 0,7 ja × 0,95 (väh. 35 m), ei kiinteä 26 / 70 m; usva vain, kun sade > 0,3.** Syy: läpinäkyvä pinta kiinteällä etäisyydellä näkyi teräväreunaisena "seinänä" puiden välissä; kun verho on alueella, jossa sumu jo peittää kohteet n. 75 %:sti, rajaa ei erota. Yleistä sumukäyrää ei muutettu (näköetäisyyden reunan kohteiden pitää häipyä täysin).
 - **Lähisalama: 28 % iskuista 45–155 m:n päähän, välähdys 2,4 × ja HTML-kerros koko näytön välähdykselle, salama kameraan käännettynä nauhana (ydin + hehku, reunat häipyvät varjostimessa).** Syy: käyttäjän toive; WebGL piirtää viivat vain 1 px:n levyisinä, joten nauha tarvitaan näkyvyyteen. Jyrähdys lähes heti (viive ≤ 0,25 s), koska käyttäjä halusi äänen "justiin silloin"; tiedostojen alun hiljaisuus leikattiin.

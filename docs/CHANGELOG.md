@@ -2,6 +2,14 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-07 (sessio 12c): ukkonen hämärtää, haamuja myrskyssä, salaman isku maahan, uusia ääniä
+
+- **Haamun äänet kuuluvat:** ilmestymis- ja ääntelyäänet jäivät lähes kuulumattomiin, koska haamu ilmestyy 32–52 m:n päähän ja äänen vaimennus alkoi jo 8 m:stä. Nyt vaimennus alkaa 22 m:stä ja äänet ovat kovempia. Uusi ääntely vuorottelee vanhan kanssa.
+- **Ukkosmyrsky päivällä hämärtää maailman** (noin 40 % tummempi).
+- **Ukkosmyrskyssä haamuja tulee selvästi useammin** (ja niitä voi olla kaksi).
+- **Salaman isku maahan:** lähelle iskevän salaman kohdalla hiekkaa ja multaa pöllähtää ja pieni tulipallo leimahtaa.
+- **Uudet äänet:** aavikon tuuli (aina hyvin hiljaa, hiekkamyrskyssä kovaa), raju myrskytuuli (merellä ukkosella ja puuskittain hiekkamyrskyssä), napsahdus esinettä heitettäessä ja hiljainen, vaihtelevan korkuinen kopsahdus puuta lyödessä.
+
 ## 2026-10-07 (sessio 12b): pehmeämpi sumu, lähisalamat, Haamun äänet, äänien hienosäätö
 
 - **Sumu ei enää näytä seinältä.** Syy: sateen usva ja sadeverho olivat lieriön pinnalla 26 m:n päässä, joten sitä lähemmät puut näkyivät kirkkaina ja kauemmat usvaisina, ja raja näkyi kuin este (myös sademetsän tihkussa). Nyt verhot ovat siellä, missä tavallinen sumu jo peittää maiseman, ja usva tulee vain kunnon sateessa.

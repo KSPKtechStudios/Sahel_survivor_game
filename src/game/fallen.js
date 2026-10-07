@@ -181,6 +181,7 @@ export class FallenTrees {
   // Lyönti kaatuneeseen runkoon. Palauttaa true, jos runko hajosi.
   hit(log, hitPoint, playerPos) {
     const def = OBJECT_TYPES[log.type];
+    events.emit('woodHit', { x: hitPoint.x, z: hitPoint.z });
     const local = log.mesh.worldToLocal(hitPoint.clone());
     const from = log.mesh.worldToLocal(playerPos.clone()).sub(local);
     addNotch(log.mesh.geometry, local, from, null, 1.3);

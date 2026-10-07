@@ -17,6 +17,10 @@ const BEDS = {
   jungle: { file: 'assets/sfx/jungle.mp3', level: 0.22, tau: 0.9, lowpass: 4200 },
   rain: { file: 'assets/sfx/rain.mp3', level: 0.42, tau: 1.2 },
   thunder: { file: 'assets/sfx/thunder-distant.mp3', level: 0.42, tau: 2.2 },
+  // Sessio 12c: aavikon tuuli (aina hyvin hiljaa, hiekkamyrskyssä kovaa) ja
+  // raju myrskytuuli (merellä ukkosella, hiekkamyrskyssä puuskittain).
+  desertWind: { file: 'assets/sfx/desert-wind.mp3', level: 0.3, tau: 1.6 },
+  stormWind: { file: 'assets/sfx/storm-wind.mp3', level: 0.3, tau: 1.4 },
 };
 const OVERLAP = 3;         // silmukan ristiinhäivytys (s)
 const IDLE_STOP = 6;       // hiljainen kerros pysäytetään tämän jälkeen (s)
@@ -29,6 +33,9 @@ const ONESHOTS = {
   ghostSpawn: 'assets/sfx/ghost-spawn.mp3',
   ghostIdle: 'assets/sfx/ghost-idle.mp3',
   ghostAttack: 'assets/sfx/ghost-attack.mp3',
+  ghostIdle2: 'assets/sfx/ghost-idle2.mp3',
+  click: 'assets/sfx/click.mp3',
+  chop: 'assets/sfx/chop-wood.mp3',
 };
 // Puun kaatuminen: räsähdyksen kohta tiedostossa (s) ja voimakkuus 10 m:stä.
 // Räsähdyksen jälkeen ääni häivytetään pois (TREE_TAIL s), ettei maassa
@@ -38,7 +45,12 @@ const TREE_LEVEL = 0.3;
 const TREE_TAIL = 0.9;
 // Lähisalaman jyrähdys ja Haamun äänet (tiedostot −16 LUFS).
 const CLAP_LEVEL = 0.65;
-const GHOST_LEVEL = { ghostSpawn: 0.22, ghostIdle: 0.2, ghostAttack: 0.26 };
+// Haamu kuuluu kauempaa (se ilmestyy 32–52 m:n päähän): vaimennus alkaa vasta
+// 22 m:stä (sessio 12c; ennen 8 m, jolloin ilmestymisääni jäi lähes kuulumattomiin).
+const GHOST_LEVEL = { ghostSpawn: 0.45, ghostIdle: 0.4, ghostIdle2: 0.38, ghostAttack: 0.4 };
+const GHOST_REF = 22, GHOST_RANGE = 95;
+const CLICK_LEVEL = 0.65;  // tiedosto on hiljainen (n. −31 LUFS)
+const CHOP_LEVEL = 0.07;   // puun lyönti: hyvin hiljaa
 
 class Bed {
   constructor(sfx, key, def) {
@@ -144,7 +156,7 @@ export class Sfx {
     this.master = 1;
     this.volume = 1;
     this.beds = {};
-    this.levels = { wind: 0, jungle: 0, rain: 0, thunder: 0 };
+    this.levels = { wind: 0, jungle: 0, rain: 0, thunder: 0, desertWind: 0, stormWind: 0 };
     this.bufs = {};
     this.noise = null;
     this.hidden = false;
@@ -260,7 +272,7 @@ export class Sfx {
   }
 
   // Lyhyt ääni paikasta (x, z): suunta ja etäisyysvaimennus.
-  _oneShot(name, level, x, z, listener, ref = 10, delay = 0, range = 140) {
+  _oneShot(name, level, x, z, listener, ref = 10, delay = 0, range = 140, rate = null) {
     const buf = this.bufs[name];
     if (!this.ctx || !buf || this.ctx.state !== 'running') return;
     const sp = this._spatial(x, z, listener, ref, range);
@@ -268,7 +280,7 @@ export class Sfx {
     const ctx = this.ctx;
     const src = ctx.createBufferSource();
     src.buffer = buf;
-    src.playbackRate.value = 0.96 + Math.random() * 0.08;
+    src.playbackRate.value = rate ?? 0.96 + Math.random() * 0.08;
     const g = ctx.createGain();
     g.gain.value = level * sp.gain;
     const pan = ctx.createStereoPanner();
@@ -287,8 +299,26 @@ export class Sfx {
 
   // Haamun äänet: spawn (ilmestyy / kirkaisu ennen syöksyä), idle, attack.
   ghost(kind, x, z, listener) {
-    const name = kind === 'spawn' ? 'ghostSpawn' : kind === 'attack' ? 'ghostAttack' : 'ghostIdle';
-    this._oneShot(name, GHOST_LEVEL[name], x, z, listener, 8);
+    const name = kind === 'spawn' ? 'ghostSpawn' : kind === 'attack' ? 'ghostAttack' : Math.random() < 0.5 ? 'ghostIdle' : 'ghostIdle2';
+    this._oneShot(name, GHOST_LEVEL[name], x, z, listener, GHOST_REF, 0, GHOST_RANGE);
+  }
+
+  // Esineen heitto (napsahdus, ei suuntaa).
+  click() {
+    const buf = this.bufs.click;
+    if (!this.ctx || !buf || this.ctx.state !== 'running') return;
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = 0.95 + Math.random() * 0.1;
+    const g = this.ctx.createGain();
+    g.gain.value = CLICK_LEVEL;
+    src.connect(g).connect(this.bus);
+    src.start();
+  }
+
+  // Isku puuhun: hiljainen kopsahdus, sävelkorkeus vaihtelee joka iskulla.
+  chop(x, z, listener) {
+    this._oneShot('chop', CHOP_LEVEL * (0.8 + Math.random() * 0.4), x, z, listener, 4, 0, 60, 0.82 + Math.random() * 0.4);
   }
 
   // Askel. kind: sand | grass | leaves | rock | gravel | wood | water.

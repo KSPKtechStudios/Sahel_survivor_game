@@ -20,7 +20,7 @@ import { Sfx } from './audio/sfx.js';
 import { createModelLibrary } from './models/models.js';
 import { World } from './world/world.js';
 import { Tumbleweeds } from './world/tumbleweeds.js';
-import { findSpawn, setWorldSeed, seedFromString, sampleTerrain, heightAt, displayBiome } from './world/terrain.js';
+import { findSpawn, setWorldSeed, seedFromString, sampleTerrain, heightAt, displayBiome, waterAt } from './world/terrain.js';
 import { Player } from './player/player.js';
 import { Input } from './player/input.js';
 import { ViewModel } from './player/viewmodel.js';
@@ -99,10 +99,20 @@ const blood = new Blood(scene);
 const rain = new Rain(scene, renderer);
 env.onStrike = (angle, dist, near) => {
   rain.strike(camera, angle, dist, near);
-  // Lähisalama: jyrähdys heti (sfx alustetaan alempana).
+  // Lähisalama: jyrähdys heti (sfx alustetaan alempana) ja isku maahan:
+  // hiekkaa ja multaa pöllähtää ja pieni tulipallo leimahtaa (sessio 12c).
   if (near) {
     const x = camera.position.x + Math.cos(angle) * dist, z = camera.position.z + Math.sin(angle) * dist;
     sfx.thunderClap(x, z, dist, { x: camera.position.x, z: camera.position.z, yaw: player.yaw });
+    const wq = waterAt(x, z, {});
+    if (wq.wl <= wq.h + 0.05) {
+      const p = new THREE.Vector3(x, wq.h + 0.3, z);
+      // Sora ja multa lentävät, pölypilvi leviää hitaasti.
+      bursts.spawn(p, 0xd9c49a, 40, 9, { size: 0.4, life: 1.3, gravity: 9, lit: true });
+      bursts.spawn(p, 0x8a6a48, 30, 7, { size: 0.35, life: 1.2, gravity: 9, lit: true });
+      bursts.spawn(p, 0xc8b493, 16, 2.6, { size: 3.6, life: 2.6, gravity: -0.4, opacity: 0.55, lit: true });
+      rain.impact(p);
+    }
   }
 };
 const music = new Music();
@@ -539,6 +549,7 @@ function throwSelected() {
     const pos = camera.position.clone().addScaledVector(_throwDir, 0.5);
     pos.y -= 0.2;
     drops.throwItem(id, 1, pos, _throwDir, elapsed);
+    sfx.click();
     inventory.removeFromSlot(slot, 1);
   });
 }
@@ -610,19 +621,24 @@ events.on('hitFeedback', ({ strength }) => { shake = Math.max(shake, strength * 
 // Taustaäänet käyttäjän ohjeen mukaan: tuuli ukkosella (missä ukkonen on
 // mahdollinen) sekä aina vuoristossa ja merellä; viidakon ääni sademetsässä;
 // sade aina kun sataa (myös sademetsän tihku, hiljaa); kaukainen ukkonen
-// ukkosmyrskyssä. Kaikki voivat soida päällekkäin. Tuuli myös hiekkamyrskyssä.
+// ukkosmyrskyssä; aavikon tuuli (hiljaa, myrskyssä kovaa) ja raju myrskytuuli
+// (sessio 12c). Kaikki voivat soida päällekkäin.
 const _sm = (a, b, x) => Math.max(0, Math.min(1, (x - a) / (b - a)));
 function updateSfx(game, rainAmt, realDt) {
   if (game) {
     const dry = Math.min(1, env.climate.desert + env.climate.dry + env.climate.mountain);
     const thunder = env.w.thunder * (1 - dry);
+    const sand = _sm(0.45, 0.9, env.w.dust);
     const open = Math.max(_sm(0.2, 0.7, _s.mountains || 0), _sm(0.2, 0.7, _s.ocean || 0));
     sfx.setLevels({
-      // Lisäksi hiekkamyrskyssä (Clauden lisäys: myrsky on tuulta).
-      wind: Math.max(thunder, open * (0.6 + 0.4 * Math.min(1, env.w.wind)), _sm(0.45, 0.9, env.w.dust)),
+      wind: Math.max(thunder, open * (0.6 + 0.4 * Math.min(1, env.w.wind))),
       jungle: _sm(0.3, 0.7, _s.rainforest || 0),
       rain: _sm(0.05, 0.12, rainAmt) * Math.pow(Math.min(1, rainAmt), 1.2),
       thunder,
+      // Aavikon tuuli: aina hyvin hiljaa, hiekkamyrskyssä kovaa.
+      desertWind: Math.max(0.1 * _sm(0.3, 0.7, (_s.desert || 0) + (_s.dunes || 0)), sand),
+      // Raju tuuli: merellä ukkosella ja hiekkamyrskyssä puuskittain.
+      stormWind: Math.max(thunder * _sm(0.2, 0.7, _s.ocean || 0), sand * Math.max(0, Math.sin(elapsed * 0.21) * Math.sin(elapsed * 0.077 + 1)) * 1.6),
     });
   } else {
     sfx.setLevels({});
@@ -642,6 +658,7 @@ function stepMaterial() {
   return 'grass';
 }
 player.onFootstep = (k) => sfx.step(stepMaterial(), k);
+events.on('woodHit', ({ x, z }) => sfx.chop(x, z, { x: player.position.x, z: player.position.z, yaw: player.yaw }));
 events.on('haamuSound', ({ kind, x, z }) => {
   sfx.ghost(kind, x, z, { x: player.position.x, z: player.position.z, yaw: player.yaw });
 });

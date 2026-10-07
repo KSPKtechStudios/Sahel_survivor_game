@@ -2,6 +2,19 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-07 (sessio 12c)
+**Tehtiin**
+- Käyttäjän palaute ja 5 äänitiedostoa (kirjattu `DESIGN.md`:hen).
+- Haamun äänten vaimennus korjattu ja tasot nostettu, uusi ääntely (`audio/sfx.js`).
+- Ukkosen hämärä (`render/environment.js`), haamujen syntyminen ukkosella (`game/mobs.js`).
+- Salaman isku maahan: hiukkaset (`render/particles.js`: koko, kesto, painovoima, salaman valaisemat) ja tulipallo (`render/rain.js`), kytkentä `main.js`.
+- Uudet äänet: aavikon tuuli, myrskytuuli (kerroksina), napsahdus heitossa (`main.js`), puun lyönti (`game/breakables.js`, `game/fallen.js`: `woodHit`).
+- Testattiin: aavikko selkeä −39 dBFS / hiekkamyrsky −19 → hiljennettiin, meri ukkosella myrskytuuli mukana, haamun äänet 40 m:stä −26…−29 dBFS (ennen n. −40), napsahdus, puun lyönti (hiljennettiin), valotus selkeällä 0,95 / ukkosella 0,55 ja kuvat, salaman iskukohdan kuvat. Savutesti ja ESLint puhtaat.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute; lisää ääniä.
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-07 (sessio 12b)
 **Tehtiin**
 - Käyttäjän palaute ja 5 uutta äänitiedostoa (kirjattu `DESIGN.md`:hen).

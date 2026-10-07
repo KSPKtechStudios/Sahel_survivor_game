@@ -525,8 +525,11 @@ export class Mobs {
       if (night && !player.dead) {
         this.haamuTimer -= dt;
         if (this.haamuTimer <= 0) {
-          this.haamuTimer = 35 + Math.random() * 40;
-          if (this.count('haamu') < MAX_HAAMU && Math.random() < 0.4) this._trySpawnHaamu();
+          // Ukkosmyrskyssä haamuja tulee selvästi useammin (sessio 12c):
+          // tarkistus 15–30 s välein, 85 %, enintään 2 kerrallaan.
+          const storm = (this.env?.w?.thunder || 0) > 0.4;
+          this.haamuTimer = storm ? 15 + Math.random() * 15 : 35 + Math.random() * 40;
+          if (this.count('haamu') < (storm ? MAX_HAAMU + 1 : MAX_HAAMU) && Math.random() < (storm ? 0.85 : 0.4)) this._trySpawnHaamu();
         }
       } else if (!night) {
         this.haamuTimer = 20 + Math.random() * 30;
