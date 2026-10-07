@@ -525,7 +525,8 @@ export class ViewModel {
       f.visible = torch;
       if (!torch) continue;
       const m = this.items.torch;
-      const k = (0.85 + Math.sin(this.time * (9 + i * 3.1) + i) * 0.1 + Math.sin(this.time * 23 + i * 2) * 0.05) * fk;
+      // Heikkokin liekki näkyy selvästi (sateessa ei näytä sammuneelta).
+      const k = (0.85 + Math.sin(this.time * (9 + i * 3.1) + i) * 0.1 + Math.sin(this.time * 23 + i * 2) * 0.05) * (0.45 + 0.55 * Math.min(1, fk));
       f.position.set(m.position.x + (i - 0.5) * 0.012, m.position.y + 0.43 * m.scale.y + 0.03 * k, m.position.z);
       f.scale.set(0.085 * k * (1 - i * 0.25), 0.15 * k * (1 - i * 0.2), 1);
     }

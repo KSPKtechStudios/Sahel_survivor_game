@@ -288,7 +288,7 @@ void main() {
     if (m > 0.001) {
       vec4 mc = uViewProj * vec4(uCamPos + vec3(ray.x, -ray.y, ray.z) * 1000.0, 1.0);
       vec2 muv = mc.xy / mc.w * 0.5 + 0.5 + heatWarp(vUv * 1.3, uTime * 1.2) * 1.5;
-      col = mix(col, texture2D(tColor, clamp(muv, vec2(0.001), vec2(0.999))).rgb, m * 0.55);
+      col = mix(col, texture2D(tColor, clamp(muv, vec2(0.001), vec2(0.999))).rgb, m * 0.5);
     }
   }
 
@@ -439,7 +439,8 @@ export class PostFX {
     cu.uViewProj.value.copy(viewProj);
     // Kuumuusväreily (vain kun jälkikäsittely on muutenkin päällä).
     this.time = (this.time + Math.max(0, dt)) % 1000;
-    cu.uHeat.value = env.heat || 0;
+    // Sessio 18: väreily hillitymmäksi (käyttäjä: siisti mutta liian runsas).
+    cu.uHeat.value = (env.heat || 0) * 0.6;
     cu.uTime.value = this.time;
     cu.uNear.value = near;
     cu.uFar.value = far;

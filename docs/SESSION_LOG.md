@@ -2,6 +2,19 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-07 (sessio 18)
+**Tehtiin**
+- Kysyttiin ensin 4 epäselvää kohtaa (kirves/nuija, viidakkoveitsi, paraneminen, kivet), sitten:
+- Soihtu sateessa (`main.js`, `player/viewmodel.js`), kestävyys (`config.js`, `player/player.js`, `game/archery.js`), paraneminen (`game/survival.js`), taistelu (`game/combat.js`), puut ja kivet (`game/interaction.js`, `game/breakables.js`, `game/fallen.js`, `world/objectTypes.js`), tekstien poisto ja punainen hehku (`ui/hud.js`, `game/combat.js`, `game/mobs.js`, `styles.css`), kuumuusväreily (`render/post.js`), jousi (`game/items.js`), nimilappujen tarkkuus (`ui/nameplates.js`, `main.js`).
+- Testattiin headless-Chromiumilla: puu 20 lyöntiä ilman kirvestä 5 → 4,8; kiven teksti; paraneminen 0,25 → 1 syödessä (30 s); punainen hehku tapahtumasta ja tyhjällä kestävyydellä; nimilappu tarkasti tähdättäessä; säteen hinta 0,016 ms. ESLint ja savutesti puhtaat.
+
+**Huomiot**
+- Testiselain oli tällä kertaa erityisen hidas (0,4–1,5 kuvaa/s, yksi kuva n. 7 s), joten ajastetut testit tehtiin osin kutsumalla päivityksiä suoraan.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute tasapainosta.
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-07 (sessio 17)
 **Tehtiin**
 - Puu pois käyttöliittymästä (`ui/woodArt.js` poistettu, `ui/hud.js`, `styles.css`).

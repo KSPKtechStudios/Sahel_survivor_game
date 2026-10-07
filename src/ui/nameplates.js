@@ -20,6 +20,26 @@ const HOSTILE = new Set(['chase', 'attack', 'windup', 'dive', 'stalk', 'recover'
 const EYE = '<svg viewBox="0 0 24 24"><path d="M12 5C6.5 5 2.4 9.2 1 12c1.4 2.8 5.5 7 11 7s9.6-4.2 11-7c-1.4-2.8-5.5-7-11-7zm0 11.2A4.2 4.2 0 1 1 12 7.8a4.2 4.2 0 0 1 0 8.4zm0-6.4a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 0 0 0-4.4z"/></svg>';
 
 const _v = new THREE.Vector3();
+const _dir = new THREE.Vector3();
+
+// Säteen ja olennon pystykapselin leikkaus: palauttaa etäisyyden tai null.
+function rayCapsule(o, d, m) {
+  const r = m.def.radius;
+  const y0 = m.pos.y + r * 0.6, y1 = m.pos.y + Math.max(r * 0.6, m.def.height - r * 0.6);
+  // Lähimmät pisteet säteen ja pystyjanan välillä.
+  const wx = o.x - m.pos.x, wy = o.y - y0, wz = o.z - m.pos.z;
+  const segLen = y1 - y0;
+  const b = d.y;                      // d · u (u = (0,1,0))
+  const dd = d.x * wx + d.y * wy + d.z * wz;
+  const e = wy;                       // u · w
+  const den = 1 - b * b;
+  let sc = den > 1e-6 ? (b * e - dd) / den : 0;
+  let tc = den > 1e-6 ? (e - b * dd) / den : e;
+  tc = Math.max(0, Math.min(segLen, tc));
+  sc = Math.max(0, b * tc - dd);
+  const px = wx + d.x * sc, py = wy + d.y * sc - tc, pz = wz + d.z * sc;
+  return px * px + py * py + pz * pz <= r * r ? sc : null;
+}
 
 export class Nameplates {
   constructor(root) {
@@ -58,20 +78,21 @@ export class Nameplates {
     this.lastT = now;
     const w = window.innerWidth, h = window.innerHeight;
     // --- Olennot: katsottu (lähellä ja tähtäimen kohdalla) + lyödyt
+    // Sessio 18: lappu vain, kun tähtäin osuu olentoon oikeasti (säde vs.
+    // olennon kapseli todellisilla mitoilla) eikä esine ole edessä.
     let looked = prompt && prompt.mob ? prompt.mob : null;
     if (visible && mobs && !looked) {
-      const cp = camera.position;
-      let best = Infinity;
+      camera.getWorldDirection(_dir);
+      const o = camera.position;
+      let bestT = LOOK_RANGE;
       for (const m of mobs.list) {
         if (m.state === 'dead') continue;
-        const d = Math.hypot(m.pos.x - cp.x, m.pos.y - cp.y, m.pos.z - cp.z);
-        if (d > LOOK_RANGE) continue;
-        const s = this._project(camera, m.pos.x, m.pos.y + m.def.height * 0.5, m.pos.z, w, h);
-        if (!s) continue;
-        // Olennon näennäinen koko ruudulla: kohteen on oltava tähtäimen kohdalla.
-        const size = Math.max(26, (m.def.height * 0.7 + m.def.radius) / d * h * 0.9);
-        const off = Math.hypot(s.x - w / 2, s.y - h / 2);
-        if (off < size && off + d * 2 < best) { best = off + d * 2; looked = m; }
+        const t = rayCapsule(o, _dir, m);
+        if (t !== null && t < bestT) { bestT = t; looked = m; }
+      }
+      if (looked && this.world) {
+        const wh = this.world.raycast(o, _dir, bestT);
+        if (wh && wh.t < bestT - 0.3) looked = null;
       }
     }
     if (looked && visible) {

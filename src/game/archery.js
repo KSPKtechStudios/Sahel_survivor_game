@@ -76,7 +76,7 @@ export class Archery {
         this.drawing = true;
         this.draw = Math.min(1, this.draw + dt / bow.draw);
         // Jänteen pitäminen vie kestävyyttä (täysi veto enemmän).
-        if (!p.god) p.stamina = Math.max(0, p.stamina - (2 + this.draw * 5) * dt);
+        if (!p.god) p.stamina = Math.max(0, p.stamina - (1.8 + this.draw * 4.4) * dt);
         p.staminaDelay = Math.max(p.staminaDelay, 0.4);
         p.moveMul *= 0.55;
       } else if (this.drawing) {

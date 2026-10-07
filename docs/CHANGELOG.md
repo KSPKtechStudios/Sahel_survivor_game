@@ -2,6 +2,18 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-07 (sessio 18): tasapainotus, soihtu sateessa, vähemmän tekstiä
+
+- **Soihtu ei näytä sammuvan sateessa:** liekki heikkenee ja yskii, mutta palaa. Se sammuu vain uidessa.
+- **Kestävyys kuluu hieman hitaammin** (juoksu, uinti, iskut, hypyt, jousi).
+- **Paraneminen on nopeaa vain 30 s syömisen jälkeen**, muuten neljäsosanopeudella.
+- **Taistelu:** kirveellä ja nuijalla lyhyt kahden iskun sarja; viidakkoveitsen sarja selvästi rauhallisempi.
+- **Puut:** ei enää tekstiä "Tarvitset kirveen". Puuta voi lyödä millä vain, mutta ilman kirvestä vahinko on mitätön. **Kivet:** "Liian kovaa!" ilman hakkua.
+- **Ei enää tekstejä** torjunnasta, väsymyksestä eikä haamuista. Kun kestävyys loppuu, kestävyyspalkki hehkuu hennosti punaisena.
+- **Aavikon kuumuusväreily** on hillitympi.
+- **Jousi jännittyy hitaammin.**
+- **Olentojen nimilaput** tulevat vasta, kun tähtäin osuu olentoon (ei esteen läpi).
+
 ## 2026-10-07 (sessio 17): moderni ilme, nimilaput vain katsottaessa, jousen tähtäin
 
 - **Puu poistettu käyttöliittymästä:** paneelit ovat puhtaasti modernia savulasia.

@@ -16,8 +16,8 @@ import { events } from './events.js';
 // dmg = vahinko, kb = tönäisy, up = heitto ylös, stam = kestävyys,
 // arc = osumakaaren puolikulma (rad), reach = lisäulottuvuus,
 // multi = osuu useampaan, stagger = horjuttaa (s).
-// Iskusarja (useampi isku) on vain nopeilla ja kevyillä aseilla
-// (viidakkoveitsi); muilla on yksi isku ja jäähdytys.
+// Iskusarja: viidakkoveitsellä kolme iskua, kirveellä ja nuijalla lyhyt
+// kahden iskun sarja (sessio 18); muilla yksi isku ja jäähdytys.
 // Sessio 11: tahti on sujuva mutta ei loputon. Yhden iskun kierto (kesto +
 // jäähdytys) on nyrkeillä n. 0,65 s, kirveellä n. 0,8 s ja raskaalla nuijalla
 // n. 1,45 s. Kun isku osuu maailmaan (puu, kivi, pensas) tai ilmaan, jäähdytys
@@ -46,7 +46,8 @@ export const WEAPONS = {
   },
   axe: {
     name: 'Kirves', block: 'tool', reach: 2.4, combo: [
-      { anim: 'swing', dur: 0.5, hitAt: 0.5, chain: 1, cd: 0.28, dmg: 12, kb: 7, up: 1.6, stam: 7, arc: 0.5 },
+      { anim: 'swing', dur: 0.42, hitAt: 0.5, chain: 0.85, cd: 0.3, dmg: 12, kb: 7, up: 1.6, stam: 7, arc: 0.5 },
+      { anim: 'slashL', dur: 0.44, hitAt: 0.5, chain: 1, cd: 0.55, dmg: 11, kb: 7.5, up: 1.8, stam: 11, arc: 0.6 },
     ],
   },
   pick: {
@@ -56,14 +57,15 @@ export const WEAPONS = {
   },
   club: {
     name: 'Puunuija', block: 'weapon', reach: 2.5, combo: [
-      { anim: 'slashR', dur: 0.75, hitAt: 0.52, chain: 1, cd: 0.7, dmg: 21, kb: 12, up: 4.2, stam: 18, arc: 0.85, multi: true, stagger: 0.6, heavy: true },
+      { anim: 'slashR', dur: 0.62, hitAt: 0.52, chain: 0.85, cd: 0.6, dmg: 19, kb: 11, up: 3.8, stam: 15, arc: 0.85, multi: true, stagger: 0.5, heavy: true },
+      { anim: 'slashL', dur: 0.7, hitAt: 0.52, chain: 1, cd: 0.9, dmg: 23, kb: 13, up: 4.5, stam: 20, arc: 0.85, multi: true, stagger: 0.65, heavy: true },
     ],
   },
   machete: {
     name: 'Viidakkoveitsi', block: 'weapon', reach: 2.4, combo: [
-      { anim: 'slashR', dur: 0.38, hitAt: 0.5, chain: 0.8, cd: 0.5, dmg: 10, kb: 5.5, up: 1.3, stam: 9, arc: 0.9, multi: true },
-      { anim: 'slashL', dur: 0.38, hitAt: 0.5, chain: 0.8, cd: 0.5, dmg: 10, kb: 5.5, up: 1.3, stam: 14, arc: 0.9, multi: true },
-      { anim: 'thrust', dur: 0.5, hitAt: 0.48, chain: 1, cd: 1.1, dmg: 19, kb: 9.5, up: 3, stam: 22, arc: 0.35, reach: 0.5, stagger: 0.5 },
+      { anim: 'slashR', dur: 0.5, hitAt: 0.5, chain: 0.9, cd: 0.5, dmg: 10, kb: 5.5, up: 1.3, stam: 9, arc: 0.9, multi: true },
+      { anim: 'slashL', dur: 0.5, hitAt: 0.5, chain: 0.9, cd: 0.5, dmg: 10, kb: 5.5, up: 1.3, stam: 14, arc: 0.9, multi: true },
+      { anim: 'thrust', dur: 0.55, hitAt: 0.48, chain: 1, cd: 1.1, dmg: 19, kb: 9.5, up: 3, stam: 22, arc: 0.35, reach: 0.5, stagger: 0.5 },
     ],
   },
 };
@@ -205,7 +207,8 @@ export class Combat {
         if (this.comboIdx > 0 && !comboOk) { this._comboDenied(weapon); this.comboIdx = 0; }
         const step = weapon.combo[this.comboIdx % weapon.combo.length];
         if (!player.useStamina(step.stam)) {
-          events.emit('message', { text: 'Olet liian väsynyt' });
+          // Ei tekstiä (sessio 18): kestävyyspalkki hehkuu punaisena.
+          events.emit('staminaOut');
           this.buffer = 0;
         } else {
           const idx = this.comboIdx;
@@ -235,10 +238,10 @@ export class Combat {
     player.staminaRegenMul = this.blocking ? 0.35 : 1;
   }
 
+  // Sarjaan ei riitä kestävyys: ei tekstiä (sessio 18), palkki hehkuu punaisena.
   _comboDenied(weapon) {
-    if (weapon.combo.length < 2 || this.comboMsgT > 0) return;
-    this.comboMsgT = 8;
-    events.emit('message', { text: 'Sarjaan tarvitaan yli puolet kestävyydestä' });
+    if (weapon.combo.length < 2) return;
+    events.emit('staminaOut');
   }
 
   // Iskun osumahetki: ensin olennot kaaressa, muuten maailma (hakkuu).

@@ -217,6 +217,18 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 18 (käyttäjän kertoma, 2026-10-07)
+- **Soihtu ei sammu sateessa**, vaan palaa heikommin ja yskivästi; se sammuu vain, kun sen kanssa menee uimaan.
+- **Energia (kestävyys) kuluu hitusen liian nopeasti.**
+- **Paraneminen on liian nopeaa:** nopeaa vain juuri syömisen jälkeen (käyttäjä valitsi: 30 s nopeaa, sitten hidas), muuten nerfattava.
+- **Taistelu:** kirveellä ja nuijalla ei saa nopeita iskuja (valinta: lyhyt 2 iskun sarja), viidakkoveitsen kombot ovat överinopeita (valinta: iskujen väli selvästi pidemmäksi, n. 0,45 s).
+- **Puihin ei tekstiä "vaatii kirveen":** puun voi lyödä millä vain (käsin, vaikka marjoilla), mutta ilman kirvestä vahinko on niin mitätön, ettei se kaadu koskaan. **Kiveen tulee teksti, esim. "Liian kovaa!"**
+- **Ei tekstejä** torjunnasta ("PARRY"), väsymyksestä eikä aaveista; kun kestävyys loppuu, **kestävyyspalkki hehkuu hieman punaisena**.
+- **Aavikon kuumuusväreily vähemmäksi** (siisti mutta liian runsas).
+- **Jousi latautuu liian nopeasti.**
+- **Eläinten ja asioiden tekstit vasta, kun pelaaja oikeasti katsoo suoraan kohteeseen tähtäimellä.**
+- Toimintatapa: Claude saa kysyä välikysymyksiä, jos tulee epäselvyyksiä, jotta asiat saadaan kerralla valmiiksi.
+
 ## Sessio 17 (käyttäjän kertoma, 2026-10-07)
 - **Puu pois kokonaan käyttöliittymästä**; modernimpi ilme sopii paremmin.
 - **Eläinten ja mobien nimet ja kestävyyspalkit näkyvät turhan kaukaa** ja paljastavat liikaa: ne näkyvät vasta läheltä, kun olentoon katsotaan.
@@ -286,6 +298,7 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - Sessio 11: tulikärpäsparvet, pienemmät aallot, ei vettä veneiden sisällä, realistinen sade ja sadeverhot, kuivuvat lammikot, säät biomeittain (kuiva laterittitasanko), rakennelmia n. 3 700 ja hylkyjä n. 120, hienovarainen linnunrata ja tähdenlennot, purjeen saumat ja vastavalo, hento kimallus, Haamu latvusten alla ja pako, jousi oikeassa kädessä ja nuolten jälki, sujuvampi iskujen tahti, tuulen nuolen suunta.
 
 ## Paikkamerkit (Clauden valitsemia, voi muuttaa vapaasti)
+- **Sessio 18:** soihtu sateessa: liekki 65–100 % (rankkasade), notkahdukset 0,15–0,45 s × 0,62, liekki näkyy vähintään 45 % koossa, valo vähintään 35 %. Kestävyys: juoksu 12/s (ennen 14), uinti 3,9/s (4,5), paikallaan uinti 1,3/s (1,5), kertakulutus (iskut, hypyt) × 0,88, jousen jännitys hieman halvempi. Paraneminen: 30 s syömisen jälkeen 1,5/s, muuten 0,375/s. Kirves: 2 iskua (toinen 0,36 s ensimmäisen jälkeen, 12 + 11 vahinkoa, 7 + 11 kestävyyttä). Nuija: 2 iskua (toinen 0,53 s jälkeen, 19 + 23 vahinkoa). Viidakkoveitsi: iskut 0,45 s välein. Puu ilman kirvestä: 1 % kirveen iskusta (n. 500 lyöntiä). Kuumuusväreily 60 % entisestä. Jousi 1,45 s (ennen 0,95), jännejousi 1,3 s (0,85). Olennon nimilappu: säde osuu olennon kapseliin (todellinen säde ja korkeus), eikä esine (puu, kivi) ole edessä.
 - **Sessio 17:** olennon nimilappu näkyy, kun olento on alle 14 m:n päässä ja tähtäimen kohdalla (näennäisen koon mukaan, vähintään 26 px); lappu viipyy 1,2 s; lyödyn olennon lappu näkyy 5 s (alle 32 m). Jousen tähtäin kiristyy jännitettäessä (115 % → 75 %), palkki hehkuu täysin jännitettynä. Nuolilaskuri näyttää kaikkien nuolityyppien yhteismäärän, punertava kun nuolet ovat loppu.
 - **Sessio 16:** Philosopher kaikessa tekstissä paitsi valikon Sahel-logossa (Eagle Lake). Naulat puukylttien kulmissa (terveys 4, kestävyys 2). Animaatiot: vahinko näkyy palkissa lähes heti (~30 ms), parannus pehmeämmin (~110 ms) hennolla hehkulla; menetetty osa viipyy 0,45 s ja kutistuu; osumasta 0,26 s tärähdys (1–3 px) ja välähdys; numero hypähtää vähintään 2 yksikön muutoksesta; kestävyys liukuu esiin 0,2 s ja häipyy 0,42 s; ruoka ponnahtaa esiin joustaen 0,38 s, loppunut kutistuu pois 0,22 s, muut liukuvat paikoilleen 0,26 s; pikapalkin valinta 0,16 s; viestit liukuvat ylös. Loppuva ruoka: viimeinen minuutti, välke 1,9 s jaksolla (läpinäkyvyys 100 → 55 %) ja pieni oranssi hehku.
 - **Sessio 15:** savulasipaneeli (tumma, 50 % läpikuultava, sumennus 6 px, ohut kermanvärinen reuna), puukyltti 46 × 46 px, viivaikonit (pisara = terveys, tuulen viivat = kestävyys). Terveys 250 × 46 px vasemmassa alakulmassa, ruoat lasiympyröinä (36 px) sen yläpuolella rivissä, kaari kertoo ajan. Terveysnumero on himmeä ja kirkastuu 1,6 s:ksi muuttuessaan. Kestävyys 176 × 22 px pikapalkin yläpuolella, näkyy vain käytettäessä. Sessio 14:n veistetty lauta ja `barFrame` jäivät koodiin käyttämättöminä.

@@ -667,7 +667,6 @@ export class Mobs {
       this.spawn('haamu', x, z);
       if (!this.haamuSeen) {
         this.haamuSeen = true;
-        events.emit('message', { text: 'Latvuksissa leijuu jotain... Nuotion valo pitää haamut loitolla.' });
       }
       return;
     }

@@ -75,6 +75,7 @@ export class Player {
 
   useStamina(amount) {
     if (this.god) return true;
+    amount *= 0.88; // sessio 18: kaikki kertakulutus (iskut, hypyt) hieman pienempi
     if (this.stamina < amount * 0.5) return false;
     this.stamina = Math.max(0, this.stamina - amount);
     this.staminaDelay = CONFIG.staminaRegenDelay;

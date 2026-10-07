@@ -102,7 +102,7 @@ export class Breakables {
 
     if (def.kind === 'tree') {
       events.emit('woodHit', { x: hitPoint.x, z: hitPoint.z });
-      return this._hitTree(obj, from, hitPoint, c1, c2);
+      return this._hitTree(obj, from, hitPoint, c1, c2, dmg);
     }
     if (def.kind === 'rock') return this._hitRock(obj, from, hitPoint, maxHp, c1, c2);
 
@@ -143,7 +143,7 @@ export class Breakables {
     return true;
   }
 
-  _hitTree(obj, from, hitPoint, c1, c2) {
+  _hitTree(obj, from, hitPoint, c1, c2, dmg = 1) {
     const def = OBJECT_TYPES[obj.type];
     if (!obj.active) {
       const geo = makeChoppable(this.models.hi(def.model, obj.variant));
@@ -154,13 +154,14 @@ export class Breakables {
     const ax = trunkAxis(geo.userData.tree);
     // Lovi tulee aina kaatokohtaan, sille puolelle josta lyödään.
     const fromLocal = mesh.worldToLocal(hitPoint.clone().addScaledVector(from, 2)).sub(mesh.worldToLocal(hitPoint.clone()));
-    addNotch(geo, null, fromLocal, ax.cutS, 1);
+    addNotch(geo, null, fromLocal, ax.cutS, Math.min(1, dmg));
     const cutWorld = ax.base.clone().addScaledVector(ax.axis, ax.cutS);
     mesh.localToWorld(cutWorld);
     cutWorld.addScaledVector(from, geo.userData.tree.r0 * obj.scale);
-    this.debris.chips(cutWorld, c1, 7, from, 0.9);
-    this.debris.chips(cutWorld, c2, 3, from, 0.8);
-    this.world.shake(obj, 0.35);
+    const weak = dmg < 0.5; // ilman kirvestä: vähemmän lastuja
+    this.debris.chips(cutWorld, c1, weak ? 2 : 7, from, 0.9);
+    this.debris.chips(cutWorld, c2, weak ? 1 : 3, from, 0.8);
+    this.world.shake(obj, weak ? 0.15 : 0.35);
     if (obj.hp > 0) return false;
     this.fallen.fell(obj, geo, hitPoint.clone().addScaledVector(from, 2));
     events.emit('harvest', { type: obj.type });

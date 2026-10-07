@@ -257,16 +257,16 @@ export class FallenTrees {
   }
 
   // Lyönti kaatuneeseen runkoon. Palauttaa true, jos runko hajosi.
-  hit(log, hitPoint, playerPos) {
+  hit(log, hitPoint, playerPos, dmg = 1) {
     const def = OBJECT_TYPES[log.type];
     events.emit('woodHit', { x: hitPoint.x, z: hitPoint.z });
     const local = log.mesh.worldToLocal(hitPoint.clone());
     const from = log.mesh.worldToLocal(playerPos.clone()).sub(local);
-    addNotch(log.mesh.geometry, local, from, null, 1.3);
+    addNotch(log.mesh.geometry, local, from, null, 1.3 * Math.min(1, dmg));
     log.shake = 1;
     this.debris.chips(hitPoint, 0xd2ad78, 7, from.clone().normalize().applyQuaternion(log.pivot.quaternion), 0.9);
     this.debris.chips(hitPoint, 0x5b4838, 3, null, 0.8);
-    log.hp -= 1;
+    log.hp -= dmg;
     if (log.hp > 0) return false;
 
     // Runko hajoaa: palat lentävät ja puut putoavat maahan.

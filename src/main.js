@@ -151,6 +151,7 @@ const icons = renderItemIcons(models.items);
 const pieceIcons = renderItemIcons(models.build);
 const hud = new Hud(inventory, icons, survival);
 const nameplates = new Nameplates(document.getElementById('hud'));
+nameplates.world = world;
 const boatHud = new BoatHud();
 const explored = new ExploredMap(world.gen);
 const minimap = new Minimap(explored);
@@ -861,18 +862,19 @@ function frame(now) {
   }
   const rainOnTorch = Math.max(0, env.w.rain - 0.15);
   if (torchSlot && !torchSlot.unlit && rainOnTorch > 0) {
-    // Yskivä liekki: hidas heikkeneminen ja satunnaisia notkahduksia.
+    // Yskivä liekki sateessa: heikompi ja välillä notkahtava, mutta ei koskaan
+    // sammu (sessio 18: ennen notkahdus vei liekin lähes näkymättömiin).
     torchCough = Math.max(0, torchCough - simDt);
-    if (torchCough <= 0 && Math.random() < simDt * 1.6 * rainOnTorch) torchCough = 0.25 + Math.random() * 0.45;
-    const base = 1 - Math.min(0.55, rainOnTorch * 0.8);
-    const target = base * (0.8 + 0.2 * Math.sin(elapsed * 2.3) * Math.sin(elapsed * 5.1)) * (torchCough > 0 ? 0.35 : 1);
+    if (torchCough <= 0 && Math.random() < simDt * 1.4 * rainOnTorch) torchCough = 0.15 + Math.random() * 0.3;
+    const base = 1 - Math.min(0.35, rainOnTorch * 0.45);
+    const target = base * (0.85 + 0.15 * Math.sin(elapsed * 2.3) * Math.sin(elapsed * 5.1)) * (torchCough > 0 ? 0.62 : 1);
     torchFlameK += (target - torchFlameK) * Math.min(1, simDt * 10);
   } else {
     torchFlameK += ((torchSlot && !torchSlot.unlit ? 1 : 0) - torchFlameK) * Math.min(1, simDt * 6);
   }
   viewmodel.torchFlame = torchSlot && torchSlot.unlit ? 0 : torchFlameK;
   const torchHeld = !!torchSlot && !torchSlot.unlit;
-  torchFire.light = 1.7 * Math.max(0.15, torchFlameK);
+  torchFire.light = 1.7 * Math.max(0.35, torchFlameK);
   if (torchHeld) {
     // Valo soihdun liekin kohdalla (oikea käsi, hieman edessä ja yläpuolella),
     // ei vartalon keskellä (sessio 12e: soihdulla näki huonosti).

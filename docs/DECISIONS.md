@@ -2,6 +2,16 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-07 (sessio 18)
+- **Soihdun "sammuminen" sateessa oli näköharha:** mikään ei sammuttanut sitä, mutta notkahdus kutisti liekin n. 13 %:iin ja valon lähes pois. Sateen vaikutusta lievennettiin ja liekin vähimmäiskoko nostettiin.
+- **Kestävyyden kulutus pieneni n. 12–15 %** (käyttäjä: "hitusen").
+- **Paraneminen: 30 s nopeaa syömisen jälkeen, muuten 1/4** (käyttäjän valinta).
+- **Kirves ja nuija saivat 2 iskun sarjan, viidakkoveitsi n. 0,45 s iskuväli** (käyttäjän valinnat). Sarja vaatii yhä yli puolet kestävyydestä.
+- **Puu ilman kirvestä: 1 % vahingosta, ei tekstiä; kivi ilman hakkua: ei vahinkoa, kehote "Liian kovaa!"** (käyttäjän valinta).
+- **Tekstit korvattiin palautteella:** kestävyyden loppuminen → punainen hehku; torjunta → välähdys (oli jo).
+- **Jousen jännitys n. 50 % hitaammaksi.** Syy: käyttäjästä liian nopea; mitoitus Clauden.
+- **Nimilappu vaatii tarkan osuman** (säde vs. kapseli) ja näköyhteyden. Syy: käyttäjä halusi lapun vasta kun "oikeen kunnolla katsoo".
+
 ## 2026-10-07 (sessio 17)
 - **Puukuvat (`ui/woodArt.js`) poistettiin kokonaan.** Syy: käyttäjä halusi puun pois; käyttämätön koodi poistetaan.
 - **Katsottu olento valitaan ruudun keskeltä näennäisen koon mukaan** (ei vain lähitaisteluetäisyyden säteellä). Syy: lappu näkyy myös parin kymmenen askeleen päässä katsottaessa, mutta ei sivusilmällä.

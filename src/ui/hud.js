@@ -104,10 +104,12 @@ export class Hud {
       ], { duration: 260, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
       this.hpFill.animate([{ filter: 'brightness(1.9)' }, { filter: 'brightness(1)' }], { duration: 340, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
     });
-    events.on('parry', () => { this.flash = 1; this.showCombatText('Parry!'); });
+    // Sessio 18: ei tekstejä torjunnasta (välähdys riittää).
+    events.on('parry', () => { this.flash = 1; });
+    this.tiredT = 0;
+    events.on('staminaOut', () => { this.tiredT = 0.9; });
     events.on('blocked', ({ broken }) => {
       this.flash = Math.max(this.flash, broken ? 0 : 0.35);
-      if (broken) this.showCombatText('Torjunta murtui');
     });
     this.renderHotbar();
   }
@@ -354,7 +356,11 @@ export class Hud {
     this.staminaFill.style.width = `${(this.dSt * 100).toFixed(2)}%`;
     this.staminaLock.style.width = `${((1 - this.dStMax) * 100).toFixed(2)}%`;
     this.staminaNotch.style.left = `${(this.dStMax * 50).toFixed(2)}%`;
-    if (stRel < 0.995 && visible) this.stShowT = 1.1;
+    // Kestävyys loppu (tai ei riitä iskuun): palkki hehkuu punaisena, ei tekstiä.
+    this.tiredT = Math.max(0, this.tiredT - dt);
+    const tired = visible && (this.tiredT > 0 || stRel < 0.03);
+    this.stamina.classList.toggle('tired', tired);
+    if ((stRel < 0.995 || tired) && visible) this.stShowT = 1.1;
     else this.stShowT = Math.max(0, this.stShowT - dt);
     this.stamina.classList.toggle('shown', this.stShowT > 0);
     this.stamina.classList.toggle('low', stRel < 0.25);

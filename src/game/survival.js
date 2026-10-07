@@ -17,6 +17,9 @@ export const MAX_CAP = 100;
 const FADE_START = 0.35;       // vaikutus alkaa hiipua, kun jäljellä on 35 % ajasta
 const POISON_DPS = 0.45;       // myrkytyksen vahinko (kerrotaan voimakkuudella)
 const POISON_FLOOR = 4;        // myrkytys ei vie terveyttä tämän alle
+// Paraneminen (sessio 18): nopea vain 30 s syömisen jälkeen, muuten neljäsosa.
+const WELL_FED = 30;
+const SLOW_HEAL = 0.25;
 
 // Ruokien vaikutukset: [maksimiterveys +, maksimikestävyys +, kesto min].
 // Liha ja padat painottavat terveyttä, hedelmät ja juomat kestävyyttä.
@@ -89,6 +92,7 @@ export class Survival {
     this.effects = {}; // avain -> { t: jäljellä (s), max, power }
     this.maxHealth = BASE_HEALTH;
     this.maxStamina = BASE_STAMINA;
+    this.wellFedT = 0;   // nopean paranemisen aika syömisen jälkeen (s)
   }
 
   // Uusi peli: aloitusateria.
@@ -182,7 +186,8 @@ export class Survival {
     const salve = this.effects.salve;
     if (salve) p.health = Math.min(p.maxHealth, p.health + salve.power * dt);
 
-    p.survivalHealthMul = poison ? 0 : 1;
+    this.wellFedT = Math.max(0, this.wellFedT - dt);
+    p.survivalHealthMul = poison ? 0 : this.wellFedT > 0 ? 1 : SLOW_HEAL;
     p.survivalStaminaMul = (poison ? 0.6 : 1) * (this.effects.energized ? 1.5 : 1);
   }
 
@@ -198,7 +203,7 @@ export class Survival {
       return false;
     }
     if (!fv && !(f.cure || f.regen || f.heal)) return false;
-    if (fv) { this._addFood(fv); this._recalc(); events.emit('foods'); }
+    if (fv) { this._addFood(fv); this._recalc(); this.wellFedT = WELL_FED; events.emit('foods'); }
     if (f.heal) p.health = Math.min(p.maxHealth, p.health + f.heal);
     if (f.stamina) p.stamina = Math.min(p.maxStamina, p.stamina + f.stamina);
     if (f.regen) this.add('salve', 14, f.regen / 14);

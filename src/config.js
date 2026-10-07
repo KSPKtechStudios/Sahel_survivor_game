@@ -25,12 +25,12 @@ export const CONFIG = {
 
   // Kestävyys (stamina)
   staminaMax: 100,
-  staminaSprintPerSec: 14,
+  staminaSprintPerSec: 12,      // sessio 18: ennen 14
   staminaJump: 10,
   staminaRegenPerSec: 18,
   staminaRegenDelay: 1.0,
-  staminaSwimPerSec: 4.5,     // uidessa (liikkuessa)
-  staminaTreadPerSec: 1.5,    // uidessa paikallaan
+  staminaSwimPerSec: 3.9,     // uidessa (liikkuessa); sessio 18: ennen 4,5
+  staminaTreadPerSec: 1.3,    // uidessa paikallaan
 
   // Terveys
   healthMax: 100,

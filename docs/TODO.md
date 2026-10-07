@@ -1,6 +1,7 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 18: soihtu sateessa, kestävyyden kulutus, paraneminen, kirveen/nuijan sarja ja viidakkoveitsen tahti, puut ilman kirvestä ja kivet ("Liian kovaa!"), punainen hehku, kuumuusväreily, jousen jännitys, nimilappujen tarkkuus
 - [ ] Käyttäjä testaa session 17: nimilaput vain katsottaessa (etäisyys 14 m sopiva?), jousen plus-tähtäin ja jännityspalkki, nuolilaskuri, puuton paneeli
 - [ ] Käyttäjä testaa session 16: Philosopher-fontti, naulat, animaatioiden tuntuma (nopeus vs. pehmeys), loppuvan ruoan välke ja hehku
 - [ ] Käyttäjä testaa sessiot 14–15: ruokajärjestelmä (maksimit, kesto, kylläisyys), savulasipaneeli ja puukyltti, ruokaympyrät, kestävyys keskellä, terveyden numero
