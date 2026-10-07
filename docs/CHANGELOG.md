@@ -2,6 +2,18 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-07 (sessio 12): äänitehosteet, askeleet, kuiva vuoristo, sääkierron korjaus
+
+**Äänet (uusi)**
+- **Taustaäänet:** tuuli (ukkosella, hiekkamyrskyssä sekä aina vuoristossa ja merellä), viidakon äänimaisema sademetsässä (pieni häivytys), sade (aina kun sataa, sademetsän tihkussa hiljaa) ja kaukainen ukkonen ukkosmyrskyssä. Äänet soivat päällekkäin ja vaihtuvat pehmeästi; silmukoissa ei kuulu saumaa.
+- **Puun kaatuminen:** narina alkaa kun puu lähtee kaatumaan, ja räsähdys osuu hetkeen, jolloin runko iskeytyy maahan. Ääni tulee puun suunnalta ja vaimenee etäisyyden mukaan.
+- **Askeleet:** syntetisoitu töpsytys, joka riippuu alustasta (hiekka, ruoho, sademetsän karike, sora, kallio, puulattia, matala vesi). Juostessa voimakkaampi, hiipiessä hiljainen; alastulo hypystä kuuluu.
+- Äänitehosteiden voimakkuus on asetuksissa (Äänitehosteet).
+
+**Korjaukset**
+- **Sään vaihto O-näppäimellä ei enää jää jumiin.** Syy: kierto kävi läpi kaikki säät, mutta biomissa mahdoton sää (esim. sumu savannilla) ei tarttunut, joten seuraava painallus yritti samaa säätä uudelleen. Nyt kierto käy läpi vain kyseisessä biomissa mahdolliset säät.
+- **Vuoristo on kuiva:** ei sadetta, ukkosta eikä sumua (selkeä, pilvinen, hiekkausva, harvoin hiekkamyrsky), joten se ei myöskään kastu. Vuoristossa vierii tumbleweedejä.
+
 ## 2026-10-07 (sessio 11): tulikärpäset, aallot, vesi veneissä, sade, lammikot, säät biomeittain, rakennelmat, linnunrata ja tähdenlennot, purje, kimallus, Haamu, jousi, iskujen tahti, tuulen nuoli
 
 **Korjaukset**

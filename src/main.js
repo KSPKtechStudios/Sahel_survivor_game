@@ -16,6 +16,7 @@ import { Blood } from './render/blood.js';
 import { Rain } from './render/rain.js';
 import { PostFX } from './render/post.js';
 import { Music, BIOME_MUSIC } from './audio/music.js';
+import { Sfx } from './audio/sfx.js';
 import { createModelLibrary } from './models/models.js';
 import { World } from './world/world.js';
 import { Tumbleweeds } from './world/tumbleweeds.js';
@@ -99,7 +100,8 @@ const rain = new Rain(scene, renderer);
 env.onStrike = (angle, dist) => rain.strike(camera, angle, dist);
 const music = new Music();
 // Selain sallii äänen vasta käyttäjän ensimmäisen klikkauksen tai näppäimen jälkeen.
-for (const ev of ['pointerdown', 'keydown']) window.addEventListener(ev, () => music.unlock(), { capture: true });
+const sfx = new Sfx();
+for (const ev of ['pointerdown', 'keydown']) window.addEventListener(ev, () => { music.unlock(); sfx.unlock(); }, { capture: true });
 
 const inventory = new Inventory();
 const guide = new Guide();
@@ -256,6 +258,7 @@ function applySettings(s) {
   post.motionBlur = s.motionBlur === 'high' ? 2 : s.motionBlur === 'low' ? 1 : 0;
   post.dof = !!s.dof;
   music.setVolumes(s.masterVolume ?? 1, s.musicVolume ?? 0.8);
+  sfx.setVolumes(s.masterVolume ?? 1, s.sfxVolume ?? 1);
 }
 applySettings(settings);
 
@@ -595,6 +598,47 @@ events.on('impact', ({ x, z, strength }) => {
 });
 events.on('hitFeedback', ({ strength }) => { shake = Math.max(shake, strength * 0.12); });
 
+// --- Äänitehosteet (sessio 12) ---------------------------------------------------------------
+// Taustaäänet käyttäjän ohjeen mukaan: tuuli ukkosella (missä ukkonen on
+// mahdollinen) sekä aina vuoristossa ja merellä; viidakon ääni sademetsässä;
+// sade aina kun sataa (myös sademetsän tihku, hiljaa); kaukainen ukkonen
+// ukkosmyrskyssä. Kaikki voivat soida päällekkäin. Tuuli myös hiekkamyrskyssä.
+const _sm = (a, b, x) => Math.max(0, Math.min(1, (x - a) / (b - a)));
+function updateSfx(game, rainAmt, realDt) {
+  if (game) {
+    const dry = Math.min(1, env.climate.desert + env.climate.dry + env.climate.mountain);
+    const thunder = env.w.thunder * (1 - dry);
+    const open = Math.max(_sm(0.2, 0.7, _s.mountains || 0), _sm(0.2, 0.7, _s.ocean || 0));
+    sfx.setLevels({
+      // Lisäksi hiekkamyrskyssä (Clauden lisäys: myrsky on tuulta).
+      wind: Math.max(thunder, open * (0.6 + 0.4 * Math.min(1, env.w.wind)), _sm(0.45, 0.9, env.w.dust)),
+      jungle: _sm(0.3, 0.7, _s.rainforest || 0),
+      rain: _sm(0.05, 0.12, rainAmt) * Math.pow(Math.min(1, rainAmt), 1.2),
+      thunder,
+    });
+  } else {
+    sfx.setLevels({});
+  }
+  sfx.update(realDt);
+}
+
+// Askeleet: materiaali jalkojen alta.
+function stepMaterial() {
+  if (player.inWater === 1) return 'water';
+  if (player.onPlatform) return 'wood';
+  const s = _s;
+  if ((s.rock || 0) > 0.4 || (s.mountains || 0) > 0.6) return 'rock';
+  if ((s.beach || 0) + (s.desert || 0) + (s.dunes || 0) > 0.5) return 'sand';
+  if ((s.rainforest || 0) > 0.5) return 'leaves';
+  if ((s.laterite || 0) > 0.5) return 'gravel';
+  return 'grass';
+}
+player.onFootstep = (k) => sfx.step(stepMaterial(), k);
+events.on('treeFell', ({ x, z, fallTime, size }) => {
+  if (x === undefined) return;
+  sfx.treeFall(x, z, fallTime, size, { x: player.position.x, z: player.position.z, yaw: player.yaw });
+});
+
 // --- Pääsilmukka --------------------------------------------------------------------------
 let last = performance.now();
 let elapsed = 0;
@@ -616,8 +660,11 @@ function handleHotbar() {
     events.emit('inventory');
   }
   if (input.pressed.has('KeyO')) {
-    const i = WEATHER_KEYS.indexOf(env.targetKey);
-    env.setWeather(WEATHER_KEYS[(i + 1) % WEATHER_KEYS.length], true);
+    // Kierto vain tässä biomissa mahdollisten säiden läpi (mahdoton sää ei
+    // tarttunut hallitsevaan vyöhykkeeseen, joten kierto jäi jumiin).
+    const keys = WEATHER_KEYS.filter((k) => k !== 'menu' && env.weatherPossibleHere(k));
+    const i = keys.indexOf(env.targetKey);
+    env.setWeather(keys[(i + 1) % keys.length], true);
     events.emit('message', { text: `Sää: ${env.weatherName}` });
   }
   if (input.pressed.has('KeyL')) {
@@ -679,6 +726,7 @@ function frame(now) {
   wetUniforms.uWetSky.value.copy(scene.fog.color);
   wetUniforms.uRain.value = rainAmt;
   wetUniforms.uPuddle.value = inGame && state !== 'menu' ? env.puddleWet : 0;
+  updateSfx(musicMode === 'game' && state !== 'loading', rainAmt, Math.min(0.25, rawDt));
   rain.update(simDt, camera, rainAmt, env.windDir, 0.2 + 0.8 * env.daylight, Math.min(0.25, rawDt), scene.fog.color);
   if (rainAmt > 0.1 && simDt > 0) {
     for (let i = 0, n = Math.floor(rainAmt * 6 + Math.random()); i < n; i++) {
@@ -836,7 +884,7 @@ enterMenu(true);
 window.sahel = {
   THREE, renderer, scene, camera, env, world, player, input, inventory, invUI, guide, structures, tumbleweeds,
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
-  ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, blood,
+  ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, sfx, blood,
   startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
   menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient,
 };

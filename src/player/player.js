@@ -248,6 +248,7 @@ export class Player {
       if (p.x < pf.x0 - 0.1 || p.x > pf.x1 + 0.1 || p.z < pf.z0 - 0.1 || p.z > pf.z1 + 0.1) continue;
       if (pf.y > ground && p.y >= pf.y - 0.5) ground = pf.y;
     }
+    this.onPlatform = ground > _wq.h + 0.05; // askeleiden ääni: puulattia
     const still = _wq.wl - ground;
     const W = this.waves;
     const amp = W.amp * openFactor(_wq.type, still, _wq.ocean, _wq.lakeR);
@@ -279,6 +280,8 @@ export class Player {
       this.onGround = false;
     } else if (p.y <= ground) {
       if (!this.onGround && this.velocity.y < -6) this.landDip = Math.min(0.18, -this.velocity.y * 0.015);
+      // Alastulo hypystä tai pudotuksesta: askeleen ääni (voimakkaampi).
+      if (!this.onGround && this.velocity.y < -3.5 && !this.riding) this.onFootstep?.(Math.min(1.6, -this.velocity.y / 6));
       p.y = ground;
       this.velocity.y = 0;
       this.onGround = true;
@@ -393,6 +396,14 @@ export class Player {
     const bobTarget = this.onGround && hs > 0.5 ? Math.min(1, hs / CONFIG.walkSpeed) : 0;
     this.bobAmount += (bobTarget - this.bobAmount) * Math.min(1, dt * 8);
     this.bobPhase += hs * dt * 1.9;
+    // Askel joka puolikkaalla heiluntajaksolla (pää alimmillaan = jalka maahan).
+    const stepN = Math.floor((this.bobPhase + Math.PI * 0.75) / Math.PI);
+    if (stepN !== this.stepN) {
+      this.stepN = stepN;
+      if ((this.onGround || this.inWater === 1) && hs > 1 && !this.riding && !this.flying && !this.dead) {
+        this.onFootstep?.(this.sprinting ? 1.25 : this.crouching ? 0.35 : 0.8);
+      }
+    }
     this.landDip *= Math.exp(-dt * 8);
 
     // Kyykky laskee silmien korkeutta pehmeästi; kuollessa kamera kaatuu maahan.

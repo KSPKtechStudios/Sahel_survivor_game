@@ -2,6 +2,22 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-07 (sessio 12)
+**Tehtiin**
+- Käyttäjän toiveet kirjattiin `DESIGN.md`:hen (sessio 12).
+- Sääkierron [O] jumi korjattiin (`main.js`): kierto vain biomissa mahdollisten säiden läpi.
+- Vuoristo kuivaksi (`render/environment.js`: säätaulukko, sateen ja salamoiden esto), tumbleweedit vuoristoon (`world/tumbleweeds.js`).
+- Uusi `audio/sfx.js`: taustaäänikerrokset (striimaus, ristiinhäivytetyt silmukat), puun kaatumisääni (suunta, etäisyys, ajoitus kaatumisen keston mukaan), syntetisoidut askeleet. Äänet tasattiin ja muunnettiin (`assets/sfx/`, 7,7 Mt). Kytkennät: `main.js` (tasot sään ja biomin mukaan, askelmateriaali), `player/player.js` (askel- ja alastulotapahtumat, puulattia), `game/fallen.js` (kaatumisen kesto).
+- Testattiin headless-Chromiumilla analysaattorilla: taustaäänten tasot biomeittain ja säittäin (savanni hiljaa, sademetsä viidakko, ukkosella sade + ukkonen + tuuli, vuoristo ja meri tuuli, hiekkamyrsky tuuli), silmukan vaihto (ristiinhäivytys, taso ei katkea), puun räsähdyksen ajoitus (huippu n. 1,9 s kohdalla, kun kaatuminen 1,9 s), kaikki 7 askelmateriaalia, kävely (15 askelta / 25 m), sääkierto vuoristossa (selkeä → pilvinen → usva → hiekkamyrsky → selkeä) ja sademetsässä (… → sade → ukkonen → sumu → selkeä). Savutesti ja ESLint puhtaat.
+
+**Huomiot**
+- Ääntä ei voi kuunnella testiympäristössä; tasot on mitattu, mutta käyttäjän korvat ratkaisevat.
+- GitHub-tili on edelleen jäädytetty: commit vain paikallisesti, peli annettiin zip-pakettina.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute äänistä ja voimakkuuksista; lisää äänitiedostoja käyttäjältä.
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-07 (sessio 11)
 **Tehtiin**
 - Käyttäjän 15 korjaus- ja parannustoivetta (kirjattu `DESIGN.md`:hen). Kaikki toteutettiin:

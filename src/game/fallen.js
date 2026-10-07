@@ -116,7 +116,15 @@ export class FallenTrees {
     stump.castShadow = true;
     stump.receiveShadow = true;
     this.world.toStump(obj, stump);
-    events.emit('treeFell', { type: obj.type });
+    // Kaatumisen kesto (sama integrointi kuin update()): ääni ajoitetaan niin,
+    // että räsähdys osuu hetkeen, jolloin runko iskeytyy maahan.
+    let th = log.theta, om = log.omega, ft = 0;
+    while (th < log.thetaMax && ft < 6) {
+      om += (((3 * 9.8) / (2 * log.L)) * Math.sin(th) + 0.15) / 60;
+      th += om / 60;
+      ft += 1 / 60;
+    }
+    events.emit('treeFell', { type: obj.type, x: obj.x, z: obj.z, fallTime: ft, size: Math.min(1, log.L / 14) });
     return log;
   }
 

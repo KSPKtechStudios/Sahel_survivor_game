@@ -9,9 +9,10 @@ import { sampleTerrain, waterAt } from './terrain.js';
 const _wq = {};
 
 const MAX = 10;
-// Kuiva, karu maa: aavikko, dyynit ja laterittitasanko (ei keitaita).
+// Kuiva, karu maa: aavikko, dyynit, laterittitasanko ja vuoristo (sessio 12;
+// ei keitaita).
 function habitat(s) {
-  return s.desert + s.dunes + s.laterite + s.mesa * 0.5 - s.oasis * 2;
+  return s.desert + s.dunes + s.laterite + s.mountains + s.mesa * 0.5 - s.oasis * 2;
 }
 const _axis = new THREE.Vector3();
 const _q = new THREE.Quaternion();

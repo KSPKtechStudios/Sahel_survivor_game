@@ -161,6 +161,17 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 14. **Nyrkillä ja kirveellä hakatessa on liikaa jäähdytystä.** Taistelu uudelleen: ei liian OP (ei jatkuvaa kombottamista), mutta ei kankeaakaan.
 15. **Seilatessa kartan tuulen suunta oli väärinpäin.**
 
+## Sessio 12 (käyttäjän kertoma, 2026-10-07)
+- **Bugi:** sään vaihtosykli O-näppäimellä jää jumiin viimeiseen säähän (todennäköisesti biomikohtaisten säiden takia).
+- **Vuoristo on kuivaa:** siellä on pöytävuoria ja kaktuksia, joten siellä ei saa sataa eikä olla märkää. Vuoristossa saa olla vieriviä tumbleweedejä.
+- **Äänitehosteet** (käyttäjä toimittaa tiedostot, enintään 5 kerrallaan). Ääniä saa leikata, häivyttää ja päällekkäistää; **ei liian kovalle**. Esim. ukkosmyrskyssä voi kuulua useampi ääni yhtä aikaa.
+  1. **Taustatuuli:** kuuluu ukkosen aikaan kaikissa biomeissa, joissa ukkonen on mahdollinen, sekä **aina vuoristossa ja merellä**.
+  2. **Viidakko:** soi sademetsässä aina, kun sinne astuu; pieni häivytys (ei ala "seinästä", lyhyempi kuin musiikissa).
+  3. **Puun kaatuminen:** ääni alkaa suunnilleen kun puu alkaa kaatua, ja räsähdys kuuluu kun runko osuu maahan.
+  4. **Sade:** kuuluu aina, kun sataa tai ukkostaa, jokaisessa biomissa, jossa se on mahdollista.
+  5. **Kaukainen ukkonen:** ukkosmyrskyn taustaääni silmukkana (ei tarvitse olla tahdissa salamoiden kanssa).
+- **Askeleet:** Claude saa generoida kävelyyn pienen töpsyttelyäänen, joka vaihtelee alustan materiaalin mukaan.
+
 ## Teknologia
 - Selaimessa toimiva peli: three.js (WebGL), ei käännösvaihetta. Ks. `DECISIONS.md`.
 - Kohdealusta toistaiseksi tietokoneen selain (hiiri + näppäimistö).
@@ -203,6 +214,9 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - Sessio 11: tulikärpäsparvet, pienemmät aallot, ei vettä veneiden sisällä, realistinen sade ja sadeverhot, kuivuvat lammikot, säät biomeittain (kuiva laterittitasanko), rakennelmia n. 3 700 ja hylkyjä n. 120, hienovarainen linnunrata ja tähdenlennot, purjeen saumat ja vastavalo, hento kimallus, Haamu latvusten alla ja pako, jousi oikeassa kädessä ja nuolten jälki, sujuvampi iskujen tahti, tuulen nuolen suunta.
 
 ## Paikkamerkit (Clauden valitsemia, voi muuttaa vapaasti)
+- **Äänitehosteet (sessio 12):** tiedostot tasattu −20 LUFS:iin (puu −16). Tasot: tuuli 0,3 (vuoristossa ja merellä 0,6–1 × tuulen mukaan, ukkosella ja hiekkamyrskyssä täysi), viidakko 0,36 (häivytys n. 2–3 s), sade 0,42 × sateen määrä^1,2 (sademetsän tihku hiljaa), kaukainen ukkonen 0,42. Silmukoiden sauma ristiinhäivytetään 3 s:ssa, ja ensimmäinen kierros alkaa satunnaisesta kohdasta. Puun ääni 0,3 (10–12 m:stä), vaimenee etäisyyden mukaan (kuuluu n. 140 m:iin), tulee oikealta suunnalta, ja räsähdys (tiedostossa 0,92 s) ajoitetaan rungon osumaan maahan (kaatuminen 1,5–2,2 s). **Tuuli myös hiekkamyrskyssä** (Clauden lisäys).
+- **Askeleet (sessio 12, syntetisoitu):** hiekka (pehmeä rahina), ruoho (rapina), sademetsän karike (vaimea, tömähtävä), sora / lateriitti (rapse), kallio (napsahdus), puulattia (ontto kopse), matala vesi (loiske). Askel joka puolikkaalla heiluntajaksolla (kävellen n. 2,5 / s), juostessa voimakkaampi, hiipiessä hiljainen; alastulo hypystä kuuluu.
+- **Vuoriston sää (sessio 12):** selkeä 4, pilvinen 1,5, hiekkausva 1,5, hiekkamyrsky 0,3 (ei sadetta, ukkosta eikä sumua).
 - **Maailman koko ja muoto (sessio 9):** säde 10 km. Maailma on saari: reunoilla (noin 8–9 km:stä alkaen) rannikko ja avomeri, jonka reunalla virta vie takaisin ("Virta on liian voimakas"). Aloituspaikan ympärillä (n. 2,4 km) on aina Sahelia.
 - **Biomialueet (sessio 9):** pehmeät Voronoi-solut 1 500 m, rajavyö 260 m; jokaiselle solulle arvotaan tyyppi: Sahel (savanni, laterittitasanko, kausilampi, akasiametsikkö, dyynit), aavikko (dyynit, keitaat), sademetsä, vuoristo tai meri (merenlahdet). Vierekkäiset samat solut yhdistyvät, joten alueet ovat n. 1–2 km.
 - *(Vanha, sessioihin 3–8: tier 1 Sahel keskellä, tier 2 aavikko ja sademetsä, ulkoreunalla vuoristo ja meri. Korvattu sessiossa 9.)*
@@ -269,7 +283,7 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Aavikon kuumuusväreily (sessio 10):** aavikon osuus × selkeä taivas (pilvet alle n. 0,3, ei sadetta, vähän pölyä) × aurinko korkealla (n. klo 9–15) × ei kosteutta; vaikuttaa yli 25–110 m:n päässä horisontin tuntumassa, kangastus yli 90–220 m:n päässä aivan horisontin alla.
 - **Muiden biomien tunnusmerkit (sessio 10, Clauden ehdotus):** tulikärpäset (sessio 11: parvina jokien, purojen ja lampien rannoilla ja n. joka viidennen akasian alla, enintään 12 lähintä parvea / 320 kärpästä; ei merellä, rannalla, vuoristossa eikä aavikolla; illalla ja yöllä, ei sateella eikä kovalla tuulella), pölypyörteet (aavikko ja savanni kuumina päivinä; 14–26 m korkeita, kulkevat tuulen mukana 1,5–3,3 m/s, kestävät 25–45 s, enintään 2).
 - **Pudotetut esineet (sessio 10, kimallus sessio 11):** hento tähtimäinen kimallus 0,3–0,6 m (esineen koon mukaan) ja satunnainen pieni välähdys, arvoesineillä hieman kirkkaampi kultainen. Heitetty esine: automaattinen poiminta vasta 10 s jälkeen ja kun pelaaja on käynyt yli 3 m:n päässä.
-- **Säätaulukot ilmastoittain (sessio 11, painot):** aavikko: selkeä 4,5, hiekkausva 3, hiekkamyrsky 1,6, pilvinen 0,25. Laterittitasanko (kuiva): selkeä 4, hiekkausva 2,5, hiekkamyrsky 0,7, pilvinen 0,6. Savanni: selkeä 4, pilvinen 2,6, hiekkausva 1,8, hiekkamyrsky 0,3, sade 0,45, ukkonen 0,12. Ranta kuuluu meri-ilmastoon. Paikallisesti sade ja ukkonen poistetaan aavikolla ja laterittitasangolla ja pöly merellä, rannalla ja sademetsässä. Sademetsä: selkeä 2, pilvinen 3, sade 3, ukkonen 1,5, sumu 1,5. Vuoristo: selkeä 3, pilvinen 3, sumu 2, sade 1, ukkonen 0,4. Meri: selkeä 3, pilvinen 2, sade 1,5, ukkonen 0,6, sumu 0,5.
+- **Säätaulukot ilmastoittain (sessio 11, painot):** aavikko: selkeä 4,5, hiekkausva 3, hiekkamyrsky 1,6, pilvinen 0,25. Laterittitasanko (kuiva): selkeä 4, hiekkausva 2,5, hiekkamyrsky 0,7, pilvinen 0,6. Savanni: selkeä 4, pilvinen 2,6, hiekkausva 1,8, hiekkamyrsky 0,3, sade 0,45, ukkonen 0,12. Ranta kuuluu meri-ilmastoon. Paikallisesti sade ja ukkonen poistetaan aavikolla ja laterittitasangolla ja pöly merellä, rannalla ja sademetsässä. Sademetsä: selkeä 2, pilvinen 3, sade 3, ukkonen 1,5, sumu 1,5. Vuoristo (sessio 12): selkeä 4, pilvinen 1,5, hiekkausva 1,5, hiekkamyrsky 0,3. Meri: selkeä 3, pilvinen 2, sade 1,5, ukkonen 0,6, sumu 0,5.
 - **Sade (sessio 11):** 9 000 ohutta pisaraviirua 16 m:n säteellä (putoamisnopeus n. 9,5 m/s, vaihtelee), kaukana harmaat sadeverhot 26 m:n ja 70 m:n päässä, kovassa sateessa maanrajan usva, roiskeet maahan (enintään 220).
 - **Linnunrata ja tähdenlennot (sessio 11):** himmeä, rakeinen vyö (hehku 0,03, tähtipöly 0,05), hennot pölykaistat, häviää horisontissa ja himmenee kuun valossa 30 %. Tähdenlento kirkkaana yönä 8–38 s välein, alkaa 30–70° korkeudelta, pituus 8–22°, kesto 0,45–1,05 s.
 - **Jousi kädessä (sessio 11):** jousi oikeassa kädessä, vasen käsi jännittää. Nuolissa punavalkoiset sulat ja ammuttaessa 3,2 m:n vaalea lentojälki, joka häviää 0,9 s:ssa.

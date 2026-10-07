@@ -62,7 +62,8 @@ export const CLIMATES = {
   dry: { name: 'Laterittitasanko', table: { clear: 4, haze: 2.5, sandstorm: 0.7, cloudy: 0.6 } },
   sahel: { name: 'Savanni', table: { clear: 4, cloudy: 2.6, haze: 1.8, sandstorm: 0.3, rain: 0.45, thunder: 0.12 } },
   wet: { name: 'Sademetsä', table: { clear: 2, cloudy: 3, rain: 3, thunder: 1.5, mist: 1.5 } },
-  mountain: { name: 'Vuoristo', table: { clear: 3, cloudy: 3, mist: 2, rain: 1, thunder: 0.4 } },
+  // Vuoristo on kuiva (pöytävuoret, kandelaaberipuut): ei sadetta eikä sumua.
+  mountain: { name: 'Vuoristo', table: { clear: 4, cloudy: 1.5, haze: 1.5, sandstorm: 0.3 } },
   sea: { name: 'Meri', table: { clear: 3, cloudy: 2, rain: 1.5, thunder: 0.6, mist: 0.5 } },
 };
 const CLIMATE_KEYS = Object.keys(CLIMATES);
@@ -277,8 +278,8 @@ export class Environment {
     this.weatherKey = this.targetKey;
 
     // --- Salamat ukkosella: välähdyksiä ja kaukaisia iskuja
-    // Kuivalla (aavikko, laterittitasanko) ei salamoi.
-    const thunderHere = g.thunder * (1 - Math.min(1, this.climate.desert + this.climate.dry));
+    // Kuivalla (aavikko, laterittitasanko, vuoristo) ei salamoi.
+    const thunderHere = g.thunder * (1 - Math.min(1, this.climate.desert + this.climate.dry + this.climate.mountain));
     if (thunderHere > 0.4 && !this.frozen) {
       this.strikeTimer -= clockDt * thunderHere;
       if (this.strikeTimer <= 0) {
@@ -306,7 +307,7 @@ export class Environment {
     // Vyöhykkeiden rajoilla sekoitus voisi tuoda naapurin sadetta aavikolle
     // tai hiekkaa rannalle: rajataan paikallisten osuuksien mukaan.
     const zw = this.climate;
-    const dryW = Math.min(1, zw.desert + zw.dry);
+    const dryW = Math.min(1, zw.desert + zw.dry + zw.mountain);
     if (dryW > 0.001) { we.rain *= 1 - dryW; we.thunder *= 1 - dryW; }
     const dampW = Math.min(1, zw.sea + zw.wet);
     if (dampW > 0.001) we.dust *= 1 - dampW;

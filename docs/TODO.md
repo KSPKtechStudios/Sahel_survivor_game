@@ -1,6 +1,8 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 12: taustaäänet (tuuli vuoristossa ja merellä, viidakko, sade, ukkonen), puun kaatumisääni, askeleet eri alustoilla, äänien voimakkuudet, sääkierto [O], kuiva vuoristo ja tumbleweedit siellä
+- [ ] Vastaus: saako tuuli kuulua hiekkamyrskyssä (Clauden lisäys)? Lisää äänitiedostoja (esim. lyönnit, eläimet, vesi, nuotio)?
 - [ ] **GitHub-tili jäädytetty väliaikaisesti (sessio 11):** session 11 commitit ovat vain paikallisesti haarassa `claude/sahel-game-dev-yi990s`. Kun tili toimii: pushaa haara, avaa / päivitä PR `main`-haaraan ja anna raw.githack-testauslinkki. (Myös claude.ai:n GitHub-yhteys pitää valtuuttaa uudelleen.)
 - [ ] Käyttäjä testaa session 11 (paikallisesta paketista): tulikärpäsparvet jokien varsilla ja akasioiden alla, pienemmät aallot (myrsky), ei vettä veneiden sisällä, uusi sade ja sadeverhot, savannin lammikot kuivuvat sateen jälkeen, säät biomeittain, rakennelmien ja hylkyjen määrä, linnunrata ja tähdenlennot, purje (saumat, vastavalo), hento kimallus, Haamu latvusten alla ja pako, jousi oikeassa kädessä ja nuolten jälki, iskujen tahti, tuulen nuoli
 - [ ] Käyttäjä testaa session 10: vesiseinät poissa (jokien yhtymäkohdat), tumbleweedit vain aavikolla ja laterittitasangolla, purjeiden nosto ja lasku, eläinten pyydystäminen (jousi ja juoksu), sademetsän tihku, märkyys ja lammikot, aavikon kuumuusväreily, pölypyörteet ja tulikärpäset, meren syvyys laivalla, Haamu öisin sademetsässä, pudotettujen esineiden hehku ja heitetyn esineen poimintaviive
@@ -32,7 +34,7 @@
 - [ ] Kuun vaiheet (nyt kuu on aina täysi ja himmentää linnunradan joka yö) ja tähdenlentoparvet tiettyinä öinä (ehdotus)
 - [ ] Haamulle äänet (kuiske, kirkaisu ennen syöksyä), kun äänitehosteet lisätään
 - [ ] Kuumuusväreily myös ilman muuta jälkikäsittelyä (nyt vaatii valonsäteet, DOF tai liike-epäterävyyden)
-- [ ] Äänet osumiin, torjuntaan ja olentoihin (kun käyttäjä toimittaa äänet)
+- [ ] Äänet osumiin, torjuntaan ja olentoihin (kun käyttäjä toimittaa äänet; sessiossa 12 tehty ympäristöäänet ja askeleet)
 - [ ] Lisää vihollisia (esim. hyeena, krokotiili) ja kaloja; viholliset raunioihin?
 - [ ] Varastoarkku rakennettavaksi (purjelaivan tarvikkeet mahtuvat nyt juuri ja juuri reppuun)
 - [ ] Laivan kannella käveleminen (liikkuva taso) ja lastiruuma
@@ -62,6 +64,8 @@
 - [ ] Päätä lopullinen nimi (Sahel vai jokin muu)
 
 ## Valmis
+- [x] Äänitehosteet: tuuli, viidakko, sade, kaukainen ukkonen, puun kaatuminen; syntetisoidut askeleet (2026-10-07, sessio 12)
+- [x] Sääkierto [O] ei jää jumiin; vuoristo kuivaksi, tumbleweedit vuoristoon (sessio 12)
 - [x] Tulikärpäset parvina (joet, akasiat), ei merellä, rannalla, vuorilla eikä aavikolla (2026-10-07, sessio 11)
 - [x] Aallot pienemmiksi (myrsky edelleen rajumpi) (sessio 11)
 - [x] Vesi ei näy veneiden sisällä (sessio 11)

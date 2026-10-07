@@ -2,6 +2,15 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-07 (sessio 12)
+- **Äänitehosteet Web Audio -verkossa (oma moduuli `audio/sfx.js`); pitkät taustaäänet soitetaan audio-elementeistä (MediaElementSource), lyhyet äänet puskureina.** Syy: purettuina taustaäänet (5 min viidakko, 2,5 min ukkonen, sade, tuuli) veisivät n. 200 Mt muistia; striimattuina ne vievät vähän. Silmukan sauma peitetään kahdella vuorottelevalla elementillä ja 3 s:n ristiinhäivytyksellä, koska mp3:n silmukointi naksahtaa.
+- **Tiedostot tasataan −20 LUFS:iin (ffmpeg loudnorm) ja tasot asetetaan koodissa (0,3–0,42 = n. −30 LUFS), eli musiikin (−28 LUFS) tuntumaan tai hiljemmaksi.** Syy: käyttäjän ohje "ei turhan kovalle"; tasattuina tiedostot ovat keskenään vertailukelpoisia.
+- **Puun kaatumisääni ajoitetaan simuloimalla kaatumisen kesto (sama fysiikka kuin animaatiossa): jos kaatuminen kestää pidempään kuin tiedoston räsähdys (0,92 s), ääni viivästetään ja alun narina soitetaan heti erikseen.** Syy: käyttäjän toive "ääni alkaa kun puu alkaa kaatua, räsähdys kun runko osuu maahan"; puut kaatuvat 1,5–2,2 s:ssa.
+- **Askeleet syntetisoidaan (suodatettu kohina + matala tömähdys) materiaaleittain, ei äänitiedostoina.** Syy: käyttäjä pyysi Claudea generoimaan ne; synteesi vaihtelee joka askeleella luonnostaan, eikä tiedostoja tarvita. Materiaali päätellään biomin osuuksista, kallioisuudesta, rakennetuista lattioista ja kahlaamisesta.
+- **Tuuli kuuluu myös hiekkamyrskyssä** (Clauden lisäys käyttäjän säännön lisäksi). Syy: hiekkamyrsky ilman tuulen ääntä tuntuisi oudolta; helppo poistaa, jos käyttäjä ei halua.
+- **Vuoristo on kuiva ilmasto (ei sadetta, ukkosta eikä sumua), ja vuoriston osuus lasketaan paikalliseen sateenestoon ja salamoiden estoon kuten aavikko.** Tumbleweedien elinympäristöön lisättiin vuoristo. Syy: käyttäjän mukaan vuoristo on kuivaa (pöytävuoret, kaktukset).
+- **O-näppäin kiertää vain biomissa mahdollisia säitä.** Syy: mahdoton sää ei tartu hallitsevaan ilmastovyöhykkeeseen, jolloin kierto jäi jumiin.
+
 ## 2026-10-07 (sessio 11)
 - **Varjostimissa pow()-funktion kanta rajataan aina välille 0–1 (clamp/max).** Syy: GPU:n interpolointi voi ylittää välin hieman, ja pow(negatiivinen) = NaN, joka jälkikäsittely levittää mustiksi läiskiksi (sadepisaroiden bugi sessiossa 11).
 - **Vesi veneen sisällä estetään näkymättömällä "vesisuojalla" (vain syvyys, ei väriä) laidan yläreunan tasolla, ei nostamalla pohjaa.** Suoja piirretään veneen sisustan jälkeen ja ennen läpinäkyvää vettä, joten vedenpinta jää sen taakse. Syy: pohja on tarkoituksella vesirajan alapuolella (syväys), ja suoja toimii kaikissa kallistuksissa ja aalloissa ilman vesi-shaderin muutoksia. Suoja ei osallistu säteenheittoon eikä esikatselumalliin.
