@@ -23,6 +23,7 @@ Uusin merkintä ylimpänä.
 - **GitHub-tili jäädytettiin väliaikaisesti kesken session.** Käyttäjän pyynnöstä työ jatkui paikallisesti: muutokset commitoitiin vain paikallisesti haaraan `claude/sahel-game-dev-yi990s` (ei pushattu, ei PR:ää eikä raw.githack-linkkiä). Käyttäjälle annettiin peli zip-pakettina paikallista testausta varten.
 
 **Huomiot**
+- Käyttäjä raportoi paketin testauksen jälkeen mustia pisteitä sademetsän sateessa (pahenivat hiirtä liikuttaessa). Syy: pisaravarjostimen pow(1 − vC.y) sai negatiivisen kannan → NaN, jonka liike-epäterävyys levitti. Korjattiin rajaamalla; testattiin sademetsän sateessa liike-epäterävyys ja DOF päällä kameraa kääntäen. Uusi paketti annettiin käyttäjälle.
 - Rakennelmien solukoon muutos siirtää vanhojen maailmojen rakennelmien paikkoja.
 - Kuu on pelissä aina täysi ja korkealla keskiyöllä, joten linnunradan himmennys kuun valossa on vain 30 % (muuten se ei näkyisi koskaan).
 - Ensimmäinen sadeversio oli näkymätön (pisaranauhat olivat myötäpäivään, joten ne karsittiin takapintoina) ja liian harva; korjattiin kaksipuolisella materiaalilla ja tiheydellä.

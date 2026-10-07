@@ -72,7 +72,10 @@ varying float vAlpha;
 varying vec2 vC;
 void main() {
   // Pehmeät reunat sivuttain, pää kirkkain, häntä haalistuu.
-  float a = vAlpha * (1.0 - abs(vC.x)) * smoothstep(0.0, 0.12, vC.y) * pow(1.0 - vC.y, 0.7);
+  // Interpoloitu vC voi ylittää hieman välin 0..1: pow(negatiivinen) = NaN, joka
+  // näkyi mustina läiskinä (liike-epäterävyys levitti ne).
+  float ty = clamp(vC.y, 0.0, 1.0);
+  float a = vAlpha * max(0.0, 1.0 - abs(vC.x)) * smoothstep(0.0, 0.12, ty) * pow(1.0 - ty, 0.7);
   if (a < 0.004) discard;
   gl_FragColor = vec4(uColor, a * uOpacity);
   #include <colorspace_fragment>
