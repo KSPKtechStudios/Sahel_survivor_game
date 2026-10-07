@@ -102,7 +102,7 @@ export class Minimap {
 
     // Pohjoinen (P) reunalla
     const nx = R + Math.sin(yaw) * (R - 11), ny = R - Math.cos(yaw) * (R - 11);
-    ctx.font = '700 12px Alegreya, Georgia, serif';
+    ctx.font = "400 12px 'Eagle Lake', Georgia, serif";
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.lineWidth = 3;

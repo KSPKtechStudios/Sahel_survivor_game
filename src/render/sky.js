@@ -20,6 +20,7 @@ uniform vec3 uSunColor;
 uniform float uSunVisible;
 uniform vec3 uMoonDir;
 uniform float uMoonVisible;
+uniform float uMoonPhase;   // 0 uusikuu, 0,5 täysikuu (sessio 13)
 uniform float uStars;
 uniform float uCloudCover;
 uniform vec3 uCloudLit;
@@ -129,7 +130,20 @@ void main() {
   // Kuu
   float md = max(dot(dir, uMoonDir), 0.0);
   float moon = smoothstep(0.99935, 0.9996, md) * uMoonVisible;
-  col += vec3(0.6, 0.65, 0.8) * pow(md, 200.0) * 0.12 * uMoonVisible;
+  // Kuun vaihe: kiekon valaistu osa (pallon pinta, valo vaiheen suunnasta);
+  // varjopuoli hohtaa hyvin himmeästi (maanvalo).
+  if (moon > 0.0) {
+    vec3 mr = normalize(cross(uMoonDir, vec3(0.0, 1.0, 0.0)));
+    vec3 mu = cross(mr, uMoonDir);
+    vec3 off = dir - uMoonDir * md;
+    vec2 q = vec2(dot(off, mr), dot(off, mu)) / 0.0285;
+    float qz = sqrt(max(0.0, 1.0 - dot(q, q)));
+    float th = uMoonPhase * 6.2832;
+    float lit = smoothstep(-0.06, 0.1, dot(vec3(q, qz), vec3(-sin(th), 0.0, -cos(th))));
+    moon *= mix(0.05, 1.0, lit);
+  }
+  float moonIllum = 0.5 - 0.5 * cos(uMoonPhase * 6.2832);
+  col += vec3(0.6, 0.65, 0.8) * pow(md, 200.0) * 0.12 * uMoonVisible * moonIllum;
 
   // Pilvet: projisoidaan tasolle taivaalla.
   float cloud = 0.0;
@@ -151,7 +165,7 @@ void main() {
   col += vec3(0.95, 0.95, 0.88) * moon * 1.4 * (1.0 - cloud);
   col += vec3(starAmt) * uStars * (1.0 - cloud);
   // Kuunvalo peittää himmeän linnunradan.
-  col += milky * uStars * (1.0 - cloud) * (1.0 - 0.3 * uMoonVisible * smoothstep(0.0, 0.4, uMoonDir.y));
+  col += milky * uStars * (1.0 - cloud) * (1.0 - 0.3 * moonIllum * uMoonVisible * smoothstep(0.0, 0.4, uMoonDir.y));
   // Tähdenlento: ohut, nopeasti häipyvä viiva, kirkkain kärjestä.
   if (uMeteor.y > 0.001) {
     vec3 mh = normalize(mix(uMeteorA, uMeteorB, uMeteor.x));
@@ -189,6 +203,7 @@ export class Sky {
       uSunVisible: { value: 1 },
       uMoonDir: { value: new THREE.Vector3(0, -1, 0) },
       uMoonVisible: { value: 0 },
+      uMoonPhase: { value: 0.5 },
       uStars: { value: 0 },
       uCloudCover: { value: 0.2 },
       uCloudLit: { value: new THREE.Color(1, 1, 1) },

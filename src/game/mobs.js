@@ -546,7 +546,9 @@ export class Mobs {
         this._trySpawnWild(night);
       }
       if (night && !player.dead) {
-        this.clayTimer -= dt;
+        // Täysikuulla vihollisia syntyy enemmän (sessio 13): ajastimet kuluvat
+        // nopeammin ja haamun todennäköisyys kasvaa.
+        this.clayTimer -= dt * (1 + 0.45 * this._fullMoon());
         if (this.clayTimer <= 0) {
           this.clayTimer = 18 + Math.random() * 28;
           if (this.count('clay') < MAX_CLAY) this._trySpawnClay();
@@ -556,13 +558,13 @@ export class Mobs {
       }
       // Haamu: harvinainen, vain öisin sademetsässä.
       if (night && !player.dead) {
-        this.haamuTimer -= dt;
+        this.haamuTimer -= dt * (1 + 0.35 * this._fullMoon());
         if (this.haamuTimer <= 0) {
           // Ukkosmyrskyssä haamuja tulee useammin (sessio 12c, hillitty 12e):
           // tarkistus 22–40 s välein, 60 %, enintään 2; muuten 40–80 s, 33 %.
           const storm = (this.env?.w?.thunder || 0) > 0.4;
           this.haamuTimer = storm ? 22 + Math.random() * 18 : 40 + Math.random() * 40;
-          if (this.count('haamu') < (storm ? MAX_HAAMU + 1 : MAX_HAAMU) && Math.random() < (storm ? 0.6 : 0.33)) this._trySpawnHaamu();
+          if (this.count('haamu') < (storm ? MAX_HAAMU + 1 : MAX_HAAMU) && Math.random() < (storm ? 0.6 : 0.33) * (1 + 0.3 * this._fullMoon())) this._trySpawnHaamu();
         }
       } else if (!night) {
         this.haamuTimer = 20 + Math.random() * 30;
@@ -607,6 +609,12 @@ export class Mobs {
       }
     }
     if (this.structures) this.structures.extraFires = this.fires;
+  }
+
+  // Täysikuun voimakkuus 0..1 (kuun valaistu osuus yli 85 %).
+  _fullMoon() {
+    const ill = this.env.moonIllum ?? 0;
+    return Math.max(0, (ill - 0.85) / 0.15);
   }
 
   // --- Syntyminen -----------------------------------------------------------

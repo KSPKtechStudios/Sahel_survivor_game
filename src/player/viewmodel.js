@@ -517,13 +517,15 @@ export class ViewModel {
     this.forearm.quaternion.setFromUnitVectors(_down, _d);
 
     // Soihdun liekki lepattaa kärjessä.
-    const torch = this.current === 'torch' && this.items.torch && this.items.torch.visible;
+    // torchFlame (main.js, sessio 13): 1 = palaa, < 1 = yskii sateessa, 0 = sammunut.
+    const fk = this.torchFlame ?? 1;
+    const torch = this.current === 'torch' && this.items.torch && this.items.torch.visible && fk > 0.02;
     for (let i = 0; i < this.flames.length; i++) {
       const f = this.flames[i];
       f.visible = torch;
       if (!torch) continue;
       const m = this.items.torch;
-      const k = 0.85 + Math.sin(this.time * (9 + i * 3.1) + i) * 0.1 + Math.sin(this.time * 23 + i * 2) * 0.05;
+      const k = (0.85 + Math.sin(this.time * (9 + i * 3.1) + i) * 0.1 + Math.sin(this.time * 23 + i * 2) * 0.05) * fk;
       f.position.set(m.position.x + (i - 0.5) * 0.012, m.position.y + 0.43 * m.scale.y + 0.03 * k, m.position.z);
       f.scale.set(0.085 * k * (1 - i * 0.25), 0.15 * k * (1 - i * 0.2), 1);
     }

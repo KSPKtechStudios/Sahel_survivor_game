@@ -1,6 +1,9 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 13: fontti kaikkialla, nimilaput (olennot lähellä, puut ja pensaat katsottaessa), huomattu-merkki (silmä), pystypalkit vasemmassa alakulmassa, kaatuvan puun vahinko ja ketjukaato, soihtu vedessä ja sateessa, kuun vaiheet ja täysikuun viholliset, lammikot
+- [ ] Vastaus: silmä vai huutomerkki huomattu-merkiksi? Pitäisikö puiden ja pensaiden nimen näkyä aina (nyt vain katsottaessa)?
+- [ ] Vastaus: miten sammunut soihtu sytytetään (nyt nuotion vieressä)? Sopiiko kuun kierto 8 vuorokautta?
 - [ ] Käyttäjä testaa session 12e: linssiheijastukset (asetus), DOF oletuksena, äänten erottuvuus (väistö), iskuääni, [Shift]+[Q], soihdun valo ja sytytys, haamujen määrä
 - [ ] Vastaus: tarkoittiko [Shift]+[Q] koko pinoa (nyt) vai koko reppua?
 - [ ] Käyttäjä testaa session 12d: puun kaatumisääni, tyrskyt veneillä (myrskyssä), linssipisarat sateella aurinkoa kohti, veneiden nopeus, kaadetun palmun hakkaaminen, linnunrata, linnut ja huitaisut
@@ -36,7 +39,8 @@
 - [ ] Ambient-äänet ja äänitehosteet (käyttäjä toimittaa; musiikki tehty sessiossa 7)
 
 ## Seuraavaksi (ehdotuksia)
-- [ ] Kuun vaiheet (nyt kuu on aina täysi ja himmentää linnunradan joka yö) ja tähdenlentoparvet tiettyinä öinä (ehdotus)
+- [x] Kuun vaiheet (sessio 13)
+- [ ] Tähdenlentoparvet tiettyinä öinä (ehdotus)
 - [ ] Haamulle äänet (kuiske, kirkaisu ennen syöksyä), kun äänitehosteet lisätään
 - [ ] Kuumuusväreily myös ilman muuta jälkikäsittelyä (nyt vaatii valonsäteet, DOF tai liike-epäterävyyden)
 - [ ] Äänet osumiin, torjuntaan ja olentoihin (kun käyttäjä toimittaa äänet; sessiossa 12 tehty ympäristöäänet ja askeleet)

@@ -2,6 +2,17 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-07 (sessio 13): fontti, nimilaput, pystypalkit, kaatuvat puut, soihtu, kuun vaiheet, lammikot
+
+- **Kaikki teksti Eagle Lake -fontilla** (sama kuin valikon logossa): valikot, HUD, viestit, kartat ja minikartta.
+- **Nimilaput seuraavat kohdetta:** lähellä olevilla eläimillä ja vihollisilla on nimi ja kestävyyspalkki niiden yläpuolella. Puiden, pensaiden, kivien ja esineiden nimi näkyy kohteen kohdalla, kun niihin katsoo, eikä niillä ole kestävyyspalkkia.
+- **Huomattu-merkki:** silmä palkin alla, kun olento on huomannut pelaajan (punainen ja sykkivä, kun se hyökkää).
+- **Terveys-, kestävyys- ja ruokapalkit** ovat nyt pystyssä vasemmassa alakulmassa, ja niissä on ikonit (sydän, salama, ruokakulho).
+- **Kaatuva puu voi satuttaa ja tappaa** pelaajan tai olennon, ja se voi kaataa toisia puita (ketjureaktio).
+- **Soihtu sammuu vedessä** (sytytetään uudelleen nuotiolla) ja **palaa sateessa heikosti ja yskien**.
+- **Kuun vaiheet:** uusikuu, kuunsirppi, puolikuu ja täysikuu vaihtuvat 8 vuorokauden kierrossa, ja kuunvalo vaihtelee niiden mukana. Illalla kerrotaan kuun vaihe. **Täysikuulla vihollisia syntyy enemmän.**
+- **Lammikot eivät enää leiju:** ne asetetaan piirretyn maaston pintaan ja vain tasaiselle maalle.
+
 ## 2026-10-07 (sessio 12e): linssiheijastukset, äänimiksaus, iskuäänet, soihtu, Shift+Q
 
 - **Linssiheijastukset:** aurinkoa kohti katsottaessa auringon ympärillä hehkuu ja säteilee, ja kuvan poikki näkyy värillisiä heijastuksia. Heijastukset häviävät, kun aurinko on puiden tai maaston takana tai pilvien peitossa. Asetuksissa uusi valinta **Linssiheijastukset**.

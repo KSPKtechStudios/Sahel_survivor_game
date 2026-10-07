@@ -78,6 +78,8 @@ const _c = new THREE.Color();
 const _c2 = new THREE.Color();
 const _grey = new THREE.Color(0x9a9ca0);
 const _moonCol = new THREE.Color(0x8ea6d8);
+const MOON_CYCLE_DAYS = 8;
+const MOON_START = 2.6; // ensimmäisenä yönä kasvava kuu
 
 export class Environment {
   constructor(scene, renderer, sky) {
@@ -196,6 +198,30 @@ export class Environment {
       if (r <= 0) return k;
     }
     return 'clear';
+  }
+
+  // Kuun vaiheet (sessio 13): kierto 8 pelivuorokautta. phase 0 = uusikuu,
+  // 0,25 = kasvava puolikuu, 0,5 = täysikuu, 0,75 = vähenevä puolikuu.
+  get moonPhase() {
+    const t = (this.day - 1) + this.time / 24 + MOON_START;
+    return ((t / MOON_CYCLE_DAYS) % 1 + 1) % 1;
+  }
+
+  // Valaistu osuus 0..1.
+  get moonIllum() {
+    return (1 - Math.cos(this.moonPhase * Math.PI * 2)) / 2;
+  }
+
+  get moonName() {
+    const p = this.moonPhase;
+    if (p < 0.04 || p > 0.96) return 'Uusikuu';
+    if (p < 0.21) return 'Kasvava kuunsirppi';
+    if (p < 0.29) return 'Kasvava puolikuu';
+    if (p < 0.44) return 'Kasvava kuu';
+    if (p < 0.56) return 'Täysikuu';
+    if (p < 0.71) return 'Vähenevä kuu';
+    if (p < 0.79) return 'Vähenevä puolikuu';
+    return 'Vähenevä kuunsirppi';
   }
 
   get weatherName() {
@@ -400,6 +426,7 @@ export class Environment {
     u.uMoonDir.value.copy(this.moonDir);
     u.uSunVisible.value = smoothstep(-0.05, 0.02, this.sunDir.y) * (1 - w.haze * 0.75) * (0.3 + w.sunMul * 0.7);
     u.uMoonVisible.value = smoothstep(-0.02, 0.1, this.moonDir.y) * (1 - w.haze * 0.9);
+    u.uMoonPhase.value = this.moonPhase;
     u.uStars.value = (1 - smoothstep(-0.2, 0.02, this.sunDir.y)) * (1 - w.haze) * (1 - w.cloud * 0.7);
     if (!this.frozen) this.sky.updateMeteors(clockDt, u.uStars.value * (1 - w.cloud));
     // Linnunrata kiertyy taivaan mukana yön aikana.
@@ -439,7 +466,7 @@ export class Environment {
       this.sun.color.copy(u.uSunColor.value);
       if (tintAmt > 0.001) this.sun.color.lerp(w.tint, tintAmt * 0.5);
     } else {
-      intensity = 0.55 * smoothstep(0.0, 0.15, this.moonDir.y) * (1 - w.cloud * 0.6) * (1 - w.haze * 0.6);
+      intensity = 0.55 * smoothstep(0.0, 0.15, this.moonDir.y) * (1 - w.cloud * 0.6) * (1 - w.haze * 0.6) * (0.2 + 0.8 * this.moonIllum);
       this.sun.color.copy(_moonCol);
     }
     // Latvusto varjostaa sademetsässä.

@@ -8,7 +8,7 @@
   --accent-2: #f2c66b;
   --good: #a9d06a;
   --bad: #ff8a6a;
-  --font: "Trebuchet MS", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font: 'Eagle Lake', Georgia, serif;
 }
 
 * { box-sizing: border-box; }
@@ -19,6 +19,9 @@ html, body {
   background: #120c07;
   color: var(--text);
   font-family: var(--font);
+  /* Sessio 13: kaikki teksti Eagle Lake -fontilla (vain yksi paino, ei
+     keinotekoista lihavointia tai kursiivia). */
+  font-synthesis: none;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -48,6 +51,24 @@ html, body {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
 }
 #target.show { opacity: 1; }
+/* Sessio 13: nimilappu kohteen kohdalla (ei tähtäimen alla). */
+#target.anchored { transform: translate(-50%, -100%); }
+#nameplates { position: absolute; inset: 0; pointer-events: none; }
+.plate {
+  position: absolute; left: 0; top: 0;
+  text-align: center; white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+.plate .pl-name { font-size: 15px; color: #f4e8d2; letter-spacing: 0.02em; }
+.plate.target .pl-name { color: #ffe2a0; }
+.plate .pl-act { font-size: 12px; color: #ffcf8a; }
+.plate .pl-act:empty { display: none; }
+.plate .pl-hp { width: 74px; height: 5px; margin: 3px auto 0; background: rgba(0, 0, 0, 0.55); border-radius: 3px; overflow: hidden; box-shadow: 0 0 0 1px rgba(236, 200, 140, 0.25); }
+.plate .pl-hp i { display: block; height: 100%; background: linear-gradient(0deg, #a8261c, #e8553e); }
+.plate .pl-spot { width: 18px; height: 18px; margin: 3px auto 0; }
+.plate .pl-spot svg { width: 100%; height: 100%; fill: #f2c66b; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.9)); }
+.plate .pl-spot.hostile svg { fill: #ff5a3c; animation: spotPulse 0.9s ease-in-out infinite; }
+@keyframes spotPulse { 50% { transform: scale(1.18); } }
 #target .name { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
 #target .action { font-size: 13px; color: var(--muted); margin-top: 2px; }
 #target .action.warn { color: var(--bad); }
@@ -154,16 +175,18 @@ html, body {
 }
 #item-name.show { opacity: 1; }
 
-/* Terveys ja kestävyys pikapalkin yläpuolella */
+/* Terveys, kestävyys ja ravinto vasemmassa alakulmassa pystypalkkeina
+   (sessio 13): kuvake alla, palkki täyttyy alhaalta ylös. */
 #vitals {
-  position: absolute; left: 50%; bottom: 86px;
-  width: 506px; transform: translateX(-50%);
-  display: flex; gap: 12px;
+  position: absolute; left: 20px; bottom: 20px;
+  display: flex; gap: 12px; align-items: flex-end;
+  padding: 10px 12px 8px; border-radius: 10px;
+  background: rgba(20, 12, 6, 0.35);
+  box-shadow: 0 0 0 1px rgba(236, 200, 140, 0.12);
 }
-.vital.hu { flex: 0.7; }
 .vital.hu .ico { fill: #b7d27a; }
-.vital.hu .bar i { background: linear-gradient(90deg, #7f9a3c, #c2dc7a); }
-.vital.hu.low .bar i { background: linear-gradient(90deg, #a05a24, #d8963c); }
+.vital.hu .bar i { background: linear-gradient(0deg, #7f9a3c, #c2dc7a); }
+.vital.hu.low .bar i { background: linear-gradient(0deg, #a05a24, #d8963c); }
 .vital.hu.empty .bar { animation: hpPulse 0.9s ease-in-out infinite; }
 #effects {
   position: absolute; left: 50%; bottom: 104px; transform: translateX(-50%);
@@ -219,28 +242,28 @@ html, body {
 #rune-panel .rp-text { margin-top: 8px; min-height: 48px; font-size: 18px; line-height: 1.45; font-style: italic; color: #f4e6c8; text-shadow: 0 1px 2px #000; }
 #rune-panel .rp-foot { margin-top: 8px; font-size: 11px; color: var(--muted); }
 #poison { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(ellipse at center, rgba(60, 120, 20, 0) 38%, rgba(70, 130, 30, 0.55) 100%); }
-.vital { flex: 1; display: flex; align-items: center; gap: 6px; transition: opacity 0.4s; }
-.vital .ico { width: 16px; height: 16px; flex: none; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8)); }
+.vital { display: flex; flex-direction: column-reverse; align-items: center; gap: 6px; transition: opacity 0.4s; }
+.vital .ico { width: 20px; height: 20px; flex: none; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8)); }
 .vital.hp .ico { fill: #e8553e; }
 .vital.st .ico { fill: #f2c66b; }
 .vital .bar {
-  position: relative; flex: 1; height: 9px;
+  position: relative; width: 12px; height: 130px;
   background: rgba(0, 0, 0, 0.5);
   border-radius: 5px; overflow: hidden;
   box-shadow: 0 0 0 1px rgba(236, 200, 140, 0.25), 0 1px 3px rgba(0, 0, 0, 0.4);
 }
-.vital .bar i, .vital .bar b { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; border-radius: 5px; }
+.vital .bar i, .vital .bar b { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; border-radius: 5px; }
 .vital.hp .bar b { background: rgba(255, 232, 205, 0.8); }
 .vital.hp .bar i { background: linear-gradient(90deg, #a8261c, #e8553e); }
 .vital.hp.low .bar { animation: hpPulse 0.9s ease-in-out infinite; }
 @keyframes hpPulse { 50% { box-shadow: 0 0 0 1px rgba(255, 90, 60, 0.9), 0 0 10px rgba(255, 60, 30, 0.6); } }
-.vital .num { min-width: 26px; font-size: 12px; font-weight: 700; text-align: right; text-shadow: 0 1px 2px #000; font-variant-numeric: tabular-nums; }
-.vital.st .bar i { background: linear-gradient(90deg, #e8a33c, #f6d27a); }
+.vital .num { min-width: 26px; font-size: 13px; text-align: center; text-shadow: 0 1px 2px #000; font-variant-numeric: tabular-nums; }
+.vital.st .bar i { background: linear-gradient(0deg, #e8a33c, #f6d27a); }
 /* Puolivälin merkki: iskusarja jatkuu vain, kun kestävyyttä on yli puolet. */
-.vital.st .bar::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: rgba(40, 22, 8, 0.75); box-shadow: 0 0 0 1px rgba(255, 236, 200, 0.25); }
-.vital.st.nocombo .bar i { background: linear-gradient(90deg, #c98a34, #e2b866); }
+.vital.st .bar::after { content: ''; position: absolute; bottom: 50%; left: 0; right: 0; height: 2px; margin-bottom: -1px; background: rgba(40, 22, 8, 0.75); box-shadow: 0 0 0 1px rgba(255, 236, 200, 0.25); }
+.vital.st.nocombo .bar i { background: linear-gradient(0deg, #c98a34, #e2b866); }
 .vital.st.full { opacity: 0.55; }
-.vital.st.low .bar i { background: linear-gradient(90deg, #d0502a, #f08a4a); }
+.vital.st.low .bar i { background: linear-gradient(0deg, #d0502a, #f08a4a); }
 .vital.st.out .bar { animation: hpPulse 0.6s ease-in-out infinite; }
 
 /* Osuma, hukkuminen, torjunta ja kuolema */
@@ -402,7 +425,7 @@ html, body {
 }
 #drag-cursor img { width: 48px; height: 48px; }
 
-#fps { position: absolute; left: 12px; top: 10px; font: 600 12px/1 var(--font); color: #f4e8d2; text-shadow: 0 1px 2px #000; }
+#fps { position: absolute; left: 12px; top: 10px; font: 400 12px/1 var(--font); color: #f4e8d2; text-shadow: 0 1px 2px #000; }
 
 @media (max-width: 760px) {
   .inv-card { flex-direction: column; max-height: calc(100vh - 32px); overflow-y: auto; }
@@ -449,7 +472,7 @@ html, body {
 .bm-sym, .bm-btn {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 4px 9px 4px 5px;
-  font: 700 13px 'Alegreya', Georgia, serif; color: #4a2f15;
+  font: 400 13px 'Eagle Lake', Georgia, serif; color: #4a2f15;
   background: rgba(255, 248, 230, 0.78);
   border: 1px solid rgba(110, 75, 35, 0.45);
   border-radius: 8px;
@@ -464,7 +487,7 @@ html, body {
 .bm-bottom {
   position: absolute; right: 14px; bottom: 10px;
   display: flex; gap: 16px; align-items: baseline;
-  font: 600 13px 'Alegreya', Georgia, serif; color: #4a2f15;
+  font: 400 13px 'Eagle Lake', Georgia, serif; color: #4a2f15;
   text-shadow: 0 1px 0 rgba(255, 245, 220, 0.8);
   pointer-events: none;
 }
@@ -482,7 +505,7 @@ html, body {
 @keyframes bmEditIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 #bm-name {
   width: 170px; padding: 5px 8px;
-  font: 700 14px 'Alegreya', Georgia, serif; color: #3e2610;
+  font: 400 14px 'Eagle Lake', Georgia, serif; color: #3e2610;
   background: #fffaf0; border: 1px solid rgba(110, 75, 35, 0.45); border-radius: 6px;
   outline: none; user-select: text; -webkit-user-select: text;
 }
@@ -515,7 +538,7 @@ html, body {
 .dev-info {
   margin: 8px 0 4px; padding: 7px 9px;
   background: rgba(0, 0, 0, 0.35); border-radius: 7px;
-  font: 12px/1.45 ui-monospace, Consolas, monospace; color: #e8dcc4;
+  font: 12px/1.45 'Eagle Lake', Georgia, serif; color: #e8dcc4;
   white-space: pre-wrap; user-select: text; -webkit-user-select: text;
 }
 .dev-status { min-height: 18px; font-size: 12px; color: var(--good); margin-bottom: 4px; }

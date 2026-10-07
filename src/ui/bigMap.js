@@ -335,7 +335,7 @@ export class BigMap {
     ctx.beginPath();
     ctx.moveTo(bx, by - 6); ctx.lineTo(bx, by); ctx.lineTo(bx + bw, by); ctx.lineTo(bx + bw, by - 6);
     ctx.stroke();
-    ctx.font = '700 14px Alegreya, Georgia, serif';
+    ctx.font = "400 14px 'Eagle Lake', Georgia, serif";
     ctx.textAlign = 'left';
     ctx.textBaseline = 'bottom';
     ctx.fillStyle = '#4a2f15';

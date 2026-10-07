@@ -12,6 +12,7 @@ import { events } from './events.js';
 
 const _dir = new THREE.Vector3();
 const _hit = new THREE.Vector3();
+const _anc = new THREE.Vector3(), _a1 = new THREE.Vector3(), _a2 = new THREE.Vector3();
 const _place = new THREE.Vector3();
 const _cols = [];
 
@@ -79,6 +80,12 @@ export class Interaction {
 
     this.target = this._raycast();
     this.prompt = this._promptFor(this.target, def);
+    // Nimilappu seuraa kohdetta (sessio 13): kohdan paikka maailmassa.
+    if (this.prompt && this.target) {
+      const a = this._anchor(this.target);
+      this.prompt.anchor = { x: a.x, y: a.y, z: a.z };
+      if (this.target.kind === 'mob') this.prompt.mob = this.target.obj;
+    }
     if (input.pressed.has('KeyE') && input.enabled && this.target && !this.player.dead) this._tryPickup(this.target);
 
     // Ruoka kädessä: hiiren oikea syö (kohteen kehote näkyy, jos sellainen on).
@@ -88,6 +95,29 @@ export class Interaction {
       }
       if (input.clicked.has(2) && input.enabled && !this.player.dead && this.useItem) this.useItem(this.inventory.selected);
     }
+  }
+
+  // Kohdan nimilapun paikka: kohteen yläpuolella (puissa rungon kohdalla).
+  _anchor(t) {
+    const o = t.obj, a = _anc;
+    if (t.kind === 'mob') return a.set(o.pos.x, o.pos.y + o.def.height + 0.35, o.pos.z);
+    if (t.kind === 'drop' && o.mesh) return a.copy(o.mesh.position).setY(o.mesh.position.y + 0.55);
+    if (t.kind === 'log' && this.fallen._trunkWorld) {
+      this.fallen._trunkWorld(o, _a1, _a2);
+      a.lerpVectors(_a1, _a2, 0.35);
+      return a.setY(a.y + 0.9);
+    }
+    if (t.kind === 'boat') return a.set(o.x, o.y + o.def.top * 0.5 + 0.9, o.z);
+    if (t.kind === 'object') {
+      const d = OBJECT_TYPES[o.type];
+      const sc = o.scale || 1;
+      const h = d.kind === 'tree' ? 2.3 : d.kind === 'rock' || d.kind === 'static' ? Math.min(3.2, 0.6 + 1.1 * sc) : d.kind === 'bush' ? 0.5 + 0.9 * sc : 0.55;
+      return a.set(o.x, (o.y ?? 0) + h, o.z);
+    }
+    // Muut (arkut, riimukivet, rakennelmat, tumbleweedit): osumakohdan yläpuolella.
+    this.camera.getWorldDirection(_dir);
+    a.copy(this.camera.position).addScaledVector(_dir, t.t);
+    return a.setY(a.y + 0.45);
   }
 
   _promptFor(target, def) {
@@ -104,7 +134,7 @@ export class Interaction {
     if (target.kind === 'rune') return { name: target.obj.rune.name, action: 'PAINA E KÄÄNTÄÄKSESI', rune: true };
     if (target.kind === 'boat') {
       const b = target.obj;
-      return { name: b.def.name, action: '[E] Nouse kyytiin', hp: b.hp < b.def.hp ? b.hp / b.def.hp : null };
+      return { name: b.def.name, action: '[E] Nouse kyytiin' };
     }
     if (target.kind === 'drop') {
       const d = target.obj;
@@ -120,15 +150,15 @@ export class Interaction {
       const log = target.obj;
       const t = OBJECT_TYPES[log.type];
       const ok = def && def.tool === 'axe';
-      return { name: t.log.name, action: ok ? '[Hiiri 1] Pilko' : 'Tarvitset kirveen', warn: !ok, hp: ok && log.hp < t.log.hp ? log.hp / t.log.hp : null };
+      return { name: t.log.name, action: ok ? '[Hiiri 1] Pilko' : 'Tarvitset kirveen', warn: !ok };
     }
     const t = OBJECT_TYPES[target.obj.type];
     if (t.pickup) return { name: t.name, action: '[E] Poimi' };
     if (t.harvest) {
       const h = t.harvest;
       const ok = this._toolOk(h, def);
-      const hp = h.hp ? target.obj.hp / h.hp : 1;
-      return { name: t.name, action: ok ? '[Hiiri 1] Hakkaa' : h.needMsg, warn: !ok, hp: ok && hp < 1 ? hp : null };
+      // Kestävyyspalkki vain olennoilla (sessio 13), ei puilla eikä kivillä.
+      return { name: t.name, action: ok ? '[Hiiri 1] Hakkaa' : h.needMsg, warn: !ok };
     }
     return { name: t.name, action: '' };
   }

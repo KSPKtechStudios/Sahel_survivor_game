@@ -17,6 +17,19 @@ const STEP = SIZE / SEG;
 export const OBJ_STRIDE = 8;   // typeIndex, candidate, x, y, z, rot, scale, variant
 export const DECOR_STRIDE = 8; // decorIndex, variant, x, y, z, rotY, sxz, sy
 
+// Piirretyn maastoverkon korkeus (kolmiot kuten world.js:n indeksissä:
+// lävistäjä kulmasta (i+1, j) kulmaan (i, j+1)). Analyyttinen korkeus voi olla
+// kuperalla maalla verkon yläpuolella, jolloin litteä lammikko leijui.
+function meshHeight(x, z) {
+  const gx = Math.floor(x / STEP), gz = Math.floor(z / STEP);
+  const fx = x / STEP - gx, fz = z / STEP - gz;
+  const X = gx * STEP, Z = gz * STEP;
+  const ha = heightAt(X, Z), hb = heightAt(X + STEP, Z), hc = heightAt(X, Z + STEP);
+  if (fx + fz <= 1) return ha + (hb - ha) * fx + (hc - ha) * fz;
+  const hd = heightAt(X + STEP, Z + STEP);
+  return hd + (hc - hd) * (1 - fx) + (hb - hd) * (1 - fz);
+}
+
 function slope(x, z, h) {
   const nx = h - heightAt(x + 1, z);
   const nz = h - heightAt(x, z + 1);
@@ -142,6 +155,22 @@ export function generateChunk(cx, cz, variantCounts) {
       } else if (s.h < s.wl + 0.05) continue;
       if (insideStructure(x, z, -1)) continue;
       const sc = def.scale[0] + r3 * (def.scale[1] - def.scale[0]);
+      if (def.puddleWeight) {
+        // Lammikko lepää verkon matalimmassa kohdassa reunansa alueella; jos
+        // reuna ei ole tasainen, kohta hylätään (sessio 13: lammikot leijuivat).
+        // Mallin säde on enintään ~1,8 × skaala: tarkistetaan kaksi kehää.
+        let lo = meshHeight(x, z), hi = lo;
+        for (const R of [sc * 0.9, sc * 1.85]) {
+          for (let k = 0; k < 12; k++) {
+            const a = (k / 12) * Math.PI * 2;
+            const hk = meshHeight(x + Math.cos(a) * R, z + Math.sin(a) * R);
+            lo = Math.min(lo, hk);
+            hi = Math.max(hi, hk);
+          }
+        }
+        if (hi - lo > 0.12) continue;
+        y = lo + 0.015;
+      }
       // Lammikon pysyvyys (1 = sademetsä, aina vettä; 0 = vain sateen jälkeen)
       // kulkee y-skaalassa (litteä malli, pystyskaala ei näy).
       const sy = def.puddleWeight ? 0.05 + 0.95 * Math.min(1, s.rainforest + s.oasis)

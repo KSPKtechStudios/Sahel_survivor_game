@@ -263,7 +263,8 @@ export class Combat {
         if (m.type === 'clay') this.debris.chips(_v, 0x9c4a2a, 5, null, 0.9);
         this.mobs.bleed(m, _v, -dx, -dz, step.dmg);
         // Soihtu sytyttää lyödyn olennon palamaan (sessio 12e).
-        if (this.inventory.selectedItem && this.inventory.selectedItem.id === 'torch') this.mobs.setOnFire(m);
+        const sel = this.inventory.selectedItem;
+        if (sel && sel.id === 'torch' && !sel.unlit) this.mobs.setOnFire(m);
       }
       // Iskuääni elävään olentoon osuessa (sessio 12e).
       events.emit('punch', { heavy: !!step.heavy, n });

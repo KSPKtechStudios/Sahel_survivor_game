@@ -2,6 +2,25 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-07 (sessio 13)
+**Tehtiin**
+- Käyttäjän toiveet (kirjattu `DESIGN.md`:hen).
+- Eagle Lake -fontti kaikkialla (`styles.css`, `menu.css`, `ui/minimap.js`, `ui/bigMap.js`, `ui/explored.js`, `main.js`: fontin esilataus).
+- Nimilaput (`ui/nameplates.js` uusi; `game/interaction.js`: kohteen ankkuripiste, ei kestävyyttä puilla ym.; `ui/hud.js`), huomattu-merkki (silmä).
+- Pystypalkit ikoneineen vasempaan alakulmaan (`index.html`, `styles.css`, `ui/hud.js`).
+- Kaatuva puu murskaa ja kaataa toisia puita (`game/fallen.js`: `_crush`, ala-askeleet, koko kaatuva pituus; `game/breakables.js`: `fellTree`; `main.js`: kytkennät).
+- Soihtu sammuu vedessä ja yskii sateessa (`main.js`, `player/viewmodel.js`, `game/combat.js`: sytyttää vain palava soihtu).
+- Kuun vaiheet (`render/environment.js`, `render/sky.js`), täysikuulla enemmän vihollisia (`game/mobs.js`), viesti illalla (`main.js`).
+- Lammikot verkon pintaan (`world/chunkGen.js`: `meshHeight`, kaksi tarkistuskehää).
+- Testattiin headless-Chromiumilla: olennon nimilappu ja silmä (näkyy jahdatessa, katoaa laiduntaessa), puun nimilappu kohteen kohdalla ilman palkkia ja ruudun sisällä, kaatuva puu (pelaaja 100 → 38–53, mobi 55 → 12 / kuoli, ketjukaato 5/6 kertaa 2–3 puuta), soihtu (sateessa liekki n. 0,5, poutaan palatessa 0,85 → 1, vedessä sammuu), kuu (sirppi ja täysikuu kuvina), lammikot (pahin 1,8 cm maanpinnan yläpuolella, ennen leijui). ESLint ja savutesti puhtaat.
+
+**Huomiot**
+- Testiselaimessa sademetsä piirtyy niin hitaasti (3 ruutua 8 s:ssa), että kaatumisfysiikkaa ajettiin testissä käsin 1/60 s:n askelin. Samalla huomattiin, että osumassa käytettiin vain hakattavan rungon pätkää (latva ei osunut), ja korjattiin.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute (nimilappujen määrä, merkki, soihdun sytytys).
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-07 (sessio 12e)
 **Tehtiin**
 - Käyttäjän toiveet ja 2 iskuääntä (kirjattu `DESIGN.md`:hen).

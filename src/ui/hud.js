@@ -166,7 +166,8 @@ export class Hud {
     // Iskun jäähdytys: tähtäin himmenee, kunnes voi lyödä uudelleen.
     this.crosshair.classList.toggle('cooldown', cooldown > 0.02);
     // Kohde
-    if (prompt && visible) {
+    // Olennon nimilappu on olennon päällä (nameplates.js), ei tähtäimen alla.
+    if (prompt && visible && !prompt.mob) {
       this.targetBox.classList.add('show');
       this.targetName.textContent = prompt.name;
       this.targetAction.textContent = prompt.action || '';
@@ -180,7 +181,7 @@ export class Hud {
       this.crosshair.classList.add('active');
     } else {
       this.targetBox.classList.remove('show');
-      this.crosshair.classList.remove('active');
+      this.crosshair.classList.toggle('active', !!(prompt && visible));
     }
 
     // Terveys: menetetty osa näkyy hetken vaaleana ennen kuin se kutistuu.
@@ -188,14 +189,15 @@ export class Hud {
     if (this.trailDelay > 0) this.trailDelay -= dt;
     else this.trail += (hp - this.trail) * Math.min(1, dt * 5);
     if (this.trail < hp) this.trail = hp;
-    this.hpFill.style.width = `${hp * 100}%`;
-    this.hpTrail.style.width = `${this.trail * 100}%`;
+    // Pystypalkit (sessio 13): täyttö korkeutena alhaalta ylös.
+    this.hpFill.style.height = `${hp * 100}%`;
+    this.hpTrail.style.height = `${this.trail * 100}%`;
     this.hpNum.textContent = Math.ceil(player.health);
     this.hp.classList.toggle('low', hp < 0.25 && !player.dead);
 
     // Kestävyys: himmeä, kun täynnä.
     const st = player.stamina / CONFIG.staminaMax;
-    this.staminaFill.style.width = `${st * 100}%`;
+    this.staminaFill.style.height = `${st * 100}%`;
     this.stamina.classList.toggle('full', st >= 0.995);
     this.stamina.classList.toggle('low', st < 0.25);
     this.stamina.classList.toggle('nocombo', st <= 0.5 && st >= 0.25);
@@ -204,7 +206,7 @@ export class Hud {
     // Ravinto ja tilavaikutukset
     if (this.survival) {
       const hu = this.survival.hunger / HUNGER_MAX;
-      this.hungerFill.style.width = `${hu * 100}%`;
+      this.hungerFill.style.height = `${hu * 100}%`;
       this.hungerEl.classList.toggle('low', hu < 0.25);
       this.hungerEl.classList.toggle('empty', hu <= 0.001 && !player.dead);
       for (const [k, el] of Object.entries(this.effectEls)) {

@@ -13,9 +13,14 @@ const _v = new THREE.Vector3();
 const _w = new THREE.Vector3();
 const _a = new THREE.Vector3();
 const _b = new THREE.Vector3();
+const _cols = [];
 
 export class FallenTrees {
   constructor({ scene, world, models, material, debris, drops, bursts }) {
+    // main.js: pelaaja, olennot ja puun kaato ketjureaktiota varten (sessio 13).
+    this.player = null;
+    this.mobs = null;
+    this.knockTree = null;
     Object.assign(this, { scene, world, models, material, debris, drops, bursts });
     this.list = [];
   }
@@ -96,7 +101,8 @@ export class FallenTrees {
   }
 
   // Puu kaatuu: geometry = hakattu (loveutunut) puu, matrix = sen maailmamatriisi.
-  fell(obj, geometry, playerPos) {
+  // forcedDir: ketjukaadossa toisen puun suunta (sessio 13).
+  fell(obj, geometry, playerPos, forcedDir = null, chainDepth = 0) {
     const split = splitTree(geometry);
     const m = new THREE.Matrix4().compose(
       new THREE.Vector3(obj.x, obj.y, obj.z),
@@ -108,11 +114,18 @@ export class FallenTrees {
     // ettei puu kaadu suoraan päälle.
     const a = Math.random() * Math.PI * 2;
     const dir = new THREE.Vector3(Math.cos(a), 0, Math.sin(a));
-    const away = _v.set(obj.x - playerPos.x, 0, obj.z - playerPos.z);
-    if (away.lengthSq() > 0.01 && dir.dot(away.normalize()) < -0.6) dir.negate();
+    if (forcedDir) {
+      dir.set(forcedDir.x, 0, forcedDir.z).normalize();
+      dir.applyAxisAngle(UP, (Math.random() - 0.5) * 0.7);
+    } else {
+      const away = _v.set(obj.x - playerPos.x, 0, obj.z - playerPos.z);
+      if (away.lengthSq() > 0.01 && dir.dot(away.normalize()) < -0.6) dir.negate();
+    }
     const log = this._create({
       type: obj.type, variant: obj.variant, scale: obj.scale, rot: obj.rot, cutWorld, dir, topGeo: split.top,
     });
+    log.src = obj;
+    log.chainDepth = chainDepth;
     const stump = new THREE.Mesh(split.stump, this.material);
     stump.position.set(obj.x, obj.y, obj.z);
     stump.rotation.y = obj.rot;
@@ -135,25 +148,86 @@ export class FallenTrees {
   update(dt) {
     for (const log of this.list) {
       if (log.state === 'falling') {
-        // Sauvan kaatuminen tukipisteen ympäri: kiihtyvyys ~ sin(kulma)
-        const alpha = ((3 * 9.8) / (2 * log.L)) * Math.sin(log.theta) + 0.15;
-        log.omega += alpha * dt;
-        log.theta += log.omega * dt;
-        if (log.theta >= log.thetaMax) {
-          log.theta = log.thetaMax;
-          if (!log.impacted) {
-            log.impacted = true;
-            this._impact(log);
+        // Ala-askeleet: matalalla ruudunpäivityksellä latva ei hyppää
+        // pelaajan tai olennon yli yhdessä askeleessa (murskaus, sessio 13).
+        const steps = Math.min(8, Math.ceil(dt * 60));
+        const h = dt / steps;
+        for (let k = 0; k < steps && log.state === 'falling'; k++) {
+          // Sauvan kaatuminen tukipisteen ympäri: kiihtyvyys ~ sin(kulma)
+          const alpha = ((3 * 9.8) / (2 * log.L)) * Math.sin(log.theta) + 0.15;
+          log.omega += alpha * h;
+          log.theta += log.omega * h;
+          if (log.theta >= log.thetaMax) {
+            log.theta = log.thetaMax;
+            if (!log.impacted) {
+              log.impacted = true;
+              this._impact(log);
+            }
+            if (log.omega > 0.5) log.omega *= -0.22;
+            else { log.omega = 0; log.state = 'down'; }
           }
-          if (log.omega > 0.5) log.omega *= -0.22;
-          else { log.omega = 0; log.state = 'down'; }
+          this._applyRotation(log);
+          if (log.state === 'falling' || log.omega > 0.6) this._crush(log);
         }
-        this._applyRotation(log);
         if (log.state === 'down') this._makeCollider(log);
       } else if (log.shake > 0) {
         log.shake = Math.max(0, log.shake - dt * 3);
         this._applyRotation(log);
       }
+    }
+  }
+
+  // Kaatuva runko osuu pelaajaan, olentoihin ja toisiin puihin (sessio 13).
+  // Iso, nopeasti kaatuva puu voi tappaa; osuessaan pystyssä olevaan puuhun
+  // se voi kaataa senkin (ketjureaktio, enintään 3 puuta peräkkäin).
+  _crush(log) {
+    if (log.theta < 0.25) return;
+    // Koko kaatuva pituus latvuksineen (hakattava runko on lyhyempi).
+    this._trunkWorld(log, _a, _b);
+    _b.sub(_a);
+    _b.multiplyScalar(log.L / Math.max(0.01, _b.length())).add(_a);
+    const meta = log.mesh.geometry.userData.tree;
+    const r = Math.max(0.25, meta.logR * log.scale);
+    const speed = Math.min(1, Math.abs(log.omega) / 2.2);
+    const dmg = (18 + log.L * 6) * (0.4 + 0.6 * speed);
+    // Latvus ulottuu rungon akselia alemmas: korkeussietoon sen paksuus.
+    const crownR = Math.min(1.5, 0.15 * log.L);
+    log.crushed = log.crushed || new Set();
+    // Pelaaja (kapseli jaloista päähän)
+    const P = this.player;
+    if (P && !P.dead && !P.riding && !log.crushed.has(P)) {
+      const p = P.position;
+      if (segDist(_a, _b, p.x, p.y + 0.9, p.z) < r + 0.55 && segMinY(_a, _b, p.x, p.z) < p.y + 1.8 + crownR) {
+        log.crushed.add(P);
+        P.hurt(dmg, { cause: 'Kaatuva puu', fromX: (_a.x + _b.x) / 2, fromZ: (_a.z + _b.z) / 2, knock: 5 });
+        events.emit('hitFeedback', { strength: 1 });
+      }
+    }
+    // Olennot
+    if (this.mobs) {
+      for (const m of this.mobs.list) {
+        if (m.state === 'dead' || log.crushed.has(m) || m.def.ghost) continue;
+        if (segDist2D(_a, _b, m.pos.x, m.pos.z) < r + m.def.radius + 0.35 && segMinY(_a, _b, m.pos.x, m.pos.z) < m.pos.y + m.def.height + r + crownR) {
+          log.crushed.add(m);
+          this.mobs.damage(m, dmg, { fromX: _a.x, fromZ: _a.z, knock: 4 });
+        }
+      }
+    }
+    // Pystyssä olevat puut rungon tiellä
+    if (!this.knockTree || (log.chainDepth || 0) >= 3) return;
+    const mx = (_a.x + _b.x) / 2, mz = (_a.z + _b.z) / 2;
+    this.world.collidersNear(mx, mz, log.L * 0.5 + 2, _cols);
+    for (const c of _cols) {
+      const o = c.obj;
+      if (!o || c.seg || o.stump || o === log.src || log.crushed.has(o)) continue;
+      const def = OBJECT_TYPES[o.type];
+      if (!def || def.kind !== 'tree') continue;
+      // Rungon on oltava puun kohdalla vielä ilmassa (latvuksen korkeudella).
+      if (segDist2D(_a, _b, o.x, o.z) > c.r + r + 0.8) continue;
+      if (segMinY(_a, _b, o.x, o.z) < (o.y ?? 0) + 1.2) continue;
+      log.crushed.add(o);
+      // Iso runko kaataa todennäköisemmin.
+      if (Math.random() < Math.min(0.9, 0.35 + log.L / 18)) this.knockTree(o, log.dir, (log.chainDepth || 0) + 1);
     }
   }
 
@@ -266,4 +340,23 @@ function raySegment(o, d, a, b, r) {
   const dist = Math.hypot(px, py, pz);
   if (dist > r) return null;
   return Math.max(0, sc - Math.sqrt(r * r - dist * dist));
+}
+
+// Pisteen etäisyys janasta a-b (3D).
+function segDist(a, b, x, y, z) {
+  const abx = b.x - a.x, aby = b.y - a.y, abz = b.z - a.z;
+  const t = Math.max(0, Math.min(1, ((x - a.x) * abx + (y - a.y) * aby + (z - a.z) * abz) / (abx * abx + aby * aby + abz * abz || 1)));
+  return Math.hypot(a.x + abx * t - x, a.y + aby * t - y, a.z + abz * t - z);
+}
+// Etäisyys vaakatasossa.
+function segDist2D(a, b, x, z) {
+  const abx = b.x - a.x, abz = b.z - a.z;
+  const t = Math.max(0, Math.min(1, ((x - a.x) * abx + (z - a.z) * abz) / (abx * abx + abz * abz || 1)));
+  return Math.hypot(a.x + abx * t - x, a.z + abz * t - z);
+}
+// Rungon korkeus kohdassa (x, z) (lähimmän janan pisteen y).
+function segMinY(a, b, x, z) {
+  const abx = b.x - a.x, abz = b.z - a.z;
+  const t = Math.max(0, Math.min(1, ((x - a.x) * abx + (z - a.z) * abz) / (abx * abx + abz * abz || 1)));
+  return a.y + (b.y - a.y) * t;
 }

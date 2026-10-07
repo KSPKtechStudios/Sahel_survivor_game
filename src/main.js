@@ -43,6 +43,7 @@ import { events } from './game/events.js';
 import { loadWorldData, saveWorldData, loadSettings } from './game/save.js';
 import { renderItemIcons } from './ui/icons.js';
 import { Hud, RESPAWN_WAIT } from './ui/hud.js';
+import { Nameplates } from './ui/nameplates.js';
 import { Minimap } from './ui/minimap.js';
 import { ExploredMap } from './ui/explored.js';
 import { BigMap } from './ui/bigMap.js';
@@ -118,6 +119,8 @@ env.onStrike = (angle, dist, near) => {
 const music = new Music();
 // Selain sallii äänen vasta käyttäjän ensimmäisen klikkauksen tai näppäimen jälkeen.
 const sfx = new Sfx();
+// Pelin fontti ladataan heti (kartat piirtävät tekstiä kankaalle).
+if (document.fonts) document.fonts.load("16px 'Eagle Lake'").catch(() => {});
 const lightningEl = document.getElementById('lightning');
 for (const ev of ['pointerdown', 'keydown']) window.addEventListener(ev, () => { music.unlock(); sfx.unlock(); }, { capture: true });
 
@@ -127,6 +130,10 @@ const player = new Player(camera);
 const input = new Input(canvas);
 const viewmodel = new ViewModel(models.items);
 const mobs = new Mobs({ scene, world, drops, debris, bursts, player, env, structures, fire, blood });
+// Kaatuvat puut: osumat pelaajaan ja olentoihin, ketjukaato (sessio 13).
+fallen.player = player;
+fallen.mobs = mobs;
+fallen.knockTree = (obj, dir, depth) => breakables.fellTree(obj, dir, depth);
 const boats = new Boats({ scene, camera, player, env, drops, waves: player.waves });
 boats.fx = {
   ripple: (x, z, r, s) => ripples.disturb(x, z, r, s),
@@ -143,6 +150,7 @@ const build = new BuildSystem({ camera, player, inventory, structures, world, vi
 const icons = renderItemIcons(models.items);
 const pieceIcons = renderItemIcons(models.build);
 const hud = new Hud(inventory, icons, survival);
+const nameplates = new Nameplates(document.getElementById('hud'));
 const boatHud = new BoatHud();
 const explored = new ExploredMap(world.gen);
 const minimap = new Minimap(explored);
@@ -696,6 +704,8 @@ let menuShadowTimer = 0;
 // Soihtu: kirkkaampi ja kantavampi kuin ennen, lämmin, elävästi lepattava
 // liekki (structures.js: torch).
 const torchFire = { x: 0, y: 0, z: 0, seed: 7, light: 1.7, fireY: 0, torch: true };
+let torchFlameK = 1, torchCough = 0;
+let wasNight = false;
 const fps = { frames: 0, t: 0, value: 0 };
 const _s = {};
 
@@ -835,7 +845,34 @@ function frame(now) {
     camera.updateProjectionMatrix();
   }
   // Kädessä oleva soihtu valaisee ympäristön (jaettu tulivalo).
-  const torchHeld = inGame && !player.dead && inventory.selectedItem && inventory.selectedItem.id === 'torch';
+  const torchSlot = inGame && !player.dead && inventory.selectedItem && inventory.selectedItem.id === 'torch' ? inventory.selectedItem : null;
+  // Soihtu (sessio 13): sammuu veden alla, syttyy uudelleen nuotion vieressä;
+  // sateessa palaa heikosti ja "yskien".
+  if (torchSlot && simDt > 0) {
+    const under = player.inWater === 2 || (player.surface > -Infinity && camera.position.y - 0.25 < player.surface);
+    if (!torchSlot.unlit && under) {
+      torchSlot.unlit = true;
+      events.emit('message', { text: 'Soihtu sammui vedessä. Sytytä se nuotiolla.' });
+      splashes.spawn(torchFire.x, player.surface > -Infinity ? player.surface : camera.position.y, torchFire.z, 0.2, { spread: 0.3 });
+    } else if (torchSlot.unlit && !under && structures.nearestFire < 3.2) {
+      torchSlot.unlit = false;
+      events.emit('message', { text: 'Soihtu syttyi.' });
+    }
+  }
+  const rainOnTorch = Math.max(0, env.w.rain - 0.15);
+  if (torchSlot && !torchSlot.unlit && rainOnTorch > 0) {
+    // Yskivä liekki: hidas heikkeneminen ja satunnaisia notkahduksia.
+    torchCough = Math.max(0, torchCough - simDt);
+    if (torchCough <= 0 && Math.random() < simDt * 1.6 * rainOnTorch) torchCough = 0.25 + Math.random() * 0.45;
+    const base = 1 - Math.min(0.55, rainOnTorch * 0.8);
+    const target = base * (0.8 + 0.2 * Math.sin(elapsed * 2.3) * Math.sin(elapsed * 5.1)) * (torchCough > 0 ? 0.35 : 1);
+    torchFlameK += (target - torchFlameK) * Math.min(1, simDt * 10);
+  } else {
+    torchFlameK += ((torchSlot && !torchSlot.unlit ? 1 : 0) - torchFlameK) * Math.min(1, simDt * 6);
+  }
+  viewmodel.torchFlame = torchSlot && torchSlot.unlit ? 0 : torchFlameK;
+  const torchHeld = !!torchSlot && !torchSlot.unlit;
+  torchFire.light = 1.7 * Math.max(0.15, torchFlameK);
   if (torchHeld) {
     // Valo soihdun liekin kohdalla (oikea käsi, hieman edessä ja yläpuolella),
     // ei vartalon keskellä (sessio 12e: soihdulla näki huonosti).
@@ -846,6 +883,12 @@ function frame(now) {
     torchFire.z = camera.position.z + _camDir.z * 0.45 + (rz / rl) * 0.32;
   }
   structures.held = torchHeld ? torchFire : null;
+  // Illan tullen ilmoitetaan kuun vaihe (täysikuulla viholliset liikkuvat).
+  const nightNow = env.daylight < 0.25;
+  if (inGame && state !== 'menu' && nightNow && !wasNight && simDt > 0) {
+    events.emit('message', { text: env.moonIllum > 0.85 ? `${env.moonName}: yössä liikkuu tavallista enemmän vihollisia` : env.moonName });
+  }
+  wasNight = nightNow;
   // Nukkuminen: ruutu pimenee, aika siirtyy aamuun.
   if (sleepT > 0) {
     const was = sleepT;
@@ -883,13 +926,14 @@ function frame(now) {
       camera.position.y += (Math.random() - 0.5) * shake * 0.12;
       shake *= Math.exp(-dt * 6);
     }
-    const torchLit = inventory.selectedItem && inventory.selectedItem.id === 'torch' ? 0.9 : 0;
+    const torchLit = inventory.selectedItem && inventory.selectedItem.id === 'torch' && !inventory.selectedItem.unlit ? 0.9 * torchFlameK : 0;
     const fireNear = Math.max(torchLit, Math.max(0, 1 - structures.nearestFire / 7)) * (1.2 - env.daylight);
     viewmodel.setItem(inventory.selectedItem ? inventory.selectedItem.id : null);
     viewmodel.update(simDt, player, input, env, camera, fireNear * 1.5);
     guide.update(simDt);
     runePanel.update(dt, player.position);
     hud.update(dt, { prompt: interaction.prompt, player, env, visible: state === 'playing', cooldown: combat.cooldownFrac });
+    nameplates.update(camera, mobs, interaction.prompt, state === 'playing');
     boatHud.update(boats, state === 'playing' && !player.dead);
     explored.update(dt, player.position.x, player.position.z);
     minimap.update(dt, player, boats);
@@ -904,6 +948,7 @@ function frame(now) {
     }
   } else {
     hud.update(dt, { prompt: null, player, env, visible: false });
+    nameplates.update(camera, mobs, null, false);
     boatHud.update(boats, false);
   }
 

@@ -130,6 +130,19 @@ export class Breakables {
     return mesh;
   }
 
+  // Toinen puu kaatui tämän päälle (ketjureaktio, sessio 13): kaatuu suuntaan dir.
+  fellTree(obj, dir, chainDepth = 1) {
+    const def = OBJECT_TYPES[obj.type];
+    if (!def || def.kind !== 'tree' || obj.stump || obj.removed) return false;
+    if (!obj.active) {
+      const geo = makeChoppable(this.models.hi(def.model, obj.variant));
+      this.world.activate(obj, this._activeMesh(obj, geo, this.material));
+    }
+    obj.hp = 0;
+    this.fallen.fell(obj, obj.active.geometry, null, dir, chainDepth);
+    return true;
+  }
+
   _hitTree(obj, from, hitPoint, c1, c2) {
     const def = OBJECT_TYPES[obj.type];
     if (!obj.active) {

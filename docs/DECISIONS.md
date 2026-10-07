@@ -2,6 +2,17 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-07 (sessio 13)
+- **Fontti Eagle Lake yhdellä painolla (400), synteettinen lihavointi pois.** Syy: käyttäjä halusi kaiken tekstin logon fontilla; fontista on vain yksi paino, ja selaimen tekemä keinolihavointi näyttää sotkuiselta.
+- **Olentojen nimilaput näkyvät aina lähellä (24 m), muiden kohteiden vain katsottaessa.** Syy: käyttäjä halusi nimen kohteeseen; jos jokaisella puulla ja pensaalla olisi aina lappu, ruutu täyttyisi teksteistä.
+- **Nimilappu rajataan ruudun sisään.** Syy: rungon vieressä seistessä latvan kohta on ruudun yläpuolella, ja lappu katosi näkyvistä.
+- **Huomattu-merkki päätellään olennon tilasta** (pakenee, jahtaa, hyökkää jne.). Syy: olennoilla ei ole erillistä "huomannut"-tietoa; tila kertoo sen luotettavasti.
+- **Kaatuvan puun osumassa käytetään koko kaatuvaa pituutta latvuksineen, ja fysiikka lasketaan ala-askelin (1/60 s).** Syy: hakattava runko on lyhyempi kuin puu, eikä latva osunut mihinkään; matalalla ruudunpäivityksellä latva olisi voinut hypätä pelaajan yli.
+- **Ketjukaato enintään 3 puuta peräkkäin.** Syy: tiheässä sademetsässä ketju voisi muuten kaataa koko metsän ja kuormittaa peliä.
+- **Soihtu sytytetään uudelleen seisomalla nuotion vieressä.** Syy: käyttäjä ei kertonut miten; nuotio on luonteva ja jo pelissä oleva tulenlähde.
+- **Kuun kierto 8 pelivuorokautta** (todellisuudessa 29,5). Syy: pelivuorokausi on 20 min, joten kaikki vaiheet näkee kohtuullisessa ajassa.
+- **Lammikon korkeus lasketaan piirretyn maastoverkon kolmioista, ja epätasaiset kohdat hylätään.** Syy: analyyttinen korkeus on kuperalla maalla verkon yläpuolella, joten litteä lammikko leijui.
+
 ## 2026-10-07 (sessio 12e)
 - **Linssiheijastus lasketaan jälkikäsittelyn lopussa (hehku, säteet, vaakajuova, 5 haamua auringon ja kuvan keskipisteen kautta) ja peitetään syvyyspuskurin testillä auringon kohdalta (5 näytettä).** Syy: käyttäjän toive; syvyystesti on kevyt tapa peittää heijastus puiden ja maaston takana. Voimakkuus × (1 − 0,92 × pilvet) × (1 − pöly) × kuvan reunalla häivytys. Jälkikäsittely kytkeytyy päälle, kun heijastus näkyy.
 - **DOF ja linssiheijastukset oletuksena päällä keskitasolta ylöspäin; asetuksiin versionumero, jolla vanhoihin tallennettuihin asetuksiin kytketään uudet oletukset kerran.** Syy: käyttäjän toive "jo oletuksena päällä"; ilman versiota vanhat asetukset (dof: false) olisivat jääneet voimaan.
