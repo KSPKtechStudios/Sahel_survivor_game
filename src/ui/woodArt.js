@@ -471,3 +471,80 @@ export function woodDisc(d, seed = 1, rivets = 0) {
   }
   return cv.toDataURL('image/png');
 }
+
+// Rustiikkinen puulevy (sessio 15): pyöristetty lauta ilman kaiverruksia,
+// valaistu korkeuskartasta (pyöristyvät ja hieman lohkeilleet reunat, syyn
+// kohokuvio, naarmut). Syy kulkee pitkää sivua pitkin. Käytetään modernin
+// käyttöliittymän taustana. opts: { seed, r (kulmasäde px), nails: [[x, y]] }
+export function woodPanel(w, h, opts = {}) {
+  const S = 2;
+  const seed = opts.seed || 1;
+  const rad = opts.r ?? 6;
+  const W = Math.round(w * S), H = Math.round(h * S);
+  const horiz = W >= H;
+  const PW = horiz ? H : W, PH = horiz ? W : H;
+  const albedo = new ImageData(PW, PH);
+  const rand = mulberry32(seed * 5113);
+  paintPlank(albedo, PW, PH, S, seed * 211, [{ x: (PW / S) * (0.3 + rand() * 0.4), y: (PH / S) * (0.2 + rand() * 0.6), r: 1.6 + rand() }]);
+  const ad = albedo.data;
+  const noise = makeNoise(seed * 17);
+  // Naarmut maskiin
+  const mc = document.createElement('canvas'); mc.width = W; mc.height = H;
+  const m = mc.getContext('2d');
+  m.strokeStyle = '#fff'; m.lineCap = 'round';
+  for (let i = 0; i < Math.round(w * h / 900) + 3; i++) {
+    const x = rand() * W, y = rand() * H, l = (3 + rand() * 9) * S, a = (horiz ? 0 : Math.PI / 2) + (rand() - 0.5) * 0.5;
+    m.globalAlpha = 0.25 + rand() * 0.35; m.lineWidth = (0.35 + rand() * 0.3) * S;
+    m.beginPath(); m.moveTo(x, y); m.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); m.stroke();
+  }
+  const sc = m.getImageData(0, 0, W, H).data;
+  const hgt = new Float32Array(W * H), inside = new Float32Array(W * H);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      const X = (x + 0.5) / S, Y = (y + 0.5) / S;
+      // etäisyys pyöristetyn suorakaiteen reunasta (sisällä positiivinen)
+      const qx = Math.abs(X - w / 2) - (w / 2 - rad), qy = Math.abs(Y - h / 2) - (h / 2 - rad);
+      let d = rad - (Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0));
+      d += (noise(X * 0.35, Y * 0.35) - 0.5) * 1.1 - 0.4;   // lohkeilleet reunat
+      inside[i] = Math.max(0, Math.min(1, d * S + 0.5));
+      if (d <= 0) continue;
+      const pi = horiz ? (x * PW + y) : i;
+      const lum = (ad[pi * 4] + ad[pi * 4 + 1] + ad[pi * 4 + 2]) / 765;
+      const bev = d >= 3 ? 1 : Math.sin((d / 3) * Math.PI / 2);
+      hgt[i] = bev * 2.4 + (0.5 - lum) * -0.5 - (sc[i * 4 + 3] / 255) * 0.5;
+    }
+  }
+  const out = new ImageData(W, H), od = out.data;
+  const L = [-0.45, -0.65, 0.62]; const ll = Math.hypot(...L); L[0] /= ll; L[1] /= ll; L[2] /= ll;
+  const Hv = [L[0], L[1], L[2] + 1]; const hl = Math.hypot(...Hv); Hv[0] /= hl; Hv[1] /= hl; Hv[2] /= hl;
+  for (let y = 1; y < H - 1; y++) {
+    for (let x = 1; x < W - 1; x++) {
+      const i = y * W + x;
+      if (inside[i] <= 0) continue;
+      let nx = (hgt[i - 1] - hgt[i + 1]) * 0.8, ny = (hgt[i - W] - hgt[i + W]) * 0.8;
+      const nl = Math.hypot(nx, ny, 1); nx /= nl; ny /= nl; const nz = 1 / nl;
+      const dif = Math.max(0, nx * L[0] + ny * L[1] + nz * L[2]);
+      const spec = Math.pow(Math.max(0, nx * Hv[0] + ny * Hv[1] + nz * Hv[2]), 26) * 0.16;
+      const sh = (0.4 + 0.78 * dif) * (1 - (sc[i * 4 + 3] / 255) * 0.25);
+      const pi = horiz ? (x * PW + y) : i;
+      od[i * 4] = Math.min(255, ad[pi * 4] * sh + spec * 255);
+      od[i * 4 + 1] = Math.min(255, ad[pi * 4 + 1] * sh + spec * 235);
+      od[i * 4 + 2] = Math.min(255, ad[pi * 4 + 2] * sh + spec * 200);
+      od[i * 4 + 3] = inside[i] * 255;
+    }
+  }
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  ctx.putImageData(out, 0, 0);
+  // Takorautaiset naulat
+  for (const [nx, ny] of opts.nails || []) {
+    const x = nx * S, y = ny * S, r = 1.5 * S;
+    const g = ctx.createRadialGradient(x - r * 0.3, y - r * 0.35, r * 0.1, x, y, r);
+    g.addColorStop(0, '#8d8478'); g.addColorStop(0.5, '#4a4239'); g.addColorStop(1, '#1d1813');
+    ctx.fillStyle = 'rgba(15,8,3,0.5)'; ctx.beginPath(); ctx.arc(x + 0.3 * S, y + 0.4 * S, r * 1.15, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(120,60,25,0.35)'; ctx.beginPath(); ctx.arc(x + r * 0.2, y + r * 0.6, r * 0.9, 0, Math.PI * 2); ctx.fill(); // ruoste
+  }
+  return cv.toDataURL('image/png');
+}

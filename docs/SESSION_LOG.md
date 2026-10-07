@@ -2,6 +2,16 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-07 (sessio 15)
+**Tehtiin**
+- Käyttäjä halusi rustiikkisen puun ja modernin UI:n yhdistelmän. Tehtiin vertailukuva kolmesta vaihtoehdosta pelin taustan päällä (erillinen mallisivu), käyttäjä valitsi B:n (savulasi).
+- `ui/woodArt.js`: `woodPanel` (valaistu rustiikkinen puulevy). HUD (`index.html`, `styles.css`, `ui/hud.js`) savulasityyliin.
+- Testattiin headless-Chromiumilla: kuva pelistä (vastaa mallia), ruokajärjestelmä ennallaan, ESLint ja savutesti puhtaat.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute; sama tyyli muuhun käyttöliittymään?
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-07 (sessio 14)
 **Tehtiin**
 - Käyttöliittymä uusiksi kysymys kerrallaan (käyttäjän vastaukset `DESIGN.md`:ssä), kolme versiota: (1) kehykset köysin ja niitein → "mobiilipelimäinen"; (2) hillitty veistetty lauta → puu näytti piirretyltä ja tikut kapeilta; (3) valaistu korkeuskartta, leveämpi lauta, kestävyys keskelle.

@@ -175,17 +175,16 @@ html, body {
 }
 #item-name.show { opacity: 1; }
 
-/* Terveys ja kestävyys vasemmassa alakulmassa (sessio 14): kapeat puukehykset
-   (kuvat piirretään ui/woodArt.js:ssä), ikoni messinkireunaisessa puukiekossa
-   alla. Kehys vastaa arvoa 100; maksimin yläpuolinen osa on lukittu (ruoat
-   nostavat maksimia). Syödyt ruoat kiekkoina palkkien oikealla. */
+/* Terveys, ruoat ja kestävyys (sessio 15: rustiikkinen puu + moderni UI,
+   käyttäjän valitsema vaihtoehto B "savulasi"): läpikuultava savulasipaneeli,
+   jonka vasemmassa reunassa on puinen kyltti ikonille (ui/woodArt.js). */
 #vitals {
-  position: absolute; left: 18px; bottom: 16px;
-  display: flex; gap: 30px; align-items: flex-end;
+  position: absolute; left: 20px; bottom: 20px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
   pointer-events: none;
 }
 #effects {
-  position: absolute; left: 50%; bottom: 118px; transform: translateX(-50%);
+  position: absolute; left: 50%; bottom: 122px; transform: translateX(-50%);
   display: flex; gap: 8px; pointer-events: none;
 }
 .effect {
@@ -238,71 +237,72 @@ html, body {
 #rune-panel .rp-text { margin-top: 8px; min-height: 48px; font-size: 18px; line-height: 1.45; font-style: italic; color: #f4e6c8; text-shadow: 0 1px 2px #000; }
 #rune-panel .rp-foot { margin-top: 8px; font-size: 11px; color: var(--muted); }
 #poison { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(ellipse at center, rgba(60, 120, 20, 0) 38%, rgba(70, 130, 30, 0.55) 100%); }
-.vital { position: relative; display: flex; flex-direction: column; align-items: center; transition: opacity 0.4s; }
-.vital .frame { position: relative; width: 30px; height: 250px; background-size: 100% 100%; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45)); }
-.vital .well {
-  position: absolute; left: 11px; top: 33px; width: 8px; height: 157px; overflow: hidden;
-  border-radius: 2px; background: #140b05;
-  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.9), inset 0 -1px 1px rgba(255, 220, 160, 0.12);
+.glass {
+  background: rgba(16, 11, 7, 0.5);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  box-shadow: inset 0 0 0 1px rgba(239, 226, 198, 0.16), 0 3px 8px rgba(0, 0, 0, 0.35);
 }
-.vital .well i, .vital .well b { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; }
-.vital .well .lock {
-  position: absolute; left: 0; right: 0; top: 0; height: 0; z-index: 2;
-  background: repeating-linear-gradient(135deg, #2a1709 0 2px, #4a2c15 2px 4px);
-  box-shadow: inset 0 -1px 0 #c79a48, 0 1px 2px rgba(0, 0, 0, 0.8);
-}
-.vital .pop {
-  position: absolute; left: 100%; margin-left: 6px; transform: translateY(-50%);
-  font-size: 13px; color: #e8d6b4; opacity: 0; transition: opacity 0.5s;
-  text-shadow: 0 1px 2px #000, 0 0 5px rgba(0, 0, 0, 0.9); font-variant-numeric: tabular-nums; white-space: nowrap;
-}
-.vital .pop.show { opacity: 1; transition: opacity 0.12s; }
-.vital .pop.down { color: #d98a78; }
-.vital .pop.up { color: #c8d6a0; }
-.vital.hp .well b { background: rgba(214, 170, 140, 0.55); }
-.vital.hp .well i { background: linear-gradient(90deg, #3e0e0a, #6e1c16 45%, #85281e 70%, #5a1510); }
-.vital.hp.low .well { animation: hpPulse 0.9s ease-in-out infinite; }
-@keyframes hpPulse { 50% { box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.9), 0 0 6px rgba(170, 40, 25, 0.8); } }
-.vital.st .well i { background: linear-gradient(90deg, #4a3410, #7d5c22 45%, #977233 70%, #64481a); }
-/* Kestävyys (sessio 14c, kuten Valheimissa): vaakapalkki ruudun alaosan
-   keskellä, näkyy vain kun kestävyyttä kuluu. */
-.vital.st {
-  position: absolute; left: 50%; bottom: 86px; transform: translateX(-50%);
-  opacity: 0; transition: opacity 0.6s; pointer-events: none;
-}
-.vital.st.shown { opacity: 1; transition: opacity 0.15s; }
-.vital.st .frame { width: 230px; height: 24px; }
-.vital.st .well { left: 48px; top: 9px; width: 156px; height: 6px; }
-.vital.st .well i { top: 0; bottom: 0; left: 0; right: auto; height: auto; width: 100%; }
-.vital.st .well .lock { top: 0; bottom: 0; right: 0; left: auto; height: auto; width: 0;
-  background: repeating-linear-gradient(45deg, #2a1709 0 2px, #4a2c15 2px 4px);
-  box-shadow: inset 1px 0 0 #c79a48, -1px 0 2px rgba(0, 0, 0, 0.8); }
-/* Iskusarjan raja: puolet maksimista (sijainti asetetaan JS:ssä). */
-.vital.st .notch {
-  position: absolute; top: -1px; bottom: -1px; width: 2px; margin-left: -1px; z-index: 1;
-  background: #1c0f05; box-shadow: 0 0 0 1px rgba(200, 170, 120, 0.25);
-}
-.vital.st.nocombo .well i { background: linear-gradient(90deg, #45300f, #6e5020 45%, #82622c 70%, #574015); }
-.vital.st.low .well i { background: linear-gradient(90deg, #4a2010, #7a3a1a 45%, #8e4a22 70%, #5e2c12); }
-.vital.st.out .well { animation: hpPulse 0.6s ease-in-out infinite; }
-/* Syödyt ruoat */
-#foods { display: flex; flex-direction: column-reverse; align-self: flex-end; gap: 8px; align-items: center; margin-bottom: 2px; }
-.food { position: relative; width: 34px; height: 34px; transition: opacity 0.5s, filter 0.5s; }
-.food .ring {
-  position: absolute; inset: 0; border-radius: 50%;
-  background: conic-gradient(#b8975a calc(var(--p) * 1turn), rgba(20, 10, 4, 0.45) 0);
-  -webkit-mask: radial-gradient(circle, transparent 15px, #000 15.5px);
-  mask: radial-gradient(circle, transparent 15px, #000 15.5px);
+.vital { position: relative; display: flex; align-items: center; border-radius: 9px; overflow: hidden; transition: opacity 0.4s; }
+.vital .tag { flex: none; display: flex; align-items: center; justify-content: center; background-size: 100% 100%; }
+.vital .ico {
+  fill: none; stroke: #efe2c6; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8));
 }
-.food .disc { position: absolute; inset: 2px; border-radius: 50%; background-size: 100% 100%; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); }
-.food img { position: absolute; left: 6px; top: 6px; width: 22px; height: 22px; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8)); }
-.food.fading { filter: saturate(0.5) brightness(0.85); }
-.food.fading .ring { background: conic-gradient(#9a5a32 calc(var(--p) * 1turn), rgba(20, 10, 4, 0.45) 0); }
+.vital .bar {
+  position: relative; flex: 1; height: 7px; border-radius: 4px; overflow: hidden;
+  background: rgba(10, 6, 3, 0.55); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.vital .bar i, .vital .bar b { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; border-radius: 4px; }
+.vital .bar i::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: rgba(255, 255, 255, 0.22); }
+.vital .bar .lock {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 0; z-index: 2;
+  background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0 2px, rgba(10, 6, 3, 0.55) 2px 5px);
+  box-shadow: inset 1px 0 0 rgba(239, 226, 198, 0.4);
+}
+.vital.hp { width: 250px; height: 46px; }
+.vital.hp .tag { width: 46px; height: 46px; }
+.vital.hp .ico { width: 18px; height: 18px; }
+.vital.hp .bar { margin: 0 10px 0 13px; }
+.vital.hp .bar b { background: rgba(230, 200, 170, 0.45); }
+.vital.hp .bar i { background: linear-gradient(90deg, #7e2219, #a8392b); }
+.vital.hp.low .bar { animation: hpPulse 0.9s ease-in-out infinite; }
+@keyframes hpPulse { 50% { box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6), 0 0 7px rgba(190, 50, 30, 0.85); } }
+.vital .num {
+  min-width: 26px; margin-right: 13px; text-align: right; font-size: 14px; color: #efe2c6;
+  text-shadow: 0 1px 2px #000; font-variant-numeric: tabular-nums; opacity: 0.55; transition: opacity 0.6s, color 0.6s;
+}
+.vital .num.flash { opacity: 1; transition: opacity 0.1s; }
+.vital .num.flash.down { color: #e3a090; }
+.vital .num.flash.up { color: #cfe0a8; }
+/* Kestävyys keskellä (kuten Valheimissa): näkyy vain, kun sitä kuluu. */
+.vital.st {
+  position: absolute; left: 50%; bottom: 88px; width: 176px; height: 22px; border-radius: 11px;
+  transform: translateX(-50%); opacity: 0; transition: opacity 0.6s; pointer-events: none;
+}
+.vital.st.shown { opacity: 1; transition: opacity 0.15s; }
+.vital.st .tag { width: 26px; height: 22px; }
+.vital.st .ico { width: 12px; height: 12px; }
+.vital.st .bar { height: 5px; margin: 0 11px 0 9px; }
+.vital.st .bar i { background: linear-gradient(90deg, #8e6a2c, #bb9346); }
+.vital.st.nocombo .bar i { background: linear-gradient(90deg, #7e5c26, #a07a38); }
+.vital.st.low .bar i { background: linear-gradient(90deg, #7a3a1a, #a2552a); }
+.vital.st.out .bar { animation: hpPulse 0.6s ease-in-out infinite; }
+/* Iskusarjan raja: puolet maksimista (sijainti asetetaan JS:ssä). */
+.vital.st .notch { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; z-index: 1; background: rgba(10, 6, 3, 0.8); }
+/* Syödyt ruoat: lasiympyrät, ohut kaari kertoo jäljellä olevan ajan. */
+#foods { display: flex; gap: 8px; margin-left: 2px; }
+.food { position: relative; width: 36px; height: 36px; border-radius: 50%; transition: opacity 0.5s, filter 0.5s; }
+.food svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.food svg circle { fill: none; stroke-width: 2; }
+.food svg .bg { stroke: rgba(0, 0, 0, 0.35); }
+.food svg .arc { stroke: #e6d3a8; transition: stroke 0.5s; }
+.food.fading svg .arc { stroke: #c27a4a; }
+.food.fading img { filter: saturate(0.55) brightness(0.85) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7)); }
+.food img { position: absolute; left: 7px; top: 7px; width: 22px; height: 22px; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7)); }
 .food .more {
-  position: absolute; right: -4px; top: -4px; min-width: 16px; height: 16px; padding: 0 3px; border-radius: 8px;
-  font-size: 10px; line-height: 16px; text-align: center; color: #f0e2c4; background: #4a3220; box-shadow: 0 0 0 1px #94723a;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  position: absolute; right: -5px; top: -5px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px;
+  font-size: 10px; line-height: 16px; text-align: center; color: #efe2c6;
+  background: rgba(16, 11, 7, 0.8); box-shadow: inset 0 0 0 1px rgba(239, 226, 198, 0.3);
 }
 
 /* Osuma, hukkuminen, torjunta ja kuolema */

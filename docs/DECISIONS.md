@@ -2,6 +2,12 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-07 (sessio 15)
+- **Vaihtoehdot näytettiin yhtenä vertailukuvana pelin taustan päällä** (A/B/C), ja käyttäjä valitsi yhdellä vastauksella. Syy: käyttäjä ei halunnut kierrättää edestakaisin.
+- **Terveysnumero näkyy aina himmeänä** (kirkastuu muuttuessa), vaikka sessiossa 14 sovittiin "vain kun muuttuu". Syy: valitussa mallikuvassa numero oli paneelissa näkyvissä, ja tyhjä kohta paneelissa näyttäisi keskeneräiseltä. Helppo muuttaa.
+- **Ruoat rivissä paneelin yläpuolella** (sessio 14: pystyssä palkkien vieressä). Syy: näin valitussa mallikuvassa; vaakapaneelin kanssa rivi on luontevampi.
+- **Puukuvat (`woodPanel`) piirretään koodilla korkeuskartasta valaistuna.** Syy: ei kuvatiedostoja; sama tekniikka kuin sessiossa 14.
+
 ## 2026-10-07 (sessio 14)
 - **Puukuvat piirretään koodilla kankaalle (`ui/woodArt.js`), valaistus korkeuskartasta.** Syy: ei kuvatiedostoja eikä ulkoisia työkaluja; korkeuskartta antaa kaiverruksille ja reunoille aidon valon ja varjon (käyttäjästä tasainen versio näytti piirretyltä).
 - **Ruokapalkin 100 = kehyksen täysi korkeus; maksimin yläpuoli lukittuna.** Syy: käyttäjä hyväksyi; näkee heti, paljonko ruoka voi vielä nostaa.

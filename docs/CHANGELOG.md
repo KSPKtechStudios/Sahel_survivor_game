@@ -2,6 +2,13 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-07 (sessio 15): savulasi ja puukyltit
+
+- **Uusi ilme terveydelle, ruoille ja kestävyydelle:** moderni läpikuultava savulasipaneeli, jonka vasemmassa reunassa on rustiikkinen puukyltti ikonille. Palkit ovat ohuita ja siistejä, värit hillityt.
+- Syödyt ruoat lasiympyröinä terveyspaneelin yläpuolella; ohut kaari kertoo jäljellä olevan ajan (oranssi, kun vaikutus hiipuu).
+- Terveyden numero näkyy himmeänä ja kirkastuu hetkeksi, kun terveys muuttuu.
+- Kestävyys samassa tyylissä keskellä alhaalla, vain kun sitä kuluu.
+
 ## 2026-10-07 (sessio 14): uusi ruokajärjestelmä ja veistetyt puupalkit
 
 - **Syödyt ruoat nostavat maksimiterveyttä ja -kestävyyttä:** ilman ruokaa maksimit ovat 25, ruoat nostavat ne enintään 100:aan. Jokainen ruoka vaikuttaa 5–20 min ja hiipuu lopussa. Ruokia saa syödä rajattomasti, kunnes maksimiterveys on 100. Liha ja padat painottavat terveyttä, hedelmät ja juomat kestävyyttä.
