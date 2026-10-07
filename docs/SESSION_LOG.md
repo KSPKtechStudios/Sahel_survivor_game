@@ -2,6 +2,22 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-07 (sessio 12b)
+**Tehtiin**
+- Käyttäjän palaute ja 5 uutta äänitiedostoa (kirjattu `DESIGN.md`:hen).
+- Sumu: kova raja johtui sadeverhoista 26 m:n päässä; verhot siirrettiin sumun kantamalle ja usva vain kunnon sateeseen (`render/rain.js`, `main.js`).
+- Lähisalamat (`render/environment.js`, `render/rain.js`: nauhasalama hehkuineen, `index.html`/`styles.css`: näytön välähdys), jyrähdysäänet (`assets/sfx/thunder-clap1/2.mp3`, alun hiljaisuus leikattu).
+- Haamun äänet (`game/mobs.js`: `haamuSound`-tapahtumat; `assets/sfx/ghost-*.mp3`).
+- `audio/sfx.js`: yleiset kertaäänet suunnalla ja etäisyydellä, viidakon hiljennys ja alipäästö, puun äänen häivytys räsähdyksen jälkeen.
+- Testattiin headless-Chromiumilla: viidakon taso (−41 dBFS, ennen n. −35), puun äänen loppu (hiljenee n. 0,6 s räsähdyksen jälkeen), jyrähdys myrskyn yli (+12…14 dB), Haamun äänet ja tapahtumat oikealla tekoälyllä (ilmestyminen, kirkaisu ennen syöksyä, hyökkäys, ääntely), sadeverhojen kuvat (ei rajaa), salamat kuvina 70 ja 140 m:n päästä. Savutesti ja ESLint puhtaat.
+
+**Huomiot**
+- Välähdyksen ajoitusta ei voi mitata testiselaimella (ruudut n. 0,25 s, välähdyskäyrä 0,55 s); pelissä se toimii ruudunpäivityksen tahdissa.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute; Haamun vahinkoäänet ja muut äänet, kun käyttäjä toimittaa.
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-07 (sessio 12)
 **Tehtiin**
 - Käyttäjän toiveet kirjattiin `DESIGN.md`:hen (sessio 12).

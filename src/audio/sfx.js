@@ -13,17 +13,32 @@
 
 const BEDS = {
   wind: { file: 'assets/sfx/wind.mp3', level: 0.3, tau: 1.6 },
-  jungle: { file: 'assets/sfx/jungle.mp3', level: 0.36, tau: 0.9 },
+  // Viidakko: hiljempi ja pehmeämpi (sessio 12: linnut kuuluivat terävästi).
+  jungle: { file: 'assets/sfx/jungle.mp3', level: 0.22, tau: 0.9, lowpass: 4200 },
   rain: { file: 'assets/sfx/rain.mp3', level: 0.42, tau: 1.2 },
   thunder: { file: 'assets/sfx/thunder-distant.mp3', level: 0.42, tau: 2.2 },
 };
 const OVERLAP = 3;         // silmukan ristiinhäivytys (s)
 const IDLE_STOP = 6;       // hiljainen kerros pysäytetään tämän jälkeen (s)
 
+// Kertaäänet (puretaan muistiin; lyhyitä).
+const ONESHOTS = {
+  tree: 'assets/sfx/tree-fall.mp3',
+  clap1: 'assets/sfx/thunder-clap1.mp3',
+  clap2: 'assets/sfx/thunder-clap2.mp3',
+  ghostSpawn: 'assets/sfx/ghost-spawn.mp3',
+  ghostIdle: 'assets/sfx/ghost-idle.mp3',
+  ghostAttack: 'assets/sfx/ghost-attack.mp3',
+};
 // Puun kaatuminen: räsähdyksen kohta tiedostossa (s) ja voimakkuus 10 m:stä.
-const TREE_FILE = 'assets/sfx/tree-fall.mp3';
+// Räsähdyksen jälkeen ääni häivytetään pois (TREE_TAIL s), ettei maassa
+// makaava puu jää rätisemään.
 const TREE_CRASH_AT = 0.92;
 const TREE_LEVEL = 0.3;
+const TREE_TAIL = 0.9;
+// Lähisalaman jyrähdys ja Haamun äänet (tiedostot −16 LUFS).
+const CLAP_LEVEL = 0.65;
+const GHOST_LEVEL = { ghostSpawn: 0.22, ghostIdle: 0.2, ghostAttack: 0.26 };
 
 class Bed {
   constructor(sfx, key, def) {
@@ -36,7 +51,15 @@ class Bed {
     this.active = -1;      // soiva elementti (0/1), -1 = pysähdyksissä
     this.out = sfx.ctx.createGain();
     this.out.gain.value = 0;
-    this.out.connect(sfx.bus);
+    if (def.lowpass) {
+      const lp = sfx.ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = def.lowpass;
+      lp.Q.value = 0.5;
+      this.out.connect(lp).connect(sfx.bus);
+    } else {
+      this.out.connect(sfx.bus);
+    }
   }
 
   _el(i) {
@@ -122,7 +145,7 @@ export class Sfx {
     this.volume = 1;
     this.beds = {};
     this.levels = { wind: 0, jungle: 0, rain: 0, thunder: 0 };
-    this.treeBuf = null;
+    this.bufs = {};
     this.noise = null;
     this.hidden = false;
     document.addEventListener('visibilitychange', () => {
@@ -150,7 +173,9 @@ export class Sfx {
     this.noise = this.ctx.createBuffer(1, n, n);
     const ch = this.noise.getChannelData(0);
     for (let i = 0; i < n; i++) ch[i] = Math.random() * 2 - 1;
-    window.fetch(TREE_FILE).then((r) => r.arrayBuffer()).then((b) => this.ctx.decodeAudioData(b)).then((buf) => { this.treeBuf = buf; }).catch(() => {});
+    for (const [k, file] of Object.entries(ONESHOTS)) {
+      window.fetch(file).then((r) => r.arrayBuffer()).then((b) => this.ctx.decodeAudioData(b)).then((buf) => { this.bufs[k] = buf; }).catch(() => {});
+    }
   }
 
   setVolumes(master, sfx) {
@@ -177,20 +202,21 @@ export class Sfx {
   }
 
   // Suunta ja etäisyys kuulijaan: palauttaa { gain, pan, dist }.
-  _spatial(x, z, listener, ref = 10) {
+  _spatial(x, z, listener, ref = 10, range = 140) {
     const dx = x - listener.x, dz = z - listener.z;
     const dist = Math.hypot(dx, dz);
     // Kameran oikea puoli: yaw 0 = katse -z, oikea = +x.
     const rx = Math.cos(listener.yaw), rz = -Math.sin(listener.yaw);
     const pan = dist > 0.5 ? Math.max(-1, Math.min(1, (dx * rx + dz * rz) / dist)) * 0.8 : 0;
-    const gain = ref / Math.max(ref, dist) * Math.max(0, 1 - dist / 140);
+    const gain = ref / Math.max(ref, dist) * Math.max(0, 1 - dist / range);
     return { gain, pan, dist };
   }
 
   // Puu kaatuu: ääni alkaa kaatumisen alkaessa ja räsähdys osuu kohtaan, jossa
   // runko iskeytyy maahan (fallTime s). size 0..1 = puun koko.
   treeFall(x, z, fallTime, size, listener) {
-    if (!this.ctx || !this.treeBuf || this.ctx.state !== 'running') return;
+    const buf = this.bufs.tree;
+    if (!this.ctx || !buf || this.ctx.state !== 'running') return;
     const sp = this._spatial(x, z, listener, 12);
     if (sp.gain < 0.01) return;
     const ctx = this.ctx, now = ctx.currentTime;
@@ -205,15 +231,20 @@ export class Sfx {
     out.connect(lp).connect(pan).connect(this.bus);
     const delay = fallTime - TREE_CRASH_AT;
     const src = ctx.createBufferSource();
-    src.buffer = this.treeBuf;
-    src.connect(out);
+    src.buffer = buf;
+    // Häivytys räsähdyksen jälkeen.
+    const tail = ctx.createGain();
+    const crashT = now + fallTime;
+    tail.gain.setValueAtTime(1, crashT + 0.25);
+    tail.gain.linearRampToValueAtTime(0, crashT + TREE_TAIL);
+    src.connect(tail).connect(out);
     if (delay >= 0) {
       src.start(now + delay);
       // Pitkä kaatuminen: tiedoston alun narina soi jo heti, jotta ääni alkaa
       // puun lähtiessä kaatumaan (häivytetään pois ennen varsinaista ääntä).
       if (delay > 0.25) {
         const creak = ctx.createBufferSource();
-        creak.buffer = this.treeBuf;
+        creak.buffer = buf;
         const g = ctx.createGain();
         g.gain.setValueAtTime(0, now);
         g.gain.linearRampToValueAtTime(1, now + 0.15);
@@ -225,6 +256,39 @@ export class Sfx {
     } else {
       src.start(now, -delay);
     }
+    src.stop(crashT + TREE_TAIL + 0.05);
+  }
+
+  // Lyhyt ääni paikasta (x, z): suunta ja etäisyysvaimennus.
+  _oneShot(name, level, x, z, listener, ref = 10, delay = 0, range = 140) {
+    const buf = this.bufs[name];
+    if (!this.ctx || !buf || this.ctx.state !== 'running') return;
+    const sp = this._spatial(x, z, listener, ref, range);
+    if (sp.gain < 0.01) return;
+    const ctx = this.ctx;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = 0.96 + Math.random() * 0.08;
+    const g = ctx.createGain();
+    g.gain.value = level * sp.gain;
+    const pan = ctx.createStereoPanner();
+    pan.pan.value = sp.pan;
+    src.connect(g).connect(pan).connect(this.bus);
+    src.start(ctx.currentTime + delay);
+  }
+
+  // Lähelle iskevän salaman jyrähdys (satunnaisesti jompikumpi tiedosto).
+  // Ääni tulee salaman suunnasta lähes samaan aikaan välähdyksen kanssa.
+  thunderClap(x, z, dist, listener) {
+    const name = Math.random() < 0.5 ? 'clap1' : 'clap2';
+    const k = 1 - Math.min(1, Math.max(0, (dist - 50) / 250)) * 0.5;
+    this._oneShot(name, CLAP_LEVEL * k, x, z, listener, 1e4, Math.min(0.25, dist / 900), 1e6);
+  }
+
+  // Haamun äänet: spawn (ilmestyy / kirkaisu ennen syöksyä), idle, attack.
+  ghost(kind, x, z, listener) {
+    const name = kind === 'spawn' ? 'ghostSpawn' : kind === 'attack' ? 'ghostAttack' : 'ghostIdle';
+    this._oneShot(name, GHOST_LEVEL[name], x, z, listener, 8);
   }
 
   // Askel. kind: sand | grass | leaves | rock | gravel | wood | water.

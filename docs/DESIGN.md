@@ -172,6 +172,13 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
   5. **Kaukainen ukkonen:** ukkosmyrskyn taustaääni silmukkana (ei tarvitse olla tahdissa salamoiden kanssa).
 - **Askeleet:** Claude saa generoida kävelyyn pienen töpsyttelyäänen, joka vaihtelee alustan materiaalin mukaan.
 
+## Sessio 12b (käyttäjän kertoma, 2026-10-07)
+- **Sumu on liian "kova"**, näyttää suorastaan esteeltä; sen pitää olla paljon pehmeämpää.
+- **Puun kaatumisääni:** räsähdys tulee oikeaan aikaan, mutta sen jälkeen ääni jää liian pitkäksi aikaa rätisemään ja paukkumaan, vaikka puu on jo maassa: leikataan.
+- **Sademetsän eläin- ja lintuääni** on vähän turhan lujalla ja kuuluu terävästi: maltillisemmaksi.
+- **Lähisalama:** ukkossäällä silloin tällöin salama iskee lähelle; näytössä suuri välähdys, salama näkyy, ja samalla kuuluu jompikumpi ukkosääni (tiedostot "thunderclap" ja "ukko", satunnaisesti).
+- **Haamun äänet** (vahinkoäänet tulevat myöhemmin): "haamuspawn" kuuluu, kun haamu ilmestyy pelaajan lähelle, ja voi kuulua satunnaisesti myöhemminkin esim. kun se hyökkää pelaajaa kohti; ei liian kovalla. "haamu2" on haamun satunnainen ääni. "haamuhyökkäys" kuuluu, kun haamu hyökkää pelaajan kimppuun.
+
 ## Teknologia
 - Selaimessa toimiva peli: three.js (WebGL), ei käännösvaihetta. Ks. `DECISIONS.md`.
 - Kohdealusta toistaiseksi tietokoneen selain (hiiri + näppäimistö).
@@ -214,6 +221,8 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - Sessio 11: tulikärpäsparvet, pienemmät aallot, ei vettä veneiden sisällä, realistinen sade ja sadeverhot, kuivuvat lammikot, säät biomeittain (kuiva laterittitasanko), rakennelmia n. 3 700 ja hylkyjä n. 120, hienovarainen linnunrata ja tähdenlennot, purjeen saumat ja vastavalo, hento kimallus, Haamu latvusten alla ja pako, jousi oikeassa kädessä ja nuolten jälki, sujuvampi iskujen tahti, tuulen nuolen suunta.
 
 ## Paikkamerkit (Clauden valitsemia, voi muuttaa vapaasti)
+- **Lähisalamat ja Haamun äänet (sessio 12b):** 28 % salamoista iskee 45–155 m:n päähän (muut 250–600 m): välähdys 2,4-kertainen, koko näytön sinertävä välähdys, salama valkoisena nauhana hehkuineen (0,5 s), jyrähdys (satunnaisesti "thunderclap" tai "ukko", hiljaisuus alusta leikattu) salaman suunnasta enintään 0,25 s viiveellä, taso 0,65. Haamu: ilmestymisääni joka kerta kun se ilmestyy ja 40 % todennäköisyydellä ennen syöksyä (taso 0,22), hyökkäysääni syöksyn alkaessa (0,26), satunnainen ääntely 8–18 s välein leijuessa ja kierrellessä alle 45 m:n päässä (0,2). Äänet tulevat haamun suunnasta ja vaimenevat etäisyyden mukaan. Viidakko 0,22 ja alipäästö 4,2 kHz. Puun ääni häivytetään 0,25–0,9 s räsähdyksen jälkeen.
+- **Sadeverhot (sessio 12b):** verhot sumun kantaman 70 %:n ja 95 %:n etäisyydellä (vähintään 35 m), usva vain kunnon sateessa (ei sademetsän tihkussa).
 - **Äänitehosteet (sessio 12):** tiedostot tasattu −20 LUFS:iin (puu −16). Tasot: tuuli 0,3 (vuoristossa ja merellä 0,6–1 × tuulen mukaan, ukkosella ja hiekkamyrskyssä täysi), viidakko 0,36 (häivytys n. 2–3 s), sade 0,42 × sateen määrä^1,2 (sademetsän tihku hiljaa), kaukainen ukkonen 0,42. Silmukoiden sauma ristiinhäivytetään 3 s:ssa, ja ensimmäinen kierros alkaa satunnaisesta kohdasta. Puun ääni 0,3 (10–12 m:stä), vaimenee etäisyyden mukaan (kuuluu n. 140 m:iin), tulee oikealta suunnalta, ja räsähdys (tiedostossa 0,92 s) ajoitetaan rungon osumaan maahan (kaatuminen 1,5–2,2 s). **Tuuli myös hiekkamyrskyssä** (Clauden lisäys).
 - **Askeleet (sessio 12, syntetisoitu):** hiekka (pehmeä rahina), ruoho (rapina), sademetsän karike (vaimea, tömähtävä), sora / lateriitti (rapse), kallio (napsahdus), puulattia (ontto kopse), matala vesi (loiske). Askel joka puolikkaalla heiluntajaksolla (kävellen n. 2,5 / s), juostessa voimakkaampi, hiipiessä hiljainen; alastulo hypystä kuuluu.
 - **Vuoriston sää (sessio 12):** selkeä 4, pilvinen 1,5, hiekkausva 1,5, hiekkamyrsky 0,3 (ei sadetta, ukkosta eikä sumua).

@@ -97,10 +97,18 @@ const splashes = new Splashes(scene);
 const fire = new FireFx(scene);
 const blood = new Blood(scene);
 const rain = new Rain(scene, renderer);
-env.onStrike = (angle, dist) => rain.strike(camera, angle, dist);
+env.onStrike = (angle, dist, near) => {
+  rain.strike(camera, angle, dist, near);
+  // Lähisalama: jyrähdys heti (sfx alustetaan alempana).
+  if (near) {
+    const x = camera.position.x + Math.cos(angle) * dist, z = camera.position.z + Math.sin(angle) * dist;
+    sfx.thunderClap(x, z, dist, { x: camera.position.x, z: camera.position.z, yaw: player.yaw });
+  }
+};
 const music = new Music();
 // Selain sallii äänen vasta käyttäjän ensimmäisen klikkauksen tai näppäimen jälkeen.
 const sfx = new Sfx();
+const lightningEl = document.getElementById('lightning');
 for (const ev of ['pointerdown', 'keydown']) window.addEventListener(ev, () => { music.unlock(); sfx.unlock(); }, { capture: true });
 
 const inventory = new Inventory();
@@ -634,6 +642,9 @@ function stepMaterial() {
   return 'grass';
 }
 player.onFootstep = (k) => sfx.step(stepMaterial(), k);
+events.on('haamuSound', ({ kind, x, z }) => {
+  sfx.ghost(kind, x, z, { x: player.position.x, z: player.position.z, yaw: player.yaw });
+});
 events.on('treeFell', ({ x, z, fallTime, size }) => {
   if (x === undefined) return;
   sfx.treeFall(x, z, fallTime, size, { x: player.position.x, z: player.position.z, yaw: player.yaw });
@@ -727,6 +738,9 @@ function frame(now) {
   wetUniforms.uRain.value = rainAmt;
   wetUniforms.uPuddle.value = inGame && state !== 'menu' ? env.puddleWet : 0;
   updateSfx(musicMode === 'game' && state !== 'loading', rainAmt, Math.min(0.25, rawDt));
+  // Lähisalaman välähdys koko näytölle.
+  lightningEl.style.opacity = env.flashK > 1 && env.flash > 0 ? Math.min(0.75, env.flash * 0.3).toFixed(3) : '0';
+  rain.fogFar = scene.fog.far;
   rain.update(simDt, camera, rainAmt, env.windDir, 0.2 + 0.8 * env.daylight, Math.min(0.25, rawDt), scene.fog.color);
   if (rainAmt > 0.1 && simDt > 0) {
     for (let i = 0, n = Math.floor(rainAmt * 6 + Math.random()); i < n; i++) {

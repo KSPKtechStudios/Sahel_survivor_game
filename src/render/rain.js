@@ -122,7 +122,7 @@ void main() {
   // Maanpinnan usva: matala, laikukas kerros.
   float ground = 1.0 - smoothstep(-4.0, 7.0, h);
   float mistA = uMist * ground * smoothstep(0.25, 0.7, vn(wq * 1.7 + 3.3));
-  float a = clamp(rainA * 0.42 + mistA * 0.5, 0.0, 0.7);
+  float a = clamp(rainA * 0.38 + mistA * 0.4, 0.0, 0.5);
   if (a < 0.003) discard;
   gl_FragColor = vec4(uColor * (0.96 + 0.08 * st), a);
   #include <colorspace_fragment>
@@ -160,6 +160,7 @@ void main() {
 `;
 
 const _size = new THREE.Vector2();
+const _d = new THREE.Vector3(), _e = new THREE.Vector3(), _f = new THREE.Vector3();
 const _wq = {};
 
 export class Rain {
@@ -202,14 +203,18 @@ export class Rain {
     this.lines.visible = false;
     scene.add(this.lines);
 
-    // --- Sadeverhot ja usva (lähi- ja kaukolieriö)
+    // --- Sadeverhot ja usva (lähi- ja kaukolieriö). Säde seuraa sumun
+    // kantamaa (sessio 12): verho on siellä, missä sumu jo peittää maiseman,
+    // joten sen eteen ja taakse jäävien puiden välille ei synny "seinää".
     this.veils = [];
-    for (const radius of [26, 70]) {
+    this.fogFar = 150;
+    for (const k of [0.7, 0.95]) {
+      const radius = 1;
       const g = new THREE.CylinderGeometry(radius, radius, 70, 48, 1, true);
       g.translate(0, 25, 0);
       const u = {
         uTime: { value: 0 }, uAmount: { value: 0 }, uMist: { value: 0 }, uWind: { value: new THREE.Vector2() },
-        uColor: { value: new THREE.Color() }, uCam: { value: new THREE.Vector3() }, uRadius: { value: radius },
+        uColor: { value: new THREE.Color() }, uCam: { value: new THREE.Vector3() }, uRadius: { value: 50 },
       };
       const m = new THREE.Mesh(g, new THREE.ShaderMaterial({
         uniforms: u, vertexShader: veilVS, fragmentShader: veilFS, transparent: true, depthWrite: false, side: THREE.BackSide,
@@ -218,7 +223,7 @@ export class Rain {
       m.renderOrder = 3;
       m.visible = false;
       scene.add(m);
-      this.veils.push({ mesh: m, uniforms: u });
+      this.veils.push({ mesh: m, uniforms: u, k });
     }
 
     // --- Roiskeet
@@ -241,7 +246,18 @@ export class Rain {
     this.mist = 0;
 
     // Salaman isku
-    this.boltMat = new THREE.LineBasicMaterial({ color: 0xe8f0ff, transparent: true, opacity: 1, fog: false });
+    // Ydin täysin valkoinen (ei sävykartoitusta), jotta se erottuu myös
+    // vaaleaa myrskytaivasta vasten; hehku additiivinen.
+    // Nauhan reunat häipyvät (aSide = −1 … 1 poikittain).
+    const boltMat = (color, power, additive) => new THREE.ShaderMaterial({
+      uniforms: { uColor: { value: new THREE.Color(color) }, uOpacity: { value: 1 } },
+      vertexShader: 'attribute float aSide; varying float vS; void main() { vS = aSide; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader: `uniform vec3 uColor; uniform float uOpacity; varying float vS;
+        void main() { float a = pow(max(0.0, 1.0 - abs(vS)), ${power.toFixed(1)}) * uOpacity; if (a < 0.003) discard; gl_FragColor = vec4(uColor, a); }`,
+      transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
+    });
+    this.boltMat = boltMat(0xffffff, 0.5, false);
+    this.boltGlowMat = boltMat(0xa8bcff, 2.0, true);
     this.bolt = null;
     this.boltT = 0;
   }
@@ -271,17 +287,20 @@ export class Rain {
     else u.uColor.value.setRGB(0.32 + 0.45 * light, 0.35 + 0.47 * light, 0.42 + 0.48 * light);
     u.uOpacity.value = 0.45 + 0.3 * (1 - drizzle);
 
-    // Verhot ja usva: vain kunnon sateessa (tihkussa vain hento usva).
-    const heavy = Math.max(0, (a - 0.2) / 0.8);
-    this.mist += ((a > 0.1 ? 0.25 + 0.6 * heavy : 0) - this.mist) * Math.min(1, fadeDt * 0.25);
+    // Verhot ja usva: vain kunnon sateessa (ei sademetsän tihkussa).
+    const heavy = Math.max(0, (a - 0.3) / 0.7);
+    this.mist += (0.7 * heavy - this.mist) * Math.min(1, fadeDt * 0.25);
     for (const v of this.veils) {
       v.mesh.visible = heavy > 0.01 || this.mist > 0.02;
       if (!v.mesh.visible) continue;
+      const R = Math.max(35, this.fogFar * v.k);
       v.mesh.position.set(camera.position.x, camera.position.y - 10, camera.position.z);
+      v.mesh.scale.set(R, 1, R);
       const vu = v.uniforms;
+      vu.uRadius.value = R;
       vu.uTime.value = this.t;
       vu.uAmount.value = heavy;
-      vu.uMist.value = this.mist * (vu.uRadius.value < 40 ? 1 : 0.6);
+      vu.uMist.value = this.mist * (v.k < 0.8 ? 0.7 : 0.5);
       vu.uWind.value.set(wind.x, wind.y);
       vu.uCam.value.copy(camera.position);
       if (fog) vu.uColor.value.copy(fog); else vu.uColor.value.setRGB(0.55, 0.58, 0.62);
@@ -314,42 +333,86 @@ export class Rain {
 
     if (this.bolt) {
       this.boltT -= dt;
-      this.boltMat.opacity = Math.max(0, Math.min(1, this.boltT * 6)) * (0.6 + 0.4 * Math.sin(this.boltT * 80));
-      if (this.boltT <= 0) {
-        this.scene.remove(this.bolt);
-        this.bolt.geometry.dispose();
-        this.bolt = null;
-      }
+      const op = Math.max(0, Math.min(1, this.boltT * 6)) * (0.6 + 0.4 * Math.sin(this.boltT * 80));
+      this.boltMat.uniforms.uOpacity.value = op;
+      this.boltGlowMat.uniforms.uOpacity.value = op * 0.45;
+      if (this.boltT <= 0) this._dropBolt();
     }
   }
 
-  // Salama: sahalaitainen viiva taivaalta maahan suunnassa angle, etäisyydellä dist.
-  strike(camera, angle, dist) {
-    if (this.bolt) {
-      this.scene.remove(this.bolt);
-      this.bolt.geometry.dispose();
-    }
-    const cx = camera.position.x + Math.cos(angle) * dist;
-    const cz = camera.position.z + Math.sin(angle) * dist;
-    const top = camera.position.y + 140 + Math.random() * 60;
-    const pts = [];
+  // Salama: sahalaitainen nauha taivaalta maahan suunnassa angle, etäisyydellä
+  // dist. Nauha käännetään kameraan päin (viivat piirtyisivät vain 1 px:n
+  // levyisinä), ja sen ympärillä on leveämpi, himmeä hehku. near = lähelle
+  // iskevä salama (sessio 12): leveämpi, kirkkaampi ja pidempään näkyvä.
+  strike(camera, angle, dist, near = false) {
+    this._dropBolt();
+    const cam = camera.position;
+    const cx = cam.x + Math.cos(angle) * dist;
+    const cz = cam.z + Math.sin(angle) * dist;
+    const ground = waterAt(cx, cz, _wq);
+    const bottom = Math.max(ground.h, ground.wl);
+    const top = bottom + 160 + Math.random() * 60;
+    const jag = near ? 9 : 22;
+    const main = [];
+    const branches = [];
     let x = cx, z = cz, y = top;
-    const seg = 14;
-    const add = (ax, ay, az, bx, by, bz) => pts.push(ax, ay, az, bx, by, bz);
+    const seg = 16;
+    main.push([x, y, z]);
     for (let i = 0; i < seg; i++) {
-      const ny = top - ((i + 1) / seg) * (top - camera.position.y + 20);
-      const nx = x + (Math.random() - 0.5) * 22, nz = z + (Math.random() - 0.5) * 22;
-      add(x, y, z, nx, ny, nz);
-      // Sivuhaara
-      if (Math.random() < 0.3) add(nx, ny, nz, nx + (Math.random() - 0.5) * 30, ny - 12 - Math.random() * 10, nz + (Math.random() - 0.5) * 30);
+      const ny = top - ((i + 1) / seg) * (top - bottom);
+      const last = i === seg - 1;
+      const nx = last ? cx : x + (Math.random() - 0.5) * jag, nz = last ? cz : z + (Math.random() - 0.5) * jag;
+      main.push([nx, ny, nz]);
+      if (Math.random() < 0.3 && i < seg - 3) {
+        const b = [[nx, ny, nz]];
+        let bx = nx, by = ny, bz = nz;
+        for (let k = 0; k < 3; k++) {
+          bx += (Math.random() - 0.5) * jag * 1.4; bz += (Math.random() - 0.5) * jag * 1.4; by -= 8 + Math.random() * 8;
+          b.push([bx, by, bz]);
+        }
+        branches.push(b);
+      }
       x = nx; y = ny; z = nz;
     }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-    this.bolt = new THREE.LineSegments(geo, this.boltMat);
-    this.bolt.frustumCulled = false;
-    this.bolt.renderOrder = 6;
+    const w = near ? 1.3 : 2.6;
+    const core = [], glow = [];
+    this._ribbon(main, w, cam, core);
+    this._ribbon(main, w * 7, cam, glow);
+    for (const b of branches) { this._ribbon(b, w * 0.5, cam, core); this._ribbon(b, w * 3, cam, glow); }
+    const mk = (pts, mat) => {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+      const side = new Float32Array(pts.length / 3);
+      for (let i = 0; i < side.length; i += 6) side.set([-1, 1, 1, -1, 1, -1], i);
+      g.setAttribute('aSide', new THREE.BufferAttribute(side, 1));
+      const m = new THREE.Mesh(g, mat);
+      m.frustumCulled = false;
+      m.renderOrder = 6;
+      return m;
+    };
+    this.bolt = new THREE.Group();
+    this.bolt.add(mk(glow, this.boltGlowMat), mk(core, this.boltMat));
     this.scene.add(this.bolt);
-    this.boltT = 0.35;
+    this.boltT = near ? 0.5 : 0.35;
+  }
+
+  // Polku nauhaksi: jokaiselle osalle nelikulmio, joka on kohtisuorassa sekä
+  // osan suuntaan että katsesuuntaan nähden.
+  _ribbon(path, w, cam, out) {
+    for (let i = 0; i < path.length - 1; i++) {
+      const [ax, ay, az] = path[i], [bx, by, bz] = path[i + 1];
+      _d.set(bx - ax, by - ay, bz - az);
+      _e.set((ax + bx) / 2 - cam.x, (ay + by) / 2 - cam.y, (az + bz) / 2 - cam.z);
+      _f.crossVectors(_d, _e).normalize().multiplyScalar(w / 2);
+      out.push(ax - _f.x, ay - _f.y, az - _f.z, ax + _f.x, ay + _f.y, az + _f.z, bx + _f.x, by + _f.y, bz + _f.z);
+      out.push(ax - _f.x, ay - _f.y, az - _f.z, bx + _f.x, by + _f.y, bz + _f.z, bx - _f.x, by - _f.y, bz - _f.z);
+    }
+  }
+
+  _dropBolt() {
+    if (!this.bolt) return;
+    this.scene.remove(this.bolt);
+    for (const c of this.bolt.children) c.geometry.dispose();
+    this.bolt = null;
   }
 }

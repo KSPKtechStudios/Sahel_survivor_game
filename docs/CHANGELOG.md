@@ -2,6 +2,14 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-07 (sessio 12b): pehmeämpi sumu, lähisalamat, Haamun äänet, äänien hienosäätö
+
+- **Sumu ei enää näytä seinältä.** Syy: sateen usva ja sadeverho olivat lieriön pinnalla 26 m:n päässä, joten sitä lähemmät puut näkyivät kirkkaina ja kauemmat usvaisina, ja raja näkyi kuin este (myös sademetsän tihkussa). Nyt verhot ovat siellä, missä tavallinen sumu jo peittää maiseman, ja usva tulee vain kunnon sateessa.
+- **Lähisalamat:** ukkosella noin joka neljäs salama iskee lähelle (45–155 m): koko näyttö välähtää, salama näkyy kirkkaana hehkuvana juovana, ja samalla kuuluu jyrähdys (satunnaisesti toinen kahdesta äänestä) salaman suunnasta. Kaukaisetkin salamat näkyvät nyt paremmin (ennen 1 px:n viiva).
+- **Haamun äänet:** ilmestyessä, joskus ennen syöksyä, hyökätessä ja satunnaisesti leijuessa. Äänet tulevat haamun suunnasta.
+- **Puun kaatumisääni** loppuu pian räsähdyksen jälkeen (ei jää rätisemään).
+- **Sademetsän äänimaisema** on hiljaisempi ja pehmeämpi (terävimmät korkeat äänet vaimennettu).
+
 ## 2026-10-07 (sessio 12): äänitehosteet, askeleet, kuiva vuoristo, sääkierron korjaus
 
 **Äänet (uusi)**

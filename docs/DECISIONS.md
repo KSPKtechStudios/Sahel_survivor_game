@@ -2,6 +2,13 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-07 (sessio 12b)
+- **Sadeverhojen säde = sumun kantama × 0,7 ja × 0,95 (väh. 35 m), ei kiinteä 26 / 70 m; usva vain, kun sade > 0,3.** Syy: läpinäkyvä pinta kiinteällä etäisyydellä näkyi teräväreunaisena "seinänä" puiden välissä; kun verho on alueella, jossa sumu jo peittää kohteet n. 75 %:sti, rajaa ei erota. Yleistä sumukäyrää ei muutettu (näköetäisyyden reunan kohteiden pitää häipyä täysin).
+- **Lähisalama: 28 % iskuista 45–155 m:n päähän, välähdys 2,4 × ja HTML-kerros koko näytön välähdykselle, salama kameraan käännettynä nauhana (ydin + hehku, reunat häipyvät varjostimessa).** Syy: käyttäjän toive; WebGL piirtää viivat vain 1 px:n levyisinä, joten nauha tarvitaan näkyvyyteen. Jyrähdys lähes heti (viive ≤ 0,25 s), koska käyttäjä halusi äänen "justiin silloin"; tiedostojen alun hiljaisuus leikattiin.
+- **Haamun äänet tapahtumina (`haamuSound`) olentologiikasta, ilmestymisääni myös 40 %:lla ennen syöksyä, ääntely 8–18 s välein.** Syy: käyttäjän kuvaus; tasot 0,2–0,26 (−30…−28 LUFS), "ei liian suurelle".
+- **Viidakko: taso 0,36 → 0,22 ja alipäästösuodin 4,2 kHz.** Syy: käyttäjän mukaan linnut kuuluivat terävästi; suodin pehmentää korkeat äänet.
+- **Puun kaatumisääni häivytetään 0,25–0,9 s räsähdyksen jälkeen.** Syy: tiedoston loppuosa (jälkiräsähdys n. 2 s myöhemmin) kuulosti siltä, että maassa makaava puu rätisee.
+
 ## 2026-10-07 (sessio 12)
 - **Äänitehosteet Web Audio -verkossa (oma moduuli `audio/sfx.js`); pitkät taustaäänet soitetaan audio-elementeistä (MediaElementSource), lyhyet äänet puskureina.** Syy: purettuina taustaäänet (5 min viidakko, 2,5 min ukkonen, sade, tuuli) veisivät n. 200 Mt muistia; striimattuina ne vievät vähän. Silmukan sauma peitetään kahdella vuorottelevalla elementillä ja 3 s:n ristiinhäivytyksellä, koska mp3:n silmukointi naksahtaa.
 - **Tiedostot tasataan −20 LUFS:iin (ffmpeg loudnorm) ja tasot asetetaan koodissa (0,3–0,42 = n. −30 LUFS), eli musiikin (−28 LUFS) tuntumaan tai hiljemmaksi.** Syy: käyttäjän ohje "ei turhan kovalle"; tasattuina tiedostot ovat keskenään vertailukelpoisia.

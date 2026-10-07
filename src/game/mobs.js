@@ -223,6 +223,7 @@ export class Mobs {
       m.pos.y = Math.max(w.h, w.wl) + m.alt;
       m.state = 'appear';
       m.fade = 0;
+      events.emit('haamuSound', { kind: 'spawn', x: m.pos.x, z: m.pos.z });
       m.bob = 0;
       m.orbit = Math.random() * Math.PI * 2;
       m.orbitDir = Math.random() < 0.5 ? -1 : 1;
@@ -379,6 +380,12 @@ export class Mobs {
     m.hitDone = false;
     if (timer !== undefined) m.timer = timer;
     if (state !== 'stagger') m.vulnerable = false;
+    // Haamun äänet (sessio 12): ilmestyminen, joskus kirkaisu ennen syöksyä
+    // (sama ääni) ja hyökkäysääni syöksyn alkaessa.
+    if (m.type === 'haamu') {
+      const kind = state === 'appear' ? 'spawn' : state === 'windup' && Math.random() < 0.4 ? 'spawn' : state === 'dive' ? 'attack' : null;
+      if (kind) events.emit('haamuSound', { kind, x: m.pos.x, z: m.pos.z });
+    }
   }
 
   // Veriroiske osumasta (savipeikolla savivelliä). pos = osumakohta,
@@ -1026,6 +1033,12 @@ export class Mobs {
     const sees = !player.dead && dh < sight;
     const fireSafe = this._nearFire(p.x, p.z, 9);
     if (m.state !== 'appear' && m.state !== 'fade') m.fade = Math.min(1, m.fade + dt);
+    // Satunnainen ääntely leijuessa ja kierrellessä (lähellä pelaajaa).
+    m.voiceT = (m.voiceT ?? 5 + Math.random() * 6) - dt;
+    if (m.voiceT <= 0) {
+      m.voiceT = 8 + Math.random() * 10;
+      if ((m.state === 'drift' || m.state === 'stalk') && dh < 45) events.emit('haamuSound', { kind: 'idle', x: m.pos.x, z: m.pos.z });
+    }
     let vx = 0, vy = 0, vz = 0, faceP = false;
     switch (m.state) {
       case 'appear':

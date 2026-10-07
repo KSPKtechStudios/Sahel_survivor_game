@@ -286,14 +286,18 @@ export class Environment {
         this.strikeTimer = 5 + Math.random() * 14;
         this.flashT = 0.55;
         const a = Math.random() * Math.PI * 2;
-        if (this.onStrike) this.onStrike(a, 250 + Math.random() * 350);
+        // Silloin tällöin salama iskee lähelle (sessio 12): suuri välähdys,
+        // salama näkyy selvästi ja jyrähdys kuuluu heti.
+        const near = Math.random() < 0.28;
+        this.flashK = near ? 2.4 : 1;
+        if (this.onStrike) this.onStrike(a, near ? 45 + Math.random() * 110 : 250 + Math.random() * 350, near);
       }
     }
     if (this.flashT > 0) {
       this.flashT = Math.max(0, this.flashT - clockDt);
       // Muutama nopea välähdys
       const t = 0.55 - this.flashT;
-      this.flash = Math.max(0, Math.sin(t * 34) * Math.exp(-t * 5)) + (t < 0.06 ? 1 : 0);
+      this.flash = (Math.max(0, Math.sin(t * 34) * Math.exp(-t * 5)) + (t < 0.06 ? 1 : 0)) * (this.flashK || 1);
     } else {
       this.flash = 0;
     }
