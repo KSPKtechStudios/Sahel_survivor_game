@@ -82,7 +82,7 @@ const env = new Environment(scene, renderer, sky);
 const world = new World(scene, materials, models);
 const tumbleweeds = new Tumbleweeds(scene, models.tumbleweed, materials.solid);
 const dust = new Dust(scene);
-const ambient = new Ambient(scene);
+const ambient = new Ambient(scene, world);
 const bursts = new Bursts(scene);
 const debris = new Debris(scene);
 const drops = new Drops(scene, models.items);
@@ -95,7 +95,7 @@ const post = new PostFX(renderer);
 const splashes = new Splashes(scene);
 const fire = new FireFx(scene);
 const blood = new Blood(scene);
-const rain = new Rain(scene);
+const rain = new Rain(scene, renderer);
 env.onStrike = (angle, dist) => rain.strike(camera, angle, dist);
 const music = new Music();
 // Selain sallii äänen vasta käyttäjän ensimmäisen klikkauksen tai näppäimen jälkeen.
@@ -678,7 +678,8 @@ function frame(now) {
   wetUniforms.uWet.value = inGame && state !== 'menu' ? env.wet : 0;
   wetUniforms.uWetSky.value.copy(scene.fog.color);
   wetUniforms.uRain.value = rainAmt;
-  rain.update(simDt, camera, rainAmt, env.windDir, 0.2 + 0.8 * env.daylight, Math.min(0.25, rawDt));
+  wetUniforms.uPuddle.value = inGame && state !== 'menu' ? env.puddleWet : 0;
+  rain.update(simDt, camera, rainAmt, env.windDir, 0.2 + 0.8 * env.daylight, Math.min(0.25, rawDt), scene.fog.color);
   if (rainAmt > 0.1 && simDt > 0) {
     for (let i = 0, n = Math.floor(rainAmt * 6 + Math.random()); i < n; i++) {
       const a = Math.random() * Math.PI * 2, r = Math.random() * 14;

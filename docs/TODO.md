@@ -1,6 +1,8 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] **GitHub-tili jäädytetty väliaikaisesti (sessio 11):** session 11 commitit ovat vain paikallisesti haarassa `claude/sahel-game-dev-yi990s`. Kun tili toimii: pushaa haara, avaa / päivitä PR `main`-haaraan ja anna raw.githack-testauslinkki. (Myös claude.ai:n GitHub-yhteys pitää valtuuttaa uudelleen.)
+- [ ] Käyttäjä testaa session 11 (paikallisesta paketista): tulikärpäsparvet jokien varsilla ja akasioiden alla, pienemmät aallot (myrsky), ei vettä veneiden sisällä, uusi sade ja sadeverhot, savannin lammikot kuivuvat sateen jälkeen, säät biomeittain, rakennelmien ja hylkyjen määrä, linnunrata ja tähdenlennot, purje (saumat, vastavalo), hento kimallus, Haamu latvusten alla ja pako, jousi oikeassa kädessä ja nuolten jälki, iskujen tahti, tuulen nuoli
 - [ ] Käyttäjä testaa session 10: vesiseinät poissa (jokien yhtymäkohdat), tumbleweedit vain aavikolla ja laterittitasangolla, purjeiden nosto ja lasku, eläinten pyydystäminen (jousi ja juoksu), sademetsän tihku, märkyys ja lammikot, aavikon kuumuusväreily, pölypyörteet ja tulikärpäset, meren syvyys laivalla, Haamu öisin sademetsässä, pudotettujen esineiden hehku ja heitetyn esineen poimintaviive
 - [ ] Vastaus: tarkoittiko "mesabiomi" punaista laterittitasankoa (nyt tulkinta: laterittitasanko + aavikon pöytävuoret)?
 - [ ] Vastaus: Haamu vai Aave (nyt Haamu)? Sopivatko vahvuus (17 vahinkoa, 70 terveyttä), harvinaisuus, nuotion valo vastakeinona ja saalis (kaurikotilot, pronssirannerengas)?
@@ -27,6 +29,7 @@
 - [ ] Ambient-äänet ja äänitehosteet (käyttäjä toimittaa; musiikki tehty sessiossa 7)
 
 ## Seuraavaksi (ehdotuksia)
+- [ ] Kuun vaiheet (nyt kuu on aina täysi ja himmentää linnunradan joka yö) ja tähdenlentoparvet tiettyinä öinä (ehdotus)
 - [ ] Haamulle äänet (kuiske, kirkaisu ennen syöksyä), kun äänitehosteet lisätään
 - [ ] Kuumuusväreily myös ilman muuta jälkikäsittelyä (nyt vaatii valonsäteet, DOF tai liike-epäterävyyden)
 - [ ] Äänet osumiin, torjuntaan ja olentoihin (kun käyttäjä toimittaa äänet)
@@ -59,6 +62,20 @@
 - [ ] Päätä lopullinen nimi (Sahel vai jokin muu)
 
 ## Valmis
+- [x] Tulikärpäset parvina (joet, akasiat), ei merellä, rannalla, vuorilla eikä aavikolla (2026-10-07, sessio 11)
+- [x] Aallot pienemmiksi (myrsky edelleen rajumpi) (sessio 11)
+- [x] Vesi ei näy veneiden sisällä (sessio 11)
+- [x] Realistisempi sade: tiheät ohuet pisarat, sadeverhot, usva, roiskeet (sessio 11)
+- [x] Lammikot: sademetsässä aina, savannilla vain sateen jälkeen ja kuivuvat (sessio 11)
+- [x] Säät vain mahdollisissa biomeissa; uusi kuiva laterittitasankoilmasto (sessio 11)
+- [x] Rakennelmia n. 2 × enemmän, laivanhylkyjä n. 120 / maailma (sessio 11)
+- [x] Hienovarainen linnunrata ja tähdenlennot (sessio 11)
+- [x] Purjeen viuhkakaistat ja tumma varjopuoli korjattu (saumat varjostimessa, vastavalo) (sessio 11)
+- [x] Hento esineiden kimallus (sessio 11)
+- [x] Haamu latvusten alla, pakenee ylös vähillä voimilla (sessio 11)
+- [x] Jousi oikeaan käteen, nuolet ja lentojälki erottuvat (sessio 11)
+- [x] Iskujen tahti sujuvammaksi (hakkuu nopeampaa kuin taistelu) (sessio 11)
+- [x] Tuulen nuolen suunta veneen paneelissa (sessio 11)
 - [x] Vesiseinät korjattu (jokien yhtymäkohdat, purot rinteillä, järvet, rakennelmat) (2026-10-07, sessio 10)
 - [x] Tumbleweedit vain aavikolla ja laterittitasangolla; uppoavat veteen (sessio 10)
 - [x] Purjeet: raakapuu lasketaan käärittäessä, ei paksua "tankoa", pienempi lepatus (sessio 10)

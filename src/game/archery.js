@@ -16,7 +16,10 @@ const _dir = new THREE.Vector3();
 const _p = new THREE.Vector3();
 const _q = new THREE.Vector3();
 const _up = new THREE.Vector3(0, 1, 0);
+const _r = new THREE.Vector3();
 const _wq = {};
+const TRAIL_LEN = 3.2;   // nuolen perässä näkyvä juova (m)
+const TRAIL_LIFE = 0.9;  // juova häipyy (s)
 const _cols = [];
 
 export class Archery {
@@ -48,7 +51,7 @@ export class Archery {
   }
 
   clear() {
-    for (const a of this.arrows) this.scene.remove(a.mesh);
+    for (const a of this.arrows) { this.scene.remove(a.mesh); this._dropTrail(a); }
     this.arrows = [];
     this.reset();
   }
@@ -104,13 +107,23 @@ export class Archery {
     const speed = (16 + 44 * d * d) * bow.power * a.speed;
     const mesh = new THREE.Mesh(this.geos[kind], this.material);
     mesh.castShadow = true;
-    const pos = this.camera.position.clone().addScaledVector(_dir, 0.6);
-    pos.y -= 0.06;
+    // Lähtö jousen kohdalta (hieman oikealla ja alempana), jotta nuolen
+    // lennon näkee ruudulla.
+    _r.crossVectors(_dir, _up).normalize();
+    const pos = this.camera.position.clone().addScaledVector(_dir, 0.5).addScaledVector(_r, 0.05);
+    pos.y -= 0.08;
     mesh.position.copy(pos);
     this.scene.add(mesh);
+    // Valojuova: ohut, nopeasti häipyvä viiva nuolen perässä.
+    const tg = new THREE.BufferGeometry();
+    tg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+    const trail = new THREE.Line(tg, new THREE.LineBasicMaterial({ color: 0xfff6e0, transparent: true, opacity: 0.6, depthWrite: false }));
+    trail.frustumCulled = false;
+    trail.renderOrder = 4;
+    this.scene.add(trail);
     if (this.arrows.length >= MAX_ARROWS) this._remove(this.arrows[0]);
     this.arrows.push({
-      kind, mesh, pos, vel: _dir.clone().multiplyScalar(speed),
+      kind, mesh, pos, start: pos.clone(), trail, vel: _dir.clone().multiplyScalar(speed),
       dmg: a.dmg * (0.35 + 0.65 * d) * bow.power, life: 0, done: false,
     });
     this.viewmodel.bowShot();
@@ -119,8 +132,17 @@ export class Archery {
 
   _remove(a) {
     this.scene.remove(a.mesh);
+    this._dropTrail(a);
     const i = this.arrows.indexOf(a);
     if (i >= 0) this.arrows.splice(i, 1);
+  }
+
+  _dropTrail(a) {
+    if (!a.trail) return;
+    this.scene.remove(a.trail);
+    a.trail.geometry.dispose();
+    a.trail.material.dispose();
+    a.trail = null;
   }
 
   // Nuoli pysähtyi: ehjä nuoli jää poimittavaksi.
@@ -150,6 +172,16 @@ export class Archery {
       if (stopped || !this.arrows.includes(a)) continue;
       a.mesh.position.copy(a.pos);
       a.mesh.quaternion.setFromUnitVectors(_up, _q.copy(a.vel).normalize());
+      if (a.trail) {
+        if (a.life > TRAIL_LIFE) { this._dropTrail(a); continue; }
+        // Juova lentoradan suuntaan taaksepäin (ei lähtöpisteen ohi).
+        const back = Math.min(TRAIL_LEN, a.pos.distanceTo(a.start));
+        const tp = a.trail.geometry.attributes.position;
+        tp.setXYZ(0, a.pos.x, a.pos.y, a.pos.z);
+        tp.setXYZ(1, a.pos.x - _q.x * back, a.pos.y - _q.y * back, a.pos.z - _q.z * back);
+        tp.needsUpdate = true;
+        a.trail.material.opacity = 0.6 * (1 - a.life / TRAIL_LIFE);
+      }
     }
   }
 

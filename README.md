@@ -2,7 +2,7 @@
 
 > Pelin työnimi. Nimi ei ole vielä lopullinen ja voi muuttua.
 
-Valheim- ja Minecraft-tyyppinen selviytymispeli, joka sijoittuu Burkina Fason Sahel-alueelle. 3D avoin saarimaailma (20 km, generoidaan joka kerta omalla siemenellä), ensimmäisen persoonan kuvakulma, reppu ja valmistus, ravinto ja myrkytys, vuorokausisykli (10 min päivä + 10 min yö, selkeinä öinä linnunrata) ja biomikohtaiset säät (hiekkamyrskyt, sade, ukkonen, sumu). Peli alkaa keräämällä risuja ja kiviä; vasaralla rakennetaan työstöpenkki, nuotio ja talot, ja jousella metsästetään arkoja eläimiä (gasellit, helmikanat, apinat, aavikkoketut, linnut). Puut kaatuvat ja kivet murskautuvat, ja saaliit putoavat maahan. Kartta piirtyy sitä mukaa kuin maailmaa tutkii, ja maailmasta löytyy kivikehiä, hylättyjä leirejä, raunioita ja laivanhylkyjä arkkuineen sekä riimukiviä, joiden tekstit voi kääntää. Joet, purot, järvet ja meri aaltoilevat ja roiskuvat, ja vesillä liikutaan soutuveneellä, purjeveneellä tai valtavalla purjelaivalla tuulen mukaan. Taistelussa on torjunta ja parry; savanneilla elää pahkasikoja, öisin maasta nousee savipeikkoja, ja sademetsän latvuksissa leijuu harvinainen, vaarallinen Haamu. Jokaisella biomilla on oma tunnelmansa: sademetsässä tihuttaa aina ja kaikki kiiltää märkänä lammikoineen, aavikon horisontti väreilee kuumuudesta, kuumilla tasangoilla kiertyy pölypyörteitä ja savannin öissä vilkkuu tulikärpäsiä. Musiikki vaihtuu biomin mukaan.
+Valheim- ja Minecraft-tyyppinen selviytymispeli, joka sijoittuu Burkina Fason Sahel-alueelle. 3D avoin saarimaailma (20 km, generoidaan joka kerta omalla siemenellä), ensimmäisen persoonan kuvakulma, reppu ja valmistus, ravinto ja myrkytys, vuorokausisykli (10 min päivä + 10 min yö, selkeinä öinä linnunrata ja tähdenlentoja) ja biomikohtaiset säät (hiekkamyrskyt, sade, ukkonen, sumu). Peli alkaa keräämällä risuja ja kiviä; vasaralla rakennetaan työstöpenkki, nuotio ja talot, ja jousella metsästetään arkoja eläimiä (gasellit, helmikanat, apinat, aavikkoketut, linnut). Puut kaatuvat ja kivet murskautuvat, ja saaliit putoavat maahan. Kartta piirtyy sitä mukaa kuin maailmaa tutkii, ja maailmasta löytyy kivikehiä, hylättyjä leirejä, raunioita ja laivanhylkyjä arkkuineen sekä riimukiviä, joiden tekstit voi kääntää. Joet, purot, järvet ja meri aaltoilevat ja roiskuvat, ja vesillä liikutaan soutuveneellä, purjeveneellä tai valtavalla purjelaivalla tuulen mukaan. Taistelussa on torjunta ja parry; savanneilla elää pahkasikoja, öisin maasta nousee savipeikkoja, ja sademetsän latvuksissa leijuu harvinainen, vaarallinen Haamu. Jokaisella biomilla on oma tunnelmansa: sademetsässä tihuttaa aina ja kaikki kiiltää märkänä lammikoineen, aavikon horisontti väreilee kuumuudesta, kuumilla tasangoilla kiertyy pölypyörteitä ja öisin jokien varsilla ja akasioiden alla vilkkuu tulikärpäsparvia. Sää riippuu biomista: aavikolla ei sada, eikä merellä tai sademetsässä ole hiekkamyrskyjä. Musiikki vaihtuu biomin mukaan.
 
 **Versio:** Alpha v0.1 (ensimmäinen julkinen alfaversio).
 
@@ -14,6 +14,12 @@ Peli toimii selaimessa ilman asennusta (tietokone, hiiri + näppäimistö). Avaa
 
 ```
 npx http-server -c-1 .
+```
+
+tai (jos Node.js ei ole asennettuna, mutta Python on)
+
+```
+python -m http.server 8080
 ```
 
 ja mene osoitteeseen `http://localhost:8080/`. (Suoraan tiedostona `file://` avaaminen ei toimi, koska selain estää ES-moduulit.)

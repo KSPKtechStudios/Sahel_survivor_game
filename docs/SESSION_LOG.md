@@ -2,6 +2,36 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-07 (sessio 11)
+**Tehtiin**
+- Käyttäjän 15 korjaus- ja parannustoivetta (kirjattu `DESIGN.md`:hen). Kaikki toteutettiin:
+  1. Tulikärpäset parvina jokien, purojen ja lampien rannoilla sekä osan akasioiden alla; ei merellä, rannalla, vuoristossa eikä aavikolla (`render/ambient.js`).
+  2. Aallot pienemmiksi (`render/environment.js`, vaahtopäät `render/water.js`).
+  3. Vesi ei näy veneiden sisällä: näkymätön syvyyssuoja laidan tasolla (`models/boats.js`).
+  4. Uusi sade: tiheät ohuet viirut, kaukaiset sadeverhot, usva ja roiskeet (`render/rain.js`, `main.js`).
+  5. Lammikot pysyviä vain sademetsässä ja keitailla; muualla sateella ilmestyvät ja kuivuvat (`world/objectTypes.js`, `world/chunkGen.js`, `render/materials.js`, `render/environment.js`, `main.js`).
+  6. Säät biomeittain: uusi kuiva laterittitasankoilmasto, uudet säätaulukot, paikalliset rajoitukset, salamat vain sateen alueella, kehittäjätyökalujen ilmoitus (`render/environment.js`, `ui/devtools.js`).
+  7. Rakennelmia n. 2 × ja laivanhylkyjä n. 120 / maailma, rantaviivan haku ruudukolla (`world/terrain.js`).
+  8.–9. Hienovarainen linnunrata ja tähdenlennot (`render/sky.js`, `render/environment.js`).
+  10. Purje: viuhkakaistojen syy (ruudukon sarakkeet suppenevat kolmion kulmaan) ja tumma varjopuoli korjattiin; lopuksi kaistat ja saumat siirrettiin varjostimeen, koska ruuduittain väritetyt kaistat näkyivät vielä porrasmaisina laikkuina (`models/boats.js`).
+  11. Hento kimallus pudotetuille esineille (`game/drops.js`).
+  12. Haamu latvusten alla, väistää runkoja, pakenee ylös alle 25 %:n terveydellä (`game/mobs.js`).
+  13. Jousi oikeaan käteen (käsimallin peilaus), selvemmät nuolet ja lentojälki (`player/viewmodel.js`, `game/archery.js`, `models/items2.js`).
+  14. Iskujen tahti: lyhyemmät jäähdytykset, hakkuussa vielä lyhyempi (`game/combat.js`).
+  15. Tuulen nuolen suunta veneen paneelissa (`ui/boatHud.js`).
+- Testattiin headless-Chromiumilla: veneiden istuinnäkymät (selkeä ja ukkonen: ei vettä rungon sisällä, purje ilman viuhkaa ja laikkuja), sade ja sadeverhot kuvina, säärajoitukset (meri: pöly 0, aavikko: sade 0, laterittitasanko: sade 0,01), lammikoiden kuivuminen (1 → 0 4 minuutissa), tulikärpäsmäärät (joki 229, metsikkö 43, ranta 0), linnunrata ja tähdenlento kuvina, Haamun korkeus (2,0–3,1 m kierrellessä, 6/6 osumaa paikallaan, 0/6 väistäessä, pako 13,7 m:iin ja katoaminen 8,7 s:ssa), jousi ja nuolen jälki kuvina, iskujen välit (nyrkit 0,53 s, puukko 0,45, kirves 0,67, keihäs 0,77, nuija 1,11, viidakkoveitsi 0,56 ilmaan / hakatessa), rakennelmatilastot kahdella siemenellä (n. 3 700–3 800, hylkyjä 120–122) ja hylyt kuvina rannalla. Vanhat savu-, toiminta-, taistelu-, jousi-, vene- (myös tallennus ja avomeri), eläin- ja riimukivitestit ajettiin uudelleen ilman konsolivirheitä. Avomeritestin laiva ajaa myötätuuliosuudella karille (kunto 1 200 → 1 002), mutta edellinen commit käyttäytyy testissä samoin (testireitti kulkee rannan vieressä), joten kyse ei ole regressiosta. ESLint puhdas.
+- **GitHub-tili jäädytettiin väliaikaisesti kesken session.** Käyttäjän pyynnöstä työ jatkui paikallisesti: muutokset commitoitiin vain paikallisesti haaraan `claude/sahel-game-dev-yi990s` (ei pushattu, ei PR:ää eikä raw.githack-linkkiä). Käyttäjälle annettiin peli zip-pakettina paikallista testausta varten.
+
+**Huomiot**
+- Rakennelmien solukoon muutos siirtää vanhojen maailmojen rakennelmien paikkoja.
+- Kuu on pelissä aina täysi ja korkealla keskiyöllä, joten linnunradan himmennys kuun valossa on vain 30 % (muuten se ei näkyisi koskaan).
+- Ensimmäinen sadeversio oli näkymätön (pisaranauhat olivat myötäpäivään, joten ne karsittiin takapintoina) ja liian harva; korjattiin kaksipuolisella materiaalilla ja tiheydellä.
+
+**Kesken / seuraavaksi**
+- Kun GitHub-tili toimii: pushaa haara, avaa PR `main`-haaraan ja anna raw.githack-linkki (myös claude.ai:n GitHub-yhteys pitää valtuuttaa uudelleen).
+- Käyttäjän palaute session 11 korjauksista (paikallisesta paketista).
+- Avoimet kysymykset: "mesabiomin" tulkinta, Haamu vai Aave ja pakenevan Haamun saalis, vuoriston ja meren tunnusmerkit, rakennelmien määrä.
+
 ## 2026-10-07 (sessio 10)
 **Tehtiin**
 - Käyttäjän 9 toivetta (kirjattu `DESIGN.md`:hen): vesiseinien korjaus, tumbleweedit vain aavikolle ja "mesabiomille", purjeiden outo käytös, liian arat ja nopeat eläimet, jokaiselle biomille tunnusomainen grafiikka (aavikon kuumuusväreily, sademetsän tihku, märkyys ja lammikot), nopeammin syvenevä meri, Haamu-vihollinen sademetsän öihin, pudotettujen esineiden hehku ja heitettyjen esineiden poimintaviive. Kaikki toteutettiin.

@@ -46,8 +46,9 @@ export class BoatHud {
     const frac = b.hp / def.hp;
     this.hpBar.style.width = `${Math.round(frac * 100)}%`;
     this.hp.classList.toggle('low', frac < 0.35);
-    // Tuulen nuoli: suunta, johon tuuli puhaltaa (veneen koordinaateissa).
-    const deg = (-Math.atan2(b.wp, b.wf) * 180) / Math.PI;
+    // Tuulen nuoli: suunta, johon tuuli puhaltaa (veneen koordinaateissa,
+    // ylös = keula). Nuolen kärki on kuvassa alaspäin, joten käännetään 180°.
+    const deg = (-Math.atan2(b.wp, b.wf) * 180) / Math.PI + 180;
     this.arrow.style.transform = `rotate(${deg.toFixed(1)}deg)`;
     let state, warn = false;
     if (def.row) {

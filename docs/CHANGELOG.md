@@ -2,6 +2,35 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-07 (sessio 11): tulikärpäset, aallot, vesi veneissä, sade, lammikot, säät biomeittain, rakennelmat, linnunrata ja tähdenlennot, purje, kimallus, Haamu, jousi, iskujen tahti, tuulen nuoli
+
+**Korjaukset**
+- **Veneiden sisällä ei enää näy vettä.** Syy: veneiden pohja on vesirajan alapuolella, ja läpinäkyvä vedenpinta piirrettiin rungon sisään. Nyt jokaisessa veneessä on laidan yläreunan tasolla näkymätön "vesisuoja", joka peittää vedenpinnan rungon sisältä (myös myrskyssä ja kallistuessa).
+- **Purjeen bugi korjattu.** Syy: kolmiopurjeen kankaan kaistat väritettiin ruudukon sarakkeittain, ja sarakkeet suppenevat purjeen kulmaan, joten kaistat näyttivät viuhkalta; lisäksi purjeen varjopuoli oli lähes musta. Nyt kaistat ja ohuet saumat piirretään varjostimessa pikselitarkasti suorina viivoina (ei porrasmaisia laikkuja), ja vastavalossa aurinko kuultaa ohuen kankaan läpi (saumat erottuvat tummempina kuten oikeassa purjeessa). Koskee myös laivan purjeita.
+- **Tuulen nuoli veneen paneelissa osoittaa oikeaan suuntaan.** Syy: nuolen kärki oli kuvassa alaspäin, joten nuoli näytti päinvastaista suuntaa. Nyt nuoli osoittaa, mihin tuuli puhaltaa (ylös = keulan suuntaan, eli ylös osoittava nuoli = myötätuuli).
+
+**Sää ja vesi**
+- **Aallot ovat paljon pienemmät:** selkeällä n. 0,13 m (ennen 0,3 m), sateella n. 0,28 m ja ukkosmyrskyssä n. 0,57 m (ennen n. 1,4 m). Myrsky on edelleen selvästi rajumpi, ja vaahtopäät tulevat vasta kovemmalla tuulella.
+- **Säät vain siellä, missä ne ovat mahdollisia:** hiekkamyrskyä ja hiekkausvaa ei ole merellä, rannalla eikä sademetsässä; sadetta ja ukkosta ei ole aavikolla eikä punaisella laterittitasangolla (uusi oma kuiva ilmasto). Savannilla sade on harvinaista (sade 0,45, ukkonen 0,12; ennen 1 ja 0,3), ja aavikolla pilvinen sää on harvinaista (0,25, ennen 0,5). Biomien rajoilla mahdoton sää haihtuu pois (esim. hiekkamyrsky laantuu rannalle tultaessa). Kehittäjätyökalujen säänapit kertovat, jos sää ei ole mahdollinen biomissa.
+- **Sade on realistisempi:** pisaroita on paljon enemmän (9 000) ja ne ovat ohuita, eripituisia ja -kirkkaisia viiruja lähellä pelaajaa; kauempana sade näkyy harmaina, liikkuvina sadeverhoina ja kovassa sateessa maan rajassa on usvaa. Maahan osuvat pisarat roiskuvat.
+- **Lammikot:** sademetsässä (ja keitailla) ne ovat aina; savannilla, metsiköissä ja kausilammilla niitä ilmestyy vain sateella, ja sateen jälkeen ne kutistuvat reunoilta ja kuivuvat noin 4 minuutissa.
+
+**Maailma**
+- **Rakennelmia on noin kaksi kertaa enemmän** (n. 3 700–3 800 maailmassa, ennen n. 1 800), ja **laivanhylkyjä on n. 120 maailmassa** (ennen 6–13): hylky syntyy noin kolmannekseen rannikon rakennelmapaikoista, ja paikka haetaan rantaviivalta (hylky on rannalla vesirajassa). Huom: vanhoissa maailmoissa rakennelmien paikat muuttuvat (jo avatut arkut voivat olla uusissa paikoissa).
+- **Tulikärpäsiä on vähemmän ja ne ovat parvina:** jokien, purojen ja lampien rannoilla sekä noin joka viidennen akasian alla, enintään 12 lähintä parvea. Merellä, rannalla, vuoristossa ja aavikolla ei ole tulikärpäsiä.
+
+**Taivas**
+- **Linnunrata on hienovarainen ja realistisempi:** himmeä, epätasainen valovyö, jossa erottuu tiheä tähtipöly ja hennot tummat pölykaistat. Se näkyy selvemmin vain pimeässä ja häviää horisontin lähellä ja kuun valossa.
+- **Tähdenlentoja:** kirkkaana yönä taivaalla näkyy satunnaisesti (8–38 s välein) lyhyt tähdenlento.
+
+**Esineet ja taistelu**
+- **Esineiden kimallus on hento:** pieni, himmeä hehku (0,3–0,6 m, ennen 0,55–1,5 m) ja silloin tällöin pieni välähdys. Arvoesineillä hieman kirkkaampi kultainen.
+- **Jousi on oikeassa kädessä** (vasen käsi jännittää), ja **nuolet erottuvat:** paksumpi varsi, isommat punavalkoiset sulat ja ammuttaessa hetken näkyvä vaalea lentojälki.
+- **Iskujen tahti on sujuvampi:** yhden iskun kierto olentoon osuessa nyrkeillä n. 0,65 s (ennen 1,1 s), kirveellä n. 0,8 s (1,05 s), puunuijalla n. 1,45 s (1,9 s). Kun isku osuu puuhun, kiveen, pensaaseen tai ilmaan, jäähdytys on lyhyempi (nyrkki n. 0,5 s, kirves n. 0,65 s), joten hakkuu ei tunnu kankealta. Jatkuvaa huitomista rajoittaa kestävyys. Viidakkoveitsen sarja 10 + 10 + 19 (kestävyys 9 + 14 + 22), sarjan jälkeen 1,1 s jäähdytys.
+
+**Haamu**
+- Haamu leijuu nyt **latvusten alla** runkojen välissä (2,6–4,2 m maasta) ja kiertää puunrungot. Kun sen terveys laskee alle neljännekseen, se **pakenee latvusten yläpuolelle** (n. 13 m) ja katoaa, ellei sitä ehditä kaataa (paetessa siihen osuu nuolella).
+
 ## 2026-10-07 (sessio 10): vesiseinät, tumbleweedit, purjeet, eläimet, biomien tunnelma, meri, Haamu, pudotetut esineet
 
 **Korjaukset**

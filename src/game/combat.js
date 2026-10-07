@@ -18,54 +18,57 @@ import { events } from './events.js';
 // multi = osuu useampaan, stagger = horjuttaa (s).
 // Iskusarja (useampi isku) on vain nopeilla ja kevyillä aseilla
 // (viidakkoveitsi); muilla on yksi isku ja jäähdytys.
-// Sessio 9: iskut ovat harkittuja ja harvoja. Yhden iskun kierto (kesto +
-// jäähdytys) on kevyillä noin 1,1 s ja raskaalla nuijalla noin 1,9 s; vahinkoa
-// on vastaavasti hieman enemmän. Kestävyyttä kuluu enemmän, joten jatkuva
-// huitominen loppuu nopeasti.
+// Sessio 11: tahti on sujuva mutta ei loputon. Yhden iskun kierto (kesto +
+// jäähdytys) on nyrkeillä n. 0,65 s, kirveellä n. 0,8 s ja raskaalla nuijalla
+// n. 1,45 s. Kun isku osuu maailmaan (puu, kivi, pensas) tai ilmaan, jäähdytys
+// on lyhyempi (GATHER_CD), joten hakkuu ei tunnu kankealta. Jatkuvaa
+// huitomista rajoittaa kestävyys (jatkuvassa lyönnissä se ei ehdi palautua).
 export const WEAPONS = {
   fist: {
     name: 'Nyrkit', block: 'fist', reach: 1.9, combo: [
-      { anim: 'punch', dur: 0.42, hitAt: 0.45, chain: 1, cd: 0.7, dmg: 6, kb: 5.5, up: 1.3, stam: 7, arc: 0.6 },
+      { anim: 'punch', dur: 0.36, hitAt: 0.45, chain: 1, cd: 0.28, dmg: 6, kb: 5.5, up: 1.3, stam: 5, arc: 0.6 },
     ],
   },
   stick: {
     name: 'Risu', block: 'tool', reach: 2.3, combo: [
-      { anim: 'swing', dur: 0.5, hitAt: 0.5, chain: 1, cd: 0.65, dmg: 6, kb: 6, up: 1.3, stam: 7, arc: 0.55 },
+      { anim: 'swing', dur: 0.42, hitAt: 0.5, chain: 1, cd: 0.3, dmg: 6, kb: 6, up: 1.3, stam: 5, arc: 0.55 },
     ],
   },
   knife: {
     name: 'Kivipuukko', block: 'tool', reach: 2.0, combo: [
-      { anim: 'slashR', dur: 0.36, hitAt: 0.5, chain: 1, cd: 0.5, dmg: 7, kb: 4.5, up: 1, stam: 6, arc: 0.8 },
+      { anim: 'slashR', dur: 0.32, hitAt: 0.5, chain: 1, cd: 0.22, dmg: 7, kb: 4.5, up: 1, stam: 5, arc: 0.8 },
     ],
   },
   spear: {
     name: 'Keihäs', block: 'weapon', reach: 3.0, combo: [
-      { anim: 'thrust', dur: 0.55, hitAt: 0.48, chain: 1, cd: 0.75, dmg: 15, kb: 7, up: 1.5, stam: 11, arc: 0.3, reach: 0.4 },
+      { anim: 'thrust', dur: 0.5, hitAt: 0.48, chain: 1, cd: 0.45, dmg: 15, kb: 7, up: 1.5, stam: 10, arc: 0.3, reach: 0.4 },
     ],
   },
   axe: {
     name: 'Kirves', block: 'tool', reach: 2.4, combo: [
-      { anim: 'swing', dur: 0.55, hitAt: 0.5, chain: 1, cd: 0.5, dmg: 12, kb: 7, up: 1.6, stam: 9, arc: 0.5 },
+      { anim: 'swing', dur: 0.5, hitAt: 0.5, chain: 1, cd: 0.28, dmg: 12, kb: 7, up: 1.6, stam: 7, arc: 0.5 },
     ],
   },
   pick: {
     name: 'Hakku', block: 'tool', reach: 2.4, combo: [
-      { anim: 'swing', dur: 0.6, hitAt: 0.5, chain: 1, cd: 0.5, dmg: 11, kb: 7, up: 1.6, stam: 10, arc: 0.45 },
+      { anim: 'swing', dur: 0.55, hitAt: 0.5, chain: 1, cd: 0.28, dmg: 11, kb: 7, up: 1.6, stam: 8, arc: 0.45 },
     ],
   },
   club: {
     name: 'Puunuija', block: 'weapon', reach: 2.5, combo: [
-      { anim: 'slashR', dur: 0.8, hitAt: 0.52, chain: 1, cd: 1.1, dmg: 21, kb: 12, up: 4.2, stam: 20, arc: 0.85, multi: true, stagger: 0.6, heavy: true },
+      { anim: 'slashR', dur: 0.75, hitAt: 0.52, chain: 1, cd: 0.7, dmg: 21, kb: 12, up: 4.2, stam: 18, arc: 0.85, multi: true, stagger: 0.6, heavy: true },
     ],
   },
   machete: {
     name: 'Viidakkoveitsi', block: 'weapon', reach: 2.4, combo: [
-      { anim: 'slashR', dur: 0.42, hitAt: 0.5, chain: 0.85, cd: 0.8, dmg: 10, kb: 5.5, up: 1.3, stam: 10, arc: 0.9, multi: true },
-      { anim: 'slashL', dur: 0.42, hitAt: 0.5, chain: 0.85, cd: 0.8, dmg: 10, kb: 5.5, up: 1.3, stam: 16, arc: 0.9, multi: true },
-      { anim: 'thrust', dur: 0.52, hitAt: 0.48, chain: 1, cd: 1.6, dmg: 19, kb: 9.5, up: 3, stam: 26, arc: 0.35, reach: 0.5, stagger: 0.5 },
+      { anim: 'slashR', dur: 0.38, hitAt: 0.5, chain: 0.8, cd: 0.5, dmg: 10, kb: 5.5, up: 1.3, stam: 9, arc: 0.9, multi: true },
+      { anim: 'slashL', dur: 0.38, hitAt: 0.5, chain: 0.8, cd: 0.5, dmg: 10, kb: 5.5, up: 1.3, stam: 14, arc: 0.9, multi: true },
+      { anim: 'thrust', dur: 0.5, hitAt: 0.48, chain: 1, cd: 1.1, dmg: 19, kb: 9.5, up: 3, stam: 22, arc: 0.35, reach: 0.5, stagger: 0.5 },
     ],
   },
 };
+// Jäähdytyksen kerroin, kun isku ei osunut olentoon (hakkuu, louhinta, ohi).
+const GATHER_CD = 0.55;
 
 // Torjunta: reduce = kuinka suuri osa vahingosta torjutaan, cost = kestävyys
 // torjuttua vahinkoa kohti, parry = täydellisen torjunnan ikkuna (s).
@@ -142,8 +145,10 @@ export class Combat {
     this.cooldown = Math.max(0, this.cooldown - dt);
     this.sinceAttack += dt;
     if (this.attacking && vm.action !== this.attacking.action) {
-      // Isku päättyi (tai keskeytettiin) ilman sarjan jatkoa: jäähdytys alkaa.
-      this.cooldown = this.cooldownMax = this.attacking.step.cd || 0;
+      // Isku päättyi (tai keskeytettiin) ilman sarjan jatkoa: jäähdytys alkaa
+      // (lyhyempi, jos isku ei osunut olentoon).
+      const cd = (this.attacking.step.cd || 0) * (this.attacking.hitMob ? 1 : GATHER_CD);
+      this.cooldown = this.cooldownMax = cd;
       this.attacking = null;
     }
 
@@ -235,6 +240,7 @@ export class Combat {
     cam.getWorldDirection(_dir);
     const reach = weapon.reach + (step.reach || 0);
     const hits = this.mobs.inArc(p.x, p.z, cam.position.y, _dir, reach, Math.cos(step.arc || 0.6), _hits);
+    if (this.attacking) this.attacking.hitMob = hits.length > 0;
     if (hits.length) {
       const n = step.multi ? Math.min(3, hits.length) : 1;
       let killed = false;

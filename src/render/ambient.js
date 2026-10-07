@@ -1,39 +1,41 @@
-// Biomien tunnelmatehosteet (sessio 10):
-// - Tulikärpäset: savannin, metsien ja sademetsän illoissa ja öissä vilkkuvat
-//   kellanvihreät valopisteet kameran ympärillä.
+// Biomien tunnelmatehosteet (sessio 10, tulikärpäset uusittu sessiossa 11):
+// - Tulikärpäset: illalla ja yöllä pieninä parvina jokien, purojen ja
+//   lampien rannoilla sekä osan akasioiden alla. Ei merellä, rannalla,
+//   vuorilla eikä aavikolla.
 // - Pölypyörteet: kuumina, selkeinä päivinä aavikolla ja savannilla
 //   (laterittitasanko mukaan lukien) kaukana maisemassa kiertyvät pölypatsaat.
 import * as THREE from 'three';
+import { CONFIG } from '../config.js';
 import { createSoftDotTexture } from './textures.js';
-import { waterAt } from '../world/terrain.js';
+import { waterAt, sampleTerrain } from '../world/terrain.js';
 import { smoothstep } from '../noise.js';
 
-const FLY_COUNT = 400;
-const FLY_BOX = new THREE.Vector3(40, 5, 40);
+const FLY_MAX = 320;     // tulikärpäsiä yhteensä
+const SWARMS = 12;       // parvia enintään (lähimmät)
+const SCAN_R = 63;       // etsintäsäde (m)
+const GRID = 7;          // rantojen etsintäruudukko (m)
 
 const flyVS = /* glsl */ `
+attribute vec3 aCenter;
 attribute vec4 aSeed;
-uniform vec3 uCam;
-uniform vec3 uBox;
+attribute float aR;
 uniform float uTime;
 uniform float uAmount;
 varying float vAlpha;
 void main() {
-  float visible = step(aSeed.w, uAmount);
-  vec3 p = aSeed.xyz * uBox;
-  // Hidas, mutkitteleva lento
-  float t = uTime * (0.25 + aSeed.w * 0.3);
-  p += vec3(sin(t + aSeed.w * 30.0), sin(t * 1.7 + aSeed.x * 20.0) * 0.35, cos(t * 1.3 + aSeed.y * 25.0)) * 1.6;
-  // Kääri kameran ympärille; korkeus enimmäkseen silmien alapuolella.
-  vec3 c = uCam - vec3(0.0, 1.0, 0.0);
-  p = mod(p - c + uBox * 0.5, uBox) - uBox * 0.5 + c;
-  vec4 mv = modelViewMatrix * vec4(p, 1.0);
+  // Hidas, mutkitteleva lento parven keskuksen ympärillä.
+  float t = uTime * (0.2 + aSeed.w * 0.25);
+  vec3 off = vec3(
+    sin(t + aSeed.x * 30.0) * aR * (0.3 + 0.7 * aSeed.y),
+    0.35 + aSeed.z * 2.0 + sin(t * 1.3 + aSeed.y * 20.0) * 0.35,
+    cos(t * 0.8 + aSeed.z * 25.0) * aR * (0.3 + 0.7 * aSeed.x));
+  vec4 mv = modelViewMatrix * vec4(aCenter + off, 1.0);
   gl_Position = projectionMatrix * mv;
   float dist = -mv.z;
   // Vilkkuu: lyhyitä välähdyksiä eri tahdissa.
   float blink = pow(max(0.0, sin(uTime * (0.9 + aSeed.w * 1.4) + aSeed.x * 40.0)), 4.0);
-  gl_PointSize = visible * (0.12 + 0.1 * blink) * 300.0 / max(dist, 0.5);
-  vAlpha = visible * blink * smoothstep(0.4, 1.5, dist) * (1.0 - smoothstep(uBox.x * 0.3, uBox.x * 0.5, dist));
+  gl_PointSize = (0.12 + 0.1 * blink) * 300.0 / max(dist, 0.5);
+  vAlpha = uAmount * blink * smoothstep(0.4, 1.5, dist) * (1.0 - smoothstep(55.0, 75.0, dist));
 }
 `;
 
@@ -50,16 +52,29 @@ void main() {
 }
 `;
 
+function hash2(x, z, k = 0) {
+  const v = Math.sin(x * 12.9898 + z * 78.233 + k * 37.719) * 43758.5453;
+  return v - Math.floor(v);
+}
+
+// Sopiiko paikka tulikärpäsille (ei meri, ranta, vuoret eikä aavikko).
+function fireflyLand(s) {
+  return s.ocean < 0.1 && s.beach < 0.2 && s.mountains < 0.35 && s.desert + s.dunes < 0.35;
+}
+
 class Fireflies {
-  constructor(scene, map) {
-    const seeds = new Float32Array(FLY_COUNT * 4);
+  constructor(scene, map, world) {
+    this.world = world;
+    const seeds = new Float32Array(FLY_MAX * 4);
     for (let i = 0; i < seeds.length; i++) seeds[i] = Math.random();
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(FLY_COUNT * 3), 3));
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(FLY_MAX * 3), 3));
+    geo.setAttribute('aCenter', new THREE.BufferAttribute(new Float32Array(FLY_MAX * 3), 3));
     geo.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 4));
+    geo.setAttribute('aR', new THREE.BufferAttribute(new Float32Array(FLY_MAX), 1));
+    geo.setDrawRange(0, 0);
+    this.geo = geo;
     this.uniforms = {
-      uCam: { value: new THREE.Vector3() },
-      uBox: { value: FLY_BOX.clone() },
       uTime: { value: 0 },
       uAmount: { value: 0 },
       uMap: { value: map },
@@ -74,20 +89,99 @@ class Fireflies {
     this.points.renderOrder = 5;
     this.points.visible = false;
     scene.add(this.points);
+    this.scan = null;      // keskeneräinen etsintä (rivi kerrallaan)
+    this.lastX = 1e9;
+    this.lastZ = 1e9;
+    this._s = {};
+  }
+
+  clear() {
+    this.scan = null;
+    this.lastX = this.lastZ = 1e9;
+    this.geo.setDrawRange(0, 0);
+  }
+
+  // Etsintä aloitetaan, kun pelaaja on liikkunut; ruudukko on maailmaan
+  // sidottu, joten samat rannat saavat aina samat parvet.
+  _startScan(px, pz) {
+    const gx = Math.round(px / GRID), gz = Math.round(pz / GRID);
+    const n = Math.ceil(SCAN_R / GRID);
+    this.scan = { gx, gz, n, row: -n, water: new Map(), land: [], px, pz };
+  }
+
+  _scanRow() {
+    const sc = this.scan, s = this._s;
+    const j = sc.row;
+    for (let i = -sc.n; i <= sc.n; i++) {
+      const x = (sc.gx + i) * GRID, z = (sc.gz + j) * GRID;
+      sampleTerrain(x, z, s);
+      const wet = s.wl > s.h + 0.05;
+      if (wet) { if (s.ocean < 0.2) sc.water.set(`${i},${j}`, 1); continue; }
+      if (fireflyLand(s)) sc.land.push([i, j, x, s.h, z]);
+    }
+    sc.row++;
+  }
+
+  _finishScan() {
+    const sc = this.scan;
+    const list = [];
+    // Rannat: kuiva ruutu, jonka vieressä on sisävettä.
+    for (const [i, j, x, y, z] of sc.land) {
+      let near = false;
+      for (let dj = -1; dj <= 1 && !near; dj++) for (let di = -1; di <= 1; di++) if (sc.water.has(`${i + di},${j + dj}`)) { near = true; break; }
+      if (!near || hash2(x, z, 1) > 0.45) continue;
+      list.push({ x: x + (hash2(x, z, 2) - 0.5) * 4, y, z: z + (hash2(x, z, 3) - 0.5) * 4, r: 3 + hash2(x, z, 4) * 2.5, n: 14 + Math.floor(hash2(x, z, 5) * 12) });
+    }
+    // Akasiat: noin joka viidennen alla parvi.
+    const SIZE = CONFIG.chunkSize;
+    const s = this._s;
+    for (const ch of this.world.chunks.values()) {
+      const cx = (ch.cx + 0.5) * SIZE, cz = (ch.cz + 0.5) * SIZE;
+      if (Math.abs(cx - sc.px) > SCAN_R + SIZE || Math.abs(cz - sc.pz) > SCAN_R + SIZE) continue;
+      for (const o of ch.objects) {
+        if (o.type !== 'acacia' || o.stump) continue;
+        if ((o.x - sc.px) ** 2 + (o.z - sc.pz) ** 2 > SCAN_R * SCAN_R) continue;
+        if (hash2(o.x, o.z, 6) > 0.2) continue;
+        sampleTerrain(o.x, o.z, s);
+        if (!fireflyLand(s)) continue;
+        list.push({ x: o.x, y: o.y, z: o.z, r: 2 + 1.6 * o.scale, n: 9 + Math.floor(hash2(o.x, o.z, 7) * 9) });
+      }
+    }
+    for (const w of list) w.d2 = (w.x - sc.px) ** 2 + (w.z - sc.pz) ** 2;
+    list.sort((a, b) => a.d2 - b.d2);
+    const cen = this.geo.attributes.aCenter, rad = this.geo.attributes.aR;
+    let k = 0;
+    for (const w of list.slice(0, SWARMS)) {
+      for (let q = 0; q < w.n && k < FLY_MAX; q++, k++) {
+        cen.setXYZ(k, w.x, w.y, w.z);
+        rad.setX(k, w.r);
+      }
+    }
+    cen.needsUpdate = true;
+    rad.needsUpdate = true;
+    this.geo.setDrawRange(0, k);
+    this.lastX = sc.px;
+    this.lastZ = sc.pz;
+    this.scan = null;
   }
 
   update(elapsed, camPos, env) {
-    const c = env.climate, w = env.w;
+    const w = env.w;
     const night = 1 - smoothstep(0.05, 0.35, env.daylight);
-    const where = Math.min(1, c.sahel * 0.8 + c.wet * 0.7 + c.mountain * 0.15);
     const calm = (1 - w.rain) * (1 - smoothstep(0.35, 0.7, w.wind)) * (1 - w.dust);
-    const amount = night * where * calm * 0.6;
-    this.points.visible = amount > 0.01;
+    const amount = night * calm;
+    this.points.visible = amount > 0.01 && this.geo.drawRange.count > 0;
+    // Parvet etsitään vain hämärässä ja yöllä, kun pelaaja on liikkunut.
+    if (night > 0.01) {
+      if (!this.scan && Math.hypot(camPos.x - this.lastX, camPos.z - this.lastZ) > 18) this._startScan(camPos.x, camPos.z);
+      if (this.scan) {
+        this._scanRow();
+        if (this.scan.row > this.scan.n) this._finishScan();
+      }
+    }
     if (!this.points.visible) return;
-    const u = this.uniforms;
-    u.uCam.value.copy(camPos);
-    u.uTime.value = elapsed;
-    u.uAmount.value = amount;
+    this.uniforms.uTime.value = elapsed;
+    this.uniforms.uAmount.value = amount;
   }
 }
 
@@ -174,7 +268,7 @@ class DustDevils {
     const c = env.climate, w = env.w;
     // Kuuma ja kuiva: aavikko ja savanni, selkeä keskipäivä, ei sadetta.
     const clearSky = smoothstep(0.55, 0.2, w.cloud) * (1 - w.rain);
-    const hot = Math.min(1, c.desert * 0.7 + c.sahel) * clearSky * smoothstep(0.4, 0.75, env.sunDir.y) * (1 - env.humid);
+    const hot = Math.min(1, c.desert * 0.7 + c.sahel + c.dry) * clearSky * smoothstep(0.4, 0.75, env.sunDir.y) * (1 - env.humid);
     this.timer -= dt;
     if (this.timer <= 0) {
       this.timer = 15 + Math.random() * 30;
@@ -203,9 +297,9 @@ class DustDevils {
 }
 
 export class Ambient {
-  constructor(scene) {
+  constructor(scene, world) {
     const map = createSoftDotTexture();
-    this.fireflies = new Fireflies(scene, map);
+    this.fireflies = new Fireflies(scene, map, world);
     this.devils = new DustDevils(scene, map);
   }
 
@@ -216,5 +310,6 @@ export class Ambient {
 
   clear() {
     this.devils.clear();
+    this.fireflies.clear();
   }
 }

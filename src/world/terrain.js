@@ -992,10 +992,11 @@ export function sampleTerrain(x, z, out = {}) {
 // siemenestä laskettua, joten sijainnit ja arkkujen sisällöt pysyvät samoina.
 
 // Sessio 9: rakennelmia selvästi enemmän (n. 4 kertaa aiempi), jotta niitä
-// löytää satunnaisesti vaeltaessa. Laivanhylyt ovat harvinaisia rannoilla.
-export const STRUCT_CELL = 230;
-const STRUCT_CHANCE = 0.5;
-const SHIPWRECK_CHANCE = 0.45; // rannalla (märkä paikka), jos solussa ei ole kuivaa paikkaa
+// löytää satunnaisesti vaeltaessa. Sessio 11: vielä noin kaksinkertaisesti
+// (solu 180 m, 60 %), ja laivanhylkyjä näkee rannoilla satunnaisesti.
+export const STRUCT_CELL = 180;
+const STRUCT_CHANCE = 0.6;
+const SHIPWRECK_CHANCE = 0.35; // rantaviiva solussa -> laivanhylky
 export const STRUCT_RADIUS = { stoneCircle: 8, camp: 10, ruinHouse: 7, ruinVillage: 21, shipwreck: 11, runestone: 3, runeTablet: 2 };
 // Painot biomeittain; null = ei rakennelmaa. Talon ja kylän rauniot ovat
 // kaikissa biomeissa harvinaisia (n. 7–8 % soluista), muut ovat biomin omia.
@@ -1008,9 +1009,9 @@ const STRUCT_TABLE = {
   mare: [['ruinHouse', 1.5], ['ruinVillage', 0.6], ['runestone', 0.8], ['runeTablet', 1.2], [null, 5]],
   desert: [['camp', 6.5], ['ruinHouse', 1.5], ['ruinVillage', 0.6], ['runestone', 1.4], ['runeTablet', 1.8]],
   oasis: [['camp', 4], ['ruinVillage', 1.2], ['runestone', 0.6], ['runeTablet', 0.8], [null, 1]],
-  rainforest: [['ruinHouse', 2.2], ['ruinVillage', 0.8], ['runestone', 1.4], ['runeTablet', 1.6], [null, 7]],
-  mountains: [['ruinHouse', 2.2], ['ruinVillage', 0.8], ['runestone', 1.8], ['runeTablet', 1.6], [null, 7]],
-  beach: [['camp', 2], ['ruinHouse', 1.5], ['shipwreck', 0.6], ['runeTablet', 0.8], [null, 4]],
+  rainforest: [['ruinHouse', 2.2], ['ruinVillage', 0.8], ['runestone', 1.4], ['runeTablet', 1.6], [null, 4]],
+  mountains: [['ruinHouse', 2.2], ['ruinVillage', 0.8], ['runestone', 1.8], ['runeTablet', 1.6], [null, 4]],
+  beach: [['camp', 2], ['ruinHouse', 1.5], ['runeTablet', 0.8], [null, 3]],
   ocean: [[null, 1]],
 };
 
@@ -1045,8 +1046,47 @@ export function structureInCell(ix, iz) {
       sampleTerrainRaw(x, z, _sraw);
       if (!best || rough < best.rough) best = { x, z, rough, h: _sraw.h, biome: biomeOf(_sraw), spawn: _sraw.spawn };
     }
+    // Rannikolla vesiraja etsitään ruudukosta: kapea hiekkaranta (10-30 m)
+    // jää helposti satunnaisnäytteiden väliin. Vierekkäisten kuivan ja märän
+    // pisteen väliltä haetaan rantaviiva ja hylky asetetaan sen kuivalle puolelle.
+    if (!shore) {
+      sampleTerrainRaw((ix + 0.5) * STRUCT_CELL, (iz + 0.5) * STRUCT_CELL, _sraw);
+      if (_sraw.coastW > 0.2) {
+        const G = 7, cs = STRUCT_CELL / G, x0 = ix * STRUCT_CELL + cs / 2, z0 = iz * STRUCT_CELL + cs / 2;
+        const wet = new Int8Array(G * G);
+        for (let j = 0; j < G; j++) {
+          for (let i = 0; i < G; i++) {
+            sampleTerrainRaw(x0 + i * cs, z0 + j * cs, _sraw);
+            const sea = _sraw.ocean + _sraw.beach > 0.5;
+            wet[j * G + i] = !sea ? 0 : _sraw.h < _sraw.wl - 0.2 ? 2 : _sraw.h > _sraw.wl + 0.2 ? 1 : 0;
+          }
+        }
+        const o = Math.floor(rand() * G * G);
+        for (let q = 0; q < G * G && !shore; q++) {
+          const k = (q + o) % (G * G), i = k % G, j = (k / G) | 0;
+          if (wet[k] !== 1) continue;
+          for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const ni = i + di, nj = j + dj;
+            if (ni < 0 || nj < 0 || ni >= G || nj >= G || wet[nj * G + ni] !== 2) continue;
+            // Puolitushaku rantaviivaan, sitten 4 m kuivalle puolelle.
+            let ax = x0 + i * cs, az = z0 + j * cs, bx = x0 + ni * cs, bz = z0 + nj * cs;
+            for (let it = 0; it < 5; it++) {
+              const mx = (ax + bx) / 2, mz = (az + bz) / 2;
+              sampleTerrainRaw(mx, mz, _sraw);
+              if (_sraw.h > _sraw.wl) { ax = mx; az = mz; } else { bx = mx; bz = mz; }
+            }
+            const dl = Math.hypot(ax - bx, az - bz) || 1;
+            const sx = ax + ((ax - bx) / dl) * 4, sz = az + ((az - bz) / dl) * 4;
+            sampleTerrainRaw(sx, sz, _sraw);
+            if (_sraw.h > _sraw.wl + 0.1 && _sraw.h < _sraw.wl + 3 && _sraw.rock < 0.05) shore = { x: sx, z: sz, h: _sraw.h };
+            break;
+          }
+        }
+      }
+    }
     let type = null;
-    if (!best && shore && rand() < SHIPWRECK_CHANCE) {
+    // Rannalla laivanhylky vesirajaan (myös, jos solussa on kuivakin paikka).
+    if (shore && rand() < SHIPWRECK_CHANCE) {
       best = { ...shore, biome: 'beach' };
       type = 'shipwreck';
     } else if (best && Math.hypot(best.x, best.z) > 60) {

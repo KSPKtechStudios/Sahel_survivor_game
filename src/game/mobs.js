@@ -12,8 +12,10 @@
 // tarkkailemaan ja pakenevat koko lauma; linnut ja helmikanat lentävät.
 // Niiden pyytämiseen tarvitaan yleensä jousi.
 // Haamu (sessio 10): harvinainen, vaarallinen mustakaapuinen olento, joka
-// leijuu öisin sademetsän latvusten tasolla. Huomattuaan pelaajan se kiertää
-// tätä ja syöksyy iskuun (varoitus: hehku kirkastuu). Aamulla se haihtuu.
+// leijuu öisin sademetsässä latvusten alla runkojen välissä (sessio 11).
+// Huomattuaan pelaajan se kiertää tätä ja syöksyy iskuun (varoitus: hehku
+// kirkastuu). Vähillä voimilla se pakenee latvusten yläpuolelle. Aamulla se
+// haihtuu.
 import * as THREE from 'three';
 import { waterAt, sampleTerrain, insideStructure } from '../world/terrain.js';
 import { makeWarthog, makeClayGolem, makeGazelle, makeFennec, makeMonkey, makeGuineafowl, makeBird, makeHaamu } from '../models/creatures.js';
@@ -216,8 +218,8 @@ export class Mobs {
       yOff: emerge ? -1.4 : 0,
     };
     if (def.ghost) {
-      // Haamu ilmestyy latvusten tasolle (8-11 m maasta) ja leijuu siellä.
-      m.alt = 8 + Math.random() * 3;
+      // Haamu leijuu latvusten alla (2,6-4,2 m maasta) runkojen välissä.
+      m.alt = 2.6 + Math.random() * 1.6;
       m.pos.y = Math.max(w.h, w.wl) + m.alt;
       m.state = 'appear';
       m.fade = 0;
@@ -330,8 +332,13 @@ export class Mobs {
       return true;
     }
     if (m.type === 'haamu') {
+      // Vähillä voimilla haamu pakenee latvusten yläpuolelle (ei horju).
+      if (m.hp < def.hp * 0.25) {
+        if (m.state !== 'escape' && m.state !== 'fade') this._set(m, 'escape', 9);
+        return true;
+      }
       // Nuoli suututtaa kiertelevän haamun; lähietäisyyden osuma karkottaa
-      // sen hetkeksi takaisin latvuksiin.
+      // sen hetkeksi kauemmas.
       if (opts.arrow && m.state === 'stalk') m.timer = Math.min(m.timer, 0.6);
       else if (m.state === 'dive' || m.state === 'windup') this._set(m, 'rise', 1.6);
     }
@@ -1000,7 +1007,7 @@ export class Mobs {
     }
   }
 
-  // --- Haamu: leijuu latvusten tasolla, kiertää pelaajaa ja syöksyy iskuun.
+  // --- Haamu: leijuu latvusten alla, kiertää pelaajaa ja syöksyy iskuun.
   // Syöksy kääntyy hitaasti, joten sivuaskel väistää; torjunta ja täydellinen
   // torjunta toimivat kuten muitakin vastaan. Nuotion lähellä se ei syöksy.
   _thinkHaamu(m, dt) {
@@ -1013,7 +1020,8 @@ export class Mobs {
     const ground = m.groundH ?? m.pos.y - m.alt;
     const dx = p.x - m.pos.x, dz = p.z - m.pos.z;
     const dh = Math.hypot(dx, dz) || 1e-3;
-    const cruise = Math.max(ground + m.alt, p.y + 5.5) + Math.sin(m.bob * 0.8 + m.phase) * 0.5;
+    // Leijuntakorkeus latvusten alla (vähintään 1,4 m pelaajan jalkojen yllä).
+    const cruise = Math.max(ground + m.alt, p.y + 1.4) + Math.sin(m.bob * 0.8 + m.phase) * 0.35;
     const sight = def.sight * (player.crouching ? 0.6 : 1);
     const sees = !player.dead && dh < sight;
     const fireSafe = this._nearFire(p.x, p.z, 9);
@@ -1044,9 +1052,9 @@ export class Mobs {
       }
       case 'stalk': {
         if (player.dead || dh > sight * 1.5) { this._set(m, 'drift', 0); break; }
-        // Kiertää pelaajaa latvusten tasolla (nuotion valossa kauempana).
-        m.orbit += dt * 0.35 * m.orbitDir;
-        const R = fireSafe ? 16 : 10;
+        // Kiertää pelaajaa runkojen välissä (nuotion valossa kauempana).
+        m.orbit += dt * 0.4 * m.orbitDir;
+        const R = fireSafe ? 16 : 8.5;
         const wx = p.x + Math.cos(m.orbit) * R - m.pos.x, wz = p.z + Math.sin(m.orbit) * R - m.pos.z;
         const wd = Math.hypot(wx, wz) || 1;
         const sp = Math.min(def.run, wd * 1.2);
@@ -1085,11 +1093,21 @@ export class Mobs {
         break;
       }
       case 'rise':
+        // Syöksyn jälkeen takaisin leijuntakorkeuteen ja vähän kauemmas.
         vx = (-dx / dh) * 3.2;
         vz = (-dz / dh) * 3.2;
-        vy = Math.max(1.5, (cruise - m.pos.y) * 1.5);
-        if (m.timer <= 0 || m.pos.y > cruise - 0.5) this._set(m, 'stalk', 2.5 + Math.random() * 2.5);
+        vy = (cruise - m.pos.y) * 1.5;
+        if (m.timer <= 0 || (m.stateT > 0.6 && Math.abs(m.pos.y - cruise) < 0.5)) this._set(m, 'stalk', 2.5 + Math.random() * 2.5);
         break;
+      case 'escape': {
+        // Pakenee latvusten yläpuolelle ja pois; kaukana haihtuu (ei saalista).
+        const high = ground + 13;
+        vx = (-dx / dh) * def.run;
+        vz = (-dz / dh) * def.run;
+        vy = (high - m.pos.y) * 1.2;
+        if (m.timer <= 0 || (dh > 42 && m.pos.y > high - 2)) this._set(m, 'fade');
+        break;
+      }
       case 'stagger':
         vy = 0.4;
         if (m.stateT >= m.staggerDur) this._set(m, 'rise', 1.5);
@@ -1116,7 +1134,8 @@ export class Mobs {
     }
   }
 
-  // Haamu ei törmää puihin (leijuu latvusten läpi); pysyy maan ja veden yllä.
+  // Haamu kiertää puunrungot latvusten alla (lehvistön läpi se leijuu);
+  // pysyy maan ja veden yllä.
   _ghostPhysics(m, dt) {
     const pos = m.pos;
     pos.x += (m.vel.x + m.knock.x) * dt;
@@ -1125,6 +1144,21 @@ export class Mobs {
     m.knock.multiplyScalar(Math.exp(-dt * 3));
     const w = waterAt(pos.x, pos.z, _wq);
     m.groundH = Math.max(w.h, w.wl);
+    if (pos.y < m.groundH + 7) {
+      const r = m.def.radius;
+      this.world.collidersNear(pos.x, pos.z, 1.5, _cols);
+      for (const c of _cols) {
+        if (c.seg) continue;
+        const ddx = pos.x - c.x, ddz = pos.z - c.z;
+        const min = c.r + r;
+        const d2 = ddx * ddx + ddz * ddz;
+        if (d2 < min * min && d2 > 1e-8) {
+          const dd = Math.sqrt(d2);
+          pos.x += (ddx / dd) * (min - dd);
+          pos.z += (ddz / dd) * (min - dd);
+        }
+      }
+    }
     const floor = m.groundH + (m.state === 'dive' ? 0.15 : 0.35);
     if (pos.y < floor) {
       pos.y = floor;
@@ -1417,9 +1451,10 @@ export class Mobs {
       armX = -1.45;
       armZ = 0.25;
       glowK = 1.6;
-    } else if (s === 'rise') {
+    } else if (s === 'rise' || s === 'escape') {
       lean = -0.15;
       armX = 0.3;
+      if (s === 'escape') glowK = 0.7;
     } else if (s === 'stagger') {
       lean = -0.4 + Math.sin(m.stateT * 16) * 0.1;
       armX = 0.6;

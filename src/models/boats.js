@@ -202,15 +202,27 @@ function sailMesh(material, corners, nu, nv, colFn) {
     for (let i = 0; i < nu; i++) {
       const a = j * W + i, b = a + 1, c = a + W + 1, d = a + W;
       map.push(a, b, c, a, c, d);
+      // Kolmiopurjeessa kankaan kaistat kulkevat takaliepeen suuntaisesti
+      // (ruudukon u-sarakkeet suppenevat kulmaan ja näyttivät viuhkalta).
       _c.set(colFn((i + 0.5) / nu, (j + 0.5) / nv));
-      const jt = 1 + (Math.random() - 0.5) * 0.04;
+      const jt = 1 + (Math.random() - 0.5) * 0.02;
       for (let v = 0; v < 6; v++) col.push(_c.r * jt, _c.g * jt, _c.b * jt);
     }
+  }
+  // Saumaparametri kärkipisteittäin; kaistat ja saumat piirretään sävyttimessä
+  // pikselitarkasti (ruuduittain väritetyt kaistat näkyivät porrasmaisina
+  // laikkuina). Kolmiopurjeessa parametri on 1 - luffin alakulman painokerroin,
+  // joten saumat ovat suoria ja takaliepeen suuntaisia.
+  const seam = new Float32Array(map.length);
+  for (let i = 0; i < map.length; i++) {
+    const u = gu[map[i]], v = gv[map[i]];
+    seam[i] = tri ? 1 - (1 - u) * (1 - v) : u;
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(map.length * 3), 3));
   g.setAttribute('normal', new THREE.Float32BufferAttribute(new Float32Array(map.length * 3), 3));
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setAttribute('aSeam', new THREE.Float32BufferAttribute(seam, 1));
   const m = new THREE.Mesh(g, material);
   m.castShadow = true;
   const P = corners.map((p) => new THREE.Vector3(...p));
@@ -286,11 +298,11 @@ export function updateSail(mesh, amount, fill, side, flap, t) {
   mesh.geometry.attributes.normal.needsUpdate = true;
 }
 
-// Purjekankaan väri: kaistat (saumat) ja valinnainen punainen risti.
-function canvasCol(base, seam, cross = false) {
+// Purjekankaan väri ja valinnainen punainen risti (saumat: sailMaterial).
+function canvasCol(base, cross = false) {
   return (u, v) => {
     if (cross && (Math.abs(u - 0.5) < 0.07 || Math.abs(v - 0.42) < 0.075) && Math.abs(u - 0.5) < 0.36 && v > 0.1 && v < 0.85) return 0xa3271d;
-    return Math.floor(u * 8) % 2 ? seam : base;
+    return base;
   };
 }
 
@@ -301,13 +313,66 @@ function pennant(rand, len, col) {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute([...pos, ...back], 3));
   g.computeVertexNormals();
-  return paint(g, col, { rand, jitter: 0.04 });
+  const out = paint(g, col, { rand, jitter: 0.04 });
+  // Purjemateriaali lukee saumaparametrin; 1/16 = keskellä kaistaa (ei saumaa).
+  out.setAttribute('aSeam', new THREE.Float32BufferAttribute(new Float32Array(out.attributes.position.count).fill(1 / 16), 1));
+  return out;
+}
+
+// Vesisuoja: näkymätön pinta laidan yläreunan tasolla. Se kirjoittaa vain
+// syvyyden (ei väriä) heti veneen sisustan jälkeen ja ennen vettä (vesi on
+// läpinäkyvä ja piirretään viimeisenä), joten vedenpinta ei näy rungon
+// sisällä, vaikka veneen pohja on vesirajan alapuolella.
+const waterCapMat = new THREE.MeshBasicMaterial({ colorWrite: false, side: THREE.DoubleSide });
+function waterCap(st, sec, nK) {
+  const pos = [];
+  for (let i = 0; i < st.length - 1; i++) {
+    const a = sec[i][0], b = sec[i][nK], c = sec[i + 1][nK], d = sec[i + 1][0];
+    pos.push(...a, ...b, ...c, ...a, ...c, ...d);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  const m = new THREE.Mesh(g, waterCapMat);
+  m.renderOrder = 10;
+  m.userData.waterCap = true;
+  m.raycast = () => {};
+  return m;
+}
+
+// Purjekangas on ohutta: vastavalossa aurinko kuultaa läpi (muuten purjeen
+// varjopuoli näkyi lähes mustana). Kankaan kaistat (8 kpl) vuorottelevat
+// hieman sävyltään, ja saumat ovat kapeita tummempia viivoja, jotka erottuvat
+// vastavalossa selvemmin (kaksinkertainen kangas).
+function sailMaterial() {
+  const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, side: THREE.DoubleSide });
+  m.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nattribute float aSeam;\nvarying float vSeam;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\n  vSeam = aSeam;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying float vSeam;')
+      .replace('#include <color_fragment>', `#include <color_fragment>
+  float seamF = vSeam * 8.0;
+  float seamD = abs(fract(seamF + 0.5) - 0.5) * 0.125;
+  float seamAA = fwidth(vSeam) + 1e-4;
+  float seamLine = 1.0 - smoothstep(0.003 - seamAA, 0.003 + seamAA, seamD);
+  diffuseColor.rgb *= (1.0 - 0.03 * mod(floor(seamF), 2.0)) * (1.0 - 0.1 * seamLine);`)
+      .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+#if NUM_SUN_LIGHTS > 0
+  {
+    float sailTr = max(0.0, -dot(normal, sunLights[0].direction)) * (1.0 - 0.45 * seamLine);
+    reflectedLight.directDiffuse += diffuseColor.rgb * sunLights[0].color * sailTr * 0.45 * RECIPROCAL_PI;
+  }
+#endif`);
+  };
+  m.customProgramCacheKey = () => 'sail';
+  return m;
 }
 
 function boatMaterials() {
   return {
     wood: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.88 }),
-    sail: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, side: THREE.DoubleSide }),
+    sail: sailMaterial(),
   };
 }
 
@@ -346,6 +411,7 @@ export function makeRowboat(seed = 1) {
   parts.push(box(0, -0.2, 0, 0.6, 0.03, 2.6, 0x5e4028, rand));
   for (const sx of [1, -1]) parts.push(box(sx * 0.68, 0.38, 0.25, 0.05, 0.14, 0.05, 0x2a2018, rand));
   const group = finish(parts, mats);
+  group.add(waterCap(st, sec, opt.nK));
   // Airot: nivel hankaimessa, mela ulospäin (+x vasen, -x oikea)
   const oarGeo = merge([
     rod(V(-0.55, 0, 0), V(1.75, 0, 0), 0.024, 0.022, 0x9a7a52, rand),
@@ -401,6 +467,7 @@ export function makeSailboat(seed = 1) {
   for (const sx of [1, -1]) parts.push(rod(V(0, 6.1, mastZ + 0.24), V(sx * 0.95, 0.55, mastZ - 0.4), 0.012, 0.012, 0x2a2018, rand, 3));
   parts.push(rod(V(0, 6.1, mastZ + 0.24), V(0, 1.0, L / 2 - 0.05), 0.012, 0.012, 0x2a2018, rand, 3));
   const group = finish(parts, mats);
+  group.add(waterCap(st, sec, opt.nK));
   // Latinalaispurje: vino raakapuu kääntyy maston ympäri. Kun purje on
   // käärittynä, raakapuu lasketaan alas veneen suuntaiseksi (hoist kääntyy
   // etupään ympäri).
@@ -414,7 +481,7 @@ export function makeSailboat(seed = 1) {
   const spar = new THREE.Mesh(merge([rod(V(0, 0, 0), V(...rel(P)), 0.06, 0.04, 0x6e5238, rand, 6)]), mats.wood);
   spar.castShadow = true;
   hoist.add(spar);
-  const sail = sailMesh(mats.sail, [[0, 0, 0], rel(P), rel(C)], 10, 8, canvasCol(0xece4d0, 0xdcd2ba));
+  const sail = sailMesh(mats.sail, [[0, 0, 0], rel(P), rel(C)], 10, 8, canvasCol(0xe8e0cb));
   hoist.add(sail);
   group.add(yard);
   const pen = new THREE.Group();
@@ -531,7 +598,7 @@ export function makeShip(seed = 1) {
     yard.add(spar);
     const zz = 0.35;
     const sail = sailMesh(mats.sail, [[head / 2, yTop - 0.15, zz], [-head / 2, yTop - 0.15, zz], [-foot / 2, yBot, zz], [foot / 2, yBot, zz]], nu, nv,
-      canvasCol(0xece3cc, 0xddd2b8, cross));
+      canvasCol(0xe8dfc8, cross));
     yard.add(sail);
     group.add(yard);
     sails.push({ mesh: sail, rig: 'square', yard, hoist: null, lower: 0 });
@@ -545,7 +612,7 @@ export function makeShip(seed = 1) {
   miz.position.set(0, 0, -9.6);
   const T = [0, yP + 1.6, 3.6], P = [0, 19.5, -3.6], C = [0, yP + 1.4, -4.6];
   miz.add(new THREE.Mesh(merge([rod(V(...T), V(...P), 0.14, 0.09, 0x6e5238, rand, 6)]), mats.wood));
-  const msail = sailMesh(mats.sail, [T, P, C], 12, 10, canvasCol(0xece3cc, 0xddd2b8));
+  const msail = sailMesh(mats.sail, [T, P, C], 12, 10, canvasCol(0xe8dfc8));
   miz.add(msail);
   group.add(miz);
   sails.push({ mesh: msail, rig: 'lateen', yard: miz, hoist: null, lower: 0 });
@@ -569,7 +636,7 @@ export function boatGeometry(type) {
   m.group.updateMatrixWorld(true);
   const geos = [];
   m.group.traverse((o) => {
-    if (!o.isMesh) return;
+    if (!o.isMesh || o.userData.waterCap) return;
     const g = o.geometry.clone();
     g.applyMatrix4(o.matrixWorld);
     geos.push(g);

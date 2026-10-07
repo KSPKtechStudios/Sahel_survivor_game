@@ -31,6 +31,9 @@ uniform vec2 uCloudOffset;
 uniform vec3 uGalaxyN;   // linnunradan tason normaali
 uniform vec3 uGalaxyC;   // galaksin keskustan suunta (tasossa)
 uniform float uFlash;    // salaman välähdys 0..1
+uniform vec3 uMeteorA;   // tähdenlennon alku- ja loppusuunta
+uniform vec3 uMeteorB;
+uniform vec2 uMeteor;    // x = eteneminen 0..1, y = kirkkaus
 varying vec3 vDir;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
@@ -74,23 +77,31 @@ void main() {
   float starAmt = 0.0;
   vec3 milky = vec3(0.0);
   if (uStars > 0.001 && y > -0.02) {
-    // Linnunradan vyö: etäisyys tasosta ja sijainti vyön suunnassa.
-    float b = dot(dir, uGalaxyN);
+    // Linnunrata (sessio 11: himmeä ja rakeinen kuten oikeasti pimeällä
+    // taivaalla): leveä, epätasareunainen vyö, joka koostuu lukemattomista
+    // himmeistä tähdistä ja tähtipilvistä. Kirkkain galaksin keskustan
+    // suunnassa, hennot pölykaistat, lähes väritön. Horisontissa ilmakehä
+    // himmentää.
+    float b0 = dot(dir, uGalaxyN);
     vec3 gu = uGalaxyC;
     vec3 gv = cross(uGalaxyN, gu);
     float along = atan(dot(dir, gv), dot(dir, gu));
-    float band = exp(-b * b / 0.012);
-    float halo = exp(-b * b / 0.05);
-    float core = exp(-along * along / 0.7);
-    vec2 gp = vec2(along * 6.0, b * 26.0);
-    float clouds = fbm(gp * 0.9 + 3.0);
-    float dust = fbm(gp * vec2(1.6, 2.6) + 11.0);
-    // Pölyvyöhykkeet: tumma repaleinen kaista vyön keskellä.
-    float lane = smoothstep(0.45, 0.62, dust) * exp(-b * b / 0.003) * 0.8;
-    float knots = pow(clouds, 2.5);
-    float glow = (band * (0.25 + 1.1 * knots) * (1.0 - lane) + halo * 0.08) * (0.45 + core * 1.1);
-    vec3 mwCol = mix(vec3(0.55, 0.62, 0.9), vec3(1.0, 0.88, 0.72), clamp(core * band, 0.0, 1.0));
-    milky = mwCol * glow * 0.068 * smoothstep(-0.02, 0.15, y);
+    vec2 gp = vec2(along * 6.0, b0 * 26.0);
+    float edge = fbm(gp * 0.7 + 5.0);
+    float b = b0 + (edge - 0.5) * 0.06;
+    float band = exp(-b * b / 0.016);
+    float core = exp(-along * along / 0.5);
+    float clouds = fbm(gp * 1.3 + 3.0);
+    float dust = fbm(gp * vec2(1.8, 3.2) + 11.0);
+    float lane = smoothstep(0.5, 0.66, dust) * exp(-b0 * b0 / 0.0025) * (0.25 + 0.3 * core);
+    // Ratkeamattomat tähdet: tiheä hienojakoinen rae vyön sisällä.
+    vec3 sp3 = dir * 1400.0;
+    float grain = hash3(floor(sp3));
+    float grainAmt = smoothstep(0.82, 1.0, grain) * band * (0.4 + 0.6 * clouds);
+    float glow = band * (0.35 + 0.65 * clouds) * (1.0 - lane) * (0.35 + 0.9 * core);
+    vec3 mwCol = mix(vec3(0.82, 0.86, 1.0), vec3(1.0, 0.94, 0.84), clamp(core * band, 0.0, 1.0));
+    float extinction = smoothstep(0.02, 0.4, y);
+    milky = mwCol * (glow * 0.03 + grainAmt * 0.05) * extinction;
     // Kirkkaat tähdet
     vec3 sp = dir * 220.0;
     vec3 cell = floor(sp);
@@ -136,7 +147,20 @@ void main() {
   col += vec3(disc) * uSunColor * 6.0 * uSunVisible * (1.0 - cloud * 0.9);
   col += vec3(0.95, 0.95, 0.88) * moon * 1.4 * (1.0 - cloud);
   col += vec3(starAmt) * uStars * (1.0 - cloud);
-  col += milky * uStars * (1.0 - cloud);
+  // Kuunvalo peittää himmeän linnunradan.
+  col += milky * uStars * (1.0 - cloud) * (1.0 - 0.3 * uMoonVisible * smoothstep(0.0, 0.4, uMoonDir.y));
+  // Tähdenlento: ohut, nopeasti häipyvä viiva, kirkkain kärjestä.
+  if (uMeteor.y > 0.001) {
+    vec3 mh = normalize(mix(uMeteorA, uMeteorB, uMeteor.x));
+    vec3 mt = normalize(mix(uMeteorA, uMeteorB, max(0.0, uMeteor.x - 0.35)));
+    vec3 seg = mh - mt;
+    float sl = max(dot(seg, seg), 1e-8);
+    float k = clamp(dot(dir - mt, seg) / sl, 0.0, 1.0);
+    float md2 = length(dir - (mt + seg * k));
+    float trail = smoothstep(0.0016, 0.0, md2) * k * k;
+    float head = smoothstep(0.003, 0.0, length(dir - mh));
+    col += vec3(0.85, 0.9, 1.0) * (trail * 0.9 + head * 0.6) * uMeteor.y * (1.0 - cloud);
+  }
   // Salama valaisee pilvet ja taivaan.
   col += vec3(0.75, 0.8, 1.0) * uFlash * (0.25 + cloud * 0.9);
 
@@ -173,7 +197,14 @@ export class Sky {
       uGalaxyN: { value: new THREE.Vector3(0.35, 0.3, 0.88).normalize() },
       uGalaxyC: { value: new THREE.Vector3(1, 0, 0) },
       uFlash: { value: 0 },
+      uMeteorA: { value: new THREE.Vector3(0, 1, 0) },
+      uMeteorB: { value: new THREE.Vector3(0, 1, 0) },
+      uMeteor: { value: new THREE.Vector2(0, 0) },
     };
+    // Tähdenlennot: satunnaisesti kirkkaina öinä.
+    this.meteorTimer = 6 + Math.random() * 10;
+    this.meteorT = -1;
+    this.meteorDur = 0.6;
     const mat = new THREE.ShaderMaterial({
       uniforms: this.uniforms,
       vertexShader,
@@ -190,5 +221,31 @@ export class Sky {
 
   update(cameraPosition) {
     this.mesh.position.copy(cameraPosition);
+  }
+
+  // dt = todellinen aika, clear = tähtien näkyvyys × selkeys (0..1).
+  updateMeteors(dt, clear) {
+    const u = this.uniforms;
+    if (this.meteorT >= 0) {
+      this.meteorT += dt / this.meteorDur;
+      const t = this.meteorT;
+      u.uMeteor.value.set(Math.min(1, t), t >= 1 ? 0 : Math.sin(Math.PI * Math.min(1, t)) ** 0.6 * this.meteorB);
+      if (t >= 1) { this.meteorT = -1; u.uMeteor.value.set(0, 0); }
+      return;
+    }
+    if (clear < 0.4) return;
+    this.meteorTimer -= dt;
+    if (this.meteorTimer > 0) return;
+    this.meteorTimer = 8 + Math.random() * 30;
+    // Alku 30-70° korkeudella, kulkee 8-22° enimmäkseen alaspäin.
+    const az = Math.random() * Math.PI * 2, el = (30 + Math.random() * 40) * Math.PI / 180;
+    u.uMeteorA.value.set(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az));
+    const len = (8 + Math.random() * 14) * Math.PI / 180;
+    const dAz = (Math.random() - 0.5) * 2.2, dEl = -(0.4 + Math.random() * 0.8);
+    const el2 = Math.max(0.1, el + dEl * len), az2 = az + dAz * len / Math.max(0.3, Math.cos(el));
+    u.uMeteorB.value.set(Math.cos(el2) * Math.cos(az2), Math.sin(el2), Math.cos(el2) * Math.sin(az2));
+    this.meteorDur = 0.45 + Math.random() * 0.6;
+    this.meteorB = (0.5 + Math.random() * 0.5) * clear;
+    this.meteorT = 0;
   }
 }

@@ -142,7 +142,11 @@ export function generateChunk(cx, cz, variantCounts) {
       } else if (s.h < s.wl + 0.05) continue;
       if (insideStructure(x, z, -1)) continue;
       const sc = def.scale[0] + r3 * (def.scale[1] - def.scale[0]);
-      decor.push(ti, Math.floor(r4 * nv), x, y, z, r2 * Math.PI * 2, sc, def.onWater ? sc : sc * (0.8 + s.mare * 0.5));
+      // Lammikon pysyvyys (1 = sademetsä, aina vettä; 0 = vain sateen jälkeen)
+      // kulkee y-skaalassa (litteä malli, pystyskaala ei näy).
+      const sy = def.puddleWeight ? 0.05 + 0.95 * Math.min(1, s.rainforest + s.oasis)
+        : def.onWater ? sc : sc * (0.8 + s.mare * 0.5);
+      decor.push(ti, Math.floor(r4 * nv), x, y, z, r2 * Math.PI * 2, sc, sy);
     }
   });
 

@@ -63,6 +63,7 @@ export const wetUniforms = {
   uWet: { value: 0 },
   uWetSky: { value: new THREE.Color(0.5, 0.55, 0.6) },
   uRain: { value: 0 },
+  uPuddle: { value: 0 }, // sateen jälkeinen vesi lammikoissa 0..1 (kuivuu hitaasti)
 };
 
 const WET_NOISE = `
@@ -147,17 +148,22 @@ function createPuddleMaterial() {
     shader.uniforms.uTime = windUniforms.uTime;
     shader.uniforms.uRain = wetUniforms.uRain;
     shader.uniforms.uWetSky = wetUniforms.uWetSky;
+    shader.uniforms.uPuddle = wetUniforms.uPuddle;
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', `#include <common>
 varying vec3 vPudW;
-varying float vPudRim;`)
+varying float vPudRim;
+varying float vPudPerm;`)
       .replace('#include <begin_vertex>', `#include <begin_vertex>
 // Keskipiste 0, reunapisteet 1: interpoloituna etäisyys reunasta.
 vPudRim = length(position.xz) > 0.01 ? 1.0 : 0.0;
+vPudPerm = 1.0;
 {
   vec4 pw = vec4(transformed, 1.0);
 #ifdef USE_INSTANCING
   pw = instanceMatrix * pw;
+  // Pysyvyys y-skaalassa (chunkGen.js): 0,05 = vain sateen jälkeen, 1 = aina.
+  vPudPerm = clamp((length(instanceMatrix[1].xyz) - 0.05) / 0.95, 0.0, 1.0);
 #endif
   vPudW = (modelMatrix * pw).xyz;
 }`);
@@ -166,8 +172,10 @@ vPudRim = length(position.xz) > 0.01 ? 1.0 : 0.0;
 uniform float uTime;
 uniform float uRain;
 uniform vec3 uWetSky;
+uniform float uPuddle;
 varying vec3 vPudW;
 varying float vPudRim;
+varying float vPudPerm;
 float pudH(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float pudRings(vec2 p, float t) {
   float r = 0.0;
@@ -188,11 +196,15 @@ float pudRings(vec2 p, float t) {
       .replace('#include <lights_physical_fragment>', `#include <lights_physical_fragment>
   material.specularColor = vec3(0.1);`)
       .replace('#include <opaque_fragment>', `{
+    // Kuivuessa lammikko kutistuu reunoilta keskelle ja katoaa.
+    float pudVis = max(vPudPerm, uPuddle);
+    float pudR = sqrt(pudVis);
+    if (vPudRim > pudR) discard;
     float nv = clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
     float fr = 0.03 + 0.97 * pow(1.0 - nv, 5.0);
     float rg = clamp(pudRings(vPudW.xz, uTime), 0.0, 1.0);
     outgoingLight += uWetSky * (fr * (1.0 - 0.5 * rg) + rg * 0.1);
-    diffuseColor.a = smoothstep(1.0, 0.6, vPudRim) * (0.6 + 0.4 * fr);
+    diffuseColor.a = smoothstep(pudR, pudR * 0.6, vPudRim) * (0.6 + 0.4 * fr);
   }
   #include <opaque_fragment>`);
   };

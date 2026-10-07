@@ -215,7 +215,7 @@ export class DevTools {
     row.appendChild(el('span', 'dev-label', 'Sää'));
     this.weatherBtns = [];
     for (const k of WEATHER_KEYS) {
-      const b = this._button(row, WEATHER[k].name, () => { env.setWeather(k, true); this._refresh(); return `Sää: ${WEATHER[k].name}`; });
+      const b = this._button(row, WEATHER[k].name, () => { env.setWeather(k, true); this._refresh(); return `Sää: ${WEATHER[k].name}${env.weatherPossibleHere(k) ? '' : ' (ei mahdollinen tässä biomissa)'}`; });
       b.dataset.key = k;
       this.weatherBtns.push(b);
     }

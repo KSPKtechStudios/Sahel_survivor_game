@@ -206,10 +206,14 @@ export class ViewModel {
     this.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, metalness: 0 });
     const itemMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0 });
 
+    // Peiliryhmä: jousen kanssa koko asetelma peilataan vaakasuunnassa
+    // (sessio 11: jousi oikeassa kädessä, vasen käsi vetää jännettä).
+    this.rig = new THREE.Group();
+    this.scene.add(this.rig);
     this.root = new THREE.Group(); // perusasento
     this.anim = new THREE.Group(); // animaatiot
     this.root.add(this.anim);
-    this.scene.add(this.root);
+    this.rig.add(this.root);
 
     this.hand = new THREE.Mesh(buildHandGeometry(), this.material);
     this.anim.add(this.hand);
@@ -264,7 +268,7 @@ export class ViewModel {
       this.nocked[kind] = a;
     }
     this.bowGroup.visible = false;
-    this.scene.add(this.bowGroup);
+    this.rig.add(this.bowGroup);
     this.bowDraw = 0;      // 0..1, asetetaan archery.js:ssä
     this.bowArrow = null;  // jänteellä oleva nuoli (esinetunnus) tai null
     this.bowT = 0;         // jousi esillä 0..1
@@ -280,7 +284,7 @@ export class ViewModel {
     this.shieldMesh.scale.setScalar(0.8);
     this.leftAnim.add(this.shieldMesh, this.leftArm);
     this.left.visible = false;
-    this.scene.add(this.left);
+    this.rig.add(this.left);
     this.hasShield = false;
     this.shieldT = 0;     // 0 = piilossa, 1 = esillä
 
@@ -524,7 +528,10 @@ export class ViewModel {
       f.scale.set(0.085 * k * (1 - i * 0.25), 0.15 * k * (1 - i * 0.2), 1);
     }
 
-    // Jousi vasemmassa kädessä; oikea käsi vetää jännettä.
+    // Jousi: malli on rakennettu vasempaan käteen (oikea käsi vetää), ja koko
+    // asetelma peilataan, joten jousi on oikeassa kädessä ja vasen vetää.
+    // Peili vaihtuu esineen vaihtuessa, kun käsi on alhaalla poissa näkyvistä.
+    this.rig.scale.x = this.bowMode ? -1 : 1;
     const bowOn = this.bowMode && !player.dead && this.pending === undefined;
     this.bowT += ((bowOn ? 1 : 0) - this.bowT) * (1 - Math.exp(-dt * 9));
     if (this.bowMode && this.items[this.current]) this.items[this.current].visible = false;

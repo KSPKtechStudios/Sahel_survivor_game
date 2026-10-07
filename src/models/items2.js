@@ -555,7 +555,7 @@ export function itemBow(recurve = false) {
 // Yksi nuoli: kärki +Y-suuntaan, pituus noin 0,75 m (y -0,1..0,65).
 export function makeArrowGeometry(kind = 'arrow_flint') {
   const rand = mulberry32(101);
-  const parts = [paint(limb(V(0, -0.1, 0), V(0, 0.6, 0), 0.006, 0.006, 5, true), 0x9a7a50, { rand })];
+  const parts = [paint(limb(V(0, -0.1, 0), V(0, 0.6, 0), 0.0075, 0.0075, 5, true), 0xa8885a, { rand })];
   if (kind === 'arrow_wood') {
     const tip = new THREE.ConeGeometry(0.007, 0.06, 5);
     tip.translate(0, 0.63, 0);
@@ -567,7 +567,8 @@ export function makeArrowGeometry(kind = 'arrow_flint') {
     parts.push(paint(flatNormals(head), kind === 'arrow_bone' ? 0xe8dfca : 0x34312f, { rand, jitter: 0.15 }));
     for (let i = 0; i < 3; i++) {
       const a = (i / 3) * Math.PI * 2;
-      const f = strip([V(0, -0.08, 0), V(0, -0.02, 0), V(0, 0.02, 0)], [0.0, 0.026, 0.004], V(Math.cos(a), 0, Math.sin(a)), i === 0 ? 0xd8402a : 0x2e2a2c, rand);
+      // Sulat: vaaleat ja yksi punainen, jotta lentävä nuoli erottuu.
+      const f = strip([V(0, -0.09, 0), V(0, -0.02, 0), V(0, 0.02, 0)], [0.0, 0.034, 0.005], V(Math.cos(a), 0, Math.sin(a)), i === 0 ? 0xe0402a : 0xf2ede2, rand);
       f.translate(Math.cos(a) * 0.012, 0, Math.sin(a) * 0.012);
       parts.push(f);
     }

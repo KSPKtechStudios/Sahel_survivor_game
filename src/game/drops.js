@@ -13,18 +13,27 @@ const PICK_RADIUS = 1.5;    // automaattinen poiminta
 const THROW_BLOCK = 10;     // s: heitettyä esinettä ei poimita automaattisesti
 const THROW_AWAY = 3;       // m: ja vasta kun pelaaja on välillä käynyt kauempana
 
-// Hehkun tekstuuri: pehmeä säteittäinen liukuma.
+// Kiillon tekstuuri: pieni pehmeä ydin ja neljä ohutta sädettä (sessio 11:
+// hento kiilto, ei isoa hehkua).
 function glowTexture() {
   const c = document.createElement('canvas');
   c.width = c.height = 64;
   const g = c.getContext('2d');
-  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-  gr.addColorStop(0, 'rgba(255,248,225,0.95)');
-  gr.addColorStop(0.25, 'rgba(255,232,180,0.45)');
-  gr.addColorStop(0.6, 'rgba(255,214,150,0.12)');
-  gr.addColorStop(1, 'rgba(255,200,120,0)');
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 14);
+  gr.addColorStop(0, 'rgba(255,250,235,1)');
+  gr.addColorStop(0.35, 'rgba(255,240,205,0.35)');
+  gr.addColorStop(1, 'rgba(255,230,190,0)');
   g.fillStyle = gr;
   g.fillRect(0, 0, 64, 64);
+  g.globalCompositeOperation = 'lighter';
+  for (const [w, h] of [[30, 1.6], [1.6, 30]]) {
+    const lg = w > h ? g.createLinearGradient(32 - w, 0, 32 + w, 0) : g.createLinearGradient(0, 32 - h, 0, 32 + h);
+    lg.addColorStop(0, 'rgba(255,245,220,0)');
+    lg.addColorStop(0.5, 'rgba(255,245,220,0.55)');
+    lg.addColorStop(1, 'rgba(255,245,220,0)');
+    g.fillStyle = lg;
+    g.fillRect(32 - w, 32 - h, w * 2, h * 2);
+  }
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
@@ -62,8 +71,8 @@ export class Drops {
     });
     // Hehku (kasvot aina kameraan päin, lisäävä sekoitus)
     const map = glowTexture();
-    this.glowMat = new THREE.SpriteMaterial({ map, color: 0xfff0d0, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.4 });
-    this.glowMatValuable = new THREE.SpriteMaterial({ map, color: 0xffc850, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.6 });
+    this.glowMat = new THREE.SpriteMaterial({ map, color: 0xfff0d0, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.18 });
+    this.glowMatValuable = new THREE.SpriteMaterial({ map, color: 0xffd070, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.3 });
     this.fullWarned = 0;
     this.waves = { amp: 0, windX: 1, windZ: 0, t: 0 };
     this.onWater = null; // (laji, x, y, z, voima) roiskeet ja väreily
@@ -96,13 +105,16 @@ export class Drops {
     const geo = this.geos[item];
     if (!geo.boundingSphere) geo.computeBoundingSphere();
     const glow = new THREE.Sprite(ITEMS[item].valuable ? this.glowMatValuable : this.glowMat);
-    glow.scale.setScalar(Math.min(1.5, Math.max(0.55, 0.45 + geo.boundingSphere.radius * 1.6)));
+    const gs = Math.min(0.6, Math.max(0.3, 0.25 + geo.boundingSphere.radius * 0.7));
+    glow.scale.setScalar(gs);
     glow.renderOrder = 3;
+    glow.userData.base = gs;
+    glow.userData.phase = Math.random() * 100;
     mesh.add(glow);
     const d = {
       item, count, mesh, vel, rest,
       spin: resting ? new THREE.Vector3() : new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(10),
-      resting, age: resting ? 10 : 0, magnet: null, blockedUntil: 0, thrown: false, leftZone: true,
+      resting, age: resting ? 10 : 0, magnet: null, blockedUntil: 0, thrown: false, leftZone: true, glow,
       // Vesi: w = viimeisin näyte, floating = kelluu pinnalla, wet = osui veteen
       w: null, wTimer: 0, floating: false, wet: false, flowX: 0, flowZ: 0, bob: Math.random() * 6,
     };
@@ -125,14 +137,20 @@ export class Drops {
   update(dt, elapsed, player, inventory) {
     this.material.emissiveIntensity = 0.05 + (Math.sin(elapsed * 3) * 0.5 + 0.5) * 0.08;
     this.valuableMaterial.emissiveIntensity = 0.2 + (Math.sin(elapsed * 4) * 0.5 + 0.5) * 0.35;
-    this.glowMat.opacity = 0.3 + (Math.sin(elapsed * 2.4) * 0.5 + 0.5) * 0.18;
-    this.glowMatValuable.opacity = 0.5 + (Math.sin(elapsed * 3.2) * 0.5 + 0.5) * 0.3;
+    this.glowMat.opacity = 0.14 + (Math.sin(elapsed * 2.4) * 0.5 + 0.5) * 0.06;
+    this.glowMatValuable.opacity = 0.24 + (Math.sin(elapsed * 3.2) * 0.5 + 0.5) * 0.12;
     const chest = _v.copy(player.position);
     chest.y += 1.0;
     for (let i = this.list.length - 1; i >= 0; i--) {
       const d = this.list[i];
       d.age += dt;
       const p = d.mesh.position;
+      // Kiilto välähtää silloin tällöin pikkuisen isompana (oma tahti).
+      if (d.glow) {
+        const gu = d.glow.userData;
+        const gl = Math.pow(Math.max(0, Math.sin(elapsed * 0.9 + gu.phase)), 40);
+        d.glow.scale.setScalar(gu.base * (1 + 0.8 * gl));
+      }
 
       if (d.magnet) {
         d.magnet.t += dt / 0.2;
