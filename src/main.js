@@ -932,7 +932,7 @@ function frame(now) {
     viewmodel.update(simDt, player, input, env, camera, fireNear * 1.5);
     guide.update(simDt);
     runePanel.update(dt, player.position);
-    hud.update(dt, { prompt: interaction.prompt, player, env, visible: state === 'playing', cooldown: combat.cooldownFrac });
+    hud.update(dt, { prompt: interaction.prompt, player, env, visible: state === 'playing', cooldown: combat.cooldownFrac, archery });
     nameplates.update(camera, mobs, interaction.prompt, state === 'playing');
     boatHud.update(boats, state === 'playing' && !player.dead);
     explored.update(dt, player.position.x, player.position.z);

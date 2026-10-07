@@ -2,6 +2,18 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-07 (sessio 17)
+**Tehtiin**
+- Puu pois käyttöliittymästä (`ui/woodArt.js` poistettu, `ui/hud.js`, `styles.css`).
+- Nimilaput vain katsottaessa ja lähellä, viive ja pehmeä esiin/pois, lyödyn olennon lappu (`ui/nameplates.js`; `game/mobs.js`: `mobHit` sisältää olennon).
+- Jousi: plus-tähtäin, jännityspalkki, nuolilaskuri (`index.html`, `styles.css`, `ui/hud.js`, `main.js`; `game/archery.js`: `AMMO_ORDER` viedään).
+- Musiikin äänenvoimakkuuden varmistus (`audio/music.js`).
+- Testattiin headless-Chromiumilla: nimilappu näkyy edessä 6 m:n päässä, ei sivulla eikä 22 m:n päässä; jousen tähtäin, palkki (65 %) ja laskuri (12) kuvana. ESLint ja savutesti puhtaat.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute.
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-07 (sessio 16)
 **Tehtiin**
 - Fontti: kaksi vertailukuvaa (Barlow, Signika, Cabin, Fira → liian tavallisia; Grenze, Alegreya Sans SC, Marcellus SC, Philosopher, Mohave, Special Elite), käyttäjä valitsi Philosopherin (`assets/fonts`, `menu.css`, `styles.css`, kartat, `main.js`). Logo jäi Eagle Lakeksi.

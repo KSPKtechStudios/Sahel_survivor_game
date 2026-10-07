@@ -1,10 +1,10 @@
 // HUD: pikapalkki, tähtäin ja kohteen nimi, terveys ja kestävyys, osuma- ja
 // hukkumistehosteet, kuolemaruutu, ilmoitukset.
 import { CONFIG } from '../config.js';
+import { AMMO_ORDER } from '../game/archery.js';
 import { ITEMS } from '../game/items.js';
 import { events } from '../game/events.js';
 import { EFFECTS, MAX_CAP, Survival, foodValues } from '../game/survival.js';
-import { woodPanel } from './woodArt.js';
 
 const MAX_FOODS = 4;
 
@@ -44,9 +44,6 @@ export class Hud {
     this.hpTrail = this.hp.querySelector('.bar b');
     this.hpLock = this.hp.querySelector('.lock');
     this.hpNum = this.hp.querySelector('.num');
-    // Puiset kyltit ikoneille (piirretään kerran).
-    this.hp.querySelector('.tag').style.backgroundImage = `url(${woodPanel(46, 46, { seed: 8, r: 8, nails: [[6, 6], [40, 6], [6, 40], [40, 40]] })})`;
-    this.stamina.querySelector('.tag').style.backgroundImage = `url(${woodPanel(26, 22, { seed: 6, r: 6, nails: [[5, 5], [5, 17]] })})`;
     this.numShown = -1;   // näytetty terveysarvo
     this.numT = 0;
     this.stShowT = 0;
@@ -74,6 +71,11 @@ export class Hud {
     this.itemName = $('item-name');
     this.tint = $('weather-tint');
     this.crosshair = $('crosshair');
+    this.bowDraw = $('bow-draw');
+    this.bowDrawFill = this.bowDraw.querySelector('i');
+    this.ammoEl = $('ammo');
+    this.ammoNum = this.ammoEl.querySelector('span');
+    this.ammoShown = -1;
     this.messageTimer = 0;
     this.itemNameTimer = 0;
     this.lastSelected = -1;
@@ -259,7 +261,27 @@ export class Hud {
     this.messageTimer = 1.8;
   }
 
-  update(dt, { prompt, player, env, visible, cooldown = 0 }) {
+  update(dt, { prompt, player, env, visible, cooldown = 0, archery = null }) {
+    // Jousi kädessä: plus-tähtäin, jännityspalkki ja nuolten määrä (sessio 17).
+    const sel = this.inventory.selectedItem;
+    const bowHeld = !!(visible && sel && ITEMS[sel.id] && ITEMS[sel.id].bow && !player.dead);
+    const draw = bowHeld && archery ? archery.draw : 0;
+    this.crosshair.classList.toggle('bow', bowHeld);
+    if (bowHeld) this.crosshair.style.setProperty('--spread', (1.15 - 0.4 * draw).toFixed(3));
+    this.bowDraw.classList.toggle('on', bowHeld && draw > 0.01);
+    if (draw > 0.01) this.bowDrawFill.style.width = `${(draw * 100).toFixed(1)}%`;
+    this.bowDraw.classList.toggle('full', draw >= 0.999);
+    let arrows = 0;
+    if (bowHeld) for (const k of AMMO_ORDER) arrows += this.inventory.count(k);
+    this.ammoEl.classList.toggle('on', bowHeld);
+    if (bowHeld && arrows !== this.ammoShown) {
+      if (this.ammoShown >= 0 && arrows < this.ammoShown) {
+        this.ammoNum.animate([{ transform: 'translateY(-3px)', opacity: 0.4 }, { transform: 'none', opacity: 1 }], { duration: 200, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+      }
+      this.ammoShown = arrows;
+      this.ammoNum.textContent = arrows;
+      this.ammoEl.classList.toggle('empty', arrows === 0);
+    }
     // Iskun jäähdytys: tähtäin himmenee, kunnes voi lyödä uudelleen.
     this.crosshair.classList.toggle('cooldown', cooldown > 0.02);
     // Kohde

@@ -1,11 +1,11 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 17: nimilaput vain katsottaessa (etäisyys 14 m sopiva?), jousen plus-tähtäin ja jännityspalkki, nuolilaskuri, puuton paneeli
 - [ ] Käyttäjä testaa session 16: Philosopher-fontti, naulat, animaatioiden tuntuma (nopeus vs. pehmeys), loppuvan ruoan välke ja hehku
 - [ ] Käyttäjä testaa sessiot 14–15: ruokajärjestelmä (maksimit, kesto, kylläisyys), savulasipaneeli ja puukyltti, ruokaympyrät, kestävyys keskellä, terveyden numero
 - [ ] Vastaus: sopivatko lähtöeväät, ruokien arvot ja se, että ruoat säilyvät kuoltaessa? Pitäisikö syömisen estyä vasta kun sekä terveys että kestävyys ovat 100?
-- [ ] Savulasi + puu -tyyli muuhun käyttöliittymään (pikapalkki, minikartta, nimilaput, viestit, reppu), jos käyttäjä haluaa
-- [ ] Poista käyttämätön `barFrame` (sessio 14) `ui/woodArt.js`:stä, jos veistettyyn tyyliin ei palata
+- [ ] Savulasityyli muuhun käyttöliittymään (pikapalkki, minikartta, nimilaput, viestit, reppu), jos käyttäjä haluaa
 - [ ] Käyttäjä testaa session 13: fontti kaikkialla, nimilaput (olennot lähellä, puut ja pensaat katsottaessa), huomattu-merkki (silmä), pystypalkit vasemmassa alakulmassa, kaatuvan puun vahinko ja ketjukaato, soihtu vedessä ja sateessa, kuun vaiheet ja täysikuun viholliset, lammikot
 - [ ] Vastaus: silmä vai huutomerkki huomattu-merkiksi? Pitäisikö puiden ja pensaiden nimen näkyä aina (nyt vain katsottaessa)?
 - [ ] Vastaus: miten sammunut soihtu sytytetään (nyt nuotion vieressä)? Sopiiko kuun kierto 8 vuorokautta?

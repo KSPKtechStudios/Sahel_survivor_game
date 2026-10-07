@@ -323,7 +323,7 @@ export class Mobs {
     m.flash = 1;
     m.hitStun = 0.3; // tönäisy ehtii näkyä ennen kuin olento ohjaa taas itse
     this.push(m, m.pos.x - (opts.fromX ?? m.pos.x), m.pos.z - (opts.fromZ ?? m.pos.z), opts.knock || 3, opts.up || 0);
-    events.emit('mobHit', { type: m.type, amount });
+    events.emit('mobHit', { type: m.type, amount, mob: m });
     if (m.hp <= 0) {
       this._kill(m);
       return true;

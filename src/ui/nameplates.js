@@ -1,13 +1,19 @@
-// Nimilaput (sessio 13): nimi seuraa kohdetta eikä ole tähtäimen alla.
-// - Olennoilla (eläimet ja viholliset) on lähellä aina nimilappu, kestävyys-
-//   palkki ja "huomattu"-merkki (silmä), kun olento on havainnut pelaajan.
+// Nimilaput (sessio 13, muutettu sessiossa 17): nimi seuraa kohdetta eikä ole
+// tähtäimen alla.
+// - Olennon nimilappu, kestävyyspalkki ja "huomattu"-merkki näkyvät vain, kun
+//   olento on lähellä ja siihen katsotaan (käyttäjä: kaukaa näkyvät laput
+//   paljastivat liikaa). Lappu viipyy hetken katseen siirryttyä, ja lyödyn
+//   olennon lappu pysyy näkyvissä taistelun ajan.
 // - Muut kohteet (puut, pensaat, esineet...) saavat nimilapun, kun niihin
 //   katsotaan; kestävyyspalkkia niillä ei ole.
 import * as THREE from 'three';
 import { MOB_TYPES } from '../game/mobs.js';
+import { events } from '../game/events.js';
 
-const RANGE = 24;        // olentojen nimilaput näkyvät tämän etäisyyden sisällä (m)
-const MAX_PLATES = 12;
+const LOOK_RANGE = 14;   // katsotun olennon lappu näkyy tämän etäisyyden sisällä (m)
+const HIT_RANGE = 32;    // lyödyn olennon lappu näkyy tähän asti
+const LINGER = 1.2;      // lappu viipyy katseen siirryttyä (s)
+const HIT_LINGER = 5;    // lyödyn olennon lappu (s)
 // Tilat, joissa olento on huomannut pelaajan.
 const AWARE = new Set(['alert', 'flee', 'fly', 'chase', 'attack', 'recover', 'windup', 'dive', 'rise', 'stalk', 'stagger', 'escape']);
 const HOSTILE = new Set(['chase', 'attack', 'windup', 'dive', 'stalk', 'recover']);
@@ -20,17 +26,12 @@ export class Nameplates {
     this.root = document.createElement('div');
     this.root.id = 'nameplates';
     root.appendChild(this.root);
-    this.pool = [];
-    for (let i = 0; i < MAX_PLATES; i++) {
-      const el = document.createElement('div');
-      el.className = 'plate';
-      el.innerHTML = `<div class="pl-name"></div><div class="pl-act"></div><div class="pl-hp"><i></i></div><div class="pl-spot">${EYE}</div>`;
-      el.style.display = 'none';
-      this.root.appendChild(el);
-      this.pool.push({ el, name: el.children[0], act: el.children[1], hp: el.children[2].firstChild, spot: el.children[3], key: null });
-    }
+    this.plates = new Map(); // olento -> { el, name, act, hp, spot, t }
+    this.hitT = new WeakMap(); // olento -> jäljellä oleva taistelunäkyvyys (s)
+    events.on('mobHit', ({ mob }) => { if (mob) this.hitT.set(mob, HIT_LINGER); });
     // Muiden kohteiden nimilappu (katsottu kohde).
     this.target = document.getElementById('target');
+    this.lastT = performance.now();
   }
 
   // Ruudun koordinaatit maailman pisteelle (null, jos takana tai kaukana ruudusta).
@@ -40,42 +41,80 @@ export class Nameplates {
     return { x: (_v.x * 0.5 + 0.5) * w, y: (-_v.y * 0.5 + 0.5) * h };
   }
 
+  _plate(m) {
+    const el = document.createElement('div');
+    el.className = 'plate';
+    el.innerHTML = `<div class="pl-name"></div><div class="pl-act"></div><div class="pl-hp"><i></i></div><div class="pl-spot">${EYE}</div>`;
+    el.children[0].textContent = MOB_TYPES[m.type].name;
+    this.root.appendChild(el);
+    // Esiin pehmeästi (seuraavassa ruudussa, jotta siirtymä käynnistyy).
+    requestAnimationFrame(() => el.classList.add('on'));
+    return { el, act: el.children[1], hp: el.children[2].firstChild, spot: el.children[3], t: 0, gone: false };
+  }
+
   update(camera, mobs, prompt, visible) {
+    const now = performance.now();
+    const dt = Math.min(0.5, (now - this.lastT) / 1000);
+    this.lastT = now;
     const w = window.innerWidth, h = window.innerHeight;
-    // --- Olennot
-    let n = 0;
-    if (visible && mobs) {
+    // --- Olennot: katsottu (lähellä ja tähtäimen kohdalla) + lyödyt
+    let looked = prompt && prompt.mob ? prompt.mob : null;
+    if (visible && mobs && !looked) {
       const cp = camera.position;
-      const list = [];
+      let best = Infinity;
       for (const m of mobs.list) {
         if (m.state === 'dead') continue;
-        const d = Math.hypot(m.pos.x - cp.x, m.pos.z - cp.z);
-        if (d > RANGE) continue;
-        list.push({ m, d });
-      }
-      list.sort((a, b) => a.d - b.d);
-      for (const { m, d } of list) {
-        if (n >= MAX_PLATES) break;
-        const s = this._project(camera, m.pos.x, m.pos.y + m.def.height + 0.35, m.pos.z, w, h);
+        const d = Math.hypot(m.pos.x - cp.x, m.pos.y - cp.y, m.pos.z - cp.z);
+        if (d > LOOK_RANGE) continue;
+        const s = this._project(camera, m.pos.x, m.pos.y + m.def.height * 0.5, m.pos.z, w, h);
         if (!s) continue;
-        const p = this.pool[n++];
-        const def = MOB_TYPES[m.type];
-        p.el.style.display = '';
-        p.el.style.transform = `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) translate(-50%, -100%)`;
-        p.el.style.opacity = (1 - Math.max(0, (d - RANGE * 0.7) / (RANGE * 0.3))).toFixed(2);
-        if (p.key !== m) { p.key = m; p.name.textContent = def.name; }
-        p.hp.style.width = `${Math.max(0, Math.min(1, m.hp / def.hp)) * 100}%`;
-        const aware = AWARE.has(m.state);
-        p.spot.style.display = aware ? '' : 'none';
-        p.spot.classList.toggle('hostile', aware && HOSTILE.has(m.state));
-        const isTarget = prompt && prompt.mob === m;
-        p.el.classList.toggle('target', !!isTarget);
-        p.act.textContent = isTarget && prompt.action ? prompt.action : '';
+        // Olennon näennäinen koko ruudulla: kohteen on oltava tähtäimen kohdalla.
+        const size = Math.max(26, (m.def.height * 0.7 + m.def.radius) / d * h * 0.9);
+        const off = Math.hypot(s.x - w / 2, s.y - h / 2);
+        if (off < size && off + d * 2 < best) { best = off + d * 2; looked = m; }
       }
     }
-    for (let i = n; i < this.pool.length; i++) {
-      if (this.pool[i].el.style.display !== 'none') this.pool[i].el.style.display = 'none';
-      this.pool[i].key = null;
+    if (looked && visible) {
+      let p = this.plates.get(looked);
+      if (!p) { p = this._plate(looked); this.plates.set(looked, p); }
+      p.t = LINGER;
+    }
+    if (visible && mobs) {
+      for (const m of mobs.list) {
+        const ht = this.hitT.get(m);
+        if (!ht) continue;
+        const left = ht - dt;
+        if (left <= 0 || m.state === 'dead') { this.hitT.delete(m); continue; }
+        this.hitT.set(m, left);
+        const cp = camera.position;
+        if (Math.hypot(m.pos.x - cp.x, m.pos.z - cp.z) > HIT_RANGE) continue;
+        let p = this.plates.get(m);
+        if (!p) { p = this._plate(m); this.plates.set(m, p); }
+        p.t = Math.max(p.t, 0.3);
+      }
+    }
+    for (const [m, p] of this.plates) {
+      p.t -= dt;
+      const s = visible && m.state !== 'dead' ? this._project(camera, m.pos.x, m.pos.y + m.def.height + 0.35, m.pos.z, w, h) : null;
+      if (p.t <= 0 || !s) {
+        // Pois pehmeästi; poistetaan siirtymän jälkeen.
+        if (!p.gone) {
+          p.gone = true;
+          p.el.classList.remove('on');
+          setTimeout(() => p.el.remove(), 260);
+          this.plates.delete(m);
+        }
+        continue;
+      }
+      p.el.style.transform = `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) translate(-50%, -100%)`;
+      p.hp.style.width = `${Math.max(0, Math.min(1, m.hp / m.def.hp)) * 100}%`;
+      const aware = AWARE.has(m.state);
+      p.spot.style.display = aware ? '' : 'none';
+      p.spot.classList.toggle('hostile', aware && HOSTILE.has(m.state));
+      const isTarget = prompt && prompt.mob === m;
+      p.el.classList.toggle('target', !!isTarget);
+      const act = isTarget && prompt.action ? prompt.action : '';
+      if (p.act.textContent !== act) p.act.textContent = act;
     }
     // --- Katsottu kohde (ei olento): nimilappu kohteen kohdalla.
     const tb = this.target;

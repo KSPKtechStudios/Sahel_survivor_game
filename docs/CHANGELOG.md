@@ -2,6 +2,14 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-07 (sessio 17): moderni ilme, nimilaput vain katsottaessa, jousen tähtäin
+
+- **Puu poistettu käyttöliittymästä:** paneelit ovat puhtaasti modernia savulasia.
+- **Olentojen nimilaput ja palkit näkyvät vain läheltä ja katsottaessa** (ei enää kaukaa). Lyödyn olennon lappu pysyy hetken näkyvissä taistelussa. Laput tulevat ja häipyvät pehmeästi.
+- **Jousen tähtäin:** plus-tähtäin, joka kiristyy jännitettäessä, ja sen alla pieni valkoinen jännityspalkki.
+- **Nuolten määrä** näkyy pikapalkin vieressä, kun jousi on kädessä.
+- Korjaus: harvinainen musiikin äänenvoimakkuusvirhe ei voi enää pysäyttää peliä.
+
 ## 2026-10-07 (sessio 16): uusi fontti, naulat ja pehmeät animaatiot
 
 - **Uusi fontti Philosopher** koko pelissä (valikon Sahel-logo pysyy ennallaan).

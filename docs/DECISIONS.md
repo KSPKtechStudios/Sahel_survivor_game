@@ -2,6 +2,13 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-07 (sessio 17)
+- **Puukuvat (`ui/woodArt.js`) poistettiin kokonaan.** Syy: käyttäjä halusi puun pois; käyttämätön koodi poistetaan.
+- **Katsottu olento valitaan ruudun keskeltä näennäisen koon mukaan** (ei vain lähitaisteluetäisyyden säteellä). Syy: lappu näkyy myös parin kymmenen askeleen päässä katsottaessa, mutta ei sivusilmällä.
+- **Lyödyn olennon lappu näkyy 5 s.** Syy: taistelussa (esim. jousella) on hyödyllistä nähdä vihollisen kestävyys, vaikka tähtäin heiluu.
+- **Nuolilaskuri näyttää kaikki nuolet yhteensä.** Syy: käyttäjä kysyi, montako nuolta on jäljellä; jousi käyttää parhaan ensin.
+- **Musiikin äänenvoimakkuus tarkistetaan äärelliseksi.** Syy: testissä ei-äärellinen arvo heitti virheen joka ruudussa ja pysäytti pelisilmukan (syy jäi epäselväksi; esiintyi kerran).
+
 ## 2026-10-07 (sessio 16)
 - **Fontit vertailukuvina pelin käyttöliittymän päällä** (ensin 4 tavallista, sitten 6 omaperäisempää), käyttäjä valitsi Philosopherin. Fontit haetaan npm:n @fontsource-paketeista ja kopioidaan `assets/fonts`-kansioon (OFL-lisenssi mukana). Syy: peli toimii ilman verkkoyhteyttä.
 - **Logo jää Eagle Lakeksi.** Syy: käyttäjä piti logon fontista alun perin; ongelma oli käyttöliittymän tekstit.
