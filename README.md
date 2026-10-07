@@ -2,7 +2,7 @@
 
 > Pelin työnimi. Nimi ei ole vielä lopullinen ja voi muuttua.
 
-Valheim- ja Minecraft-tyyppinen selviytymispeli, joka sijoittuu Burkina Fason Sahel-alueelle. 3D avoin maailma (20 km, generoidaan joka kerta omalla siemenellä), ensimmäisen persoonan kuvakulma, reppu ja valmistus, vuorokausisykli ja sää (selkeä, pilvinen, hiekkausva, hiekkamyrsky). Puut kaatuvat ja kivet murskautuvat, ja saaliit putoavat maahan. Kartta piirtyy sitä mukaa kuin maailmaa tutkii, ja maailmasta löytyy kivikehiä, hylättyjä leirejä ja raunioita arkkuineen. Sademetsän takana on meri, ja maailmassa on jokia, puroja ja järviä, joissa vesi aaltoilee ja roiskuu. Taistelussa on iskusarjat, torjunta ja parry; savanneilla elää pahkasikoja, ja öisin maasta nousee savipeikkoja. Musiikki vaihtuu biomin mukaan.
+Valheim- ja Minecraft-tyyppinen selviytymispeli, joka sijoittuu Burkina Fason Sahel-alueelle. 3D avoin saarimaailma (20 km, generoidaan joka kerta omalla siemenellä), ensimmäisen persoonan kuvakulma, reppu ja valmistus, ravinto ja myrkytys, vuorokausisykli (10 min päivä + 10 min yö, selkeinä öinä linnunrata) ja biomikohtaiset säät (hiekkamyrskyt, sade, ukkonen, sumu). Peli alkaa keräämällä risuja ja kiviä; vasaralla rakennetaan työstöpenkki, nuotio ja talot, ja jousella metsästetään arkoja eläimiä (gasellit, helmikanat, apinat, aavikkoketut, linnut). Puut kaatuvat ja kivet murskautuvat, ja saaliit putoavat maahan. Kartta piirtyy sitä mukaa kuin maailmaa tutkii, ja maailmasta löytyy kivikehiä, hylättyjä leirejä, raunioita ja laivanhylkyjä arkkuineen sekä riimukiviä, joiden tekstit voi kääntää. Joet, purot, järvet ja meri aaltoilevat ja roiskuvat, ja vesillä liikutaan soutuveneellä, purjeveneellä tai valtavalla purjelaivalla tuulen mukaan. Taistelussa on torjunta ja parry; savanneilla elää pahkasikoja, ja öisin maasta nousee savipeikkoja. Musiikki vaihtuu biomin mukaan.
 
 **Versio:** Alpha v0.1 (ensimmäinen julkinen alfaversio).
 
@@ -27,10 +27,12 @@ Haarojen testauslinkit: `https://raw.githack.com/KSPKtech/sahel/<haara>/index.ht
 | W A S D | liiku |
 | Shift | juokse |
 | Välilyönti | hyppää (kuolleena: herää henkiin) |
-| Ctrl tai C | kyykky päälle/pois |
-| Hiiri 1 | lyö / hakkaa (iskun jälkeen lyhyt jäähdytys; viidakkoveitsellä iskusarja) |
-| Hiiri 2 | torju (heti iskun alla: parry); asetettava esine kädessä: aseta (esim. nuotio); kilpi kädessä: varusta |
-| E | poimi |
+| Ctrl tai C | kyykky päälle/pois (hiivi eläinten luo) |
+| Hiiri 1 | lyö / hakkaa (iskun jälkeen jäähdytys; viidakkoveitsellä iskusarja); jousi: pidä pohjassa ja päästä; vasara: rakenna / korjaa vene |
+| Hiiri 2 | torju (heti iskun alla: parry); ruoka kädessä: syö; vasara: rakennusvalikko; kilpi kädessä: varusta |
+| R / X | vasara: käännä rakennelmaa / pura (materiaalit palautuvat) |
+| E | poimi, avaa arkku, käännä riimukivi, nouse veneeseen / maihin, nuku makuualustalla (yöllä) |
+| Veneessä | soutuvene: W/S soutu, A/D käänny, Shift nopeammin; purjeveneet: W/S purjeet (taakse, seis, hiljaa, puolet, täydet), A/D peräsin |
 | Q | heitä valittu esine |
 | 1–8 / rulla | valitse esine |
 | Tab tai I | reppu ja valmistus |
@@ -47,11 +49,11 @@ Haarojen testauslinkit: `https://raw.githack.com/KSPKtech/sahel/<haara>/index.ht
 | `src/main.js` | Käynnistys, tilat (valikko/lataus/peli/tauko/reppu/kartta), pääsilmukka |
 | `src/config.js` | Säädettävät arvot (näkyvyys, vuorokauden pituus, nopeudet…) |
 | `src/world/` | Maailman generointi (vyöhykkeet, biomit, meri, joet ja järvet, siemen, rakennelmien paikat), chunkit ja LOD, generointisäikeet (`genWorker.js`), aaltojen kaavat (`waves.js`), esinetyypit, tumbleweedit |
-| `src/render/` | Taivas, vuorokausi ja sää, materiaalit, vesi (`water.js`), väreily (`ripples.js`), roiskeet (`splash.js`), tuli ja savu (`fire.js`), veri (`blood.js`), jälkikäsittely (`post.js`: valonsäteet, DOF, liike-epäterävyys), hiukkaset, sirpaleet, tekstuurit |
-| `src/models/` | Proseduraaliset 3D-mallit: puut, kasvit (`flora.js`), kivet, esineet ja aseet, rakennelmat ja arkku, olennot (`creatures.js`) (korvattavissa glTF-malleilla) |
-| `src/player/` | Ohjaus, liikkuminen, uinti, terveys, kyykky, käsi ja esine kädessä (iskuanimaatiot, torjunta, kilpi) |
-| `src/game/` | Esineet, reppu, valmistus, opas, hakkaaminen, kaatuminen, saaliit, nuotio, rauniot ja arkut (`ruins.js`), taistelu (`combat.js`), eläimet ja viholliset (`mobs.js`), tallennus |
-| `src/ui/` | Valikot, HUD, tutkittu kartta (`explored.js`), minikartta, iso kartta (`bigMap.js`), opas, reppuikkuna, kuvakkeet, kehittäjätyökalut (`devtools.js`) |
+| `src/render/` | Taivas ja linnunrata (`sky.js`), vuorokausi, säät ja tuuli (`environment.js`), sade ja salamat (`rain.js`), materiaalit, vesi (`water.js`), väreily (`ripples.js`), roiskeet (`splash.js`), tuli ja savu (`fire.js`), veri (`blood.js`), jälkikäsittely (`post.js`: valonsäteet, DOF, liike-epäterävyys), hiukkaset, sirpaleet, tekstuurit |
+| `src/models/` | Proseduraaliset 3D-mallit: puut, kasvit (`flora.js`), poimittavat (`pickups.js`), kivet, esineet ja aseet (`items.js`, `items2.js`), rakennelmat, arkku, laivanhylky ja riimukivet (`structures.js`), rakennusosat (`building.js`), veneet ja purjeet (`boats.js`), olennot (`creatures.js`) (korvattavissa glTF-malleilla) |
+| `src/player/` | Ohjaus, liikkuminen, uinti, veneessä istuminen, terveys, kyykky, käsi ja esine kädessä (iskuanimaatiot, torjunta, kilpi, jousi, soihtu) |
+| `src/game/` | Esineet ja reseptit (`items.js`), reppu, valmistus, ravinto ja tilavaikutukset (`survival.js`), opas, hakkaaminen, kaatuminen, saaliit, rauniot, arkut ja riimukivet (`ruins.js`, `lore.js`), taistelu (`combat.js`), jousi (`archery.js`), rakentaminen (`building.js`, `pieces.js`, `structures.js`), veneet (`boats.js`), eläimet ja viholliset (`mobs.js`), tallennus |
+| `src/ui/` | Valikot, HUD, tutkittu kartta (`explored.js`), minikartta, iso kartta (`bigMap.js`), opas, reppuikkuna, rakennusvalikko (`buildMenu.js`), riimujen käännös (`runePanel.js`), veneen tiedot (`boatHud.js`), kuvakkeet, kehittäjätyökalut (`devtools.js`) |
 | `src/audio/` | Musiikki (`music.js`): kappaleet biomeittain, viiveet ja häivytykset |
 | `assets/music/` | Musiikkikappaleet (käyttäjän toimittamat) |
 | `assets/fonts/` | Valikon fontit (OFL/Apache) |
@@ -69,4 +71,4 @@ Haarojen testauslinkit: `https://raw.githack.com/KSPKtech/sahel/<haara>/index.ht
 
 ## Tila
 
-Pelattava prototyyppi: päävalikko, maailmojen luonti siemenellä, vyöhykkeellinen maailma merineen ja vesistöineen, veden fysiikka, tutkittava kartta, rakennelmat ja arkut, keräys, hakkaaminen ja valmistus, taistelu, pahkasiat ja savipeikot. Grafiikka on vielä yksinkertaista low-poly-paikkamerkkiä, ja sitä on tarkoitus jalostaa myöhemmin.
+Pelattava prototyyppi: päävalikko, maailmojen luonti siemenellä, saarimaailma biomeineen, vesistöineen ja merineen, veden fysiikka, tutkittava kartta, rakennelmat, arkut ja riimukivet, keräys, ruoka ja myrkytys, hakkaaminen ja valmistus, rakentaminen vasaralla, taistelu ja jousi, arat eläimet, pahkasiat ja savipeikot, veneet ja purjehdus. Grafiikka on vielä yksinkertaista low-poly-paikkamerkkiä, ja sitä on tarkoitus jalostaa myöhemmin.

@@ -40,6 +40,7 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
   - **tier 2**: aavikkoa ja sademetsää
   - **ulkoreuna**: vuoristobiomi (harvinainen)
   - Ulkoreuna on epäsäännöllinen (rosoinen ääriviiva).
+- **Sessio 9: käyttäjä luopui kehämäisestä järjestyksestä.** Biomit voivat nyt olla missä tahansa (ks. sessio 9 alla).
 
 ## Kartta (käyttäjän kertoma, 2026-10-06, sessio 4)
 - Maailmaa luodessa **karttaa ei saa näkyä**, koska se spoilaa kokonaisuuden.
@@ -113,6 +114,20 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - **Lisää tönäisyä:** olennot pysyvät liian paikallaan, kun niitä lyö.
 - **Kuollessa efekti ja veren tyylistä nestettä**, kuten peleissä yleensä.
 
+## Sessio 9 (käyttäjän kertoma, 2026-10-06)
+1. **Jokien generointi** on erikoista: ne **ylittävät toisiaan hölmösti**. Korjattava.
+2. **Hylättyjä paikkoja on aivan liian vähän.** Niiden pitää syntyä useammin, niin että matkaaja **satunnaisesti löytää niitä vaeltaessaan**.
+3. **Unohda biomien spawnaushierarkia** (reunoilla harvinaisimmat). Biomit voivat syntyä miten vain. Biomit eivät saa olla **aivan liian massiivisia eivätkä liian pieniä**: **pitkän kävelymatkan jälkeen voi löytää uuden biomin**.
+4. **Hylättyjä laivanhylkyjä rannoille** satunnaisesti, mutta **aika harvinaisia**.
+5. **Combat ei vieläkään ole hyvä:** iskuja pystyy tekemään aivan liikaa. **Iskujen pitää olla aika harvassa.**
+6. **Peli alkaa** sillä, että **maasta ja pusikoista kerätään kiviä ja oksia**. **Kaikkien sienien, kukkien yms. pitää olla poimittavia.** Osaa (esim. **sieniä**) voi **syödä**, mutta niistä voi **satunnaisesti saada Myrkytys-efektin**, eivätkä ne muutenkaan ole järin hyvää ruokaa. Tarvitaan **älytön määrä materiaaleja ja eläimiä**: piikiveä, taljaa, apinoita, lintuja, kaikkea. **Osan lähelle pääsee vain hiippailemalla, mutta silloinkin ne säikähtävät, kun tulee liian lähelle**, joten **jousipyssy** vaaditaan.
+7. Peliin lisätään **aivan valtava määrä esineitä ja työkaluja** (Claude saa suunnitella ne itse). **Nuotion ja rakennelmien pystytys vaatii ensin lähelle työstöpenkin**, joka rakennetaan **vasaralla**, jolla rakennetaan asioita.
+8. **Selkeänä yönä taivaalla näkyy mahtava linnunrata.**
+9. **Yö-päiväsykli hieman lyhyemmäksi:** **10 min päivä ja 10 min yö**.
+10. **Sääsykli tarkistettava:** kaikilla biomeilla **ei voi olla samoja säitä**; esim. viidakossa ei voi olla hiekkamyrskyä, vaan ennemmin **sade tai ukkonen**.
+11. **Kaiverrettuja kiviä ja pieniä riimukirjoituksia** sinne tänne. Niissä on harakanvarpaita, mutta kun niitä katsoo kohdistimella, ruudulle tulee **"PAINA E KÄÄNTÄÄKSESI"**, ja teksti tulee **suomeksi** näytölle. Kivet kertovat **abstrakteja asioita pelimaailmasta**, joita pelaaja saa pähkäillä, ja niistä voi ehkä ymmärtää jopa **pelimaailman salaisuuksia**.
+12. **Veneet / lautat**, jotka voi asettaa **vain veteen**: pienin on **pieni soutuvene** (heikko ja hidas), toisena **pieni purjevene** (nopeudeltaan välissä), viimeisenä **valtava purjelaiva, Santa Maria -tyylinen**: vaatii **älyttömät määrät resursseja**, mutta **kestää ja kulkee kovaa**. **Laivojen purjeet toimivat tuulen suunnan mukaisesti.**
+
 ## Teknologia
 - Selaimessa toimiva peli: three.js (WebGL), ei käännösvaihetta. Ks. `DECISIONS.md`.
 - Kohdealusta toistaiseksi tietokoneen selain (hiiri + näppäimistö).
@@ -141,23 +156,40 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - Musiikki (päävalikko ja kolme biomia), ääniasetukset.
 - Kehittäjätyökalut [F3].
 - Iskusarjojen rajoitus kestävyydellä, kilven varustaminen, savipeikot palavat aamulla.
+- Jäähdytys iskuille, iskusarja vain viidakkoveitsellä, veri ja kuolemaefekti, grafiikan esiasetukset (sessio 8).
+- Valumaverkon joet (eivät risteä), biomit missä tahansa (alueet n. 1–2 km), saari meren ympäröimänä (sessio 9).
+- Noin 1 800 rakennelmaa maailmassa, laivanhylyt rannoilla, riimukivet ja -taulut käännöksineen (sessio 9).
+- Keräily maasta ja pensaista, poimittavat sienet, kukat ja kasvit, ravinto ja syöminen, myrkytys ja tilavaikutukset (sessio 9).
+- Kymmeniä esineitä, valmistus käsin / työstöpenkillä / nuotiolla, vasara ja rakentaminen (työstöpenkki, nuotio, lattiat, seinät, katot, aidat, soihtuteline, makuualusta), soihtu (sessio 9).
+- Jousi ja nuolet, arat eläimet (gaselli, helmikana, apina, aavikkokettu, kutojalinnut) (sessio 9).
+- Linnunrata, 10 + 10 min vuorokausi todellisessa ajassa, alueelliset säät (sade, ukkonen, sumu) (sessio 9).
+- Veneet: soutuvene, purjevene ja purjelaiva; purjeet tuulen mukaan, tuulen suunta kääntyy (sessio 9).
 
 ## Paikkamerkit (Clauden valitsemia, voi muuttaa vapaasti)
-- **Maailman koko:** säde 10 km. Spawn-alue n. 2,4 km, tier 1 n. 6 km asti, tier 2 n. 9,3 km asti, sen jälkeen vuoristoreuna. Vuorten takana on läpäisemätön vuoriseinämä, meren puolella virta vie takaisin. Rannikko alkaa n. 8,85 km päästä keskeltä.
-- **Tier 1 -biomit:** Sahelin savanni, Laterittitasanko (punainen), Kausilampi (vesi), Akasiametsikkö sekä dyynikentät, jotka kuuluvat nyt aavikkoon (nimi "Aavikko"). Spawn-alueella ei ole dyynejä.
-- **Tier 2:** Aavikko (valtavat dyynit, keitaat) ja Sademetsä (tiheä: sademetsäpuut, kapokkipuut, tiheiköt, bambu, saniaiset). Aavikko painottuu toiselle puolelle maailmaa ja sademetsä vastakkaiselle (suunta vaihtelee siemenen mukaan).
-- **Ulkoreuna:** Vuoristo aavikon puolella (punertavaa kalliota, lohkareita, vuoristojärviä ja puroja), meri ja hiekkarannat sademetsän puolella.
+- **Maailman koko ja muoto (sessio 9):** säde 10 km. Maailma on saari: reunoilla (noin 8–9 km:stä alkaen) rannikko ja avomeri, jonka reunalla virta vie takaisin ("Virta on liian voimakas"). Aloituspaikan ympärillä (n. 2,4 km) on aina Sahelia.
+- **Biomialueet (sessio 9):** pehmeät Voronoi-solut 1 500 m, rajavyö 260 m; jokaiselle solulle arvotaan tyyppi: Sahel (savanni, laterittitasanko, kausilampi, akasiametsikkö, dyynit), aavikko (dyynit, keitaat), sademetsä, vuoristo tai meri (merenlahdet). Vierekkäiset samat solut yhdistyvät, joten alueet ovat n. 1–2 km.
+- *(Vanha, sessioihin 3–8: tier 1 Sahel keskellä, tier 2 aavikko ja sademetsä, ulkoreunalla vuoristo ja meri. Korvattu sessiossa 9.)*
 - **Maailman esineet:** akasia, kapokkipuu, sademetsäpuu, palmu, baobab (ei kaadettava), kuollut puu, kuivunut pensas, tiheikkö, bambu, saniainen, kandelaaberipuu, tumbleweed, risu, kivi, lohkare, kalliomuodostelma, kalliotorni, termiittikeko, ruoho, aluskasvillisuus, ruoko.
 - **Hakkaaminen:** akasia 5 iskua + runko 4, kapokkipuu 8 + 6, sademetsäpuu 6 + 4, palmu 4 + 3, kuollut puu 3 (kirves), lohkare 4 (hakku), pensas/tiheikkö 3, bambu 4, saniainen 2 (kirves 2x). Lovi tulee aina samaan kaatokohtaan sille puolelle, josta lyödään.
 - **Kaatumissuunta:** satunnainen, mutta jos se osoittaisi suoraan pelaajaa kohti, suunta käännetään (ettei puu kaadu päälle).
-- **Esineet:** risu, kivi, kuitu, puu, kivikirves, kivihakku, nuotio.
-- **Reseptit:** kivikirves (3 risua, 2 kiveä, 2 kuitua), kivihakku (3 risua, 3 kiveä, 2 kuitua), nuotio (3 puuta, 5 kiveä, 3 risua).
-- **Oppaan vaiheet 2–5:** kivikirves → kaada akasia ja pilko runko → kivihakku + louhi lohkare → nuotio.
+- **Esineet (sessio 9, Clauden suunnittelemat):**
+  - *Materiaalit:* risu, kivi, kuitu, puu, piikivi, luu, sulka, ruoko, bambunvarsi, palmunlehti, akasiankumi, köysi, savi, simpukankuori, jänne, nahka, karitevoi, terälehdet, taljat (pahkasika, gaselli, apina, aavikkokettu).
+  - *Ruoat (ravinto):* ruskea sieni 5, kalpea sieni 4, punahattu 3, termiittisieni 8, paahdettu sieni 11, raaka liha 8, paistettu liha 35, jujubanmarjat 6, banaani 14, kookospähkinä 15 (+30 kestävyyttä), apinanleipä 14, karitepähkinät 3, paahdetut pähkinät 12, moringanlehdet 4 (lievittää myrkytystä), bissap-kukat 2, fonio 2, fonio-puuro 28, lihapata 60 (+30 terveyttä), bissap-juoma 6 (virkistää 150 s: kestävyys palautuu 1,5×).
+  - *Rohdot:* yrttirohto (parantaa myrkytyksen, +10 terveyttä), karitevoide (+35 terveyttä 14 s aikana).
+  - *Työkalut:* kivipuukko, kivikirves, kivihakku, piikivikirves ja -hakku (2× teho), vasara (rakentaa), soihtu (valaisee).
+  - *Aseet:* puunuija, keihäs, viidakkoveitsi, puukilpi, jousi, jännejousi (1,35× voima), puunuolet (9 vahinkoa), luunuolet (14), piikivinuolet (17).
+  - *Arvoesineet:* kultahippu, kaurikotilo, pronssirannerengas (ei vielä käyttöä).
+- **Reseptit (sessio 9):**
+  - *Käsin:* köysi (3 kuitua), kivipuukko (kivi, risu, kuitu), kivikirves (3 risua, 2 kiveä, 2 kuitua), kivihakku (3 risua, 3 kiveä, 2 kuitua), vasara (2 risua, 2 kiveä, 2 kuitua), soihtu (risu, 2 kuitua, kumi), puunuija (2 puuta, 2 kuitua), 5 puunuolta (3 risua, kuitu).
+  - *Työstöpenkki:* piikivikirves (2 puuta, 4 piikiveä, köysi), piikivihakku (2 puuta, 5 piikiveä, köysi), keihäs (2 puuta, 2 piikiveä, köysi), jousi (3 puuta, 2 köyttä, kumi), jännejousi (3 puuta, 3 jännettä, 2 kumia, 2 luuta), 8 piikivinuolta (4 risua, 2 piikiveä, 4 sulkaa), 8 luunuolta (4 risua, 2 luuta, 4 sulkaa), puukilpi (4 puuta, 4 risua, 4 kuitua), 2 nahkaa (talja).
+  - *Nuotio:* paistettu liha, paahdettu sieni, paahdetut pähkinät (3 karitepähkinää), fonio-puuro (5 fonioita), lihapata (2 lihaa, 2 sientä, moringa), bissap-juoma (3 hibiskusta, kookos), karitevoi (4 pähkinää), yrttirohto (2 moringaa, 2 terälehteä, kumi), karitevoide (karitevoi, moringa, terälehti).
+- **Rakennusosat ja hinnat (sessio 9):** työstöpenkki (6 puuta, 4 kiveä, 4 kuitua), nuotio (5 kiveä, 3 puuta, 3 risua), puulattia (4 puuta), puuseinä (4 puuta, 2 risua), saviseinä (6 savea, 4 risua), oviaukko (4 puuta), olkikatto (4 risua, 6 ruokoa), aita (6 risua, 2 kuitua), pylväs (2 puuta), soihtuteline (3 risua, 2 kuitua, kumi), makuualusta (8 kuitua, talja), soutuvene (10 puuta, 2 köyttä, 2 kumia), purjevene (24 puuta, 8 köyttä, 6 kumia, 4 nahkaa), purjelaiva (160 puuta, 40 köyttä, 24 kumia, 24 nahkaa, 30 kiveä). Työstöpenkki vaaditaan 20 m:n säteelle.
+- **Oppaan vaiheet (sessio 9):** kerää tarvikkeita (risuja, kiviä, kuitua) → valmista työkalut ja vasara → hanki puuta → rakenna työstöpenkki → rakenna nuotio → valmista ja syö ateria → valmista jousi ja ammu → "Hyvä alku".
 - **Kestävyys (stamina):** kuluu juostessa, hypätessä ja lyödessä.
 - **Hahmo:** tummaihoinen käsi ja indigonsininen hiha (koska peli sijoittuu Burkina Fasoon).
 - **Valikon fontit:** Eagle Lake (otsikko), Permanent Marker (napit), Alegreya (teksti).
 - **Ohjaimet:** WASD, Shift, välilyönti, Ctrl/C (kyykky päälle/pois), hiiri 1 (lyö, sarjat), hiiri 2 (torju / aseta / varusta kilpi), E, Q (heitä esine), 1–8, Tab/I, M, F3 (kehittäjätyökalut), Esc.
-- **Iskut (sessio 8):** iskusarja vain viidakkoveitsellä (9 + 9 + 17 vahinkoa, kestävyys 8 + 14 + 24, jatkuu vain yli 50 %:n kestävyydellä, jäähdytys sarjan jälkeen 1,3 s). Yksi isku: nyrkit 5 (jäähdytys 0,4 s), puunuija 16 (0,75 s), risu 5, kirves 10 (0,2 s), hakku 9 (0,25 s).
+- **Iskut (sessio 9):** iskujen väli (animaatio + jäähdytys): nyrkit 1,1 s (6 vahinkoa), risu 1,15 s (6), kivipuukko 0,9 s (7), kirves 1,05 s (12), hakku 1,1 s (11), keihäs 1,3 s (15, ulottuu 3,4 m), puunuija 1,9 s (21, iso tönäisy). Viidakkoveitsi: sarja 10 + 10 + 19 (kestävyys 10 + 16 + 26, jatkuu vain yli 50 %:n kestävyydellä), sarjan jälkeen 1,6 s jäähdytys.
 - **Grafiikan esiasetukset:** Matala (näkö 3, varjot pois, tarkkuus 70 %, ei valonsäteitä), Keskitaso (4, normaali, 85 %), Korkea (5, normaali, 100 %), Ultra (7, tarkka, 100 %, 2× pikselitiheys).
 - **Veri:** pisarat ja läikät (haalistuvat n. 40 s); savipeikoilla punaruskea savivelli.
 - **Kilpi:** varustetaan hiiren oikealla (kilpi valittuna) tai hiiren oikealla repussa.
@@ -183,18 +215,30 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - **Uudet kasvit ja esineet:** karitepuu (Sahel, 6 iskua + runko 4), doumpalmu (kausilammet, keitaat; 5 + 3), kookospalmu (ranta; 4 + 3), lahopuu ja sammaloitunut runko (kirves, puuta), villibanaani (kuitua), aavikkopensas, ajopuu (poimitaan: puuta), korkea heinä, kukat, sienet, lumpeet, merilevä, luut, kivikko.
 - **Grafiikka-asetukset:** Valonsäteet (oletus päällä), Liike-epäterävyys Pois/Kevyt/Vahva (oletus pois), Syväterävyys (oletus pois). Varjot: Normaali (170 m) / Tarkka (260 m).
 - **Kartta:** paljastuu n. 100 m säteeltä. Merkkisymbolit: raksi, pallukka, talo (käyttäjän esimerkit) sekä lippu ja tähti. Minikartta kääntyy katsesuunnan mukaan, iso kartta on pohjoinen ylöspäin. Kartta on aina käytössä (ei erillistä esinettä).
-- **Rakennelmat:** kivikehä (Sahel: savanni, laterittitasanko, akasiametsikkö, dyynit), hylätty leiri (aavikko, dyynit, keidas), talon rauniot ja kylän rauniot (kaikki biomit, harvinaisia). Vuoristossa rauniot ovat kiveä, sademetsässä köynnösten peittämiä. Noin 500 rakennelmaa / maailma.
-- **Arkun tavallinen saalis:** 2–3 seuraavista: risuja 3–8, kiviä 2–6, kuitua 2–6, puuta 1–4.
+- **Rakennelmat:** kivikehä (Sahel: savanni, laterittitasanko, akasiametsikkö, dyynit), hylätty leiri (aavikko, dyynit, keidas, ranta), talon rauniot ja kylän rauniot (kaikki biomit), riimukivi ja riimutaulu (kaikki biomit), laivanhylky (vain hiekkaranta). Vuoristossa rauniot ovat kiveä, sademetsässä köynnösten peittämiä. Sessio 9: 230 m:n solua kohti 50 %:n todennäköisyydellä, n. 1 800 rakennelmaa / maailma (riimukiviä ja -tauluja n. 580, laivanhylkyjä 6–13). Arkku 45 %:ssa (ei riimukivissä).
+- **Arkun tavallinen saalis:** 2–3 seuraavista: risuja, kiviä, kuitua, puuta, piikiveä, köyttä, piikivinuolia, kumia, soihtu, karitepähkinöitä, yrttirohto. Laivanhylyn arkussa merihenkinen saalis (köyttä, simpukankuoria, puuta, kookospähkinöitä, luunuolia, nahkaa). Arvoesineitä 10 %:ssa arkuista kuten ennen.
 - **Arvoesineet:** kultahippu (1–3), kaurikotilo (3–8), pronssirannerengas (1); arkussa 1–2 näistä. Ei vielä käyttöä.
 - **Sademetsän kasvit:** sademetsäpuu (6 iskua + runko 4), kapokkipuu, tiheikkö, bambu (risuja), saniainen, aluskasvillisuus, ruoko. Kulku 30 % hitaampaa.
 - **Aavikko:** keitaat (vesi, palmut, ruo'ot), kuolleet puut (kirves, puuta + risuja).
 - **Vuoristo:** kalliomuodostelmat, kalliotornit, lohkareet, kandelaaberipuut (euphorbia), kerrostuneet kallion värit.
+- **Ravinto ja myrkytys (sessio 9):** ravinto 100, tyhjenee n. 34 min:ssa (juostessa 1,7×, uidessa 1,4×). Alle 20: palautuminen hitaampaa; tyhjänä −0,5 terveyttä / s. Myrkytyksen todennäköisyys: ruskea sieni 15 %, kalpea sieni 40 %, punahattu 85 % (vahvempi), termiittisieni 5 %, paahdettu sieni 6 %, raaka liha 30 %. Myrkytys −0,45 terveyttä / s (ei alle 4), kestävyys palautuu hitaammin.
+- **Poimittavat (sessio 9):** piikivi, simpukankuoret, sulat, kookospähkinät, apinanleivät, karitepähkinät, jujubapensas, moringa, hibiskus (bissap), ruoko (veden lähellä), fonio, savi (veden lähellä), neljä sientä (ruskea, kalpea, punahattu, termiittisieni), kukat (terälehdet) ja luurangot (luita). Puista ja kasveista lisäksi kumia, palmunlehtiä, kookoksia, banaaneja, bambua ja karitepähkinöitä.
+- **Jousi (sessio 9):** täysi jännitys n. 0,95 s (jännejousi 0,85 s), lähtönopeus 16–60 m/s jännityksen mukaan, jännittäminen kuluttaa kestävyyttä ja hidastaa liikettä. Nuolet järjestyksessä piikivi > luu > puu.
+- **Arat eläimet (sessio 9):** gaselli (26 terveyttä, juoksee 11 m/s, huomaa 30 m:stä, laumassa 2–4; savanni ja metsiköt), helmikana (7, lentää, 17 m, 3–6; savanni), apina (18, 20 m, 2–4; sademetsä, keitaat), aavikkokettu (10, 22 m, 1–2; aavikko, enemmän öisin), kutojalintu (3, lentää, 10 m, parvissa 4–7). Kyykyssä huomaamisetäisyys × 0,38, juostessa × 1,25. Saalis: lihaa, taljoja, luita, jänteitä ja sulkia.
+- **Säätaulukot ilmastoittain (sessio 9, painot):** aavikko: selkeä 4, hiekkausva 3, hiekkamyrsky 1,6, pilvinen 0,5. Savanni: selkeä 4, pilvinen 3, hiekkausva 2, hiekkamyrsky 0,4, sade 1, ukkonen 0,3. Sademetsä: selkeä 2, pilvinen 3, sade 3, ukkonen 1,5, sumu 1,5. Vuoristo: selkeä 3, pilvinen 3, sumu 2, sade 1, ukkonen 0,4. Meri: selkeä 3, pilvinen 2, sade 1,5, ukkonen 0,6, sumu 0,5.
+- **Riimukivet (sessio 9):** 38 suomenkielistä tekstiä (`src/game/lore.js`) ovat **Clauden luonnoksia**: abstrakteja lauseita savipeikoista, joista, tähdistä, raunioista, kylistä, meren takaa tulleista laivoista ja saaren salaisuuksista. Käyttäjä voi kirjoittaa tilalle omat tekstinsä tai tarinansa.
+- **Veneet (sessio 9):**
+  - *Soutuvene:* 3,8 m, kestävyys 60, soutu 2,4 m/s ([Shift] 3,4 m/s), soutu kuluttaa kestävyyttä 1,6 / s ([Shift] 6 / s), kääntyy paikallaan. Syväys 0,3 m.
+  - *Purjevene:* 6,6 m, latinalaispurje, kestävyys 180, enintään 8,5 m/s × tuuli, vastatuuli alle 43°, "hiljaa" 1,3 m/s. Syväys 0,55 m.
+  - *Purjelaiva:* 24 m karakki (keulamasto ja isomasto raakapurjein, peräsmastossa latinalaispurje, keulapuun alla räikkäpurje, punaiset ristit), kestävyys 1 200, enintään 13 m/s × tuuli, vastatuuli alle 60°, "hiljaa" 1,1 m/s. Syväys 1,25 m; rakentamiseen riittää 0,7 m.
+  - Tuulikerroin 0,6–1,15 (selkeällä n. 0,72, ukkosella n. 1,07). Karilleajo yli 1,6 m/s vaurioittaa. Joissa virta kuljettaa venettä.
+  - Tuulen suunta: uusi tavoitesuunta 4–10 min välein, enintään ±100°, kääntyy n. 0,7° / s.
 
 ## Avoimet kysymykset
 - Mihin **Hiekan jäljet** -kappale laitetaan? (Se oli liitteissä, mutta ei luettelossa.)
 - Oma kappale sademetsään (nyt väliaikaisesti Deep Exploration)? Soiko vuoristossa, rannalla, yöllä tai taistelussa jokin musiikki (käyttäjä toimittaa)?
 - Lisätäänkö miekka tai muita kevyitä aseita, joilla on iskusarja?
-- Mitä meren takana on (nyt virta vie takaisin)? Pitäisikö merellä voida liikkua veneellä?
+- Mitä meren takana on (nyt virta vie takaisin myös veneellä)? Pitäisikö siellä olla toinen saari tai jotain salaista?
 - Voiko veden alle sukeltaa? (Uinti kuluttaa nyt kestävyyttä, ja sen loputtua alkaa hukkuminen.)
 - Pitäisikö vesistöissä olla kaloja tai muuta elämää (kalastus)?
 - Pitäisikö vettä voida juoda tai kerätä (jano)?
@@ -207,19 +251,21 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - Pitäisikö kantojen olla poistettavissa / antaa puuta?
 - Pitäisikö kaatuvan puun vahingoittaa pelaajaa (kun terveys lisätään)?
 - Kuinka kauan pudonneet esineet säilyvät maassa (nyt pysyvästi, enintään 250)?
-- Selviytymismittarit: terveys ja kestävyys on nyt tehty; tarvitaanko nälkä, jano tai kuumuus? Mistä ruoka ja vesi?
-- Mihin raaka liha, nahka ja savi käytetään? Voiko lihaa paistaa nuotiolla ja syödä (esim. terveydeksi)?
+- Selviytymismittarit: terveys, kestävyys ja ravinto (sessio 9) on tehty; tarvitaanko myös jano tai kuumuus?
 - Mistä viidakkoveitsi saadaan: arkuista (nyt) vai valmistetaanko se (metalli, seppä)?
 - Mitä kuollessa tapahtuu: säilyykö reppu (nyt säilyy), jääkö hautakivi, herätäänkö sängystä?
 - Sopiiko savipeikko yön viholliseksi (nimi, ulkonäkö), vai jokin muu olento?
-- Lisää eläimiä ja vihollisia (esim. antilooppi, hyeena, krokotiili vesistöissä)? Viholliset rakennelmiin tai luoliin?
+- Lisää eläimiä ja vihollisia (esim. hyeena, krokotiili vesistöissä, kalat)? Viholliset rakennelmiin tai luoliin? (Sessio 9: gaselli, helmikana, apina, aavikkokettu, kutojalinnut.)
 - Kyykky: kytkin (nyt) vai pohjassa pidettävä? (Ctrl+W sulkee selaimen välilehden, siksi nyt kytkin.)
-- Rakentaminen: Valheimin tapainen vapaa rakentaminen vai jotain muuta?
+- Rakentaminen (sessio 9: vasara ja työstöpenkki, Valheimin tapaan): mitä osia vielä tarvitaan (portaat, ovet, kivimuurit, varastoarkut, savimajat)?
+- Varastoarkut: voiko tavaraa säilöä (nyt ei)? Purjelaivan tarvikkeet (yli 270 esinettä) mahtuvat juuri ja juuri reppuun.
+- Veneet: pitäisikö laivan kannella voida kävellä (nyt pelaaja on ohjauspaikalla)? Lastiruuma? "Lautta" omana veneenään (pyynnössä mainittiin veneet / lautat)?
+- Riimukivet: kirjoittaako käyttäjä tekstit itse, tai onko pelillä tarina, johon niiden pitäisi liittyä? Pitäisikö kivistä koota pulmia (esim. kaikki kivet luettuina avaavat jotain)?
+- Metallit ja sepät (rauta, pronssi): seuraava työkalutaso piikiven jälkeen?
 - Kuka pelaajahahmo on, ja onko pelissä tarinaa?
 - Uusiutuvatko resurssit (risut, kivet, puut)?
 - Työkalujen kuluminen?
 - Moninpeli?
-- Vuorokauden pituus (nyt 20 min)?
 - Lopullinen julkaisualusta (selain, Steam/työpöytä)?
 - Pelin kieli (nyt suomi)?
 - Mistä nimi "Sahel" tulee ja mihin suuntaan se voisi muuttua?

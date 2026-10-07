@@ -2,6 +2,30 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-06–07 (sessio 9)
+**Tehtiin**
+- Käyttäjän 12 toivetta (kirjattu `DESIGN.md`:hen): joet eivät saa risteillä, enemmän hylättyjä paikkoja, biomit missä tahansa ja sopivan kokoisina, harvinaiset laivanhylyt rannoille, iskut harvemmaksi, keräilystä alkava peli (sienet ja kukat poimittaviksi, syötävät sienet ja myrkytys, paljon materiaaleja ja arkoja eläimiä, jousi), valtavasti esineitä ja työkaluja (nuotio ja rakennelmat vaativat työstöpenkin, joka rakennetaan vasaralla), linnunrata, 10 + 10 min vuorokausi, säät biomeittain, riimukivet käännöksineen ja veneet (soutuvene, purjevene, Santa Maria -tyylinen purjelaiva, purjeet tuulen mukaan). Kaikki 12 toteutettiin.
+- Maailma (`terrain.js`, `chunkGen.js`): valumaverkon joet, biomisolut, saari meren ympäröimänä, rakennelmien taulukko (n. 1 800 / maailma), laivanhylyt ja riimukivet (`models/structures.js`, `game/ruins.js`, `game/lore.js`, `ui/runePanel.js`).
+- Taistelu (`combat.js`): pidemmät jäähdytykset ja kalliimmat iskut, uudet aseet (keihäs, kivipuukko).
+- Selviytyminen: `game/survival.js` (ravinto, syöminen, myrkytys, tilavaikutukset), `game/items.js` uusiksi (kymmeniä esineitä ja reseptejä, valmistus käsin / työstöpenkillä / nuotiolla), `models/items2.js` ja `models/pickups.js` (uudet mallit), `world/objectTypes.js` (poimittavat), `ui/inventoryUI.js` (välilehdet, tiedot), `ui/hud.js` (ravinto, tilavaikutukset, myrkytysreunus).
+- Rakentaminen: `game/pieces.js`, `game/building.js`, `game/structures.js` uusiksi, `models/building.js`, `ui/buildMenu.js`; makuualusta herätyspaikkana ja nukkuminen, soihtu kädessä valaisee.
+- Jousi (`game/archery.js`, `player/viewmodel.js`) ja arat eläimet (`game/mobs.js`, `models/creatures.js`).
+- Taivas ja sää: linnunrata (`render/sky.js`), alueelliset säät ja salamat (`render/environment.js`), sade (`render/rain.js`), vuorokausi todellisessa ajassa.
+- Veneet: `models/boats.js` (rungot asemista, kastellit, purjeet joiden muoto lasketaan joka ruudulla), `game/boats.js` (kelluminen, ohjaus, purjeiden veto tuulen kulman mukaan, karilleajo, korjaus, tallennus), `ui/boatHud.js`, vasaralla rakentaminen veteen, tuulen suunnan hidas kääntyminen, veneet kartoilla, F3-napit.
+- Opas uusittiin keräilystä metsästykseen; valikon taustapaikka siirrettiin uuden biomijaon mukaan.
+- Testattiin headless-Chromiumilla: jokikartat ja -verkon tarkistus (ei risteyksiä), biomikartat useilla siemenillä, rakennelmatilastot, iskujen tahti, keräily, syöminen ja myrkytys, rakentaminen (työstöpenkki, lattiat, seinät, katot, pinoaminen, purku), jousi (jännitys, laukaus, osuma, nuolen palautus), eläinten pako ja hiipiminen, linnunrata ja säät kuvina, riimukivien kehote ja käännös, veneet (soutu ja kestävyys, purjehdus eri tuulen kulmissa, vastatuuli, "hiljaa", karilleajo ja vauriot, rakentaminen veteen ja matalasta lähtö, kuvakkeet, tallennus ja lataus kyydissä, [E] kyytiin ja maihin oikeassa pelisilmukassa), vanhat savu- ja toimintatestit. Ei konsolivirheitä.
+
+**Huomiot**
+- Sisämaan merenlahdet ovat usein vain 1,5–2 m syviä, joten laivan syväys laskettiin 1,25 m:iin ja rakentaminen sallitaan matalaan rantaveteen, josta laiva ajetaan syvemmälle.
+- Kaikki esineet, reseptit, hinnat, eläinten arvot ja riimukivien tekstit ovat Clauden paikkamerkkejä (käyttäjä antoi vapaat kädet); koottu `DESIGN.md`:hen.
+- PR #1 oli jo yhdistetty, joten session 9 työ menee uuteen PR:ään.
+- Sessio keskeytyi välillä (työprosessin uudelleenkäynnistys ja käyttörajan nollautuminen), ja työtä jatkettiin siitä mihin jäätiin.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute kaikista 12 kohdasta, erityisesti iskujen tahdista, ruoasta ja myrkytyksestä, rakentamisesta ja veneistä.
+- Avoimet kysymykset: riimukivien tekstit ja tarina, laivan kannella kävely ja lastiruuma, varastoarkut, metallit ja seppä, kalat.
+- Tunnetut puutteet: sade sataa rakennetun katon läpi, opas peittää palkkeja kapealla näytöllä, makuualustan purku palauttaa aina pahkasian taljan.
+
 ## 2026-10-06 (julkaisu Alpha v0.1)
 **Tehtiin**
 - Käyttäjä pyysi pelin julkiseksi pelattavaksi versiona Alpha v0.1. Lisättiin versiomerkintä valikkoon, `.nojekyll`, pelilinkit README:hen, ja PR #1 yhdistettiin `main`-haaraan.

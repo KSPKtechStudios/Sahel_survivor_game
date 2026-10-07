@@ -2,6 +2,51 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-06–07 (sessio 9): joet, biomit, rakennelmat, keräily ja ruoka, työkalut ja rakentaminen, jousi, eläimet, taivas ja sää, riimukivet, veneet
+
+**Maailma**
+- Joet eivät enää risteä toistensa yli: joet ja purot muodostavat valumaverkon (vesi valuu alamäkeen kohti merta tai järveä), sivujoet yhtyvät pääuomaan porrastetusti, eivätkä uomat käänny itsensä päälle. Graniittikalliot ja muut muodostelmat eivät enää katkaise jokia, ja sademetsän kuivat painanteet (jotka näyttivät risteäviltä uomilta) poistettiin.
+- Biomit voivat olla missä tahansa: kehämäinen järjestys (Sahel keskellä, reunoilla harvinaisimmat) poistettiin. Biomialueet ovat noin 1–2 km kokoisia (vierekkäiset samat yhdistyvät isommiksi), joten pitkän kävelyn jälkeen löytää uuden biomin. Maailma on saari, jota ympäröi meri, ja sisämaassakin voi olla merenlahtia.
+- Hylättyjä paikkoja on paljon enemmän: noin 1 800 rakennelmaa maailmassa (aiemmin n. 500), eli kulkija löytää niitä satunnaisesti vaeltaessaan.
+- Laivanhylyt: rannoille harvinaisia hylättyjä laivoja (n. 6–13 maailmassa), osassa arkku merihenkisellä saaliilla.
+- Riimukivet ja riimutaulut: kaiverrettuja kiviä ja pieniä riimukirjoituksia kaikkialla. Kun niitä katsoo, ruudulle tulee "PAINA E KÄÄNTÄÄKSESI", ja [E] näyttää riimujen alla suomennoksen, joka "kääntyy" kirjain kerrallaan. 38 abstraktia tekstiä maailmasta, vihjeitä ja arvoituksia; luetut kivet tallentuvat.
+
+**Taistelu**
+- Iskut ovat paljon harvemmassa: jokaisen iskun jälkeen on pidempi jäähdytys (nyrkit noin 1,1 s iskujen välillä, kivipuukko 0,9 s, kirves ja hakku 1,1 s, keihäs 1,3 s, puunuija 1,9 s, viidakkoveitsen sarjan jälkeen 2,1 s), ja iskut kuluttavat enemmän kestävyyttä.
+
+**Keräily, ruoka ja myrkytys**
+- Peli alkaa keräämällä kiviä ja risuja maasta ja pensaista. Kaikki sienet ja kukat ovat poimittavia, samoin piikivi, simpukankuoret, sulat, kookospähkinät, apinanleivät, karitepähkinät, jujubapensaat, moringa, hibiskus (bissap), ruoko, fonio, savi ja luut.
+- Ravinto (nälkäpalkki): vähenee hitaasti (täydestä tyhjään n. 34 min, juostessa ja uidessa nopeammin). Nälkäisenä terveys ja kestävyys palautuvat hitaammin, tyhjällä vatsalla terveys hupenee.
+- Syöminen: ruoka kädessä [Hiiri 2] tai repussa hiiren oikealla. Sienet ovat huonoa ruokaa, ja niistä voi saada satunnaisesti **Myrkytys**-efektin (ruskea sieni 15 %, kalpea 40 %, punahattu 85 %, termiittisieni 5 %); myös raa'asta lihasta (30 %). Myrkytys vie terveyttä (ei tapa yksinään) ja hidastaa palautumista. Yrttirohto parantaa, moringa lievittää.
+- Nuotiolla laitetaan ruokaa ja rohtoja: paistettu liha, paahdettu sieni, paahdetut pähkinät, fonio-puuro, lihapata, bissap-juoma (virkistää), karitevoi, yrttirohto ja karitevoide (haavavoide).
+
+**Esineet, työkalut ja rakentaminen**
+- Kymmeniä uusia esineitä: materiaalit (piikivi, luu, sulka, ruoko, bambunvarsi, palmunlehti, akasiankumi, köysi, simpukankuori, jänne, nahka, karitevoi, terälehdet sekä pahkasian, gasellin, apinan ja aavikkoketun taljat), 19 ruokaa, 2 rohtoa, työkalut (kivipuukko, piikivikirves ja -hakku, vasara, soihtu) ja aseet (keihäs, jousi, jännejousi, puu-, luu- ja piikivinuolet).
+- Valmistus kolmessa paikassa: käsin, työstöpenkillä ja nuotiolla (välilehdet repussa, valmistettavat ensin).
+- Vasara rakentaa [Hiiri 2 = rakennusvalikko]: ensin työstöpenkki, ja kaikki muut rakennelmat (myös nuotio) vaativat työstöpenkin 20 m:n säteelle. Osat: työstöpenkki, nuotio, puulattia, puuseinä, saviseinä, oviaukko, olkikatto, aita, pylväs, soihtuteline, makuualusta (herätyspaikka, yöllä nukkuu aamuun) ja veneet. Lattiat, seinät ja katot asettuvat 2 m:n ruudukkoon ja toistensa päälle; [R] kääntää, [X] purkaa (materiaalit palautuvat). Nuotiota ei enää valmisteta repussa.
+- Soihtu kädessä valaisee ympäristöä.
+
+**Jousi ja eläimet**
+- Jousi: pidä [Hiiri 1] pohjassa jännittääksesi (näkymä tarkentuu) ja päästä ampuaksesi. Nuolet lentävät kaarena, osuvat eläimiin ja jäävät maahan tai runkoihin, josta ne voi usein poimia takaisin.
+- Uudet arat eläimet: gaselli (savanni, akasiametsikkö), helmikana (lentää pakoon), apinat (sademetsä), aavikkokettu ja kutojalinnut (parvina, lentävät pois). Eläimet huomaavat pelaajan kaukaa ja pakenevat; hiipimällä (kyykky) pääsee lähemmäs, mutta ne säikähtävät silti, jos menee liian lähelle, joten jousi on tarpeen. Lauma pakenee yhdessä. Saaliina lihaa, taljoja, luita, jänteitä ja sulkia.
+
+**Taivas ja sää**
+- Selkeinä öinä taivaalla näkyy linnunrata: kirkas vyö pölykaistoineen ja tiheät tähdet. Taivas kiertyy hitaasti taivaannavan ympäri.
+- Vuorokausi: 10 min päivä + 10 min yö, ja aika kulkee todellisessa ajassa (ei hidastu, vaikka ruudunpäivitys hidastuisi).
+- Säät biomin mukaan: jokaisella ilmastolla on oma säätaulukko, ja sää vaihtuu pehmeästi alueelta toiselle. Sademetsässä ei ole hiekkamyrskyjä vaan sadetta, ukkosta ja sumua; aavikolla hiekkausvaa ja -myrskyjä; savannilla joskus sadetta; vuoristossa sumua; merellä sadetta ja ukkosta.
+- Uudet säät: sade (sadepisarat, väreet vedessä), ukkosmyrsky (salamat taivaalla, välähdykset valaisevat pilvet) ja sumu.
+
+**Veneet**
+- Kolme venettä, jotka rakennetaan vasaralla vain veteen (työstöpenkki rannalla): **soutuvene** (halpa, hidas ja heikko; soutaminen kuluttaa kestävyyttä), **purjevene** (latinalaispurje, keskinopea) ja valtava kolmimastoinen **purjelaiva** Santa Marian tapaan (punaiset ristit purjeissa, kastellit, viirit ja ruori; vaatii valtavasti tarvikkeita, kestää paljon ja kulkee kovaa).
+- Purjeet toimivat tuulen suunnan mukaan: purjeet kääntyvät ja pullistuvat tuulen alapuolelle, sivu- ja myötätuulessa kulku on nopeinta, ja suoraan vastatuuleen ei pääse (purjeet lepattavat). Raakapurjeinen laiva kulkee parhaiten myötätuulessa, latinalaispurjeinen vene sivutuulessa. Tuulen suunta kääntyy hitaasti muutaman minuutin välein, ja voimakkaampi tuuli kuljettaa nopeammin.
+- [E] kyytiin ja maihin. Purjeveneissä [W]/[S] vaihtaa asetusta (taakse, seis, hiljaa, puolet purjeista, täydet purjeet) ja [A]/[D] ohjaa. Vasemmassa yläkulmassa veneen tiedot: kunto, tuulen suunta, asetus ja nopeus.
+- Vene keinuu aaltojen mukana ja kallistuu tuulessa, jättää vanan ja roiskii keulasta. Matalikkoon ajo pysäyttää ja kovassa vauhdissa vaurioittaa; vasara korjaa ([Hiiri 1]) ja purkaa ([X]). Uponneesta veneestä jää kelluvia tarvikkeita. Veneet näkyvät kartoilla ja tallentuvat.
+
+**Muuta**
+- Opas uusittiin: tarvikkeet, työkalut ja vasara, puuta, työstöpenkki, nuotio, ateria ja metsästys jousella.
+- Kehittäjätyökaluihin [F3] napit uusille eläimille, aseille, materiaaleille, rakentamiselle, ruoalle ja veneille.
+- Valikon taustapaikka siirrettiin uuden biomijaon mukaan savannille.
+
 ## 2026-10-06: Alpha v0.1 julkaistu
 - Ensimmäinen julkinen alfaversio: sessioiden 1–8 työ yhdistettiin `main`-haaraan, ja peli on pelattavissa julkisesti. Valikon alareunassa lukee "Alpha v0.1".
 

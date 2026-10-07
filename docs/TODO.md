@@ -1,6 +1,10 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 9: joet (eivät risteä), biomit missä tahansa, rakennelmien määrä ja laivanhylyt, iskujen tahti, keräily ja ruoka (myrkytys), työkalut ja vasara (työstöpenkki, rakentaminen), jousi ja arat eläimet, linnunrata, 10 + 10 min vuorokausi, säät biomeittain (sade, ukkonen, sumu), riimukivet, veneet ja purjehdus
+- [ ] Vastaus: kirjoittaako käyttäjä riimukivien tekstit itse, ja liittyvätkö ne tarinaan tai pulmiin? (Nyt 38 Clauden luonnosta)
+- [ ] Vastaus: veneet: kävely laivan kannella, lastiruuma, "lautta" omana veneenään? Ovatko hinnat sopivat?
+- [ ] Vastaus: tarvitaanko varastoarkkuja, metalleja (rauta, pronssi) tai seppää seuraavaksi työkalutasoksi?
 - [ ] Käyttäjä testaa jäähdytyksen, tönäisyt, veren ja kuolemaefektin, grafiikan esiasetukset ja sademetsän musiikin
 - [ ] Vastaus: oma kappale sademetsään? Miekka tai muita kevyitä aseita?
 - [ ] Käyttäjä kytkee GitHub Pagesin päälle (Settings → Pages → Deploy from a branch → main / root) ja luo julkaisun **Alpha v0.1** (tagi `alpha-v0.1` main-haarasta)
@@ -9,7 +13,7 @@
 - [ ] Käyttäjä testaa taistelun (iskusarjat nuijalla ja viidakkoveitsellä, torjunta, parry, tönäisyt), pahkasian, savipeikot yöllä, uinnin ja hukkumisen, kyykyn, karttamerkkien nimet sekä korjatut joet, aallot ja DOF:n
 - [ ] Vastaus: mihin liha, nahka ja savi; mistä viidakkoveitsi; mitä kuollessa tapahtuu (reppu, herätyspaikka)?
 - [ ] Käyttäjä kertoo, pyöriikö peli sujuvasti (varjokaskadit ja jälkikäsittely lisäävät näytönohjaimen työtä)
-- [ ] Vastaus: mitä meren takana on, voiko sukeltaa, kalat, juomavesi?
+- [ ] Vastaus: mitä meren takana on (myös veneellä virta vie takaisin), voiko sukeltaa, kalat, juomavesi?
 - [ ] Käyttäjä testaa kartan (minikartta + [M]), rakennelmat ja arkut, uudet biomit sekä animaatioiden sulavuuden ja antaa palautetta
 - [ ] Vastaus: mihin arvoesineitä käytetään?
 - [ ] Vastaus: onko kartta aina käytössä vai pitääkö se ensin valmistaa / löytää?
@@ -20,8 +24,14 @@
 
 ## Seuraavaksi (ehdotuksia)
 - [ ] Äänet osumiin, torjuntaan ja olentoihin (kun käyttäjä toimittaa äänet)
-- [ ] Lisää eläimiä (esim. antilooppi) ja vihollisia; viholliset raunioihin?
-- [ ] Ruoka: lihan paistaminen nuotiolla (jos käyttäjä haluaa)
+- [ ] Lisää vihollisia (esim. hyeena, krokotiili) ja kaloja; viholliset raunioihin?
+- [ ] Varastoarkku rakennettavaksi (purjelaivan tarvikkeet mahtuvat nyt juuri ja juuri reppuun)
+- [ ] Laivan kannella käveleminen (liikkuva taso) ja lastiruuma
+- [ ] Sade ei saisi sataa katon läpi (rakennetun katon alla)
+- [ ] Opas menee kapealla näytöllä palkkien ja pikapalkin päälle: sijoittelu pienille näytöille
+- [ ] Makuualustan purku palauttaa aina pahkasian taljan (hinta on "mikä tahansa talja"): muista käytetty talja
+- [ ] Äänet: tuuli purjeissa, aallot rungossa, airot, sade ja ukkonen (kun käyttäjä toimittaa)
+- [ ] Riimukiviin pulma tai palkinto (esim. kaikki luetut kivet avaavat jotain), jos käyttäjä haluaa
 - [ ] Työkalujen ja aseiden kuluminen (avoin kysymys)
 - [ ] Oppaaseen lisää vaiheita, kun pelin suunta tarkentuu (esim. aavikon ja sademetsän resurssit, arkkujen etsiminen)
 - [ ] Kartalle rakennelmien merkintä automaattisesti, kun ne on nähty (jos halutaan)
@@ -43,6 +53,15 @@
 - [ ] Päätä lopullinen nimi (Sahel vai jokin muu)
 
 ## Valmis
+- [x] Joet valumaverkkona (eivät risteä), biomit missä tahansa (alueet n. 1–2 km), saari meren ympäröimänä (2026-10-06–07, sessio 9)
+- [x] Rakennelmia n. 1 800 maailmassa, laivanhylyt rannoilla, riimukivet ja -taulut käännöksineen (sessio 9)
+- [x] Iskut harvemmaksi (pidemmät jäähdytykset, suurempi kestävyyden kulutus) (sessio 9)
+- [x] Keräily maasta ja pensaista, poimittavat sienet ja kukat, ravinto, syöminen, myrkytys, nuotioruoat ja rohdot (sessio 9)
+- [x] Kymmeniä esineitä ja työkaluja, valmistus käsin / työstöpenkillä / nuotiolla, vasara ja rakentaminen, soihtu (sessio 9)
+- [x] Jousi ja nuolet, arat eläimet (gaselli, helmikana, apina, aavikkokettu, kutojalinnut), hiipiminen (sessio 9)
+- [x] Linnunrata, vuorokausi 10 + 10 min todellisessa ajassa, säät biomeittain (sade, ukkonen ja salamat, sumu) (sessio 9)
+- [x] Veneet: soutuvene, purjevene, Santa Maria -tyylinen purjelaiva; purjeet tuulen mukaan, tuulen suunta kääntyy, veneet kartoilla (sessio 9)
+- [x] Lihan paistaminen nuotiolla ja lisää eläimiä (sessio 9)
 - [x] Jäähdytys, kombot vain kevyille aseille, lisää tönäisyä, veri ja kuolemaefekti, grafiikan esiasetukset, sademetsän musiikki, lyhyemmät häivytykset, varjokorjaus (2026-10-06, sessio 8)
 - [x] Musiikki (päävalikko, savanni, aavikko, meri) viiveillä ja häivytyksillä, ääniasetukset (2026-10-06, sessio 7)
 - [x] Kehittäjätyökalut [F3]: lentäminen, nopeus, kuolemattomuus, siirtyminen, olennot, esineet, sää, aika, koko kartta (2026-10-06, sessio 7)
