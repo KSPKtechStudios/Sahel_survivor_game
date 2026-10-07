@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
 import { V, displace, paint, limb, flatNormals, merge } from './util.js';
 import { makeCampfireBase } from './items.js';
+import { boatGeometry } from './boats.js';
 
 const PLANK = [0x8a6a44, 0x7a5c3a, 0x93734a, 0x806040];
 
@@ -192,5 +193,8 @@ export function createBuildModels() {
     pole: makePole(),
     torch_stand: makeTorchStand(),
     bed: makeBed(),
+    rowboat: boatGeometry('rowboat'),
+    sailboat: boatGeometry('sailboat'),
+    ship: boatGeometry('ship'),
   };
 }

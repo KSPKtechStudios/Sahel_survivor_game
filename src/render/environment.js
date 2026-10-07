@@ -124,6 +124,11 @@ export class Environment {
     this.onStrike = null; // (suunta) main.js: salaman kuva
     this.windDir = new THREE.Vector2(-0.7071, 0.7071);
     this.windAngle = Math.atan2(0.7071, -0.7071);
+    // Tuulen suunta kääntyy hitaasti (purjeet): tavoitesuunta vaihtuu muutaman
+    // minuutin välein. Aallokon suunta (swellDir) pysyy vakiona.
+    this.windBase = this.windAngle;
+    this.windTarget = this.windAngle;
+    this.windTimer = 300;
 
     // Lasketut arvot muille järjestelmille
     this.sunDir = new THREE.Vector3();
@@ -288,8 +293,18 @@ export class Environment {
     // Meren aallot kasvavat tuulen mukana (myrskyssä metrien aallokko).
     this.waveAmp = 0.15 + Math.pow(g.wind, 1.5) * 1.6;
 
-    // Tuulen suunta vaihtelee hitaasti koillisen ympärillä.
-    const ang = this.windAngle + Math.sin(elapsed * 0.03) * 0.35;
+    // Tuulen suunta kääntyy hitaasti uuteen suuntaan (enintään n. 0,7° / s)
+    // ja huojuu vähän sen ympärillä.
+    if (!this.frozen) {
+      this.windTimer -= clockDt;
+      if (this.windTimer <= 0) {
+        this.windTimer = 240 + Math.random() * 360;
+        this.windTarget = this.windBase + (Math.random() * 2 - 1) * 1.8;
+      }
+      const dA = this.windTarget - this.windBase;
+      this.windBase += Math.sign(dA) * Math.min(Math.abs(dA), clockDt * 0.012);
+    }
+    const ang = this.windBase + Math.sin(elapsed * 0.03) * 0.25;
     this.windDir.set(Math.cos(ang), Math.sin(ang));
     windUniforms.uTime.value = elapsed;
     windUniforms.uWindDir.value.copy(this.windDir);
@@ -402,13 +417,14 @@ export class Environment {
   serialize() {
     const zones = {};
     for (const k of CLIMATE_KEYS) zones[k] = this.zones[k].target;
-    return { time: this.time, day: this.day, weather: this.targetKey, zones };
+    return { time: this.time, day: this.day, weather: this.targetKey, zones, wind: Math.round(this.windBase * 1000) / 1000 };
   }
 
   load(data) {
     if (!data) return;
     if (typeof data.time === 'number') this.time = data.time;
     if (typeof data.day === 'number') this.day = data.day;
+    if (Number.isFinite(data.wind)) this.windBase = this.windTarget = data.wind;
     if (data.zones) {
       for (const k of CLIMATE_KEYS) if (WEATHER[data.zones[k]]) this.setWeather(data.zones[k], true, k);
     } else if (data.weather && WEATHER[data.weather]) {

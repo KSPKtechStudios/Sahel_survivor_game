@@ -35,6 +35,7 @@ import { Combat } from './game/combat.js';
 import { Survival } from './game/survival.js';
 import { Archery } from './game/archery.js';
 import { BuildSystem } from './game/building.js';
+import { Boats } from './game/boats.js';
 import { PIECES } from './game/pieces.js';
 import { events } from './game/events.js';
 import { loadWorldData, saveWorldData, loadSettings } from './game/save.js';
@@ -47,6 +48,7 @@ import { GuideUI } from './ui/guideUI.js';
 import { InventoryUI } from './ui/inventoryUI.js';
 import { BuildMenu } from './ui/buildMenu.js';
 import { RunePanel } from './ui/runePanel.js';
+import { BoatHud } from './ui/boatHud.js';
 import { Menu } from './ui/menu.js';
 import { DevTools } from './ui/devtools.js';
 
@@ -103,19 +105,27 @@ const player = new Player(camera);
 const input = new Input(canvas);
 const viewmodel = new ViewModel(models.items);
 const mobs = new Mobs({ scene, world, drops, debris, bursts, player, env, structures, fire, blood });
-const interaction = new Interaction({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs });
+const boats = new Boats({ scene, camera, player, env, drops, waves: player.waves });
+boats.fx = {
+  ripple: (x, z, r, s) => ripples.disturb(x, z, r, s),
+  splash: (x, y, z, power, opts) => splashes.spawn(x, y, z, power, opts),
+};
+const interaction = new Interaction({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs, boats });
+interaction.boardBoat = (b) => boats.board(b);
 const combat = new Combat({ camera, player, inventory, viewmodel, interaction, mobs, debris, bursts });
 mobs.combat = combat;
 const survival = new Survival(player);
 const archery = new Archery({ scene, camera, player, inventory, viewmodel, mobs, world, drops, debris });
-const build = new BuildSystem({ camera, player, inventory, structures, world, viewmodel, drops });
+const build = new BuildSystem({ camera, player, inventory, structures, world, viewmodel, drops, boats });
 
 const icons = renderItemIcons(models.items);
 const pieceIcons = renderItemIcons(models.build);
 const hud = new Hud(inventory, icons, survival);
+const boatHud = new BoatHud();
 const explored = new ExploredMap(world.gen);
 const minimap = new Minimap(explored);
 const bigMap = new BigMap(explored, player);
+bigMap.boats = boats;
 new GuideUI(guide);
 const invUI = new InventoryUI(inventory, icons, {
   stations: () => structures.stationsNear(player.position.x, player.position.z),
@@ -298,6 +308,7 @@ function clearWorldState(seed) {
   fire.clear();
   blood.clear();
   mobs.clear();
+  boats.clear();
   combat.reset();
   archery.clear();
   build.select(null);
@@ -370,6 +381,7 @@ async function startWorld(meta) {
   await buildAround(player.position.x, player.position.z, (p) => menu.setLoading(p));
   env.snapClimate();
   structures.load(data ? data.structures : []);
+  boats.load(data ? data.boats : null);
   drops.load(data ? data.drops : []);
   fallen.load(data ? data.fallen : []);
   ruins.load(data ? data.ruins : []);
@@ -391,6 +403,7 @@ function persist() {
     env: env.serialize(),
     world: world.serialize(),
     structures: structures.serialize(),
+    boats: boats.serialize(),
     drops: drops.serialize(),
     fallen: fallen.serialize(),
     ruins: ruins.serialize(),
@@ -540,12 +553,14 @@ async function respawnPlayer() {
 }
 events.on('playerDied', () => {
   combat.reset();
+  boats.detach();
   persist();
 });
 
 // --- Kehittäjätyökalut [F3] -----------------------------------------------------------------
 // Siirtyminen: maailma rakennetaan uuden paikan ympärille ennen kuin jatketaan.
 async function teleportTo(x, z, look = null) {
+  boats.detach();
   player.teleport(x, z);
   env.snapClimate();
   player.velocity.set(0, 0, 0);
@@ -554,7 +569,7 @@ async function teleportTo(x, z, look = null) {
   player.update(0, input, world);
 }
 const devtools = new DevTools({
-  player, env, world, mobs, inventory, explored, ruins, drops, fps: null, teleport: teleportTo, fmtTime, music,
+  player, env, world, mobs, inventory, explored, ruins, drops, fps: null, teleport: teleportTo, fmtTime, music, boats,
 });
 
 // --- Koko ------------------------------------------------------------------------------
@@ -634,7 +649,11 @@ function frame(now) {
   if (state === 'playing') handleHotbar();
 
   if (state === 'menu') updateMenuCamera(dt);
-  else if (inGame) player.update(running ? dt : 0, input, world);
+  else if (inGame) {
+    // Vene liikkuu ennen pelaajaa (kyydissä pelaajan paikka tulee veneeltä).
+    boats.update(running ? dt : 0, input, elapsed);
+    player.update(running ? dt : 0, input, world);
+  }
 
   if (state !== 'boot') world.update(player.position.x, player.position.z, simDt);
   sampleTerrain(player.position.x, player.position.z, _s);
@@ -676,7 +695,14 @@ function frame(now) {
   blood.update(simDt, 0.35 + 0.65 * env.daylight);
   tumbleweeds.update(simDt, player.position, env.w.wind, env.windDir);
   if (state === 'playing' && !player.dead) {
+    const wasRiding = boats.riding;
     interaction.update(simDt, input);
+    // Veneessä: [E] nousee maihin, kun katse ei osu mihinkään muuhun
+    // (ei samalla painalluksella, jolla juuri noustiin kyytiin).
+    if (boats.riding && !interaction.target) {
+      interaction.prompt = boats.prompt;
+      if (wasRiding && input.pressed.has('KeyE') && input.enabled) boats.disembark();
+    }
     // Vasara: rakennushaamu ja kehote (vasaran kehote korvaa muut).
     if (build.update(simDt, input) && build.prompt) interaction.prompt = build.prompt;
   } else { structures.showGhost(null); interaction.prompt = null; }
@@ -740,19 +766,21 @@ function frame(now) {
     guide.update(simDt);
     runePanel.update(dt, player.position);
     hud.update(dt, { prompt: interaction.prompt, player, env, visible: state === 'playing', cooldown: combat.cooldownFrac });
+    boatHud.update(boats, state === 'playing' && !player.dead);
     explored.update(dt, player.position.x, player.position.z);
-    minimap.update(dt, player);
+    minimap.update(dt, player, boats);
     bigMap.update();
     devtools.update(dt);
     if (player.atEdge && state === 'playing') {
       edgeMsgTimer -= dt;
       if (edgeMsgTimer <= 0) {
-        events.emit('message', { text: player.inWater ? 'Virta on liian voimakas' : 'Maailman reuna' });
+        events.emit('message', { text: player.inWater || player.riding ? 'Virta on liian voimakas' : 'Maailman reuna' });
         edgeMsgTimer = 3;
       }
     }
   } else {
     hud.update(dt, { prompt: null, player, env, visible: false });
+    boatHud.update(boats, false);
   }
 
   // Valikossa aurinko on paikallaan: varjokartta päivitetään harvoin, jotta
@@ -802,5 +830,5 @@ window.sahel = {
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
   ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, blood,
   startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
-  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot,
+  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats,
 };

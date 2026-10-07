@@ -56,6 +56,10 @@ export class Player {
     this.drowning = 0;                // 0..1 (HUD:n sininen reunus)
     this.drownTimer = 0;
     this.swimTime = 0;
+    // Veneessä (game/boats.js asettaa paikan, silmien korkeuden ja kallistuksen)
+    this.riding = null;
+    this.rideEye = CONFIG.eyeHeight;
+    this.rideRoll = 0;
     // Kehittäjätyökalut [F3]
     this.flying = false;
     this.god = false;                 // ei vahinkoa, kestävyys ei kulu
@@ -145,6 +149,11 @@ export class Player {
 
     if (this.flying && alive) {
       this._fly(dt, input);
+      this._post(dt, alive);
+      return;
+    }
+    if (this.riding) {
+      this._ride();
       this._post(dt, alive);
       return;
     }
@@ -326,6 +335,19 @@ export class Player {
     this.sprinting = false;
   }
 
+  // Veneessä: paikka tulee veneeltä (game/boats.js), ei painovoimaa eikä uintia.
+  _ride() {
+    this.velocity.set(0, 0, 0);
+    this.knock.set(0, 0, 0);
+    this.onGround = true;
+    this.inWater = 0;
+    this.surface = -Infinity;
+    this.waterDepth = 0;
+    this.crouching = false;
+    this.sprinting = false;
+    this.atEdge = !!this.riding.atEdge;
+  }
+
   // Kestävyys, terveys, uinnin kulutus ja kamera (joka ruudulla lopuksi).
   _post(dt, alive) {
     const p = this.position;
@@ -375,8 +397,8 @@ export class Player {
 
     // Kyykky laskee silmien korkeutta pehmeästi; kuollessa kamera kaatuu maahan.
     this.crouchBlend += ((this.crouching ? 1 : 0) - this.crouchBlend) * Math.min(1, dt * 10);
-    let eyeH = CONFIG.eyeHeight + (CONFIG.crouchEyeHeight - CONFIG.eyeHeight) * this.crouchBlend;
-    let roll = 0;
+    let eyeH = this.riding ? this.rideEye : CONFIG.eyeHeight + (CONFIG.crouchEyeHeight - CONFIG.eyeHeight) * this.crouchBlend;
+    let roll = this.riding ? this.rideRoll : 0;
     if (this.dead) {
       const k = 1 - Math.exp(-this.deathT * 3);
       eyeH += (0.32 - eyeH) * (this.inWater === 2 ? 0.25 : k);

@@ -3,6 +3,9 @@
 import * as THREE from 'three';
 
 const ICON_POSE = {
+  rowboat: [0.45, 0.85, 0],
+  sailboat: [0.25, 0.95, 0],
+  ship: [0.18, 1.05, 0],
   stick: [0.3, 0, -0.8],
   stone: [0.5, 0.4, 0],
   fiber: [0.2, 0, -0.6],
@@ -76,6 +79,10 @@ export function renderItemIcons(itemGeometries, size = 96) {
     box.getSize(sz);
     const r = Math.max(sz.x, sz.y, sz.z * 0.8) * 0.5;
     const dist = (r / Math.tan(THREE.MathUtils.degToRad(cam.fov / 2))) * 1.18;
+    // Isot mallit (purjelaiva): kameran syvyysalue mallin koon mukaan.
+    cam.near = Math.max(0.01, dist * 0.02);
+    cam.far = dist + sz.length() * 2 + 10;
+    cam.updateProjectionMatrix();
     cam.position.set(center.x, center.y, center.z + dist + sz.z * 0.5);
     cam.lookAt(center);
     renderer.render(scene, cam);

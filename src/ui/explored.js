@@ -23,6 +23,34 @@ export const WAYPOINT_TYPES = [
 ];
 
 // Merkin piirto (keskipiste x, y; koko s pikseliä).
+// Vene kartalla: rungon siluetti keula suuntaan (hx, hy) ruudulla.
+export function drawBoat(ctx, x, y, hx, hy, size, sail = false) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(Math.atan2(hy, hx) + Math.PI / 2);
+  const w = size * 0.42, l = size;
+  ctx.beginPath();
+  ctx.moveTo(0, -l * 0.55);
+  ctx.quadraticCurveTo(w, -l * 0.2, w * 0.8, l * 0.45);
+  ctx.lineTo(-w * 0.8, l * 0.45);
+  ctx.quadraticCurveTo(-w, -l * 0.2, 0, -l * 0.55);
+  ctx.closePath();
+  ctx.fillStyle = '#5a3a1e';
+  ctx.strokeStyle = 'rgba(255, 246, 228, 0.95)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fill();
+  if (sail) {
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.9, -l * 0.05);
+    ctx.lineTo(w * 0.9, -l * 0.05);
+    ctx.strokeStyle = '#f4ead2';
+    ctx.lineWidth = Math.max(1.5, size * 0.12);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 export function drawWaypoint(ctx, type, x, y, s = 14) {
   const def = WAYPOINT_TYPES.find((w) => w.type === type) || WAYPOINT_TYPES[0];
   ctx.save();

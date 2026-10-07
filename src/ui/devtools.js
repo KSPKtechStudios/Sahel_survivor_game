@@ -4,6 +4,7 @@
 import { CONFIG } from '../config.js';
 import { ITEMS } from '../game/items.js';
 import { STRUCT_NAMES } from '../game/ruins.js';
+import { BOATS } from '../game/boats.js';
 import { WEATHER, WEATHER_KEYS } from '../render/environment.js';
 import { findSpawn, findBiome, findWater, placeName, sampleTerrain, structuresNear, WATER } from '../world/terrain.js';
 
@@ -16,7 +17,7 @@ const el = (tag, cls, text) => {
 
 export class DevTools {
   // ctx: { player, env, world, mobs, inventory, explored, ruins, drops, fps,
-  //        teleport(x, z, look) -> Promise, music, fmtTime }
+  //        teleport(x, z, look) -> Promise, music, fmtTime, boats }
   constructor(ctx) {
     this.ctx = ctx;
     this.root = document.getElementById('devtools');
@@ -146,6 +147,29 @@ export class DevTools {
     row = this._row(sec);
     this._toggle(row, 'Olentoja syntyy', () => mobs.enabled, (v) => { mobs.enabled = v; });
 
+    // Veneet: kutsutaan lähimpään sopivaan veteen ja noustaan kyytiin.
+    sec = this._section(card, 'Veneet');
+    row = this._row(sec);
+    for (const [type, name] of [['rowboat', 'Soutuvene'], ['sailboat', 'Purjevene'], ['ship', 'Purjelaiva']]) {
+      this._button(row, name, async () => {
+        const boats = this.ctx.boats;
+        this.status('Etsitään vettä…');
+        await new Promise((res) => setTimeout(res, 20));
+        const spot = this._boatSpot(type);
+        if (!spot) return 'Sopivaa vettä ei löytynyt';
+        this.status('Siirrytään…');
+        await this.ctx.teleport(spot.x, spot.z);
+        const b = boats.add(type, spot.x, spot.z, spot.yaw);
+        boats.board(b);
+        return `${name}: kyydissä (${Math.round(spot.x)}, ${Math.round(spot.z)})`;
+      });
+    }
+    this._button(row, 'Venetarvikkeet', () => {
+      if (inventory.count('hammer') === 0) inventory.add('hammer', 1);
+      for (const [id, n] of [['wood', 160], ['rope', 40], ['gum', 24], ['leather', 24], ['stone', 30]]) inventory.add(id, n);
+      return 'Vasara ja purjelaivan tarvikkeet (työstöpenkki tarvitaan rannalle)';
+    });
+
     // Esineet
     sec = this._section(card, 'Esineet');
     row = this._row(sec, 'dev-items');
@@ -224,6 +248,35 @@ export class DevTools {
     const r = el('div', `dev-row ${cls}`);
     parent.appendChild(r);
     return r;
+  }
+
+  // Lähin paikka, johon vene mahtuu (ensin pelaajan ympäriltä, sitten
+  // lähimmän meren tai järven luota).
+  _boatSpot(type) {
+    const { player, boats } = this.ctx;
+    const s = {};
+    const search = (cx, cz, R) => {
+      for (let r = 0; r <= R; r += 6) {
+        const n = Math.max(1, Math.floor((2 * Math.PI * r) / 8));
+        for (let i = 0; i < n; i++) {
+          const a = (i / n) * Math.PI * 2;
+          const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r;
+          sampleTerrain(x, z, s);
+          if (s.wl - s.h < BOATS[type].draft + 0.4) continue;
+          for (const yaw of [a, a + Math.PI / 2, a - Math.PI / 2, a + Math.PI]) {
+            if (boats.clearance(type, x, z, yaw) > 0.3) return { x, z, yaw };
+          }
+        }
+      }
+      return null;
+    };
+    const p = player.position;
+    let spot = search(p.x, p.z, 260);
+    if (!spot) {
+      const w = findWater(type === 'ship' ? 'sea' : WATER.LAKE, p.x, p.z) || findWater('sea', p.x, p.z);
+      if (w) spot = search(w.wx, w.wz, 400);
+    }
+    return spot;
   }
 
   _button(parent, label, fn) {

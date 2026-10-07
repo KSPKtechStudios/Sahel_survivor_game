@@ -1,5 +1,6 @@
 // Vasaralla rakennettavat osat. Kaikki paitsi työstöpenkki vaativat
-// työstöpenkin lähelle (BENCH_RANGE). grid: 'floor' = ruutu (2 x 2 m),
+// työstöpenkin lähelle (BENCH_RANGE). Veneet (boat) asetetaan vain veteen,
+// ja ne liikkuvat (game/boats.js). grid: 'floor' = ruutu (2 x 2 m),
 // 'wall' = ruudun reuna, 'roof' = ruutu (kalteva), 'corner' = ruudun kulma,
 // null = vapaa sijoitus maastoon. Törmäykset ja lattiapinnat ovat osan omissa
 // koordinaateissa (origo pohjan keskellä, seinä x-akselin suuntainen).
@@ -69,6 +70,21 @@ export const PIECES = {
     desc: 'Herätyspaikka. Yöllä [E] nukkuu aamuun.',
     colliders: [], box: [-1, 0, -0.45, 1, 0.2, 0.45],
   },
+  rowboat: {
+    name: 'Soutuvene', cost: { wood: 10, rope: 2, gum: 2 }, grid: null, boat: 'rowboat',
+    desc: 'Pieni soutuvene. Hidas ja heikko, mutta halpa. Asetetaan vain veteen. Soutaminen kuluttaa kestävyyttä.',
+    colliders: [], box: [-0.7, -0.3, -1.9, 0.7, 0.6, 1.9],
+  },
+  sailboat: {
+    name: 'Purjevene', cost: { wood: 24, rope: 8, gum: 6, leather: 4 }, grid: null, boat: 'sailboat',
+    desc: 'Latinalaispurjeinen vene. Kulkee tuulen voimalla, sivutuulessa nopeimmin; suoraan vastatuuleen ei pääse. Asetetaan vain veteen.',
+    colliders: [], box: [-1.1, -0.55, -3.3, 1.1, 1, 3.3],
+  },
+  ship: {
+    name: 'Purjelaiva', cost: { wood: 160, rope: 40, gum: 24, leather: 24, stone: 30 }, grid: null, boat: 'ship',
+    desc: 'Valtava kolmimastoinen karakki. Kestävä ja nopea myötätuulessa, mutta vaatii valtavasti tarvikkeita. Rakennetaan vähintään 0,7 m syvään rantaveteen ja ajetaan sieltä hitaasti syvemmälle; vapaa purjehdus vaatii 1,25 m vettä.',
+    colliders: [], box: [-3.7, -2.4, -12, 3.7, 7.8, 12],
+  },
 };
 
-export const PIECE_ORDER = ['workbench', 'campfire', 'floor', 'wall', 'mud_wall', 'door_wall', 'roof', 'fence', 'pole', 'torch_stand', 'bed'];
+export const PIECE_ORDER = ['workbench', 'campfire', 'floor', 'wall', 'mud_wall', 'door_wall', 'roof', 'fence', 'pole', 'torch_stand', 'bed', 'rowboat', 'sailboat', 'ship'];

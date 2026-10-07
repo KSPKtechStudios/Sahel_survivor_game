@@ -8,21 +8,28 @@
 // seinien yläreunaan. Muut osat (työstöpenkki, nuotio, soihtuteline,
 // makuualusta) asetetaan vapaasti maahan tai lattialle. Kaikki paitsi
 // työstöpenkki vaativat työstöpenkin BENCH_RANGE-säteelle.
+//
+// Veneet asetetaan vain veteen: haamu alkaa katsotusta kohdasta ja jatkuu
+// katseen suuntaan, ja koko rungon alla pitää olla tarpeeksi syvää vettä.
+// Vasara korjaa venettä [Hiiri 1] ja purkaa sen [X].
 import * as THREE from 'three';
 import { heightAt, waterAt } from '../world/terrain.js';
 import { ITEMS, TAG_NAMES } from './items.js';
 import { PIECES, GRID, BENCH_RANGE } from './pieces.js';
+import { BOATS } from './boats.js';
 import { events } from './events.js';
+import { CONFIG } from '../config.js';
 
 const REACH = 7;
+const BOAT_REACH = CONFIG.reach + 1.5; // sama kuin kyytiin nousussa
 const _dir = new THREE.Vector3();
 const _p = new THREE.Vector3();
 const _wq = {};
 const _cols = [];
 
 export class BuildSystem {
-  constructor({ camera, player, inventory, structures, world, viewmodel, drops }) {
-    Object.assign(this, { camera, player, inventory, structures, world, viewmodel, drops });
+  constructor({ camera, player, inventory, structures, world, viewmodel, drops, boats }) {
+    Object.assign(this, { camera, player, inventory, structures, world, viewmodel, drops, boats });
     this.selected = null; // valittu osa (PIECES-avain)
     this.rot = 0;         // käännös (vapaat osat 45°, katto 90° askelin)
     this.plan = null;     // { type, x, y, z, rot, key, valid, reason }
@@ -44,15 +51,24 @@ export class BuildSystem {
   update(dt, input) {
     this.prompt = null;
     this.plan = null;
-    if (!this.active || this.player.dead) return false;
+    if (!this.active || this.player.dead || this.player.riding) {
+      if (this.active) this.structures.showGhost(null);
+      return false;
+    }
     const cam = this.camera;
     cam.getWorldDirection(_dir);
-    const target = this.structures.raycast(cam.position, _dir, REACH);
+    let target = this.structures.raycast(cam.position, _dir, REACH);
     if (input.enabled && input.clicked.has(2) && this.openMenu) {
       this.openMenu();
       return true;
     }
     if (input.enabled && input.pressed.has('KeyR')) this.rot = (this.rot + 1) % 8;
+    // Vene katseen edessä: korjaus ja purku.
+    const boat = this.boats ? this.boats.raycast(cam.position, _dir, BOAT_REACH) : null;
+    if (boat && (!target || boat.t < target.t)) {
+      target = null;
+      if (!this.selected || PIECES[this.selected].boat || boat.t < 3.5) return this._boatTarget(boat.obj, input);
+    }
     if (input.enabled && input.pressed.has('KeyX') && target) {
       this.removePiece(target.obj);
       return true;
@@ -68,7 +84,7 @@ export class BuildSystem {
     this.structures.showGhost(plan ? _p.set(plan.x, plan.y, plan.z) : null, plan && plan.valid, this.selected, plan ? plan.rot : 0);
     const name = PIECES[this.selected].name;
     if (!plan) {
-      this.prompt = { name, action: 'Katso maahan asettaaksesi · [Hiiri 2] Valikko', warn: false };
+      this.prompt = { name, action: `Katso ${PIECES[this.selected].boat ? 'veteen' : 'maahan'} asettaaksesi · [Hiiri 2] Valikko`, warn: false };
     } else {
       this.prompt = plan.valid
         ? { name, action: '[Hiiri 1] Rakenna · [R] Käännä · [Hiiri 2] Valikko' + (target ? ' · [X] Pura' : '') }
@@ -126,6 +142,7 @@ export class BuildSystem {
   _plan(target) {
     const type = this.selected;
     const def = PIECES[type];
+    if (def.boat) return this._planBoat(type, def);
     const aim = this._aim(target);
     if (!aim) return null;
     let x, y, z, rot = 0, key = null;
@@ -257,9 +274,105 @@ export class BuildSystem {
     return '';
   }
 
+  // Vasara osoittaa venettä: [Hiiri 1] korjaa, [X] purkaa.
+  _boatTarget(b, input) {
+    this.structures.showGhost(null);
+    const def = b.def;
+    const hurt = b.hp < def.hp;
+    const cost = Object.entries(def.repair);
+    const costText = cost.map(([id, n]) => `${ITEMS[id].name} ${n}`).join(', ');
+    this.prompt = {
+      name: def.name,
+      action: (hurt ? `[Hiiri 1] Korjaa (${costText}) · ` : '') + '[X] Pura · [E] Kyytiin',
+      hp: hurt ? b.hp / def.hp : null,
+    };
+    if (!input.enabled) return true;
+    if (input.clicked.has(0) && hurt) {
+      const missing = cost.filter(([id, n]) => this.inventory.count(id) < n);
+      if (missing.length) {
+        events.emit('message', { text: `Korjaus vaatii: ${costText}` });
+      } else {
+        for (const [id, n] of cost) this.inventory.remove(id, n);
+        this.boats.repair(b);
+        this.viewmodel.play('swing', { dur: 0.42, hitAt: 0.5 });
+        events.emit('hitFeedback', { strength: 0.25 });
+        events.emit('message', { text: `${def.name} korjattu (kunto ${Math.round((b.hp / def.hp) * 100)} %)` });
+      }
+    } else if (input.pressed.has('KeyX')) {
+      this.removeBoat(b);
+    }
+    return true;
+  }
+
+  // Veneen haamu: katseen osuma veteen, vene jatkuu katseen suuntaan.
+  _planBoat(type, def) {
+    const bd = BOATS[def.boat];
+    const o = this.camera.position;
+    let hit = null;
+    for (let t = 0.5; t <= bd.reach; t += t < 20 ? 0.25 : 0.5) {
+      const x = o.x + _dir.x * t, y = o.y + _dir.y * t, z = o.z + _dir.z * t;
+      const w = waterAt(x, z, _wq);
+      if (y <= Math.max(w.h, w.wl)) { hit = { x, z }; break; }
+    }
+    if (!hit) return null;
+    const yaw = this.player.yaw;
+    const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
+    const rel = this.rot * (Math.PI / 4);
+    const ext = Math.abs(Math.cos(rel)) * bd.L * 0.5 + Math.abs(Math.sin(rel)) * bd.B + 0.3;
+    const x = hit.x + fx * ext, z = hit.z + fz * ext;
+    const w = waterAt(x, z, _wq);
+    const plan = { type, boat: def.boat, x, y: Math.max(w.wl, w.h), z, rot: yaw + Math.PI + rel, key: null, valid: false, reason: '' };
+    plan.reason = this._checkBoat(plan, def, bd);
+    plan.valid = !plan.reason;
+    return plan;
+  }
+
+  // Työstöpenkki pelaajan lähellä (rannalla); koko rungon alla vettä ja
+  // keskellä vähintään launch-syvyys. Matalasta vedestä vene ajetaan syvemmälle.
+  _checkBoat(plan, def, bd) {
+    const p = this.player.position;
+    if (!this.structures.nearest('workbench', p.x, p.z, BENCH_RANGE)) return 'Vaatii työstöpenkin lähelle (rakenna rannalle)';
+    const w = waterAt(plan.x, plan.z, _wq);
+    if (w.wl - w.h < 0.05) return 'Vain veteen';
+    if (this.boats.clearance(plan.boat, plan.x, plan.z, plan.rot, 0) < 0.05) return 'Vain veteen: osa rungosta on maalla';
+    if (w.wl - w.h < bd.launch) return `Liian matalaa (vaatii ${bd.launch.toFixed(1).replace('.', ',')} m): katso kauemmas`;
+    const other = this.boats.nearest(plan.x, plan.z, bd.L * 0.5);
+    if (other) return 'Toinen vene on tiellä';
+    const missing = [];
+    for (const [id, n] of Object.entries(def.cost)) {
+      const have = this.inventory.count(id);
+      if (have < n) missing.push(`${ITEMS[id].name} ${n - have}`);
+    }
+    if (missing.length) return `Puuttuu: ${missing.join(', ')}`;
+    return '';
+  }
+
+  // Purku: vene poistetaan ja materiaalit palautetaan kunnon mukaan.
+  removeBoat(b) {
+    if (this.boats.riding === b) return;
+    const def = PIECES[b.type];
+    const k = 0.5 + 0.5 * (b.hp / b.def.hp);
+    this.boats.remove(b);
+    for (const [id, n] of Object.entries(def.cost)) {
+      const m = Math.max(1, Math.round(n * k));
+      const left = this.inventory.add(id, m);
+      if (left > 0) this.drops.spawn(id, left, _p.set(this.player.position.x, this.player.position.y + 0.8, this.player.position.z));
+    }
+    this.viewmodel.play('swing', { dur: 0.42, hitAt: 0.5 });
+    events.emit('message', { text: `${def.name} purettu` });
+  }
+
   _build(plan) {
     const def = PIECES[plan.type];
     for (const [id, n] of Object.entries(def.cost)) this.inventory.remove(id, n);
+    if (def.boat) {
+      this.boats.add(def.boat, plan.x, plan.z, plan.rot);
+      this.viewmodel.play('swing', { dur: 0.42, hitAt: 0.5 });
+      events.emit('build', { type: plan.type });
+      events.emit('hitFeedback', { strength: 0.3 });
+      events.emit('message', { text: `${def.name} valmis: [E] nouse kyytiin` });
+      return;
+    }
     this.structures.add(plan.type, plan.x, plan.y, plan.z, plan.rot, plan.key);
     this.viewmodel.play('swing', { dur: 0.42, hitAt: 0.5 });
     events.emit('build', { type: plan.type });

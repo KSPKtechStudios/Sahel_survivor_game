@@ -16,14 +16,15 @@ const _place = new THREE.Vector3();
 const _cols = [];
 
 export class Interaction {
-  constructor({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs }) {
-    Object.assign(this, { camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs });
-    this.target = null; // { obj, t, kind: 'object'|'tumbleweed'|'drop'|'log'|'chest'|'mob'|'piece' }
+  constructor({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs, boats }) {
+    Object.assign(this, { camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs, boats });
+    this.target = null; // { obj, t, kind: 'object'|'tumbleweed'|'drop'|'log'|'chest'|'mob'|'piece'|'rune'|'boat' }
     this.prompt = null;
     this.placeValid = false;
     this.useItem = null;  // main.js: syö / käytä valitun paikan esine
     this.usePiece = null; // main.js: [E] rakennelmaan (makuualusta)
     this.readRune = null; // main.js: [E] riimukiveen (käännös)
+    this.boardBoat = null; // main.js: [E] veneeseen (kyytiin)
   }
 
   _raycast() {
@@ -42,6 +43,7 @@ export class Interaction {
     consider(this.ruins.raycastRunes(o, _dir, reach + 1.5), 'rune');
     consider(this.structures.raycast(o, _dir, reach), 'piece');
     if (this.mobs) consider(this.mobs.raycast(o, _dir, reach + 2), 'mob');
+    if (this.boats) consider(this.boats.raycast(o, _dir, reach + 1.5), 'boat');
     return best;
   }
 
@@ -100,6 +102,10 @@ export class Interaction {
       return target.obj.chest.opened ? { name: 'Tyhjä arkku', action: '' } : { name: 'Arkku', action: '[E] Avaa' };
     }
     if (target.kind === 'rune') return { name: target.obj.rune.name, action: 'PAINA E KÄÄNTÄÄKSESI', rune: true };
+    if (target.kind === 'boat') {
+      const b = target.obj;
+      return { name: b.def.name, action: '[E] Nouse kyytiin', hp: b.hp < b.def.hp ? b.hp / b.def.hp : null };
+    }
     if (target.kind === 'drop') {
       const d = target.obj;
       return { name: ITEMS[d.item].name + (d.count > 1 ? ` ×${d.count}` : ''), action: '[E] Poimi' };
@@ -134,6 +140,11 @@ export class Interaction {
   }
 
   _tryPickup(target) {
+    if (target.kind === 'boat') {
+      if (this.boardBoat) this.boardBoat(target.obj);
+      this.target = null;
+      return true;
+    }
     if (target.kind === 'rune') {
       if (this.readRune) this.readRune(target.obj);
       return true;
@@ -183,7 +194,7 @@ export class Interaction {
     _hit.copy(this.camera.position).addScaledVector(this.camera.getWorldDirection(_dir), target.t);
     const playerPos = this.camera.position;
 
-    if (target.kind === 'drop' || target.kind === 'chest' || target.kind === 'rune' || target.kind === 'piece') return;
+    if (target.kind === 'drop' || target.kind === 'chest' || target.kind === 'rune' || target.kind === 'piece' || target.kind === 'boat') return;
     if (target.kind === 'tumbleweed') {
       const tw = target.obj;
       tw.mesh.updateMatrixWorld(true);

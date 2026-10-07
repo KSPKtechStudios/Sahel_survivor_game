@@ -2,7 +2,7 @@
 // maasto piirtyy (explored.js). Kartta kääntyy pelaajan mukana, joten
 // katsesuunta on aina ylöspäin. Alla biomin nimi.
 import { sampleTerrain, placeName } from '../world/terrain.js';
-import { drawWaypointName, drawWaypoint, createPaperPattern } from './explored.js';
+import { drawWaypointName, drawWaypoint, drawBoat, createPaperPattern } from './explored.js';
 
 const RANGE = 110; // metriä keskeltä reunaan
 const GRID = 128;  // ruudukon väli metreinä
@@ -23,7 +23,7 @@ export class Minimap {
     this._s = {};
   }
 
-  update(dt, player) {
+  update(dt, player, boats = null) {
     const px = player.position.x;
     const pz = player.position.z;
     const yaw = player.yaw;
@@ -75,6 +75,20 @@ export class Minimap {
       ctx.globalAlpha = d > max ? 0.8 : 1;
       drawWaypoint(ctx, w.type, R + sx, R + sy, size);
       if (d <= max && w.name) drawWaypointName(ctx, w.name, R + sx, R + sy + 8, 11);
+    }
+    // Veneet (ei sitä, jossa ollaan)
+    if (boats) {
+      for (const b of boats.list) {
+        if (b === boats.riding || b.sinking >= 0) continue;
+        const dx = (b.x - px) * k, dz = (b.z - pz) * k;
+        let sx = dx * c - dz * s, sy = dx * s + dz * c;
+        const d = Math.hypot(sx, sy);
+        const max = R - 12;
+        if (d > max) { sx *= max / d; sy *= max / d; }
+        ctx.globalAlpha = d > max ? 0.75 : 1;
+        const hx = Math.sin(b.yaw - yaw), hy = Math.cos(b.yaw - yaw);
+        drawBoat(ctx, R + sx, R + sy, hx, hy, b.type === 'ship' ? 16 : b.type === 'sailboat' ? 12 : 10, b.type !== 'rowboat');
+      }
     }
     ctx.globalAlpha = 1;
 

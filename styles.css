@@ -179,6 +179,32 @@ html, body {
 .effect.good { color: #ffe2a0; }
 .effect i { display: block; width: 34px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.15); overflow: hidden; }
 .effect i b { display: block; height: 100%; background: currentColor; }
+/* Vene: nopeus, tuuli ja purjeet */
+#boat-hud {
+  position: absolute; left: 18px; top: 34px; width: 236px; padding: 10px 12px 9px;
+  background: var(--panel); border: 1px solid var(--edge); border-radius: 10px;
+  text-shadow: 0 1px 2px #000; pointer-events: none;
+}
+#boat-hud .bh-top { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+#boat-hud .bh-name { flex: 1; }
+#boat-hud .bh-hp { width: 64px; height: 5px; border-radius: 3px; background: rgba(0, 0, 0, 0.5); overflow: hidden; }
+#boat-hud .bh-hp i { display: block; height: 100%; background: var(--accent-2); }
+#boat-hud .bh-hp.low i { background: var(--bad); }
+#boat-hud .bh-row { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+#boat-hud .bh-wind { width: 52px; height: 52px; flex: none; }
+#boat-hud .bh-wind svg { width: 100%; height: 100%; overflow: visible; }
+#boat-hud .bh-wind circle { fill: rgba(0, 0, 0, 0.35); stroke: rgba(236, 200, 140, 0.35); stroke-width: 1.2; }
+#boat-hud .bh-boat { fill: rgba(244, 232, 210, 0.22); stroke: rgba(244, 232, 210, 0.5); stroke-width: 1; }
+#boat-hud .bh-arrow { transform-origin: 20px 20px; }
+#boat-hud .bh-arrow path { fill: none; stroke: #9fd3ff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+#boat-hud .bh-info { flex: 1; min-width: 0; }
+#boat-hud .bh-state { font-size: 13px; font-weight: 700; color: var(--accent-2); }
+#boat-hud .bh-state.warn { color: var(--bad); }
+#boat-hud .bh-pips { display: flex; gap: 3px; margin: 5px 0 4px; }
+#boat-hud .bh-pips i { flex: 1; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.14); }
+#boat-hud .bh-pips i.on { background: var(--accent); }
+#boat-hud .bh-speed { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+#boat-hud .bh-keys { margin-top: 7px; font-size: 11px; color: var(--muted); line-height: 1.35; }
 /* Riimukiven käännös */
 #rune-panel {
   position: absolute; left: 50%; top: 9%; transform: translateX(-50%);
