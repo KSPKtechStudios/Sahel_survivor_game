@@ -337,10 +337,12 @@ export class Rain {
         const ang = Math.random() * Math.PI * 2, r = 0.8 + Math.pow(Math.random(), 0.7) * 8;
         const x = camera.position.x + Math.cos(ang) * r, z = camera.position.z + Math.sin(ang) * r;
         const w = waterAt(x, z, _wq);
-        if (w.wl > w.h + 0.02) continue;
+        // Myös vedenpinnalle (sessio 12d): pisara ponnauttaa pienen kruunun,
+        // väreet piirtää vesi itse.
+        const wet = w.wl > w.h + 0.02;
         const i = this.splashIdx;
         this.splashIdx = (i + 1) % SPLASHES;
-        pos.setXYZ(i, x, w.h + 0.02, z);
+        pos.setXYZ(i, x, (wet ? w.wl + 0.03 : w.h + 0.02), z);
         birth.setX(i, this.t + Math.random() * 0.03);
       }
       if (n > 0) { pos.needsUpdate = true; birth.needsUpdate = true; }

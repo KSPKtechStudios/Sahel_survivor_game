@@ -623,6 +623,8 @@ events.on('hitFeedback', ({ strength }) => { shake = Math.max(shake, strength * 
 // sade aina kun sataa (myös sademetsän tihku, hiljaa); kaukainen ukkonen
 // ukkosmyrskyssä; aavikon tuuli (hiljaa, myrskyssä kovaa) ja raju myrskytuuli
 // (sessio 12c). Kaikki voivat soida päällekkäin.
+let birdT = 4;
+const _camDir = new THREE.Vector3();
 const _sm = (a, b, x) => Math.max(0, Math.min(1, (x - a) / (b - a)));
 function updateSfx(game, rainAmt, realDt) {
   if (game) {
@@ -640,6 +642,15 @@ function updateSfx(game, rainAmt, realDt) {
       // Raju tuuli: merellä ukkosella ja hiekkamyrskyssä puuskittain.
       stormWind: Math.max(thunder * _sm(0.2, 0.7, _s.ocean || 0), sand * Math.max(0, Math.sin(elapsed * 0.21) * Math.sin(elapsed * 0.077 + 1)) * 1.6),
     });
+    // Linnut (sessio 12d): välillä viidakossa, savannilla harvemmin; päivällä
+    // eikä kovassa sateessa.
+    birdT -= realDt;
+    if (birdT <= 0) {
+      const jungle = (_s.rainforest || 0) > 0.5;
+      const sav = (_s.savanna || 0) + (_s.woodland || 0) > 0.5;
+      birdT = jungle ? 6 + Math.random() * 12 : 18 + Math.random() * 30;
+      if ((jungle || sav) && env.daylight > 0.3 && rainAmt < 0.5) sfx.bird({ x: player.position.x, z: player.position.z, yaw: player.yaw });
+    }
   } else {
     sfx.setLevels({});
   }
@@ -658,6 +669,7 @@ function stepMaterial() {
   return 'grass';
 }
 player.onFootstep = (k) => sfx.step(stepMaterial(), k);
+events.on('swing', ({ heavy, quiet }) => sfx.whoosh(heavy, quiet));
 events.on('woodHit', ({ x, z }) => sfx.chop(x, z, { x: player.position.x, z: player.position.z, yaw: player.yaw }));
 events.on('haamuSound', ({ kind, x, z }) => {
   sfx.ghost(kind, x, z, { x: player.position.x, z: player.position.z, yaw: player.yaw });
@@ -755,6 +767,11 @@ function frame(now) {
   wetUniforms.uRain.value = rainAmt;
   wetUniforms.uPuddle.value = inGame && state !== 'menu' ? env.puddleWet : 0;
   updateSfx(musicMode === 'game' && state !== 'loading', rainAmt, Math.min(0.25, rawDt));
+  // Vesipisarat linssillä: sateella ja ukkosella, kun katsotaan valoa kohti.
+  camera.getWorldDirection(_camDir);
+  const toSun = _sm(0.25, 0.85, _camDir.dot(env.sunDir)) * _sm(-0.02, 0.12, env.sunDir.y);
+  const lensT = inGame && state !== 'menu' ? _sm(0.25, 0.7, env.w.rain) * toSun : 0;
+  post.lens += (lensT - post.lens) * Math.min(1, Math.min(0.25, rawDt) * 1.5);
   // Lähisalaman välähdys koko näytölle.
   lightningEl.style.opacity = env.flashK > 1 && env.flash > 0 ? Math.min(0.75, env.flash * 0.3).toFixed(3) : '0';
   rain.fogFar = scene.fog.far;

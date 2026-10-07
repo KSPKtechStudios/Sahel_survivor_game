@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { createSoftDotTexture } from './textures.js';
 
-const MAX = 900;
+const MAX = 2400;
 const _c = new THREE.Color();
 
 const vs = /* glsl */ `
@@ -79,14 +79,16 @@ export class Splashes {
       const a = Math.random() * Math.PI * 2;
       const r = Math.random() * 0.35 * spread * (0.5 + power * 0.3);
       // Kruunu: osa lentää ylös, osa sivuille
-      const up = (1.2 + Math.random() * 2.6) * (0.55 + power * 0.45);
+      const up = (1.2 + Math.random() * 2.6) * (0.55 + power * 0.45) * (opts.upMul ?? 1);
       const out = (0.4 + Math.random() * 1.4) * (0.6 + power * 0.4) * spread;
       this.pos[i * 3] = x + Math.cos(a) * r;
       this.pos[i * 3 + 1] = y + 0.02;
       this.pos[i * 3 + 2] = z + Math.sin(a) * r;
-      this.vel[i * 3] = Math.cos(a) * out + (opts.vx || 0) * 0.3;
+      // dx/dz + push: suunnattu suihku (veneen keulan tyrskyt, sessio 12d).
+      const pk = (opts.push || 0) * (0.6 + Math.random() * 0.6);
+      this.vel[i * 3] = Math.cos(a) * out + (opts.vx || 0) * 0.3 + (opts.dx || 0) * pk;
       this.vel[i * 3 + 1] = up;
-      this.vel[i * 3 + 2] = Math.sin(a) * out + (opts.vz || 0) * 0.3;
+      this.vel[i * 3 + 2] = Math.sin(a) * out + (opts.vz || 0) * 0.3 + (opts.dz || 0) * pk;
       this.maxLife[i] = this.life[i] = 0.5 + Math.random() * 0.7;
       this.floorY[i] = y - 0.05;
       // Osa isoja, sumumaisia roiskeita, osa pieniä pisaroita

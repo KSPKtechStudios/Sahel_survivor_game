@@ -86,7 +86,10 @@ void main() {
     vec3 gu = uGalaxyC;
     vec3 gv = cross(uGalaxyN, gu);
     float along = atan(dot(dir, gv), dot(dir, gu));
-    vec2 gp = vec2(along * 6.0, b0 * 26.0);
+    // Kohinan koordinaatit ilman kulman ±180° hyppyä (sessio 12d: atan-
+    // koordinaatti teki vyöhön saumaviivan): vyön suuntainen ympyrä + leveys.
+    vec2 ring = vec2(dot(dir, gu), dot(dir, gv)) * 6.0;
+    vec2 gp = ring + vec2(b0 * 26.0, -b0 * 17.0);
     float edge = fbm(gp * 0.7 + 5.0);
     float b = b0 + (edge - 0.5) * 0.06;
     float band = exp(-b * b / 0.016);
@@ -94,14 +97,12 @@ void main() {
     float clouds = fbm(gp * 1.3 + 3.0);
     float dust = fbm(gp * vec2(1.8, 3.2) + 11.0);
     float lane = smoothstep(0.5, 0.66, dust) * exp(-b0 * b0 / 0.0025) * (0.25 + 0.3 * core);
-    // Ratkeamattomat tähdet: tiheä hienojakoinen rae vyön sisällä.
-    vec3 sp3 = dir * 1400.0;
-    float grain = hash3(floor(sp3));
-    float grainAmt = smoothstep(0.82, 1.0, grain) * band * (0.4 + 0.6 * clouds);
+    // Rakeisuus tulee himmeistä tähdistä (alla); pikseliä pienempi rae
+    // välkkyi ja näkyi pikseleinä (sessio 12d).
     float glow = band * (0.35 + 0.65 * clouds) * (1.0 - lane) * (0.35 + 0.9 * core);
     vec3 mwCol = mix(vec3(0.82, 0.86, 1.0), vec3(1.0, 0.94, 0.84), clamp(core * band, 0.0, 1.0));
     float extinction = smoothstep(0.02, 0.4, y);
-    milky = mwCol * (glow * 0.03 + grainAmt * 0.05) * extinction;
+    milky = mwCol * glow * 0.034 * extinction;
     // Kirkkaat tähdet
     vec3 sp = dir * 220.0;
     vec3 cell = floor(sp);
@@ -112,14 +113,16 @@ void main() {
       float tw = 0.7 + 0.3 * sin(uTime * (2.0 + h * 40.0) + h * 100.0);
       starAmt = smoothstep(0.45, 0.0, d) * tw * (h - 0.9965) / 0.0035;
     }
-    // Himmeät tähdet, tiheimmillään linnunradan vyössä
-    vec3 sp2 = dir * 520.0;
+    // Himmeät tähdet, tiheimmillään linnunradan vyössä. Solu n. 2 px, ja
+    // tähden reuna on pehmeä, jotta ne eivät välky pikseleinä.
+    vec3 sp2 = dir * 340.0;
     vec3 cell2 = floor(sp2);
     float h2 = hash3(cell2 + 17.0);
-    float thr = 0.993 - band * 0.03 * (0.6 + clouds);
+    float thr = 0.992 - band * 0.05 * (0.6 + clouds);
     if (h2 > thr) {
-      float d2 = length(sp2 - cell2 - 0.5);
-      starAmt += smoothstep(0.42, 0.0, d2) * 0.45 * (0.6 + 0.4 * sin(uTime * 3.0 + h2 * 50.0));
+      vec3 c2 = cell2 + 0.25 + 0.5 * vec3(hash3(cell2 + 3.1), hash3(cell2 + 5.7), hash3(cell2 + 8.3));
+      float d2 = length(sp2 - c2);
+      starAmt += smoothstep(0.5, 0.05, d2) * (0.25 + 0.25 * fract(h2 * 731.0)) * (0.75 + 0.25 * sin(uTime * 2.0 + h2 * 50.0)) * extinction;
     }
   }
 

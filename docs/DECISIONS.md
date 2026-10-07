@@ -2,6 +2,15 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-07 (sessio 12d)
+- **Puun kaatumisääni muokattiin tiedostona (ffmpeg: narina venytetty 2×, ristiinhäivytys, basso + kompressio, jälkiräsähdys pois; räsähdys 1,74 s:ssa) eikä koodissa päällekkäisillä kopioilla.** Syy: kopio katkesi tiedoston kohdassa ja kuului nykäyksenä; nyt kaatumisaika 1,5–2,2 s osuu tiedoston rajoihin ilman päällekkäisyyttä.
+- **Tyrskyt lasketaan keulan ja aallon suhteellisesta nousunopeudesta (vesi nousee keulaa vasten nopeammin kuin runko ehtii nousta) ja vauhdista; roiskepooli kasvatettiin 900 → 2 400 pistettä.** Syy: tyrsky syntyy fyysisesti juuri keulan iskeytyessä aaltoon; pelkkä vauhti antoi tasaista roisketta, ja nopeuden nerfauksen jälkeen roiskeita ei olisi juuri tullut.
+- **Linssipisarat tehdään jälkikäsittelyn lopussa (proseduraaliset pisarat ruudukossa, kevyt taittuminen, reunan välke), ja jälkikäsittely kytkeytyy päälle automaattisesti, kun pisaroita tarvitaan.** Syy: käyttäjän toive "satunnaisesti, kun katsoo valoa kohti"; vahva taittuminen käänsi tumman maan taivaan kohdalle ja näytti läiskiltä, joten taittuminen on hienovarainen ja pisaroita harvassa.
+- **Veneiden nopeudet n. −35 %.** Syy: käyttäjän mukaan laivat olivat liian nopeita.
+- **Kaarevien palmujen kaatuneelle rungolle oma akseli (`logTop`, tyvestä latvaan); kaatokohdan laskenta käyttää edelleen ensimmäistä pätkää.** Syy: kaatokohdan rengas ja lovet toimivat ennallaan, mutta osumat ja törmäys kattavat koko rungon.
+- **Linnunradan rakeisuus pehmeistä himmeistä tähdistä (solu n. 2 px, satunnainen paikka solussa), kohina jatkuvista koordinaateista.** Syy: alipikselirae välkkyi ja atan-kulman hyppy teki saumaviivan.
+- **Huitaisun ääni lähtee iskun alussa; olento iskun kaarella → 45 %.** Ei nyrkeillä (käyttäjä mainitsi työkalut ja aseet). Lintu vain päivällä (yöllä linnut ovat hiljaa).
+
 ## 2026-10-07 (sessio 12c)
 - **Haamun äänten etäisyysvaimennus alkaa 22 m:stä (kantama 95 m), ei 8 m:stä.** Syy: haamu ilmestyy 32–52 m:n päähän, joten ilmestymisääni vaimeni n. 14 %:iin eikä käyttäjä kuullut sitä.
 - **Ukkosen hämärä tehdään valotuksella (tone mapping exposure × (1 − 0,42 × paikallinen ukkonen × päivänvalo)).** Syy: koskee kaikkea (maasto, taivas, pilvet) tasaisesti, eikä vaadi materiaalimuutoksia; yöllä ei vaikutusta.

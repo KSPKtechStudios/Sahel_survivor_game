@@ -2,6 +2,21 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-07 (sessio 12d)
+**Tehtiin**
+- Käyttäjän palaute ja 3 äänitiedostoa (kirjattu `DESIGN.md`:hen).
+- Puun kaatumisääni rakennettiin uudelleen tiedostona (`assets/sfx/tree-fall.mp3`), koodista poistettiin päällekkäinen narinakopio (`audio/sfx.js`).
+- Tyrskyt (`game/boats.js`, `render/splash.js`: suunnattu suihku, pooli 2 400), sadepisaroiden roiskeet vedenpinnalle (`render/rain.js`), linssipisarat (`render/post.js`, `main.js`).
+- Veneiden nopeudet −35 % (`game/boats.js`).
+- Kaarevien palmujen kaatunut runko (`models/trees.js`, `models/flora.js`: `logTop`; `game/treeCut.js`, `game/fallen.js`).
+- Linnunradan pikselit ja saumaviiva (`render/sky.js`).
+- Linnut ja huitaisut (`audio/sfx.js`, `game/combat.js`: `swing`-tapahtuma, `main.js`).
+- Testattiin: palmu ja kookospalmu kaadettuna (osumat koko rungolla 3/3, runko hajoaa), linssipisarat kuvina (ensin liikaa ja liian tummia → harvennettiin), tyrskyt purjeveneen istuimelta myrskyssä (kuvat), linnunrata kuvana, veneiden nopeudet (purjevene sivutuulessa 5,5 → 3,6 m/s, laiva 6,3 → 4,1 m/s), puun räsähdys 2,1 s:n kaatumisessa oikeaan kohtaan, huitaisujen tasot (tasattiin huipputason mukaan), lintu. Savutesti ja ESLint puhtaat.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute; lisää ääniä.
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-07 (sessio 12c)
 **Tehtiin**
 - Käyttäjän palaute ja 5 äänitiedostoa (kirjattu `DESIGN.md`:hen).

@@ -25,21 +25,21 @@ import { events } from './events.js';
 export const BOATS = {
   rowboat: {
     name: 'Soutuvene', L: 3.8, B: 0.7, keel: 0.32, draft: 0.3, launch: 0.22, reach: 22, hp: 60, top: 0.65, mass: 0.3,
-    row: { speed: 2.4, sprint: 3.4, cost: 1.6, sprintCost: 6 },
+    row: { speed: 2.0, sprint: 2.9, cost: 1.6, sprintCost: 6 },
     turn: 1.0, accel: 1.0, turnAccel: 0.3, ground: 0.05,
     seat: [0, 0.13, -0.95], eye: 0.92, wake: 0.3,
     repair: { wood: 1 }, wreck: { wood: 3 },
   },
   sailboat: {
     name: 'Purjevene', L: 6.6, B: 1.1, keel: 0.6, draft: 0.55, launch: 0.4, reach: 30, hp: 180, top: 1.05, mass: 0.55,
-    sail: { max: 8.5, noGo: 0.75, rig: 'lateen' }, slow: 1.3,
+    sail: { max: 5.6, noGo: 0.75, rig: 'lateen' }, slow: 1.0,
     turn: 0.7, accel: 2.6, turnAccel: 0.6, ground: 0.05, heel: 0.16,
     seat: [0, 0.42, -2.55], eye: 0.92, wake: 0.22, hike: 0.42,
     repair: { wood: 2 }, wreck: { wood: 6, rope: 2 },
   },
   ship: {
     name: 'Purjelaiva', L: 24, B: 3.7, keel: 1.6, draft: 1.25, launch: 0.7, reach: 60, hp: 1200, top: 7.8, mass: 2.0,
-    sail: { max: 13, noGo: 1.05, rig: 'square' }, slow: 1.1,
+    sail: { max: 8.4, noGo: 1.05, rig: 'square' }, slow: 0.9,
     turn: 0.22, accel: 7, turnAccel: 1.8, ground: 0.03, heel: 0.05,
     seat: [0, 4.92, -5.7], eye: CONFIG.eyeHeight, wake: 0.12,
     repair: { wood: 6, gum: 1 }, wreck: { wood: 25, rope: 6 },
@@ -429,6 +429,12 @@ export class Boats {
     // Purjeet kallistavat tuulen alapuolelle.
     if (def.heel && b.drive > 0) rollT += (b.wp < 0 ? 1 : -1) * def.heel * b.drive * b.sailAmt * b.windK;
     const k = snap ? 1 : 1 - Math.exp(-dt / def.mass);
+    // Keulan iskeytyminen aaltoon: vesi nousee keulaa vasten nopeammin kuin
+    // runko ehtii nousta (tyrskyjen voimakkuus, sessio 12d).
+    const rel = wq.wl + hb - b.y;
+    b.slam = dt > 0 && b.prevRel !== undefined ? Math.max(0, (rel - b.prevRel) / dt) : 0;
+    b.prevRel = rel;
+    b.waveAmp = amp;
     b.y += (yT - b.y) * k;
     b.pitch += (pitchT - b.pitch) * k;
     b.roll += (rollT - b.roll) * k;
@@ -521,6 +527,26 @@ export class Boats {
     // Vana ja keularoiskeet
     b.wakeT -= dt;
     const v = Math.abs(b.speed);
+    // Tyrskyt: keula iskeytyy aaltoon (aallokossa) tai halkoo vettä vauhdilla.
+    // Pisarat lentävät keulan molemmin puolin ulos ja ylös, tuuli kantaa niitä.
+    b.sprayT = (b.sprayT || 0) - dt;
+    const slamI = (b.slam || 0) * Math.min(1, (b.waveAmp || 0) * 3) * (0.5 + Math.min(1, v / 3));
+    const sprayI = Math.min(2.4, slamI * 1.4 + Math.max(0, v - 1.4) * 0.22);
+    if (this.fx && near && b.speed > 0.3 && sprayI > 0.22 && b.sprayT <= 0) {
+      const big = b.type === 'ship';
+      b.sprayT = big ? 0.09 : 0.12;
+      const fx = Math.sin(b.yaw), fz = Math.cos(b.yaw), px = Math.cos(b.yaw), pz = -Math.sin(b.yaw);
+      const W = this.waves;
+      for (const sx of [1, -1]) {
+        const along = def.L * (big ? 0.4 : 0.38);
+        const x = b.x + fx * along + px * sx * def.B * 0.75, z = b.z + fz * along + pz * sx * def.B * 0.75;
+        // Suunta: ulos laidalta ja hieman eteen; tuuli lisää sivuttaista ajoa.
+        const dx = px * sx * 0.8 + fx * 0.5 + (W ? W.windX * 0.4 : 0), dz = pz * sx * 0.8 + fz * 0.5 + (W ? W.windZ * 0.4 : 0);
+        this.fx.splash(x, b.wl + (b.y - b.wl) * 0.5, z, sprayI * (big ? 1.5 : 1.0), {
+          spread: big ? 1.0 : 0.5, dx, dz, push: 1.2 + sprayI * (big ? 2.2 : 1.3), upMul: 0.8 + sprayI * 0.5,
+        });
+      }
+    }
     if (this.fx && near && v > 0.6 && b.wakeT <= 0) {
       b.wakeT = def.wake;
       const fx = Math.sin(b.yaw), fz = Math.cos(b.yaw), px = Math.cos(b.yaw), pz = -Math.sin(b.yaw);

@@ -186,6 +186,15 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Salaman isku maahan:** kun pelaaja näkee salaman osuvan maahan, maasta pöllähtää vähän hiekkaa ja multaa, ja aivan pieni tulipallo voi näkyä.
 - **Uudet äänet:** "desertwind" kuuluu aavikolla aina mutta TODELLA hiljaa, ja vain hiekkamyrskyssä se kuuluu kovaa. "härskituuli" kuuluu merellä myrskyssä ja välillä hiekkamyrskyssäkin täydentämässä toista ääntä. "click" kuuluu, kun pelaaja heittää esineen pois. "puu" kuuluu, kun pelaaja lyö puuta: paljon hiljempaa ja eri sävelkorkeuksilla vaihtelun vuoksi. "hamu" on haamulle vielä yksi äänirepliikki.
 
+## Sessio 12d (käyttäjän kertoma, 2026-10-07)
+- **Puun kaatumisääni:** siinä on ärsyttävä kohta, jossa ääni "tökkää"; parannettava.
+- **Sade ja vesi super realistisiksi.** Laivalla kulkiessa vedestä pitää tulla **komeita tyrskyjä**, kun vesi osuu laivaan.
+- **Vesipisara linssillä:** satunnaisesti, kun sateella ja ukkosella vettä roiskuu ja katsoo valoa (aurinkoa tms.) kohti, linssillä on ikään kuin vesitippa.
+- **Laivat kulkevat liian nopeasti:** nerfataan.
+- **Kaadettua palmua ei voi hakata palasiksi:** korjattava.
+- **Linnunradassa näkyy pikseleitä** tai muuta ei-toivottua efektiä: korjattava.
+- **Äänet:** "bird" soi välillä viidakossa ja savannilla (savannilla harvemmin). "whoosh1" ja "whoosh2" soivat satunnaisesti, kun työkalulla tai aseella huitoo ilmaan (sävelkorkeutta saa vaihdella); ne kuuluvat myös olentoa lyödessä, mutta jonkin verran hiljempaa.
+
 ## Teknologia
 - Selaimessa toimiva peli: three.js (WebGL), ei käännösvaihetta. Ks. `DECISIONS.md`.
 - Kohdealusta toistaiseksi tietokoneen selain (hiiri + näppäimistö).
@@ -228,6 +237,7 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - Sessio 11: tulikärpäsparvet, pienemmät aallot, ei vettä veneiden sisällä, realistinen sade ja sadeverhot, kuivuvat lammikot, säät biomeittain (kuiva laterittitasanko), rakennelmia n. 3 700 ja hylkyjä n. 120, hienovarainen linnunrata ja tähdenlennot, purjeen saumat ja vastavalo, hento kimallus, Haamu latvusten alla ja pako, jousi oikeassa kädessä ja nuolten jälki, sujuvampi iskujen tahti, tuulen nuolen suunta.
 
 ## Paikkamerkit (Clauden valitsemia, voi muuttaa vapaasti)
+- **Sessio 12d:** veneiden nopeudet: soutu 2,0 / 2,9 m/s (ennen 2,4 / 3,4), purjevene enintään 5,6 m/s × tuuli (ennen 8,5), "hiljaa" 1,0; purjelaiva 8,4 m/s × tuuli (ennen 13), "hiljaa" 0,9. Tyrskyt: keulan iskeytyminen aaltoon (veden nousunopeus keulaa vasten × aallokko) + vauhti yli 1,4 m/s; suihku keulan molemmin puolin ulos, ylös ja tuulen mukana, laivalla isompi. Linssipisarat: kun sade > 0,25 ja katse on aurinkoa kohti (kosini > 0,25), harvoja pisaroita, jotka elävät 10–20 s (valuvat hieman ja haihtuvat); vaatii jälkikäsittelyn (kytkeytyy automaattisesti). Lintu: sademetsässä 6–18 s välein, savannilla ja metsiköissä 18–48 s välein, vain päivällä eikä kovassa sateessa, 8–38 m:n päässä satunnaisessa suunnassa. Huitaisu: kaikilla työkaluilla ja aseilla (ei nyrkeillä), satunnainen tiedosto, sävelkorkeus 0,92–1,22 × (raskas ase 0,72–1,02 ×), olento iskun tiellä 45 %.
 - **Sessio 12c:** Haamun äänet vaimenevat vasta 22 m:stä (kuuluvat n. 95 m:iin), tasot 0,38–0,45; satunnainen ääntely vuorottelee kahden tiedoston välillä. Ukkosella päivällä valotus × (1 − 0,42 × ukkonen), eli n. 40 % hämärämpi. Ukkosmyrskyssä haamun tarkistus 15–30 s välein, todennäköisyys 85 %, enintään 2 kerrallaan (muuten 35–75 s, 40 %, 1). Salaman isku maahan (vain lähisalamat, ei veteen): hiekkaa ja multaa lentää, pölypilvi nousee hitaasti (2,6 s), pieni tulipallo leimahtaa (0,6 s). Aavikon tuuli 0,3 × (aavikolla 0,1, hiekkamyrskyssä 1), myrskytuuli 0,3 (merellä ukkosella; hiekkamyrskyssä puuskittain). Esineen heitto: napsahdus 0,65. Isku puuhun: 0,07, sävelkorkeus 0,82–1,22 ×. Tuuli (taustatuuli) ei enää soi hiekkamyrskyssä, koska sen hoitavat aavikon tuuli ja myrskytuuli.
 - **Lähisalamat ja Haamun äänet (sessio 12b):** 28 % salamoista iskee 45–155 m:n päähän (muut 250–600 m): välähdys 2,4-kertainen, koko näytön sinertävä välähdys, salama valkoisena nauhana hehkuineen (0,5 s), jyrähdys (satunnaisesti "thunderclap" tai "ukko", hiljaisuus alusta leikattu) salaman suunnasta enintään 0,25 s viiveellä, taso 0,65. Haamu: ilmestymisääni joka kerta kun se ilmestyy ja 40 % todennäköisyydellä ennen syöksyä (taso 0,22), hyökkäysääni syöksyn alkaessa (0,26), satunnainen ääntely 8–18 s välein leijuessa ja kierrellessä alle 45 m:n päässä (0,2). Äänet tulevat haamun suunnasta ja vaimenevat etäisyyden mukaan. Viidakko 0,22 ja alipäästö 4,2 kHz. Puun ääni häivytetään 0,25–0,9 s räsähdyksen jälkeen.
 - **Sadeverhot (sessio 12b):** verhot sumun kantaman 70 %:n ja 95 %:n etäisyydellä (vähintään 35 m), usva vain kunnon sateessa (ei sademetsän tihkussa).
@@ -307,9 +317,9 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Purjekangas (sessio 11):** 8 kaistaa ja ohuet saumat, vastavalossa 45 % auringosta kuultaa läpi.
 - **Riimukivet (sessio 9):** 38 suomenkielistä tekstiä (`src/game/lore.js`) ovat **Clauden luonnoksia**: abstrakteja lauseita savipeikoista, joista, tähdistä, raunioista, kylistä, meren takaa tulleista laivoista ja saaren salaisuuksista. Käyttäjä voi kirjoittaa tilalle omat tekstinsä tai tarinansa.
 - **Veneet (sessio 9):**
-  - *Soutuvene:* 3,8 m, kestävyys 60, soutu 2,4 m/s ([Shift] 3,4 m/s), soutu kuluttaa kestävyyttä 1,6 / s ([Shift] 6 / s), kääntyy paikallaan. Syväys 0,3 m.
-  - *Purjevene:* 6,6 m, latinalaispurje, kestävyys 180, enintään 8,5 m/s × tuuli, vastatuuli alle 43°, "hiljaa" 1,3 m/s. Syväys 0,55 m.
-  - *Purjelaiva:* 24 m karakki (keulamasto ja isomasto raakapurjein, peräsmastossa latinalaispurje, keulapuun alla räikkäpurje, punaiset ristit), kestävyys 1 200, enintään 13 m/s × tuuli, vastatuuli alle 60°, "hiljaa" 1,1 m/s. Syväys 1,25 m; rakentamiseen riittää 0,7 m.
+  - *Soutuvene:* 3,8 m, kestävyys 60, soutu 2,0 m/s ([Shift] 2,9 m/s; ennen 2,4 / 3,4), soutu kuluttaa kestävyyttä 1,6 / s ([Shift] 6 / s), kääntyy paikallaan. Syväys 0,3 m.
+  - *Purjevene:* 6,6 m, latinalaispurje, kestävyys 180, enintään 5,6 m/s × tuuli (sessio 12d; ennen 8,5), vastatuuli alle 43°, "hiljaa" 1,0 m/s. Syväys 0,55 m.
+  - *Purjelaiva:* 24 m karakki (keulamasto ja isomasto raakapurjein, peräsmastossa latinalaispurje, keulapuun alla räikkäpurje, punaiset ristit), kestävyys 1 200, enintään 8,4 m/s × tuuli (sessio 12d; ennen 13), vastatuuli alle 60°, "hiljaa" 0,9 m/s. Syväys 1,25 m; rakentamiseen riittää 0,7 m.
   - Tuulikerroin 0,6–1,15 (selkeällä n. 0,72, ukkosella n. 1,07). Karilleajo yli 1,6 m/s vaurioittaa. Joissa virta kuljettaa venettä.
   - Tuulen suunta: uusi tavoitesuunta 4–10 min välein, enintään ±100°, kääntyy n. 0,7° / s.
 

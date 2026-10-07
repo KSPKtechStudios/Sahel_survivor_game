@@ -36,13 +36,22 @@ const ONESHOTS = {
   ghostIdle2: 'assets/sfx/ghost-idle2.mp3',
   click: 'assets/sfx/click.mp3',
   chop: 'assets/sfx/chop-wood.mp3',
+  bird: 'assets/sfx/bird.mp3',
+  whoosh1: 'assets/sfx/whoosh1.mp3',
+  whoosh2: 'assets/sfx/whoosh2.mp3',
 };
+// Huitominen: tasattu huipputason mukaan (tiedostojen huiput −1,6 / −6,8 dB),
+// jolloin huitaisu on n. −24 dB ja olentoon osuessa n. −31 dB.
+const WHOOSH_LEVEL = { whoosh1: 0.076, whoosh2: 0.14 };
+const BIRD_LEVEL = 0.22;
 // Puun kaatuminen: räsähdyksen kohta tiedostossa (s) ja voimakkuus 10 m:stä.
 // Räsähdyksen jälkeen ääni häivytetään pois (TREE_TAIL s), ettei maassa
 // makaava puu jää rätisemään.
-const TREE_CRASH_AT = 0.92;
+// Sessio 12d: tiedostossa alun narina on venytetty (räsähdys 1,74 s:ssa) ja
+// jälkiräsähdys leikattu; ääni hiipuu itsestään n. 1,4 s räsähdyksen jälkeen.
+const TREE_CRASH_AT = 1.74;
 const TREE_LEVEL = 0.3;
-const TREE_TAIL = 0.9;
+const TREE_TAIL = 1.5;
 // Lähisalaman jyrähdys ja Haamun äänet (tiedostot −16 LUFS).
 const CLAP_LEVEL = 0.65;
 // Haamu kuuluu kauempaa (se ilmestyy 32–52 m:n päähän): vaimennus alkaa vasta
@@ -250,24 +259,11 @@ export class Sfx {
     tail.gain.setValueAtTime(1, crashT + 0.25);
     tail.gain.linearRampToValueAtTime(0, crashT + TREE_TAIL);
     src.connect(tail).connect(out);
-    if (delay >= 0) {
-      src.start(now + delay);
-      // Pitkä kaatuminen: tiedoston alun narina soi jo heti, jotta ääni alkaa
-      // puun lähtiessä kaatumaan (häivytetään pois ennen varsinaista ääntä).
-      if (delay > 0.25) {
-        const creak = ctx.createBufferSource();
-        creak.buffer = buf;
-        const g = ctx.createGain();
-        g.gain.setValueAtTime(0, now);
-        g.gain.linearRampToValueAtTime(1, now + 0.15);
-        g.gain.setValueAtTime(1, now + delay);
-        g.gain.linearRampToValueAtTime(0, now + delay + 0.3);
-        creak.connect(g).connect(out);
-        creak.start(now, 0.05, Math.min(TREE_CRASH_AT - 0.1, delay + 0.3));
-      }
-    } else {
-      src.start(now, -delay);
-    }
+    // Yksi yhtenäinen ääni (sessio 12d: erillinen narinakopio katkesi kesken
+    // ja ääni "tökkäsi"): lyhyt kaatuminen alkaa tiedostosta myöhemmin, pitkä
+    // hieman viiveellä.
+    if (delay >= 0) src.start(now + delay);
+    else src.start(now, -delay);
     src.stop(crashT + TREE_TAIL + 0.05);
   }
 
@@ -319,6 +315,30 @@ export class Sfx {
   // Isku puuhun: hiljainen kopsahdus, sävelkorkeus vaihtelee joka iskulla.
   chop(x, z, listener) {
     this._oneShot('chop', CHOP_LEVEL * (0.8 + Math.random() * 0.4), x, z, listener, 4, 0, 60, 0.82 + Math.random() * 0.4);
+  }
+
+  // Huitaisu työkalulla tai aseella: satunnainen tiedosto ja sävelkorkeus.
+  // Olentoon osuessa hiljempaa.
+  whoosh(heavy = false, quiet = false) {
+    const name = Math.random() < 0.5 ? 'whoosh1' : 'whoosh2';
+    const buf = this.bufs[name];
+    if (!this.ctx || !buf || this.ctx.state !== 'running') return;
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    // Raskas ase matalampi ja hitaampi.
+    src.playbackRate.value = (heavy ? 0.72 : 0.92) + Math.random() * 0.3;
+    const g = this.ctx.createGain();
+    g.gain.value = WHOOSH_LEVEL[name] * (quiet ? 0.45 : 1) * (0.85 + Math.random() * 0.3);
+    const pan = this.ctx.createStereoPanner();
+    pan.pan.value = 0.15 + Math.random() * 0.15;
+    src.connect(g).connect(pan).connect(this.bus);
+    src.start();
+  }
+
+  // Lintu jossain lähellä (satunnainen suunta ja etäisyys).
+  bird(listener) {
+    const a = Math.random() * Math.PI * 2, r = 8 + Math.random() * 30;
+    this._oneShot('bird', BIRD_LEVEL * (0.6 + Math.random() * 0.5), listener.x + Math.cos(a) * r, listener.z + Math.sin(a) * r, listener, 12, 0, 80, 0.88 + Math.random() * 0.25);
   }
 
   // Askel. kind: sand | grass | leaves | rock | gravel | wood | water.

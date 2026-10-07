@@ -211,6 +211,14 @@ export class Combat {
           const idx = this.comboIdx;
           const ok = vm.play(step.anim, { dur: step.dur, hitAt: step.hitAt, onHit: () => this._onHit(step, def, weapon) });
           if (ok) {
+            // Huitaisun ääni (sessio 12d): työkaluilla ja aseilla, hiljempaa
+            // jos olento on iskun tiellä.
+            if (weapon !== WEAPONS.fist) {
+              const cam = this.camera;
+              cam.getWorldDirection(_dir);
+              const near = this.mobs.inArc(player.position.x, player.position.z, cam.position.y, _dir, weapon.reach + (step.reach || 0), Math.cos(step.arc || 0.6), _hits).length > 0;
+              events.emit('swing', { heavy: !!step.heavy || weapon === WEAPONS.spear, quiet: near });
+            }
             this.attacking = { action: vm.action, step, idx };
             this.cooldown = 0;
             this.comboIdx = (idx + 1) % weapon.combo.length;

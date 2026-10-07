@@ -192,6 +192,7 @@ export function splitTree(geo) {
   const topGeo = build(top, center);
   // Kaatunut osa: rungon akseli alkaa nyt origosta.
   const tmeta = { ...meta, base: [0, 0, 0], top: ax.top.clone().sub(center).toArray(), cutY: -1, r0: meta.r0 + (meta.r1 - meta.r0) * (ax.cutS / ax.len) };
+  if (meta.logTop) tmeta.logTop = new THREE.Vector3().fromArray(meta.logTop).sub(center).toArray();
   topGeo.userData.tree = tmeta;
   // Runko on mallin ensimmäinen osa, joten sen kolmiot ovat kaatuneen osan alussa.
   topGeo.userData.ranges = { trunk: [0, topTrunk] };

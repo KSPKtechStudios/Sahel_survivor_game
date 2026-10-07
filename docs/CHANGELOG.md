@@ -2,6 +2,17 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-07 (sessio 12d): tyrskyt, linssipisarat, hitaammat veneet, palmut, linnunrata, lintujen ja huitaisujen äänet
+
+- **Puun kaatumisääni ei enää tökkää.** Syy: pitkässä kaatumisessa alun narina soitettiin erillisenä kopiona, joka katkesi kesken. Nyt ääni on yksi yhtenäinen tiedosto, jossa narina on venytetty (sävelkorkeus ennallaan), basso vahvistettu ja jälkiräsähdys leikattu.
+- **Tyrskyt:** kun vene iskeytyy aaltoon tai halkoo vettä vauhdilla, keulan molemmin puolin roiskuu vettä ulos ja ylös, ja tuuli kantaa pisaroita. Laivalla tyrskyt ovat isompia, ja myrskyssä niitä tulee eniten.
+- **Sade vedessä:** sadepisarat roiskuvat nyt myös vedenpinnalta (ennen vain maasta).
+- **Vesipisarat linssillä:** sateella ja ukkosella, kun katsoo aurinkoa kohti, linssille ilmestyy satunnaisesti vesipisaroita, jotka taittavat kuvaa, valuvat hieman ja haihtuvat.
+- **Veneet ovat hitaampia** (noin kolmanneksen).
+- **Kaadetun palmun voi hakata palasiksi.** Syy: kaarevan palmun rungosta oli tallennettu vain alin pätkä, joten kaatuneeseen runkoon osui vain kannon kohdalta. Koskee myös kookospalmua.
+- **Linnunradassa ei enää näy pikseleitä.** Syy: pikseliä pienempi rae välkkyi, ja vyön kohina laskettiin kulmasta, joka hyppäsi 180°:ssa, jolloin vyöhön tuli saumaviiva. Nyt rakeisuus tulee pehmeistä himmeistä tähdistä.
+- **Äänet:** lintuja viidakossa ja harvemmin savannilla (päivällä), työkalujen ja aseiden huitaisut (satunnainen ääni ja korkeus, olentoa lyödessä hiljempaa).
+
 ## 2026-10-07 (sessio 12c): ukkonen hämärtää, haamuja myrskyssä, salaman isku maahan, uusia ääniä
 
 - **Haamun äänet kuuluvat:** ilmestymis- ja ääntelyäänet jäivät lähes kuulumattomiin, koska haamu ilmestyy 32–52 m:n päähän ja äänen vaimennus alkoi jo 8 m:stä. Nyt vaimennus alkaa 22 m:stä ja äänet ovat kovempia. Uusi ääntely vuorottelee vanhan kanssa.

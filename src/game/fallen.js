@@ -75,7 +75,11 @@ export class FallenTrees {
     const meta = log.mesh.geometry.userData.tree;
     const ax = trunkAxis({ ...meta, cutY: 0 });
     outA.copy(ax.base);
-    outB.copy(ax.base).addScaledVector(ax.axis, Math.min(ax.len, meta.fallLen));
+    // Kaarevilla palmuilla koko runko tyvestä latvaan (sessio 12d: ennen
+    // osuma-alue oli vain ensimmäinen pätkä, joten kaatunutta palmua ei
+    // voinut hakata).
+    if (meta.logTop) outB.fromArray(meta.logTop);
+    else outB.copy(ax.base).addScaledVector(ax.axis, Math.min(ax.len, meta.fallLen));
     log.mesh.localToWorld(outA);
     log.mesh.localToWorld(outB);
   }

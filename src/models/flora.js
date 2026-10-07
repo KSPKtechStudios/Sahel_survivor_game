@@ -300,7 +300,7 @@ export function makeCoconutPalm(seed, q = 1) {
     }
   }
   return treeMeta(merge(parts), {
-    kind: 'coconut', base: pts[0].toArray(), top: pts[1].toArray(), r0: rAt(0), r1: rAt(1), cutY,
+    kind: 'coconut', base: pts[0].toArray(), top: pts[1].toArray(), logTop: pts[n].toArray(), r0: rAt(0), r1: rAt(1), cutY,
     height: H + 1, fallLen: H - cutY + 1.5, logR: 0.2,
   });
 }

@@ -281,7 +281,9 @@ export function makePalm(seed, q = 1) {
     parts.push(paint(f, 0xb5521f, { rand: fj, jitter: 0.2 }));
   }
   return treeMeta(merge(parts), {
-    kind: 'palm', base: pts[0].toArray(), top: pts[1].toArray(), r0: rAt(0), r1: rAt(1), cutY,
+    // logTop: kaarevan rungon latva (kaatuneen rungon osumat; top on vain
+    // ensimmäinen pätkä, jota käytetään kaatokohdan laskentaan).
+    kind: 'palm', base: pts[0].toArray(), top: pts[1].toArray(), logTop: pts[n].toArray(), r0: rAt(0), r1: rAt(1), cutY,
     height: H + 1, fallLen: H - cutY + 1.5, logR: 0.22,
   });
 }

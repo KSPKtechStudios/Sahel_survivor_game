@@ -1,6 +1,7 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 12d: puun kaatumisääni, tyrskyt veneillä (myrskyssä), linssipisarat sateella aurinkoa kohti, veneiden nopeus, kaadetun palmun hakkaaminen, linnunrata, linnut ja huitaisut
 - [ ] Käyttäjä testaa session 12c: Haamun äänet (kuuluvatko nyt), ukkosen hämärä päivällä, haamut ukkosmyrskyssä, salaman isku maahan, aavikon tuuli ja myrskytuuli, heiton napsahdus, puun lyönnin ääni
 - [ ] Käyttäjä testaa session 12b: sumun pehmeys sateessa ja sademetsässä, lähisalamat (välähdys, salama, jyrähdys), Haamun äänet, puun äänen loppu, viidakon voimakkuus
 - [ ] Käyttäjä testaa session 12: taustaäänet (tuuli vuoristossa ja merellä, viidakko, sade, ukkonen), puun kaatumisääni, askeleet eri alustoilla, äänien voimakkuudet, sääkierto [O], kuiva vuoristo ja tumbleweedit siellä
@@ -66,6 +67,7 @@
 - [ ] Päätä lopullinen nimi (Sahel vai jokin muu)
 
 ## Valmis
+- [x] Tyrskyt, sade vedessä, linssipisarat, hitaammat veneet, palmun hakkaaminen, linnunradan korjaus, puun äänen korjaus, linnut ja huitaisut (2026-10-07, sessio 12d)
 - [x] Haamun äänet kuuluviksi, ukkosen hämärä, haamuja myrskyssä, salaman isku maahan, aavikon tuuli, myrskytuuli, heiton ja puun lyönnin äänet (2026-10-07, sessio 12c)
 - [x] Pehmeämpi sumu (sadeverhot), lähisalamat äänineen, Haamun äänet, puun ja viidakon äänien hienosäätö (2026-10-07, sessio 12b)
 - [x] Äänitehosteet: tuuli, viidakko, sade, kaukainen ukkonen, puun kaatuminen; syntetisoidut askeleet (2026-10-07, sessio 12)

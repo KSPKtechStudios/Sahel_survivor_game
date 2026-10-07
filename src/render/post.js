@@ -141,7 +141,46 @@ uniform float uFogFar;
 uniform float uHeat;
 uniform float uTime;
 uniform mat4 uViewProj;
+uniform float uLens;
+uniform float uAspect;
 varying vec2 vUv;
+
+// Vesipisarat "linssillä" (sessio 12d): sateella ja ukkosella satunnaisia
+// pisaroita, jotka taittavat kuvaa (pisara toimii pienenä linssinä), valuvat
+// hieman ja haihtuvat. Näkyvät selvimmin valoa (aurinkoa) kohti katsottaessa.
+float lh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+vec3 lensDrops(vec2 uv, vec3 col) {
+  vec3 outc = col;
+  for (int L = 0; L < 2; L++) {
+    float sc = L == 0 ? 6.0 : 11.0;
+    vec2 p = uv * vec2(uAspect, 1.0) * sc;
+    vec2 id = floor(p);
+    vec2 f = fract(p) - 0.5;
+    float h = lh(id + float(L) * 17.3);
+    if (h > uLens * (L == 0 ? 0.07 : 0.1)) continue;
+    float life = fract(uTime * (0.045 + 0.05 * lh(id + 2.1)) + h * 13.0);
+    vec2 c = (vec2(lh(id + 3.7), lh(id + 5.3)) - 0.5) * 0.5;
+    c.y += 0.18 * smoothstep(0.25, 1.0, life) * lh(id + 8.8);
+    float r = (0.1 + 0.16 * lh(id + 9.9)) * smoothstep(0.0, 0.04, life) * (1.0 - smoothstep(0.65, 1.0, life));
+    if (r < 0.01) continue;
+    vec2 d = f - c;
+    d.y *= 0.9;
+    float dd = length(d) / r;
+    if (dd >= 1.0) continue;
+    float mask = smoothstep(1.0, 0.82, dd);
+    // Pisara kääntää ympäristön kuvan (taittuminen) ja kirkastaa hieman.
+    // Kevyt taittuminen (vahva käänsi tumman maan taivaalle läiskiksi).
+    float z = sqrt(max(0.0, 1.0 - dd * dd));
+    vec2 suv = clamp(uv - d / (vec2(uAspect, 1.0) * sc) * (0.6 + 0.5 * (1.0 - z)), vec2(0.001), vec2(0.999));
+    vec3 rc = texture2D(tColor, suv).rgb * 1.06;
+    // Reuna tummempi, yläreunassa pieni valon välke.
+    float rim = smoothstep(0.7, 1.0, dd);
+    float spec = smoothstep(0.3, 0.0, length(d / r - vec2(-0.3, -0.35)));
+    rc = rc * (1.0 - 0.18 * rim) + vec3(1.0) * spec * 0.45;
+    outc = mix(outc, rc, mask * 0.8);
+  }
+  return outc;
+}
 
 // Kuumuusväreily: nousevia, aaltoilevia vääristymiä (uv-siirtymä).
 vec2 heatWarp(vec2 uv, float t) {
@@ -219,6 +258,7 @@ void main() {
   }
 
   if (uUseRays > 0.5) col += texture2D(tRays, vUv).rgb * uRayColor * uRayStrength;
+  if (uLens > 0.01) col = lensDrops(vUv, col);
 
   gl_FragColor = vec4(col, 1.0);
   #include <tonemapping_fragment>
@@ -250,6 +290,7 @@ export class PostFX {
     this.godRays = true;
     this.motionBlur = 0; // 0 = pois, 1 = kevyt, 2 = vahva
     this.dof = false;
+    this.lens = 0; // vesipisarat linssillä 0..1 (main.js)
 
     const depthTexture = new THREE.DepthTexture(1, 1);
     depthTexture.type = THREE.UnsignedIntType;
@@ -283,6 +324,7 @@ export class PostFX {
       uInvViewProj: { value: new THREE.Matrix4() }, uPrevViewProj: { value: new THREE.Matrix4() }, uMBScale: { value: 0 },
       uNear: { value: 0.1 }, uFar: { value: 1500 }, uCamPos: { value: new THREE.Vector3() },
       uSunDir: { value: new THREE.Vector3() }, uSunColor: { value: new THREE.Color() }, uInscatter: { value: 0 },
+      uLens: { value: 0 }, uAspect: { value: 1 },
       uFogNear: { value: 50 }, uFogFar: { value: 330 },
       uHeat: { value: 0 }, uTime: { value: 0 }, uViewProj: { value: new THREE.Matrix4() },
     });
@@ -300,7 +342,7 @@ export class PostFX {
   }
 
   get active() {
-    return this.godRays || this.motionBlur > 0 || this.dof;
+    return this.godRays || this.motionBlur > 0 || this.dof || this.lens > 0.01;
   }
 
   _resize() {
@@ -317,6 +359,7 @@ export class PostFX {
     this.dofRT.setSize(hw, hh);
     this.dofMat.uniforms.uTexel.value.set(1 / hw, 1 / hh);
     this.maskMat.uniforms.uAspect.value = w / h;
+    this.compMat.uniforms.uAspect.value = w / h;
   }
 
   _pass(material, target) {
@@ -419,6 +462,7 @@ export class PostFX {
 
     // --- Ilmakehän hehku
     cu.uSunDir.value.copy(env.sunDir);
+    cu.uLens.value = this.lens;
     cu.uSunColor.value.copy(env.sky.uniforms.uSunColor.value).multiplyScalar(env.sky.uniforms.uSunVisible.value);
     cu.uInscatter.value = 0.9 * env.daylight * (1 - env.w.cloud * 0.6);
     cu.uFogNear.value = env.scene.fog.near;
