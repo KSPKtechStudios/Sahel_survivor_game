@@ -2,10 +2,11 @@
 import * as THREE from 'three';
 import { CONFIG } from './config.js';
 import { createGroundDetailTexture } from './render/textures.js';
-import { createSharedMaterials } from './render/materials.js';
+import { createSharedMaterials, wetUniforms, addWet } from './render/materials.js';
 import { Sky } from './render/sky.js';
 import { Environment, WEATHER_KEYS } from './render/environment.js';
 import { Dust, Bursts } from './render/particles.js';
+import { Ambient } from './render/ambient.js';
 import { Debris } from './render/debris.js';
 import { createWaterMaterial, updateWaterMaterial } from './render/water.js';
 import { Ripples } from './render/ripples.js';
@@ -73,7 +74,7 @@ const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerH
 
 // --- Järjestelmät -------------------------------------------------------------
 const materials = createSharedMaterials(createGroundDetailTexture());
-const activeMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
+const activeMaterial = addWet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 }), 1, 0.3);
 const models = createModelLibrary();
 const sky = new Sky(scene);
 materials.water = createWaterMaterial(sky);
@@ -81,6 +82,7 @@ const env = new Environment(scene, renderer, sky);
 const world = new World(scene, materials, models);
 const tumbleweeds = new Tumbleweeds(scene, models.tumbleweed, materials.solid);
 const dust = new Dust(scene);
+const ambient = new Ambient(scene);
 const bursts = new Bursts(scene);
 const debris = new Debris(scene);
 const drops = new Drops(scene, models.items);
@@ -173,9 +175,9 @@ interaction.usePiece = (st) => {
     events.emit('message', { text: 'Herätyspaikka asetettu. Nukkua voi vain yöllä.' });
     return;
   }
-  const foes = mobs.list.some((m) => m.type === 'clay' && m.state !== 'dead' && m.pos.distanceTo(player.position) < 25);
+  const foes = mobs.list.some((m) => (m.type === 'clay' || m.type === 'haamu') && m.state !== 'dead' && m.pos.distanceTo(player.position) < (m.type === 'haamu' ? 40 : 25));
   if (foes) {
-    events.emit('message', { text: 'Et voi nukkua: savipeikkoja on lähellä' });
+    events.emit('message', { text: 'Et voi nukkua: vihollisia on lähellä' });
     return;
   }
   sleepT = 1.6;
@@ -303,6 +305,7 @@ function clearWorldState(seed) {
   fallen.clear();
   debris.clear();
   tumbleweeds.clear();
+  ambient.clear();
   explored.clear();
   splashes.clear();
   fire.clear();
@@ -670,8 +673,11 @@ function frame(now) {
   else if (env.humid < 0.4) world.setDetailRange(Infinity);
   // Vuorokausi ja sään vaihtuminen todellisessa ajassa (10 min päivä + 10 min yö).
   env.update(simDt, player.position, elapsed, running || state === 'menu' ? Math.min(0.25, rawDt) : 0);
-  // Sade ja sadepisaroiden väreet vedessä
-  const rainAmt = inGame && state !== 'menu' ? env.w.rain : 0;
+  // Sade ja sadepisaroiden väreet vedessä. Sademetsässä tihuttaa aina.
+  const rainAmt = inGame && state !== 'menu' ? Math.max(env.w.rain, env.humid * 0.24) : 0;
+  wetUniforms.uWet.value = inGame && state !== 'menu' ? env.wet : 0;
+  wetUniforms.uWetSky.value.copy(scene.fog.color);
+  wetUniforms.uRain.value = rainAmt;
   rain.update(simDt, camera, rainAmt, env.windDir, 0.2 + 0.8 * env.daylight, Math.min(0.25, rawDt));
   if (rainAmt > 0.1 && simDt > 0) {
     for (let i = 0, n = Math.floor(rainAmt * 6 + Math.random()); i < n; i++) {
@@ -750,6 +756,7 @@ function frame(now) {
   debris.update(running ? dt : 0);
   bursts.update(simDt);
   dust.update(elapsed, camera.position, env);
+  ambient.update(simDt, elapsed, camera.position, env);
   sky.update(camera.position);
 
   if (inGame) {
@@ -830,5 +837,5 @@ window.sahel = {
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
   ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, blood,
   startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
-  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats,
+  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient,
 };

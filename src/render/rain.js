@@ -14,12 +14,14 @@ uniform float uTime;
 uniform vec3 uCam;
 uniform vec2 uWind;
 uniform float uAmount;
+uniform float uDrizzle;
 varying float vAlpha;
 float h1(float n) { return fract(sin(n * 12.9898) * 43758.5453); }
 void main() {
   float s = aSeed;
   vec3 base = vec3(h1(s * 3.1) * 2.0 - 1.0, h1(s * 7.7), h1(s * 5.3) * 2.0 - 1.0) * vec3(${R.toFixed(1)}, ${H.toFixed(1)}, ${R.toFixed(1)});
-  float sp = ${SPEED.toFixed(1)} * (0.85 + 0.3 * h1(s * 1.9));
+  // Tihku: hitaampia ja lyhyempiä pisaroita.
+  float sp = ${SPEED.toFixed(1)} * (0.85 + 0.3 * h1(s * 1.9)) * (1.0 - 0.5 * uDrizzle);
   vec3 vel = vec3(uWind.x * 6.0, -sp, uWind.y * 6.0);
   vec3 p = base + vel * uTime;
   // Toisto kameran ympärillä
@@ -27,8 +29,8 @@ void main() {
   p.x = mod(p.x - uCam.x + ${R.toFixed(1)}, ${(2 * R).toFixed(1)}) + uCam.x - ${R.toFixed(1)};
   p.z = mod(p.z - uCam.z + ${R.toFixed(1)}, ${(2 * R).toFixed(1)}) + uCam.z - ${R.toFixed(1)};
   // Viivan häntä nopeuden suuntaan taaksepäin
-  p -= vel * aEnd * 0.035;
-  vAlpha = step(h1(s * 9.1), uAmount) * (1.0 - aEnd * 0.7);
+  p -= vel * aEnd * 0.035 * (1.0 - 0.35 * uDrizzle);
+  vAlpha = step(h1(s * 9.1), uAmount) * (1.0 - aEnd * 0.7) * (1.0 - 0.3 * uDrizzle);
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }
 `;
@@ -63,6 +65,7 @@ export class Rain {
       uCam: { value: new THREE.Vector3() },
       uWind: { value: new THREE.Vector2() },
       uAmount: { value: 0 },
+      uDrizzle: { value: 0 },
       uColor: { value: new THREE.Color(0.75, 0.8, 0.88) },
     };
     const mat = new THREE.ShaderMaterial({
@@ -93,6 +96,7 @@ export class Rain {
     u.uCam.value.copy(camera.position);
     u.uWind.value.set(wind.x, wind.y);
     u.uAmount.value = this.amount;
+    u.uDrizzle.value = 1 - Math.min(1, Math.max(0, (this.amount - 0.15) / 0.4));
     u.uColor.value.setRGB(0.32 + 0.45 * light, 0.35 + 0.47 * light, 0.42 + 0.48 * light);
     if (this.bolt) {
       this.boltT -= dt;

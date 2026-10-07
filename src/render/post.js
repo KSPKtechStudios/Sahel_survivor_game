@@ -138,7 +138,17 @@ uniform vec3 uSunColor;
 uniform float uInscatter;
 uniform float uFogNear;
 uniform float uFogFar;
+uniform float uHeat;
+uniform float uTime;
+uniform mat4 uViewProj;
 varying vec2 vUv;
+
+// Kuumuusväreily: nousevia, aaltoilevia vääristymiä (uv-siirtymä).
+vec2 heatWarp(vec2 uv, float t) {
+  float a = sin(uv.y * 240.0 - t * 8.0 + sin(uv.x * 31.0 + t * 1.1) * 2.5);
+  float b = sin(uv.y * 150.0 - t * 5.3 + uv.x * 19.0 + sin(uv.x * 7.0 - t * 0.7) * 1.5);
+  return vec2(a * 0.0009, (a + b) * 0.0015);
+}
 
 vec3 sceneAt(vec2 uv) {
   vec3 c = texture2D(tColor, uv).rgb;
@@ -154,6 +164,18 @@ void main() {
   vec4 ndc = vec4(vUv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
   vec4 wp = uInvViewProj * ndc;
   wp /= wp.w;
+  vec3 ray = normalize(wp.xyz - uCamPos);
+  float dist = length(wp.xyz - uCamPos);
+  bool sky = depth >= 0.99999;
+
+  // Kuumuusväreily horisontin tuntumassa: kaukaiset ääriviivat värisevät.
+  vec2 uv = vUv;
+  float heatW = 0.0;
+  if (uHeat > 0.001) {
+    float far = sky ? 1.0 : smoothstep(25.0, 110.0, dist);
+    heatW = uHeat * far * (1.0 - smoothstep(0.0, 0.09, abs(ray.y + 0.012)));
+    uv = clamp(vUv + heatWarp(vUv, uTime) * heatW, vec2(0.001), vec2(0.999));
+  }
 
   vec3 col;
   if (uMBScale > 0.0) {
@@ -167,20 +189,29 @@ void main() {
       const int M = 9;
       for (int i = 0; i < M; i++) {
         float t = float(i) / float(M - 1) - 0.5;
-        col += sceneAt(clamp(vUv + vel * t, vec2(0.001), vec2(0.999)));
+        col += sceneAt(clamp(uv + vel * t, vec2(0.001), vec2(0.999)));
       }
       col /= float(M);
     } else {
-      col = sceneAt(vUv);
+      col = sceneAt(uv);
     }
   } else {
-    col = sceneAt(vUv);
+    col = sceneAt(uv);
+  }
+
+  // Kangastus: kaukainen maa aivan horisontin alla heijastaa taivasta kuin
+  // väreilevä vesi.
+  if (heatW > 0.001 && !sky && ray.y < 0.0) {
+    float m = uHeat * smoothstep(-0.03, -0.004, ray.y) * smoothstep(90.0, 220.0, dist);
+    if (m > 0.001) {
+      vec4 mc = uViewProj * vec4(uCamPos + vec3(ray.x, -ray.y, ray.z) * 1000.0, 1.0);
+      vec2 muv = mc.xy / mc.w * 0.5 + 0.5 + heatWarp(vUv * 1.3, uTime * 1.2) * 1.5;
+      col = mix(col, texture2D(tColor, clamp(muv, vec2(0.001), vec2(0.999))).rgb, m * 0.55);
+    }
   }
 
   // Ilmakehä: sumu hehkuu auringon suunnassa (aamu- ja iltavalo, usva).
-  vec3 ray = normalize(wp.xyz - uCamPos);
-  if (uInscatter > 0.0 && depth < 0.99999) {
-    float dist = length(wp.xyz - uCamPos);
+  if (uInscatter > 0.0 && !sky) {
     float f = clamp((dist - uFogNear) / max(uFogFar - uFogNear, 1.0), 0.0, 1.0);
     float mu = max(dot(ray, uSunDir), 0.0);
     float phase = pow(mu, 6.0) * 0.55 + pow(mu, 40.0) * 0.45;
@@ -253,7 +284,9 @@ export class PostFX {
       uNear: { value: 0.1 }, uFar: { value: 1500 }, uCamPos: { value: new THREE.Vector3() },
       uSunDir: { value: new THREE.Vector3() }, uSunColor: { value: new THREE.Color() }, uInscatter: { value: 0 },
       uFogNear: { value: 50 }, uFogFar: { value: 330 },
+      uHeat: { value: 0 }, uTime: { value: 0 }, uViewProj: { value: new THREE.Matrix4() },
     });
+    this.time = 0;
 
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.compMat);
     this.quad.frustumCulled = false;
@@ -312,6 +345,11 @@ export class PostFX {
     const cu = this.compMat.uniforms;
     cu.tColor.value = this.sceneRT.texture;
     cu.uInvViewProj.value.copy(viewProj).invert();
+    cu.uViewProj.value.copy(viewProj);
+    // Kuumuusväreily (vain kun jälkikäsittely on muutenkin päällä).
+    this.time = (this.time + Math.max(0, dt)) % 1000;
+    cu.uHeat.value = env.heat || 0;
+    cu.uTime.value = this.time;
     cu.uNear.value = near;
     cu.uFar.value = far;
     cu.uCamPos.value.copy(camera.position);

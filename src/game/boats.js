@@ -123,7 +123,7 @@ export class Boats {
     const b = {
       type, def, parts, group: parts.group, x, z, yaw, y: w.wl, pitch: 0, roll: 0,
       speed: 0, yawRate: 0, rudder: 0, hp: def.hp, setting: 0, drive: 0,
-      sailAmt: 0.05, fill: 0, flap: 0, theta: Math.PI, windK: 1, wakeT: 0, sinking: -1,
+      sailAmt: 0.02, hoisted: 0, fill: 0, flap: 0, theta: Math.PI, windK: 1, wakeT: 0, sinking: -1,
       clear: 0, floorC: 0, atEdge: false, tired: false,
       box: new THREE.Box3(new THREE.Vector3(-def.B - 0.1, -def.keel, -def.L / 2 - 0.1), new THREE.Vector3(def.B + 0.1, def.top, def.L / 2 + 0.1)),
     };
@@ -444,7 +444,11 @@ export class Boats {
     const near = this.camera.position.distanceToSquared(b.group.position) < 260 * 260;
     if (P.sails.length) {
       const s = b.setting;
-      const amtT = s === 3 ? 1 : s === 2 ? 0.55 : 0.05;
+      const want = s >= 2;
+      // Purjeet: ensin raakapuu ylös, sitten purje auki; laskiessa päinvastoin.
+      const hoistT = want ? 1 : b.sailAmt < 0.08 ? 0 : 1;
+      b.hoisted += (hoistT - b.hoisted) * (1 - Math.exp(-dt * 1.4));
+      const amtT = want && b.hoisted > 0.9 ? (s === 3 ? 1 : 0.55) : 0.02;
       b.sailAmt += (amtT - b.sailAmt) * (1 - Math.exp(-dt * 1.2));
       const fillT = s >= 2 ? Math.min(1, b.drive * 1.4) : 0;
       b.fill += (fillT - b.fill) * (1 - Math.exp(-dt * 2));
@@ -452,17 +456,20 @@ export class Boats {
       b.flap += (flapT - b.flap) * (1 - Math.exp(-dt * 2));
       const fromPort = b.wp < 0;
       // Paikallaan oleva, purjeet kääritty: muotoa ei tarvitse laskea joka ruudulla.
-      const idle = !rider && s < 2 && b.sailAmt < 0.06 && b.fill < 0.01 && b.speed === 0;
+      const idle = !rider && s < 2 && b.sailAmt < 0.03 && b.hoisted < 0.02 && b.fill < 0.01 && b.speed === 0;
       for (const sl of P.sails) {
-        let ang;
-        if (sl.rig === 'square') {
+        let ang = 0;
+        if (!want) {
+          ang = 0; // käärityt purjeet keskilinjassa
+        } else if (sl.rig === 'square') {
           const brace = Math.min(0.75, Math.max(0, (Math.PI - b.theta) * 0.5));
           ang = fromPort ? -brace : brace;
         } else {
-          const boom = Math.min(1.35, Math.max(0.12, (b.theta - 0.5) * 0.62));
+          const boom = Math.min(1.2, Math.max(0.12, (b.theta - 0.5) * 0.6));
           ang = fromPort ? boom : -boom;
         }
         sl.yard.rotation.y += (ang - sl.yard.rotation.y) * (1 - Math.exp(-dt * 1.2));
+        if (sl.hoist) sl.hoist.rotation.x = -sl.lower * (1 - b.hoisted);
         if (!near || (idle && sl.idle)) continue;
         sl.idle = idle;
         // Pullistus tuulen alapuolelle: purjeen normaali veneen koordinaateissa.

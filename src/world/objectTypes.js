@@ -320,6 +320,12 @@ export const OBJECT_TYPES = {
     scale: [0.85, 1.2], maxSlope: 0.7, collider: 0, hit: { y: 0.1, r: 0.32 }, drawDist: 2,
     pickup: { drops: [['mushroom_termite', 1, 3]] },
   },
+  // Sessio 10: sademetsän vesilammikot (koriste, vain tasaisella maalla).
+  puddle: {
+    name: 'Lammikko', model: 'puddle', kind: 'decor', material: 'puddle', castShadow: false, decorative: true,
+    density: { rainforest: 9, mare: 0.8 },
+    scale: [0.7, 1.8], maxSlope: 0.12, slopeCheck: true, lift: 0.03, collider: 0, hit: null,
+  },
 };
 
 export const OBJECT_TYPE_KEYS = Object.keys(OBJECT_TYPES);

@@ -2,6 +2,30 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-07 (sessio 10)
+**Tehtiin**
+- Käyttäjän 9 toivetta (kirjattu `DESIGN.md`:hen): vesiseinien korjaus, tumbleweedit vain aavikolle ja "mesabiomille", purjeiden outo käytös, liian arat ja nopeat eläimet, jokaiselle biomille tunnusomainen grafiikka (aavikon kuumuusväreily, sademetsän tihku, märkyys ja lammikot), nopeammin syvenevä meri, Haamu-vihollinen sademetsän öihin, pudotettujen esineiden hehku ja heitettyjen esineiden poimintaviive. Kaikki toteutettiin.
+- Vesiseinät (`world/terrain.js`): syy selvitettiin mittaamalla jokien yhtymäkohdat (88/442:ssa yli 1,2 m:n porras, pahimmillaan 9 m). Korjaus: vedenpintojen sovittelu yhtymäkohdissa, sivujoen pinta liukuu pääuoman tasoon, kapeat purot seuraavat maastoa, järven kaivama kohta laskee joen pintaa, rakennelmat eivät tasoita uomia. Jäljelle jäi 1 (koskipaikka). Meren pohja syvenee nopeammin (`coastHeight`).
+- `world/tumbleweeds.js`: elinympäristö (aavikko, dyynit, laterittitasanko, pöytävuoret), uppoaminen ja katoaminen.
+- Purjeet (`models/boats.js`, `game/boats.js`): latinalaispurjeen raakapuun nosto ja lasku, käärityt purjeet keskilinjassa, pienempi lepatus.
+- Arat eläimet (`game/mobs.js`): lyhyemmät huomaamisetäisyydet, hitaampi pako, tarkkailuvaihe, väsyminen, haavoittuneen hidastuminen.
+- Sademetsä: märkyys jaettuihin materiaaleihin (`render/materials.js`: tummuminen, kiilto, laikuittaiset vesikalvot), lammikot (`models/flora.js`, `world/objectTypes.js`, `world/chunkGen.js`), tihku (`render/rain.js`, `main.js`), pilvet ja märkyyden kertymä (`render/environment.js`).
+- Aavikon kuumuusväreily ja kangastus (`render/post.js`, `render/environment.js`).
+- Uusi `render/ambient.js`: tulikärpäset ja pölypyörteet (Clauden ehdotukset muille biomeille).
+- Haamu (`models/creatures.js`, `game/mobs.js`, `ui/hud.js`, `ui/devtools.js`, `main.js`): malli (kaapu, huppu, violetit silmät, hehku, jälkihehku), tekoäly (leijunta latvuksissa, kiertely, varoitus, syöksy, nousu, horjahdus, haihtuminen aamulla), nuotion valo vastakeinona, lähitaistelun korkeusehto.
+- Pudotetut esineet (`game/drops.js`): hehku ja heitetyn esineen poimintaviive.
+- Testattiin headless-Chromiumilla: vesiseinien mittaus ennen ja jälkeen, vesikuvat, eläinten pako (kävely, juoksu, hiipiminen, väsyminen, kiinni juokseminen), purjeet kuvina, sademetsän märkyys ja lammikot (kuvat ja varjostimen komponenttien vianetsintä), sade ja renkaat, aavikon väreily (kuvat, kehysten erotus), Haamu (kuvat, syöksyt seisten ja väistäen, ulottuvuus, nuolet ja saalis, aamu, syntymistiheys), tulikärpäset ja pölypyörre kuvina, meren syvyysprofiili ennen ja jälkeen, vanhat savu-, toiminta-, taistelu-, jousi- ja venetestit (veneet avomerellä). Ei konsolivirheitä.
+
+**Huomiot**
+- Lammikko näytti ensin vaalealta kiveltä: se heijasti kirkasta sumun väriä, vaikka metsässä heijastuu enimmäkseen tumma latvusto. Nyt lammikko on läpikuultava, heijastus noudattaa fresneliä ja reuna sulautuu maahan.
+- Session 9 venetestin aloituspaikka osuu nyt pieneen lampeen (muuttuneet vesistöt), joten veneet testattiin merellä: soutu 2,4 / 3,2 m/s, purjevene sivutuulessa 5,5 m/s, laiva 6,3 m/s.
+- Kuumuusväreily ei näy matalalla esiasetuksella (jälkikäsittely pois).
+- Käyttäjä kirjoitti kesken työn "Try again"; työtä jatkettiin normaalisti.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute kaikista kohdista, erityisesti Haamun vaarallisuudesta ja harvinaisuudesta, eläinten pyydystettävyydestä ja sademetsän märkyyden voimakkuudesta.
+- Avoimet kysymykset: "mesabiomin" tulkinta, Haamu vai Aave, vuoriston ja meren tunnusmerkit.
+
 ## 2026-10-06–07 (sessio 9)
 **Tehtiin**
 - Käyttäjän 12 toivetta (kirjattu `DESIGN.md`:hen): joet eivät saa risteillä, enemmän hylättyjä paikkoja, biomit missä tahansa ja sopivan kokoisina, harvinaiset laivanhylyt rannoille, iskut harvemmaksi, keräilystä alkava peli (sienet ja kukat poimittaviksi, syötävät sienet ja myrkytys, paljon materiaaleja ja arkoja eläimiä, jousi), valtavasti esineitä ja työkaluja (nuotio ja rakennelmat vaativat työstöpenkin, joka rakennetaan vasaralla), linnunrata, 10 + 10 min vuorokausi, säät biomeittain, riimukivet käännöksineen ja veneet (soutuvene, purjevene, Santa Maria -tyylinen purjelaiva, purjeet tuulen mukaan). Kaikki 12 toteutettiin.

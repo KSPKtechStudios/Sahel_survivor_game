@@ -479,3 +479,27 @@ export function makeScree(seed) {
   }
   return merge(parts);
 }
+
+// Vesilammikko sademetsän maahan: epäsäännöllinen litteä läikkä (materiaali
+// tekee heijastuksen ja sadepisaroiden renkaat).
+export function makePuddle(seed) {
+  const rand = mulberry32(seed);
+  const n = 16;
+  const pos = [];
+  const R = [];
+  const k1 = rand() * 6, k2 = rand() * 6;
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    R.push(1 + 0.22 * Math.sin(a * 2 + k1) + 0.12 * Math.sin(a * 3 + k2) + (rand() - 0.5) * 0.12);
+  }
+  const sx = 0.8 + rand() * 0.5;
+  for (let i = 0; i < n; i++) {
+    const a0 = (i / n) * Math.PI * 2, a1 = ((i + 1) / n) * Math.PI * 2;
+    const r0 = R[i], r1 = R[(i + 1) % n];
+    pos.push(0, 0, 0, Math.cos(a1) * r1 * sx, 0, Math.sin(a1) * r1, Math.cos(a0) * r0 * sx, 0, Math.sin(a0) * r0);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.computeVertexNormals();
+  return paint(g, 0x2a2318, { rand, jitter: 0.03 });
+}

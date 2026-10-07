@@ -130,7 +130,8 @@ export function generateChunk(cx, cz, variantCounts) {
       let p = 0;
       for (const b of DENSITY_KEYS) p += (def.density[b] || 0) * s[b];
       if (r1 >= p / maxD) continue;
-      let y = s.h - 0.03;
+      let y = def.lift !== undefined ? s.h + def.lift : s.h - 0.03;
+      if (def.slopeCheck && slope(x, z, s.h) > def.maxSlope) continue;
       if (def.onWater) {
         // Kelluu tyynellä vedellä (ei joissa eikä meressä), 0.3..2.2 m syvyydessä.
         const depth = s.wl - s.h;

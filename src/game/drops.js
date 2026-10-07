@@ -1,6 +1,8 @@
 // Maahan pudonneet esineet. Kun jotain hajoaa, saaliit lennähtävät maahan
 // fyysisinä esineinä. Ne poimitaan [E]:llä tai ne imaistaan automaattisesti,
-// kun pelaaja kävelee niiden yli.
+// kun pelaaja kävelee niiden yli. Esineillä on pieni hehku, jotta ne erottaa
+// maasta. Heitettyä esinettä ei poimita automaattisesti heti takaisin:
+// pelaaja heitti sen tarkoituksella (ks. throwItem).
 import * as THREE from 'three';
 import { heightAt, waterAt, WATER } from '../world/terrain.js';
 import { waveHeight, openFactor } from '../world/waves.js';
@@ -8,6 +10,25 @@ import { ITEMS } from './items.js';
 import { events } from './events.js';
 
 const PICK_RADIUS = 1.5;    // automaattinen poiminta
+const THROW_BLOCK = 10;     // s: heitettyä esinettä ei poimita automaattisesti
+const THROW_AWAY = 3;       // m: ja vasta kun pelaaja on välillä käynyt kauempana
+
+// Hehkun tekstuuri: pehmeä säteittäinen liukuma.
+function glowTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d');
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,248,225,0.95)');
+  gr.addColorStop(0.25, 'rgba(255,232,180,0.45)');
+  gr.addColorStop(0.6, 'rgba(255,214,150,0.12)');
+  gr.addColorStop(1, 'rgba(255,200,120,0)');
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 64, 64);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
 // Kuinka korkealla maasta esine lepää (mallin paksuus makuuasennossa).
 const REST_Y = {
   stick: 0.025, stone: 0.07, fiber: 0.03, wood: 0.09, stone_axe: 0.03, stone_pick: 0.03, campfire: 0.05, gold_nugget: 0.02, cowrie: 0.02, bronze_bracelet: 0.02,
@@ -39,6 +60,10 @@ export class Drops {
       emissive: 0xffc040,
       emissiveIntensity: 0.25,
     });
+    // Hehku (kasvot aina kameraan päin, lisäävä sekoitus)
+    const map = glowTexture();
+    this.glowMat = new THREE.SpriteMaterial({ map, color: 0xfff0d0, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.4 });
+    this.glowMatValuable = new THREE.SpriteMaterial({ map, color: 0xffc850, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.6 });
     this.fullWarned = 0;
     this.waves = { amp: 0, windX: 1, windZ: 0, t: 0 };
     this.onWater = null; // (laji, x, y, z, voima) roiskeet ja väreily
@@ -67,10 +92,17 @@ export class Drops {
     if (resting) mesh.quaternion.copy(rest);
     else mesh.quaternion.setFromEuler(new THREE.Euler(Math.random() * 6, Math.random() * 6, Math.random() * 6));
     this.scene.add(mesh);
+    // Hehku esineen ympärille (koko mallin mukaan)
+    const geo = this.geos[item];
+    if (!geo.boundingSphere) geo.computeBoundingSphere();
+    const glow = new THREE.Sprite(ITEMS[item].valuable ? this.glowMatValuable : this.glowMat);
+    glow.scale.setScalar(Math.min(1.5, Math.max(0.55, 0.45 + geo.boundingSphere.radius * 1.6)));
+    glow.renderOrder = 3;
+    mesh.add(glow);
     const d = {
       item, count, mesh, vel, rest,
       spin: resting ? new THREE.Vector3() : new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(10),
-      resting, age: resting ? 10 : 0, magnet: null, blockedUntil: 0,
+      resting, age: resting ? 10 : 0, magnet: null, blockedUntil: 0, thrown: false, leftZone: true,
       // Vesi: w = viimeisin näyte, floating = kelluu pinnalla, wet = osui veteen
       w: null, wTimer: 0, floating: false, wet: false, flowX: 0, flowZ: 0, bob: Math.random() * 6,
     };
@@ -93,6 +125,8 @@ export class Drops {
   update(dt, elapsed, player, inventory) {
     this.material.emissiveIntensity = 0.05 + (Math.sin(elapsed * 3) * 0.5 + 0.5) * 0.08;
     this.valuableMaterial.emissiveIntensity = 0.2 + (Math.sin(elapsed * 4) * 0.5 + 0.5) * 0.35;
+    this.glowMat.opacity = 0.3 + (Math.sin(elapsed * 2.4) * 0.5 + 0.5) * 0.18;
+    this.glowMatValuable.opacity = 0.5 + (Math.sin(elapsed * 3.2) * 0.5 + 0.5) * 0.3;
     const chest = _v.copy(player.position);
     chest.y += 1.0;
     for (let i = this.list.length - 1; i >= 0; i--) {
@@ -198,12 +232,15 @@ export class Drops {
         if (d.age < 12) p.y += (heightAt(p.x, p.z) + (REST_Y[d.item] ?? 0.05) - p.y) * Math.min(1, dt * 8);
       }
 
-      // Automaattinen poiminta, kun pelaaja kävelee yli
-      if (d.age > 0.6 && elapsed > d.blockedUntil) {
+      // Automaattinen poiminta, kun pelaaja kävelee yli. Heitetty esine
+      // odottaa, kunnes pelaaja on käynyt kauempana (ei poimita heti takaisin).
+      if (d.age > 0.6) {
         const dx = p.x - player.position.x;
         const dz = p.z - player.position.z;
         const dy = p.y - player.position.y;
-        if (dx * dx + dz * dz < PICK_RADIUS * PICK_RADIUS && dy > -1 && dy < 2.2) this.pick(d);
+        const d2 = dx * dx + dz * dz;
+        if (!d.leftZone && elapsed > d.blockedUntil && d2 > THROW_AWAY * THROW_AWAY) d.leftZone = true;
+        if (elapsed > d.blockedUntil && d.leftZone && d2 < PICK_RADIUS * PICK_RADIUS && dy > -1 && dy < 2.2) this.pick(d);
       }
     }
   }
@@ -253,7 +290,9 @@ export class Drops {
     if (!ITEMS[item] || count <= 0) return null;
     const vel = new THREE.Vector3().copy(dir).multiplyScalar(7.5).add(new THREE.Vector3(0, 2.2, 0));
     const d = this._add(item, count, pos.clone(), vel, false);
-    d.blockedUntil = elapsed + 1.5;
+    d.blockedUntil = elapsed + THROW_BLOCK;
+    d.thrown = true;
+    d.leftZone = false;
     return d;
   }
 

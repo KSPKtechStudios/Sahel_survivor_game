@@ -11,9 +11,12 @@
 // linnut. Ne huomaavat pelaajan kaukaa (hiipiessä vasta lähellä), pysähtyvät
 // tarkkailemaan ja pakenevat koko lauma; linnut ja helmikanat lentävät.
 // Niiden pyytämiseen tarvitaan yleensä jousi.
+// Haamu (sessio 10): harvinainen, vaarallinen mustakaapuinen olento, joka
+// leijuu öisin sademetsän latvusten tasolla. Huomattuaan pelaajan se kiertää
+// tätä ja syöksyy iskuun (varoitus: hehku kirkastuu). Aamulla se haihtuu.
 import * as THREE from 'three';
 import { waterAt, sampleTerrain, insideStructure } from '../world/terrain.js';
-import { makeWarthog, makeClayGolem, makeGazelle, makeFennec, makeMonkey, makeGuineafowl, makeBird } from '../models/creatures.js';
+import { makeWarthog, makeClayGolem, makeGazelle, makeFennec, makeMonkey, makeGuineafowl, makeBird, makeHaamu } from '../models/creatures.js';
 import { createFlameTexture } from '../render/textures.js';
 import { events } from './events.js';
 
@@ -28,41 +31,51 @@ export const MOB_TYPES = {
     damage: 8, knock: 4, up: 0, reach: 1.4, windup: 0.65, attack: 0.28, recover: 0.8,
     sight: 24, poise: 6, turn: 4, drops: [['clay', 1, 2]], cause: 'clay',
   },
-  // --- Arat eläimet. sight = huomaamisetäisyys (kyykyssä noin 0,38 ×),
-  // group = laumakoko, max = enimmäismäärä, habitat = biomipainot.
+  // --- Arat eläimet. sight = huomaamisetäisyys kävelevästä pelaajasta
+  // (paikallaan 0,75 ×, kyykyssä 0,3 ×, paikallaan kyykyssä 0,22 ×, juostessa
+  // 1,3 ×), run = pakonopeus (pelaaja juoksee 7,2 m/s), group = laumakoko,
+  // max = enimmäismäärä, habitat = biomipainot. Sessio 10: arkuutta ja
+  // nopeutta vähennetty, jotta jousella ehtii ampua.
   gazelle: {
-    name: 'Gaselli', hp: 26, radius: 0.32, height: 1.0, walk: 1.3, run: 11, mass: 0.9, sight: 30, turn: 6, poise: 6,
+    name: 'Gaselli', hp: 26, radius: 0.32, height: 1.0, walk: 1.3, run: 7.6, mass: 0.9, sight: 18, turn: 6, poise: 6,
     drops: [['raw_meat', 1, 2], ['gazelle_pelt', 1, 1], ['bone', 0, 1], ['sinew', 0, 1]],
     skittish: true, group: [2, 4], max: 6, habitat: (s) => s.savanna + s.woodland * 0.8 + s.laterite * 0.5 + s.mare * 0.5 + s.desert * 0.3,
   },
   guineafowl: {
-    name: 'Helmikana', hp: 7, radius: 0.18, height: 0.45, walk: 0.8, run: 6.5, mass: 0.3, sight: 17, turn: 9, poise: 1,
+    name: 'Helmikana', hp: 7, radius: 0.18, height: 0.45, walk: 0.8, run: 5.2, mass: 0.3, sight: 11, turn: 9, poise: 1,
     drops: [['raw_meat', 1, 1], ['feather', 2, 4]],
     skittish: true, flies: true, group: [3, 6], max: 8, habitat: (s) => s.savanna + s.woodland + s.mare * 0.7 + s.laterite * 0.4,
   },
   monkey: {
-    name: 'Apina', hp: 18, radius: 0.24, height: 0.6, walk: 1.2, run: 8, mass: 0.6, sight: 20, turn: 8, poise: 4,
+    name: 'Apina', hp: 18, radius: 0.24, height: 0.6, walk: 1.2, run: 6.2, mass: 0.6, sight: 13, turn: 8, poise: 4,
     drops: [['raw_meat', 1, 1], ['monkey_pelt', 1, 1], ['bone', 0, 1]],
     skittish: true, group: [2, 4], max: 5, habitat: (s) => s.rainforest + s.woodland * 0.25 + s.oasis * 0.5,
   },
   fennec: {
-    name: 'Aavikkokettu', hp: 10, radius: 0.2, height: 0.45, walk: 1.0, run: 9.5, mass: 0.35, sight: 22, turn: 8, poise: 2,
+    name: 'Aavikkokettu', hp: 10, radius: 0.2, height: 0.45, walk: 1.0, run: 6.8, mass: 0.35, sight: 14, turn: 8, poise: 2,
     drops: [['raw_meat', 1, 1], ['fox_pelt', 1, 1]],
     skittish: true, group: [1, 2], max: 2, habitat: (s) => (s.desert + s.dunes) * 1.2,
   },
   bird: {
-    name: 'Kutojalintu', hp: 3, radius: 0.08, height: 0.18, walk: 0.5, run: 2.5, mass: 0.05, sight: 10, turn: 12, poise: 0,
+    name: 'Kutojalintu', hp: 3, radius: 0.08, height: 0.18, walk: 0.5, run: 2.5, mass: 0.05, sight: 7, turn: 12, poise: 0,
     drops: [['feather', 1, 2]],
     skittish: true, flies: true, bird: true, group: [4, 7], max: 12,
     habitat: (s) => s.savanna + s.woodland + s.mare + s.oasis + s.rainforest * 0.5 + s.beach * 0.3,
   },
+  // Haamu: walk = vaellus, run = kiertely, dive = syöksyn nopeus (m/s).
+  haamu: {
+    name: 'Haamu', hp: 70, radius: 0.42, height: 1.8, walk: 2.2, run: 4.5, dive: 10.5, mass: 0.8,
+    damage: 17, knock: 7, up: 2.2, reach: 1.1, windup: 0.9, sight: 30, poise: 12, turn: 3.5,
+    drops: [['cowrie', 1, 3], ['bronze_bracelet', 0, 1]], cause: 'haamu', ghost: true,
+  },
 };
 const WILD = ['gazelle', 'guineafowl', 'monkey', 'fennec', 'bird'];
-const FACTORY = { warthog: makeWarthog, gazelle: makeGazelle, fennec: makeFennec, monkey: makeMonkey, guineafowl: makeGuineafowl, bird: makeBird };
+const FACTORY = { warthog: makeWarthog, gazelle: makeGazelle, fennec: makeFennec, monkey: makeMonkey, guineafowl: makeGuineafowl, bird: makeBird, haamu: makeHaamu };
 
 const MAX_WARTHOGS = 3;
 const MAX_CLAY = 3;
-const DESPAWN = { warthog: 150, clay: 70, gazelle: 170, guineafowl: 150, monkey: 150, fennec: 150, bird: 120 };
+const MAX_HAAMU = 1;
+const DESPAWN = { warthog: 150, clay: 70, gazelle: 170, guineafowl: 150, monkey: 150, fennec: 150, bird: 120, haamu: 120 };
 const PLAYER_R = 0.35;
 
 const _wq = {};
@@ -74,7 +87,10 @@ const _w = new THREE.Vector3();
 
 // Veren väri lajeittain (savipeikolla punaruskeaa savivelliä).
 const RED = new THREE.Color(0.55, 0.03, 0.02);
-const BLOOD = { warthog: RED, clay: new THREE.Color(0.45, 0.16, 0.07), gazelle: RED, guineafowl: RED, monkey: RED, fennec: RED, bird: RED };
+const BLOOD = {
+  warthog: RED, clay: new THREE.Color(0.45, 0.16, 0.07), gazelle: RED, guineafowl: RED, monkey: RED, fennec: RED, bird: RED,
+  haamu: new THREE.Color(0.12, 0.06, 0.26),
+};
 
 // Hiiltynyt versio geometriasta (palanut savipeikko murenee mustina paloina).
 const charred = new Map();
@@ -113,8 +129,11 @@ function instantiate(type, n, eyeMat) {
   const map = new Map(src.map((o, i) => [o, dst[i]]));
   for (const o of dst) if (o.isMesh && o.material === t.material) o.material = material;
   const out = { group, material, kind: t.kind };
-  for (const k of ['body', 'head', 'tail', 'torso']) if (t[k]) out[k] = map.get(t[k]);
+  for (const k of ['body', 'head', 'tail', 'torso', 'glow', 'core']) if (t[k]) out[k] = map.get(t[k]);
   for (const k of ['legs', 'arms', 'eyes', 'wings']) if (t[k]) out[k] = t[k].map((o) => map.get(o));
+  // Haamun hehku himmenee ja kirkastuu yksilöllisesti.
+  if (out.glow) out.glow.material = out.glow.material.clone();
+  if (out.core) out.core.material = out.core.material.clone();
   return out;
 }
 
@@ -142,6 +161,7 @@ export class Mobs {
     this.spawnTimer = 3;
     this.clayTimer = 6;
     this.wildTimer = 2;
+    this.haamuTimer = 25;
     this.combat = null; // asetetaan main.js:ssä (osumat pelaajaan)
     this.enabled = true;
     this.seed = 1;
@@ -151,7 +171,12 @@ export class Mobs {
   // olento nyi peliä.
   prepare() {
     for (const type of Object.keys(MOB_TYPES)) {
-      for (let n = 0; n < VARIANTS; n++) instantiate(type, n, this.eyeMaterial).material.dispose();
+      for (let n = 0; n < VARIANTS; n++) {
+        const inst = instantiate(type, n, this.eyeMaterial);
+        inst.material.dispose();
+        if (inst.glow) inst.glow.material.dispose();
+        if (inst.core) inst.core.material.dispose();
+      }
     }
   }
 
@@ -190,6 +215,28 @@ export class Mobs {
       burning: false, burnT: 0, burnDur: 0, flames: null,
       yOff: emerge ? -1.4 : 0,
     };
+    if (def.ghost) {
+      // Haamu ilmestyy latvusten tasolle (8-11 m maasta) ja leijuu siellä.
+      m.alt = 8 + Math.random() * 3;
+      m.pos.y = Math.max(w.h, w.wl) + m.alt;
+      m.state = 'appear';
+      m.fade = 0;
+      m.bob = 0;
+      m.orbit = Math.random() * Math.PI * 2;
+      m.orbitDir = Math.random() < 0.5 ? -1 : 1;
+      m.diveDir = new THREE.Vector3();
+      // Jälkihehku: muutama himmeä kehä seuraa perässä.
+      m.trail = [];
+      for (let i = 0; i < 3; i++) {
+        const t = new THREE.Sprite(model.glow.material.clone());
+        t.scale.setScalar(1.8 - i * 0.4);
+        t.renderOrder = 2;
+        t.position.set(m.pos.x, m.pos.y + 1, m.pos.z);
+        t.material.opacity = 0;
+        this.scene.add(t);
+        m.trail.push(t);
+      }
+    }
     model.group.position.copy(m.pos);
     this.scene.add(model.group);
     this.list.push(m);
@@ -199,8 +246,13 @@ export class Mobs {
   remove(m) {
     const i = this.list.indexOf(m);
     if (i >= 0) this.list.splice(i, 1);
+    // Haamun jälkeen seuraava tulee vasta pitkän ajan päästä (harvinainen).
+    if (m.type === 'haamu') this.haamuTimer = Math.max(this.haamuTimer, 90 + Math.random() * 60);
     this.scene.remove(m.model.group);
     m.model.material.dispose(); // geometriat ovat yhteisiä (templates)
+    if (m.model.glow) m.model.glow.material.dispose();
+    if (m.model.core) m.model.core.material.dispose();
+    if (m.trail) for (const t of m.trail) { this.scene.remove(t); t.material.dispose(); }
   }
 
   clear() {
@@ -209,6 +261,7 @@ export class Mobs {
     this.spawnTimer = 3;
     this.clayTimer = 6;
     this.wildTimer = 2;
+    this.haamuTimer = 25;
   }
 
   // Lähin olento säteellä (kohteen nimi ja terveys tähtäimessä).
@@ -241,6 +294,8 @@ export class Mobs {
       const d = Math.hypot(dx, dz);
       const surf = d - m.def.radius;
       if (surf > reach) continue;
+      // Korkeusero: ylhäällä leijuvaan haamuun ei yletä.
+      if (Math.abs(m.pos.y + m.def.height * 0.5 - eyeY) > reach + m.def.height * 0.5 + 0.8) continue;
       // Hyvin lähellä oleva osuu aina, kun se on edessä päin.
       const c = d > 1e-3 ? (dx * fx + dz * fz) / d : 1;
       if (c < cosArc && !(surf < 0.4 && c > 0)) continue;
@@ -274,6 +329,12 @@ export class Mobs {
       this._alarm(m);
       return true;
     }
+    if (m.type === 'haamu') {
+      // Nuoli suututtaa kiertelevän haamun; lähietäisyyden osuma karkottaa
+      // sen hetkeksi takaisin latvuksiin.
+      if (opts.arrow && m.state === 'stalk') m.timer = Math.min(m.timer, 0.6);
+      else if (m.state === 'dive' || m.state === 'windup') this._set(m, 'rise', 1.6);
+    }
     if (m.type === 'warthog') {
       if (m.hp / def.hp < 0.35) {
         m.provoked = 0;
@@ -291,7 +352,7 @@ export class Mobs {
 
   // Horjahdus: keskeyttää hyökkäyksen. Parryn jälkeen olento on haavoittuvainen.
   stagger(m, dur, vulnerable) {
-    if (m.state === 'dead' || m.state === 'panic' || m.state === 'emerge') return;
+    if (m.state === 'dead' || m.state === 'panic' || m.state === 'emerge' || m.state === 'appear' || m.state === 'fade') return;
     m.staggerDur = dur;
     m.vulnerable = !!vulnerable;
     this._set(m, 'stagger');
@@ -330,13 +391,18 @@ export class Mobs {
       this.blood.spray(_v, null, BLOOD[m.type], 34, 1.3);
       m.poolAt = 0.35;
     }
-    this.bursts.spawn(_v, m.type === 'clay' ? 0x8a5a3a : 0xb8a888, 18, 1.8);
+    this.bursts.spawn(_v, m.type === 'clay' ? 0x8a5a3a : m.type === 'haamu' ? 0x2a1d48 : 0xb8a888, 18, 1.8);
     if (m.type === 'clay' && this.blood) this.blood.splat(m.pos.x, m.pos.z, 1.3, BLOOD.clay, 1.5);
     for (const [item, a, b] of def.drops) {
       const n = a + Math.floor(Math.random() * (b - a + 1));
       this.drops.spawn(item, n, _v, { spread: 0.6, up: 0.8 });
     }
     events.emit('mobKilled', { type: m.type });
+    if (m.type === 'haamu') {
+      this._dissolve(m, true);
+      this.remove(m);
+      return;
+    }
     if (m.type === 'clay') {
       this._shatter(m, m.burning);
       this.remove(m);
@@ -441,10 +507,22 @@ export class Mobs {
       } else if (!night) {
         this.clayTimer = 8 + Math.random() * 10;
       }
+      // Haamu: harvinainen, vain öisin sademetsässä.
+      if (night && !player.dead) {
+        this.haamuTimer -= dt;
+        if (this.haamuTimer <= 0) {
+          this.haamuTimer = 35 + Math.random() * 40;
+          if (this.count('haamu') < MAX_HAAMU && Math.random() < 0.4) this._trySpawnHaamu();
+        }
+      } else if (!night) {
+        this.haamuTimer = 20 + Math.random() * 30;
+      }
     }
     for (const m of this.list.slice()) {
       const d = Math.hypot(m.pos.x - p.x, m.pos.z - p.z);
       if (d > DESPAWN[m.type]) { this.remove(m); continue; }
+      // Aamun valossa haamu haihtuu.
+      if (m.type === 'haamu' && this.env.daylight > 0.15 && m.state !== 'fade') this._set(m, 'fade');
       // Aamulla savipeikot joutuvat paniikkiin ja syttyvät palamaan (eri aikaan).
       if (m.type === 'clay' && this.env.daylight > 0.18 && m.state !== 'panic' && m.state !== 'dead') {
         if (m.panicAt < 0) m.panicAt = elapsed + Math.random() * 3.5;
@@ -463,9 +541,11 @@ export class Mobs {
       if (dt > 0) {
         if (m.def.skittish) this._thinkSkittish(m, dt);
         else if (m.type === 'warthog') this._thinkWarthog(m, dt);
+        else if (m.def.ghost) this._thinkHaamu(m, dt);
         else this._thinkClay(m, dt);
         if (!this.list.includes(m)) continue;
         if (m.state === 'fly') this._flyPhysics(m, dt);
+        else if (m.def.ghost) this._ghostPhysics(m, dt);
         else this._physics(m, dt);
       }
       this._animate(m, dt, elapsed);
@@ -508,6 +588,26 @@ export class Mobs {
       if (Math.random() < 0.25 && this.count('clay') < MAX_CLAY) {
         const ox = x + (Math.random() - 0.5) * 6, oz = z + (Math.random() - 0.5) * 6;
         if (this._okSpot(ox, oz)) this.spawn('clay', ox, oz, { emerge: true });
+      }
+      return;
+    }
+  }
+
+  // Haamu ilmestyy 32-52 m päähän, kun pelaaja on sademetsässä (ei nuotion lähelle).
+  _trySpawnHaamu() {
+    const p = this.player.position;
+    sampleTerrain(p.x, p.z, _s);
+    if (_s.rainforest < 0.45) return;
+    for (let a = 0; a < 6; a++) {
+      const ang = Math.random() * Math.PI * 2;
+      const r = 32 + Math.random() * 20;
+      const x = p.x + Math.cos(ang) * r, z = p.z + Math.sin(ang) * r;
+      sampleTerrain(x, z, _s);
+      if (_s.rainforest < 0.4 || _s.ocean > 0.3 || this._nearFire(x, z, 18)) continue;
+      this.spawn('haamu', x, z);
+      if (!this.haamuSeen) {
+        this.haamuSeen = true;
+        events.emit('message', { text: 'Latvuksissa leijuu jotain... Nuotion valo pitää haamut loitolla.' });
       }
       return;
     }
@@ -684,7 +784,8 @@ export class Mobs {
       this._set(m, 'fly', def.bird ? 7 : 1.4 + Math.random() * 0.6);
       m.vy = def.bird ? 3.2 + Math.random() : 4.2;
     } else {
-      this._set(m, 'flee', 5 + Math.random() * 3);
+      // Lyhyt pako: pysähtyy pian katsomaan taakseen.
+      this._set(m, 'flee', (hurt ? 3.5 : 2.5) + Math.random() * 1.5);
     }
   }
 
@@ -692,9 +793,18 @@ export class Mobs {
   _alarm(m) {
     for (const o of this.list) {
       if (o === m || o.type !== m.type || o.state === 'dead' || o.state === 'flee' || o.state === 'fly') continue;
-      if ((o.pos.x - m.pos.x) ** 2 + (o.pos.z - m.pos.z) ** 2 > 22 * 22) continue;
-      o.alarmAt = 0.15 + Math.random() * 0.5;
+      if ((o.pos.x - m.pos.x) ** 2 + (o.pos.z - m.pos.z) ** 2 > 15 * 15) continue;
+      o.alarmAt = 0.2 + Math.random() * 0.6;
     }
+  }
+
+  // Huomaamisetäisyys pelaajan liikkeen mukaan.
+  _sight(def) {
+    const P = this.player;
+    if (P.dead) return 0;
+    const moving = P.speedNow > 0.6;
+    const k = P.crouching ? (moving ? 0.3 : 0.22) : P.sprinting ? 1.3 : moving ? 1 : 0.75;
+    return def.sight * k * (P.inWater === 2 ? 0.7 : 1);
   }
 
   _thinkSkittish(m, dt) {
@@ -703,9 +813,10 @@ export class Mobs {
     m.timer -= dt;
     const { dx, dz, d } = this._toPlayer(m);
     const P = this.player;
-    // Havaitseminen: hiipiessä vasta lähellä, juostessa kauempaa.
-    const sight = P.dead ? 0 : def.sight * (P.crouching ? 0.38 : P.sprinting ? 1.25 : 1) * (P.inWater === 2 ? 0.7 : 1);
+    const sight = this._sight(def);
     const near = d < sight;
+    // Väsymys: pitkä pakeneminen hidastaa (palautuu levossa).
+    m.tired = Math.max(0, (m.tired || 0) + (m.state === 'flee' ? dt * 0.045 : -dt * 0.02));
     if (m.alarmAt !== undefined && m.state !== 'dead') {
       m.alarmAt -= dt;
       if (m.alarmAt <= 0) { m.alarmAt = undefined; this._startFlee(m); }
@@ -713,7 +824,7 @@ export class Mobs {
     switch (m.state) {
       case 'graze':
         this._steer(m, 0, 0, 0, dt);
-        if (near) this._set(m, 'alert', 0.5 + Math.random() * 0.9);
+        if (near) { this._set(m, 'alert', 1.2 + Math.random() * 1.2); m.alertD = d; }
         else if (m.timer <= 0) {
           const a = Math.random() * Math.PI * 2, r = def.bird ? 1 + Math.random() * 2 : 3 + Math.random() * 7;
           m.tx = m.pos.x + Math.cos(a) * r;
@@ -725,28 +836,33 @@ export class Mobs {
         const wx = m.tx - m.pos.x, wz = m.tz - m.pos.z;
         const wd = Math.hypot(wx, wz);
         this._steer(m, wx / (wd || 1), wz / (wd || 1), def.walk, dt);
-        if (near) this._set(m, 'alert', 0.5 + Math.random() * 0.9);
+        if (near) { this._set(m, 'alert', 1.2 + Math.random() * 1.2); m.alertD = d; }
         else if (wd < 0.5 || m.timer <= 0) this._set(m, 'graze', 2 + Math.random() * 5);
         break;
       }
       case 'alert':
-        // Pysähtyy katsomaan; liian lähelle tultaessa pakenee heti.
+        // Pysähtyy katsomaan. Pakenee, jos pelaaja tulee liian lähelle tai
+        // jatkaa lähestymistä; paikalleen pysähtyneestä se rauhoittuu.
         this._steer(m, dx, dz, 0, dt, true);
-        if (near && (d < sight * 0.6 || m.timer <= 0)) {
+        if (d < sight * 0.55 || (near && d < m.alertD - 2.5)) {
           this._startFlee(m);
           this._alarm(m);
-        } else if (!near && m.stateT > 2.5) this._set(m, 'graze', 1 + Math.random() * 3);
+        } else if (m.timer <= 0) {
+          this._set(m, 'graze', 1.5 + Math.random() * 3);
+        }
         break;
       case 'flee': {
         const wob = Math.sin(m.stateT * 1.7 + m.phase) * 0.45;
         const fx = -dx * Math.cos(wob) + dz * Math.sin(wob);
         const fz = -dz * Math.cos(wob) - dx * Math.sin(wob);
-        this._steer(m, fx, fz, def.run, dt);
+        // Haavoittunut ja väsynyt eläin juoksee hitaammin.
+        const hurt = 0.55 + 0.45 * Math.max(0, m.hp / def.hp);
+        this._steer(m, fx, fz, def.run * hurt * (1 - 0.45 * Math.min(1, m.tired)), dt);
         // Helmikana pyrähtää lentoon, jos pelaaja on aivan kintereillä.
         if (def.flies && d < def.sight * 0.35 && m.stateT > 0.3) this._startFlee(m, true);
         else if (m.timer <= 0) {
-          if (d > sight * 2 || P.dead) this._set(m, 'graze', 2 + Math.random() * 3);
-          else m.timer = 1.5;
+          if (d > sight * 1.4 || P.dead) { this._set(m, 'alert', 1.5 + Math.random() * 1.5); m.alertD = d; }
+          else m.timer = 1.2;
         }
         break;
       }
@@ -760,7 +876,7 @@ export class Mobs {
         m.vel.z = Math.cos(m.yaw) * sp;
         if (m.timer <= 0) {
           if (def.bird) { this.remove(m); return; }
-          if (m.pos.y <= m.groundH + 0.05) this._set(m, 'flee', 3 + Math.random() * 2);
+          if (m.pos.y <= m.groundH + 0.05) this._set(m, 'flee', 2 + Math.random() * 1.5);
         }
         break;
       }
@@ -884,6 +1000,158 @@ export class Mobs {
     }
   }
 
+  // --- Haamu: leijuu latvusten tasolla, kiertää pelaajaa ja syöksyy iskuun.
+  // Syöksy kääntyy hitaasti, joten sivuaskel väistää; torjunta ja täydellinen
+  // torjunta toimivat kuten muitakin vastaan. Nuotion lähellä se ei syöksy.
+  _thinkHaamu(m, dt) {
+    const def = m.def;
+    m.stateT += dt;
+    m.timer -= dt;
+    m.bob += dt;
+    const player = this.player;
+    const p = player.position;
+    const ground = m.groundH ?? m.pos.y - m.alt;
+    const dx = p.x - m.pos.x, dz = p.z - m.pos.z;
+    const dh = Math.hypot(dx, dz) || 1e-3;
+    const cruise = Math.max(ground + m.alt, p.y + 5.5) + Math.sin(m.bob * 0.8 + m.phase) * 0.5;
+    const sight = def.sight * (player.crouching ? 0.6 : 1);
+    const sees = !player.dead && dh < sight;
+    const fireSafe = this._nearFire(p.x, p.z, 9);
+    if (m.state !== 'appear' && m.state !== 'fade') m.fade = Math.min(1, m.fade + dt);
+    let vx = 0, vy = 0, vz = 0, faceP = false;
+    switch (m.state) {
+      case 'appear':
+        // Ilmestyy tyhjästä (kasvaa ja hehku voimistuu).
+        m.fade = Math.min(1, m.stateT / 2);
+        vy = (cruise - m.pos.y) * 0.8;
+        if (m.stateT >= 2) this._set(m, sees ? 'stalk' : 'drift', 3 + Math.random() * 3);
+        break;
+      case 'drift': {
+        if (sees) { this._set(m, 'stalk', 3 + Math.random() * 3); break; }
+        if (m.timer <= 0 || Math.hypot(m.tx - m.pos.x, m.tz - m.pos.z) < 2) {
+          // Uusi kohde: aistii elävän ja ajelehtii sen suuntaan.
+          const near = !player.dead && dh < 80;
+          const a = Math.random() * Math.PI * 2, r = 6 + Math.random() * 14;
+          m.tx = (near ? p.x : m.pos.x) + Math.cos(a) * r;
+          m.tz = (near ? p.z : m.pos.z) + Math.sin(a) * r;
+          m.timer = 5 + Math.random() * 4;
+        }
+        const wx = m.tx - m.pos.x, wz = m.tz - m.pos.z, wd = Math.hypot(wx, wz) || 1;
+        vx = (wx / wd) * def.walk;
+        vz = (wz / wd) * def.walk;
+        vy = (cruise - m.pos.y) * 1.2;
+        break;
+      }
+      case 'stalk': {
+        if (player.dead || dh > sight * 1.5) { this._set(m, 'drift', 0); break; }
+        // Kiertää pelaajaa latvusten tasolla (nuotion valossa kauempana).
+        m.orbit += dt * 0.35 * m.orbitDir;
+        const R = fireSafe ? 16 : 10;
+        const wx = p.x + Math.cos(m.orbit) * R - m.pos.x, wz = p.z + Math.sin(m.orbit) * R - m.pos.z;
+        const wd = Math.hypot(wx, wz) || 1;
+        const sp = Math.min(def.run, wd * 1.2);
+        vx = (wx / wd) * sp;
+        vz = (wz / wd) * sp;
+        vy = (cruise - m.pos.y) * 1.2;
+        faceP = true;
+        if (m.timer <= 0 && !fireSafe && dh < 22) this._set(m, 'windup');
+        break;
+      }
+      case 'windup':
+        // Pysähtyy, nousee hiukan ja hehku kirkastuu: varoitus ennen syöksyä.
+        vy = 0.6;
+        faceP = true;
+        if (m.stateT >= def.windup) {
+          this._set(m, 'dive');
+          m.diveDir.set(dx, p.y + 1.1 - (m.pos.y + 0.9), dz).normalize();
+        }
+        break;
+      case 'dive': {
+        _v.set(dx, p.y + 1.1 - (m.pos.y + 0.9), dz);
+        const d3 = _v.length() || 1e-3;
+        _v.multiplyScalar(1 / d3);
+        // Viimeiset metrit suoraan: sivuaskel ajoissa väistää syöksyn.
+        if (d3 > 6) m.diveDir.lerp(_v, Math.min(1, dt * 2.2)).normalize();
+        vx = m.diveDir.x * def.dive;
+        vy = m.diveDir.y * def.dive;
+        vz = m.diveDir.z * def.dive;
+        faceP = true;
+        if (!m.hitDone && d3 < def.reach + 0.3) {
+          this._tryHitHaamu(m);
+          if (m.state !== 'dive') break; // täydellinen torjunta: horjuu
+        }
+        // Osui tai meni ohi: nousee takaisin latvuksiin.
+        if (m.hitDone || m.stateT > 2.4 || (d3 < 4 && m.diveDir.dot(_v) < 0.2)) this._set(m, 'rise', 1.8 + Math.random() * 0.8);
+        break;
+      }
+      case 'rise':
+        vx = (-dx / dh) * 3.2;
+        vz = (-dz / dh) * 3.2;
+        vy = Math.max(1.5, (cruise - m.pos.y) * 1.5);
+        if (m.timer <= 0 || m.pos.y > cruise - 0.5) this._set(m, 'stalk', 2.5 + Math.random() * 2.5);
+        break;
+      case 'stagger':
+        vy = 0.4;
+        if (m.stateT >= m.staggerDur) this._set(m, 'rise', 1.5);
+        break;
+      case 'fade':
+        // Aamulla haihtuu savuna.
+        m.fade = Math.max(0, m.fade - dt / 1.6);
+        vy = 0.5;
+        if (m.fade <= 0) { this._dissolve(m, false); this.remove(m); return; }
+        break;
+      default:
+        this._set(m, 'drift', 0);
+    }
+    // Liike pehmeästi kohti haluttua nopeutta (3D).
+    const k = 1 - Math.exp(-dt * (m.state === 'dive' ? 6 : 2.5));
+    if (m.hitStun > 0) { m.hitStun -= dt; vx *= 0.2; vz *= 0.2; }
+    m.vel.x += (vx - m.vel.x) * k;
+    m.vel.z += (vz - m.vel.z) * k;
+    m.vy += (Math.max(-def.dive, Math.min(def.dive, vy)) - m.vy) * k;
+    const fx = faceP ? dx : m.vel.x, fz = faceP ? dz : m.vel.z;
+    if (Math.abs(fx) + Math.abs(fz) > 0.05) {
+      const diff = angleDiff(Math.atan2(fx, fz), m.yaw);
+      m.yaw += Math.max(-def.turn * dt, Math.min(def.turn * dt, diff));
+    }
+  }
+
+  // Haamu ei törmää puihin (leijuu latvusten läpi); pysyy maan ja veden yllä.
+  _ghostPhysics(m, dt) {
+    const pos = m.pos;
+    pos.x += (m.vel.x + m.knock.x) * dt;
+    pos.z += (m.vel.z + m.knock.z) * dt;
+    pos.y += m.vy * dt;
+    m.knock.multiplyScalar(Math.exp(-dt * 3));
+    const w = waterAt(pos.x, pos.z, _wq);
+    m.groundH = Math.max(w.h, w.wl);
+    const floor = m.groundH + (m.state === 'dive' ? 0.15 : 0.35);
+    if (pos.y < floor) {
+      pos.y = floor;
+      if (m.vy < 0) m.vy = 0;
+    }
+  }
+
+  _tryHitHaamu(m) {
+    const p = this.player.position;
+    const d3 = Math.hypot(p.x - m.pos.x, p.y + 1.1 - (m.pos.y + 0.9), p.z - m.pos.z);
+    if (d3 > m.def.reach + 0.3 || this.player.dead) return;
+    m.hitDone = true;
+    const res = this.combat ? this.combat.receiveHit(m, m.def.damage, { knock: m.def.knock, up: m.def.up, cause: m.def.cause }) : 'hit';
+    if (res === 'block' || res === 'broken') this.push(m, m.pos.x - p.x, m.pos.z - p.z, 3, 1.5);
+  }
+
+  // Haamu hajoaa mustaksi savuksi ja violetiksi hohteeksi.
+  _dissolve(m, killed) {
+    _v.set(m.pos.x, m.pos.y + 0.9, m.pos.z);
+    this.bursts.spawn(_v, 0x1e1430, killed ? 26 : 12, killed ? 1.6 : 0.9);
+    this.bursts.spawn(_v, 0x5b3dff, killed ? 12 : 6, 1.2);
+    if (!this.fire) return;
+    for (let i = 0; i < (killed ? 10 : 5); i++) {
+      this.fire.smokePuff(m.pos.x + (Math.random() - 0.5) * 0.6, m.pos.y + 0.4 + Math.random() * 1.2, m.pos.z + (Math.random() - 0.5) * 0.6, 0.35, 1.2);
+    }
+  }
+
   // Hyökkäyksen osuma pelaajaan, jos pelaaja on edessä ja ulottuvilla.
   _tryHit(m) {
     const p = this.player.position;
@@ -970,7 +1238,7 @@ export class Mobs {
     }
     // Toiset olennot ja pelaaja
     for (const o of this.list) {
-      if (o === m || o.state === 'dead') continue;
+      if (o === m || o.state === 'dead' || o.def.ghost) continue;
       const ddx = pos.x - o.pos.x, ddz = pos.z - o.pos.z;
       const min = r + o.def.radius;
       const d2 = ddx * ddx + ddz * ddz;
@@ -1027,6 +1295,7 @@ export class Mobs {
     m.phase += speed * dt * (m.type === 'warthog' ? 4.4 : kind === 'bird' ? 14 : kind === 'guineafowl' ? 9 : m.def.skittish ? 5 : 3.2);
     if (m.type === 'warthog') this._animWarthog(m, md, speed, dt, elapsed);
     else if (kind === 'guineafowl' || kind === 'bird') this._animFowl(m, md, speed, dt, elapsed);
+    else if (kind === 'haamu') this._animHaamu(m, md, speed, dt, elapsed);
     else if (m.def.skittish) this._animQuad(m, md, speed, dt, elapsed);
     else this._animClay(m, md, speed, dt, elapsed);
   }
@@ -1126,6 +1395,65 @@ export class Mobs {
       md.group.rotation.z = m.deathSide * k * 1.5;
       md.group.position.y += k * 0.12 - Math.max(0, m.deadT - 4.5) * 0.4;
       for (const l of L) l.rotation.x *= Math.exp(-dt * 6);
+    }
+  }
+
+  // Haamu: kaapu huojuu, kädet roikkuvat; varoituksessa kädet nousevat ja
+  // hehku kirkastuu, syöksyssä vartalo kallistuu eteen kädet ojossa.
+  _animHaamu(m, md, speed, dt, elapsed) {
+    const s = m.state;
+    const f = m.fade ?? 1;
+    md.group.scale.setScalar(0.3 + 0.7 * f);
+    let lean = 0.08 + Math.min(0.25, speed * 0.04);
+    let armX = -0.15 + Math.sin(elapsed * 1.3 + m.phase) * 0.1, armZ = 0.12, glowK = 1;
+    if (s === 'windup') {
+      const k = smooth(m.stateT / m.def.windup);
+      lean = -0.25 * k;
+      armX = -2.3 * k;
+      armZ = 0.12 + 0.4 * k;
+      glowK = 1 + 0.8 * k;
+    } else if (s === 'dive') {
+      lean = 0.75;
+      armX = -1.45;
+      armZ = 0.25;
+      glowK = 1.6;
+    } else if (s === 'rise') {
+      lean = -0.15;
+      armX = 0.3;
+    } else if (s === 'stagger') {
+      lean = -0.4 + Math.sin(m.stateT * 16) * 0.1;
+      armX = 0.6;
+      glowK = 0.6;
+    }
+    // Pää katsoo pelaajaa.
+    const p = this.player.position;
+    const dh = Math.hypot(p.x - m.pos.x, p.z - m.pos.z) || 1;
+    const headX = Math.max(-0.6, Math.min(0.9, Math.atan2(m.pos.y - p.y, dh))) - lean * 0.6;
+    md.torso.rotation.x += (lean - md.torso.rotation.x) * Math.min(1, dt * 6);
+    md.torso.rotation.z = Math.sin(elapsed * 0.9 + m.phase) * 0.06;
+    md.head.rotation.x += (headX - md.head.rotation.x) * Math.min(1, dt * 5);
+    for (let i = 0; i < 2; i++) {
+      const a = md.arms[i];
+      const want = armX + (i ? 0.1 : -0.1) * Math.sin(elapsed * 2 + m.phase);
+      a.rotation.x += (want - a.rotation.x) * Math.min(1, dt * 8);
+      a.rotation.z = (i ? 1 : -1) * armZ;
+    }
+    // Hehku sykkii hitaasti.
+    const pulse = 1 + Math.sin(elapsed * 2.6 + m.phase) * 0.12;
+    md.glow.material.opacity = Math.min(1, 0.4 * f * pulse * glowK);
+    md.glow.scale.setScalar(2.3 * (0.9 + 0.1 * glowK));
+    md.core.material.opacity = Math.min(1, 0.45 * f * glowK);
+    for (const e of md.eyes) e.scale.set(1.2 * glowK, 0.7 * glowK, 1);
+    // Jälkihehku seuraa perässä (näkyy liikkeessä).
+    if (m.trail) {
+      md.glow.getWorldPosition(_w);
+      let prev = _w;
+      for (let i = 0; i < m.trail.length; i++) {
+        const t = m.trail[i];
+        t.position.lerp(prev, Math.min(1, dt * (7 - i * 1.5)));
+        t.material.opacity = (0.18 - i * 0.04) * f * Math.min(1, 0.3 + speed / 6);
+        prev = t.position;
+      }
     }
   }
 

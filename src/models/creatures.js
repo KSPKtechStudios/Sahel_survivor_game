@@ -401,3 +401,116 @@ export function makeBird(seed = 1) {
   group.add(tail);
   return { group, material, body, head, legs, tail, wings, kind: 'bird' };
 }
+
+// --- Sessio 10: Haamu ---------------------------------------------------------------
+// Mustakaapuinen olento, joka leijuu öisin sademetsän latvusten tasolla.
+// Kaavun helma on riekaleinen, hupun alla on pimeää ja kaksi violettia silmää.
+// Ympärillä hohtaa pieni tummansininen / violetti kehä (additiivinen sprite).
+// Malli on irti maasta: y = 0 on helman alareuna.
+let haamuGlowTex = null;
+function haamuGlowTexture() {
+  if (haamuGlowTex) return haamuGlowTex;
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.35, 'rgba(255,255,255,0.45)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 64, 64);
+  haamuGlowTex = new THREE.CanvasTexture(c);
+  haamuGlowTex.colorSpace = THREE.SRGBColorSpace;
+  return haamuGlowTex;
+}
+
+export function haamuGlowMaterial(color = 0x4b34e0, opacity = 0.6) {
+  return new THREE.SpriteMaterial({
+    map: haamuGlowTexture(), color, opacity, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true,
+  });
+}
+
+export function makeHaamu(seed = 1) {
+  const rand = mulberry32(seed);
+  // Kaapu on avoin alhaalta: molemmat puolet piirretään.
+  const material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, side: THREE.DoubleSide });
+  const group = new THREE.Group();
+  const CLOAK = 0x16111f, CLOAK_D = 0x0c0912, HAND = 0x5d5468;
+
+  // Kaapu: levenevä, riekaleinen helma ja laskokset (nivel vyötäröllä).
+  const k1 = rand() * 6, k2 = rand() * 6, k3 = rand() * 6;
+  let cloak = new THREE.CylinderGeometry(0.16, 0.46, 1.35, 14, 5, true);
+  cloak.translate(0, 0.725 - 0.8, 0);
+  displace(cloak, (x, y, z) => {
+    const a = Math.atan2(z, x);
+    const t = (y + 0.8 - 0.05) / 1.35; // 0 = helma, 1 = hartiat
+    const fold = 1 + (0.09 * Math.sin(a * 3 + k3) + 0.05 * Math.sin(a * 7 + k1)) * (1 - t);
+    let dy = 0;
+    if (t < 0.05) dy = -0.06 + 0.13 * Math.sin(a * 5 + k1) + 0.09 * Math.sin(a * 11 + k2) + (rand() - 0.5) * 0.08;
+    else if (t < 0.3) dy = (0.05 * Math.sin(a * 5 + k1)) * (1 - t / 0.3);
+    return [x * (fold - 1), dy, z * (fold - 1)];
+  });
+  const torsoParts = [paint(flatNormals(cloak), CLOAK, { rand, jitter: 0.14 })];
+  // Hartiaviitta
+  torsoParts.push(blob(0.24, 1.1, 0.45, 0.9, 0, 0.56, -0.01, CLOAK_D, rand, { rough: 0.2 }));
+  const torso = joint(merge(torsoParts), material, 0, 0.8, 0);
+  group.add(torso);
+
+  // Huppu: pyöreä, takaa suippeneva. Kasvojen kohdalla musta tyhjyys.
+  const head = new THREE.Group();
+  head.position.set(0, 0.62, 0);
+  const hood = merge([
+    blob(0.2, 1, 1.12, 1.12, 0, 0.14, -0.07, CLOAK, rand, { rough: 0.16 }),
+    paint(limb(V(0, 0.2, -0.12), V(0, 0.33, -0.33), 0.09, 0.012, 6), CLOAK_D, { rand }),
+  ]);
+  const hoodMesh = new THREE.Mesh(hood, material);
+  hoodMesh.castShadow = true;
+  head.add(hoodMesh);
+  const face = new THREE.Mesh(
+    paint(flatNormals(new THREE.SphereGeometry(0.13, 10, 8).scale(1, 1.15, 0.5).translate(0, 0.12, 0.15)), 0x020104, { rand, jitter: 0 }),
+    material,
+  );
+  head.add(face);
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0xc8a4ff });
+  const eyes = [];
+  for (const sx of [-1, 1]) {
+    const e = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 6), eyeMat);
+    e.scale.set(1.2, 0.7, 1);
+    e.position.set(sx * 0.052, 0.13, 0.215);
+    head.add(e);
+    eyes.push(e);
+  }
+  torso.add(head);
+
+  // Hihat ja luiset sormet (nivel olkapäässä).
+  const armGeo = (sx) => {
+    const parts = [
+      paint(limb(V(0, 0, 0), V(sx * 0.05, -0.46, 0.06), 0.07, 0.115, 7), CLOAK, { rand, jitter: 0.12 }),
+    ];
+    for (let i = 0; i < 3; i++) {
+      const fx = sx * 0.05 + (i - 1) * 0.025;
+      parts.push(paint(limb(V(fx, -0.44, 0.07), V(fx + (i - 1) * 0.02, -0.62, 0.12 + rand() * 0.03), 0.012, 0.005, 4), HAND, { rand }));
+    }
+    return merge(parts);
+  };
+  const arms = [];
+  for (const sx of [-1, 1]) {
+    const a = joint(armGeo(sx), material, sx * 0.2, 0.52, 0.0);
+    torso.add(a);
+    arms.push(a);
+  }
+
+  // Hehku: iso himmeä kehä vartalon ympärillä ja pienempi kirkkaampi kasvoilla.
+  const glow = new THREE.Sprite(haamuGlowMaterial(0x3a2a9c, 0.45));
+  glow.position.set(0, 1.0, 0);
+  glow.scale.set(2.3, 2.3, 1);
+  glow.renderOrder = 2;
+  group.add(glow);
+  const core = new THREE.Sprite(haamuGlowMaterial(0x7a58e8, 0.45));
+  core.position.set(0, 0.13, 0.17);
+  core.scale.set(0.6, 0.6, 1);
+  core.renderOrder = 2;
+  head.add(core);
+
+  return { group, material, torso, head, arms, legs: [], eyes, glow, core, kind: 'haamu' };
+}

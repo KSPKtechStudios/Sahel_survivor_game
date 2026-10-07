@@ -10,7 +10,7 @@ import { makeCampfireBase, createItemModels } from './items.js';
 import { createBuildModels } from './building.js';
 import {
   makeSheaTree, makeDoumPalm, makeLog, makeBanana, makeDesertShrub, makeCoconutPalm, makeDriftwood,
-  makeTallGrass, makeFlowers, makeLilies, makeSeaweed, makeBones, makeScree,
+  makeTallGrass, makeFlowers, makeLilies, makeSeaweed, makeBones, makeScree, makePuddle,
 } from './flora.js';
 import {
   makeFlintGround, makeShellGround, makeFeatherGround, makeCoconutGround, makeBaobabFruitGround, makeSheaNutsGround,
@@ -70,6 +70,8 @@ const VARIANTS = {
   mushPale: [(s) => makeMushPatch('pale', s), 2, 531],
   mushRed: [(s) => makeMushPatch('red', s), 2, 541],
   mushTermite: [(s) => makeMushPatch('termite', s), 2, 551],
+  // Sessio 10: sademetsän vesilammikot
+  puddle: [makePuddle, 4, 601],
 };
 // Mallit, joilla on kevyt kaukoversio (ilman varjoa).
 const HAS_FAR = new Set(['acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut']);

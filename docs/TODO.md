@@ -1,6 +1,10 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 10: vesiseinät poissa (jokien yhtymäkohdat), tumbleweedit vain aavikolla ja laterittitasangolla, purjeiden nosto ja lasku, eläinten pyydystäminen (jousi ja juoksu), sademetsän tihku, märkyys ja lammikot, aavikon kuumuusväreily, pölypyörteet ja tulikärpäset, meren syvyys laivalla, Haamu öisin sademetsässä, pudotettujen esineiden hehku ja heitetyn esineen poimintaviive
+- [ ] Vastaus: tarkoittiko "mesabiomi" punaista laterittitasankoa (nyt tulkinta: laterittitasanko + aavikon pöytävuoret)?
+- [ ] Vastaus: Haamu vai Aave (nyt Haamu)? Sopivatko vahvuus (17 vahinkoa, 70 terveyttä), harvinaisuus, nuotion valo vastakeinona ja saalis (kaurikotilot, pronssirannerengas)?
+- [ ] Vastaus: tunnusmerkit muille biomeille: sopivatko tulikärpäset ja pölypyörteet? Mitä vuoristoon (esim. pilvet rinteillä, kylmä sininen sävy) ja merelle (esim. lokit, vaahtopäät)?
 - [ ] Käyttäjä testaa session 9: joet (eivät risteä), biomit missä tahansa, rakennelmien määrä ja laivanhylyt, iskujen tahti, keräily ja ruoka (myrkytys), työkalut ja vasara (työstöpenkki, rakentaminen), jousi ja arat eläimet, linnunrata, 10 + 10 min vuorokausi, säät biomeittain (sade, ukkonen, sumu), riimukivet, veneet ja purjehdus
 - [ ] Vastaus: kirjoittaako käyttäjä riimukivien tekstit itse, ja liittyvätkö ne tarinaan tai pulmiin? (Nyt 38 Clauden luonnosta)
 - [ ] Vastaus: veneet: kävely laivan kannella, lastiruuma, "lautta" omana veneenään? Ovatko hinnat sopivat?
@@ -23,6 +27,8 @@
 - [ ] Ambient-äänet ja äänitehosteet (käyttäjä toimittaa; musiikki tehty sessiossa 7)
 
 ## Seuraavaksi (ehdotuksia)
+- [ ] Haamulle äänet (kuiske, kirkaisu ennen syöksyä), kun äänitehosteet lisätään
+- [ ] Kuumuusväreily myös ilman muuta jälkikäsittelyä (nyt vaatii valonsäteet, DOF tai liike-epäterävyyden)
 - [ ] Äänet osumiin, torjuntaan ja olentoihin (kun käyttäjä toimittaa äänet)
 - [ ] Lisää vihollisia (esim. hyeena, krokotiili) ja kaloja; viholliset raunioihin?
 - [ ] Varastoarkku rakennettavaksi (purjelaivan tarvikkeet mahtuvat nyt juuri ja juuri reppuun)
@@ -53,6 +59,14 @@
 - [ ] Päätä lopullinen nimi (Sahel vai jokin muu)
 
 ## Valmis
+- [x] Vesiseinät korjattu (jokien yhtymäkohdat, purot rinteillä, järvet, rakennelmat) (2026-10-07, sessio 10)
+- [x] Tumbleweedit vain aavikolla ja laterittitasangolla; uppoavat veteen (sessio 10)
+- [x] Purjeet: raakapuu lasketaan käärittäessä, ei paksua "tankoa", pienempi lepatus (sessio 10)
+- [x] Arat eläimet vähemmän arkoja ja hitaampia, tarkkailevat ensin, väsyvät paetessa (sessio 10)
+- [x] Biomien tunnelma: sademetsän tihku, märkyys ja lammikot; aavikon kuumuusväreily ja kangastus; pölypyörteet; tulikärpäset (sessio 10)
+- [x] Meri syvenee rannasta nopeammin (sessio 10)
+- [x] Haamu: harvinainen yön vihollinen sademetsän latvuksissa (sessio 10)
+- [x] Pudotettujen esineiden hehku ja heitetyn esineen poimintaviive (sessio 10)
 - [x] Joet valumaverkkona (eivät risteä), biomit missä tahansa (alueet n. 1–2 km), saari meren ympäröimänä (2026-10-06–07, sessio 9)
 - [x] Rakennelmia n. 1 800 maailmassa, laivanhylyt rannoilla, riimukivet ja -taulut käännöksineen (sessio 9)
 - [x] Iskut harvemmaksi (pidemmät jäähdytykset, suurempi kestävyyden kulutus) (sessio 9)

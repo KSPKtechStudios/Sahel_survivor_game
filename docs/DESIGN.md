@@ -128,6 +128,21 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 11. **Kaiverrettuja kiviä ja pieniä riimukirjoituksia** sinne tänne. Niissä on harakanvarpaita, mutta kun niitä katsoo kohdistimella, ruudulle tulee **"PAINA E KÄÄNTÄÄKSESI"**, ja teksti tulee **suomeksi** näytölle. Kivet kertovat **abstrakteja asioita pelimaailmasta**, joita pelaaja saa pähkäillä, ja niistä voi ehkä ymmärtää jopa **pelimaailman salaisuuksia**.
 12. **Veneet / lautat**, jotka voi asettaa **vain veteen**: pienin on **pieni soutuvene** (heikko ja hidas), toisena **pieni purjevene** (nopeudeltaan välissä), viimeisenä **valtava purjelaiva, Santa Maria -tyylinen**: vaatii **älyttömät määrät resursseja**, mutta **kestää ja kulkee kovaa**. **Laivojen purjeet toimivat tuulen suunnan mukaisesti.**
 
+## Sessio 10 (käyttäjän kertoma, 2026-10-07)
+Nyt keskitytään jälleen biomeihin.
+- **Bugi:** vedessä näkyy outoja pystysuoria "seiniä" (kuvakaappaukset sademetsästä ja savannilta). Mikä ne aiheuttaa? Korjattava.
+- **Tumbleweedit (risukasat) pyörivät joka biomissa, jopa meressä.** Ne kuuluvat vain **aavikolle ja mesabiomille**.
+- **Veneiden purjeet käyttäytyvät tosi erikoisesti.** Miksi? Korjattava.
+- **Eläimet ovat "typerän" arkoja ja juoksevat liian lujaa pakoon**: pelaajalla ei ole mitään mahdollisuutta saada niitä kiinni. Parannettava.
+- **Joka biomilla pitää olla tunnusomainen grafiikka.** Esimerkiksi:
+  - **Aavikolla** kirkkaana, helteisenä päivänä horisontissa näkyy oikeita **kuumuuden väreilyä / ilman aaltoja**.
+  - **Sademetsässä ei aina varsinaisesti sada, mutta vähän tihuttaa aina** ("nimensä mukaisesti sademetsä").
+  - **Sademetsässä kaikki on aina tosi märkää ja kiiltävää**, ja siellä on **vesilammikoita**.
+- **Meret syvenevät nopeammin**, jotta laivan käyttö on helpompaa.
+- **Uusi vihamielinen ja suhteellisen vaarallinen mobi sademetsiin öisin: "Haamu" tai "Aave".** Mustakaapuinen olento, jonka ympärillä on pieni **tummansininen / violetti hehku**. Se **leijailee ilmassa, ei liian korkealla vaan puiden latvuksia pitkin**. **Ei liian yleinen.**
+- **Pudotetulla esineellä pieni hehku / kiilto ympärillä**, jotta sen erottaa.
+- **Heitetyillä esineillä poimimisviive:** kun pelaaja heittää esineen maahan ja kävelee heti sen yli, peli ei poimi sitä heti takaisin ("pelaaja heitti juuri tämän, ei varmaan halua sitä takaisin").
+
 ## Teknologia
 - Selaimessa toimiva peli: three.js (WebGL), ei käännösvaihetta. Ks. `DECISIONS.md`.
 - Kohdealusta toistaiseksi tietokoneen selain (hiiri + näppäimistö).
@@ -164,6 +179,9 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - Jousi ja nuolet, arat eläimet (gaselli, helmikana, apina, aavikkokettu, kutojalinnut) (sessio 9).
 - Linnunrata, 10 + 10 min vuorokausi todellisessa ajassa, alueelliset säät (sade, ukkonen, sumu) (sessio 9).
 - Veneet: soutuvene, purjevene ja purjelaiva; purjeet tuulen mukaan, tuulen suunta kääntyy (sessio 9).
+- Vesiseinät korjattu, tumbleweedit vain aavikolla ja laterittitasangolla, purjeiden nosto ja lasku, rauhallisemmat arat eläimet (sessio 10).
+- Biomien tunnelma: sademetsän tihku, märkyys ja lammikot, aavikon kuumuusväreily ja kangastus, pölypyörteet, tulikärpäset (sessio 10).
+- Meri syvenee nopeammin, Haamu sademetsän öissä, pudotettujen esineiden hehku ja heitetyn esineen poimintaviive (sessio 10).
 
 ## Paikkamerkit (Clauden valitsemia, voi muuttaa vapaasti)
 - **Maailman koko ja muoto (sessio 9):** säde 10 km. Maailma on saari: reunoilla (noin 8–9 km:stä alkaen) rannikko ja avomeri, jonka reunalla virta vie takaisin ("Virta on liian voimakas"). Aloituspaikan ympärillä (n. 2,4 km) on aina Sahelia.
@@ -224,7 +242,13 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - **Ravinto ja myrkytys (sessio 9):** ravinto 100, tyhjenee n. 34 min:ssa (juostessa 1,7×, uidessa 1,4×). Alle 20: palautuminen hitaampaa; tyhjänä −0,5 terveyttä / s. Myrkytyksen todennäköisyys: ruskea sieni 15 %, kalpea sieni 40 %, punahattu 85 % (vahvempi), termiittisieni 5 %, paahdettu sieni 6 %, raaka liha 30 %. Myrkytys −0,45 terveyttä / s (ei alle 4), kestävyys palautuu hitaammin.
 - **Poimittavat (sessio 9):** piikivi, simpukankuoret, sulat, kookospähkinät, apinanleivät, karitepähkinät, jujubapensas, moringa, hibiskus (bissap), ruoko (veden lähellä), fonio, savi (veden lähellä), neljä sientä (ruskea, kalpea, punahattu, termiittisieni), kukat (terälehdet) ja luurangot (luita). Puista ja kasveista lisäksi kumia, palmunlehtiä, kookoksia, banaaneja, bambua ja karitepähkinöitä.
 - **Jousi (sessio 9):** täysi jännitys n. 0,95 s (jännejousi 0,85 s), lähtönopeus 16–60 m/s jännityksen mukaan, jännittäminen kuluttaa kestävyyttä ja hidastaa liikettä. Nuolet järjestyksessä piikivi > luu > puu.
-- **Arat eläimet (sessio 9):** gaselli (26 terveyttä, juoksee 11 m/s, huomaa 30 m:stä, laumassa 2–4; savanni ja metsiköt), helmikana (7, lentää, 17 m, 3–6; savanni), apina (18, 20 m, 2–4; sademetsä, keitaat), aavikkokettu (10, 22 m, 1–2; aavikko, enemmän öisin), kutojalintu (3, lentää, 10 m, parvissa 4–7). Kyykyssä huomaamisetäisyys × 0,38, juostessa × 1,25. Saalis: lihaa, taljoja, luita, jänteitä ja sulkia.
+- **Arat eläimet (sessio 9, arvot päivitetty sessiossa 10):** gaselli (26 terveyttä, juoksee 7,6 m/s, huomaa 18 m:stä, laumassa 2–4; savanni ja metsiköt), helmikana (7, 5,2 m/s, lentää, 11 m, 3–6; savanni), apina (18, 6,2 m/s, 13 m, 2–4; sademetsä, keitaat), aavikkokettu (10, 6,8 m/s, 14 m, 1–2; aavikko, enemmän öisin), kutojalintu (3, lentää, 7 m, parvissa 4–7). Huomaamisetäisyys: paikallaan 0,75 ×, kyykyssä 0,3 ×, paikallaan kyykyssä 0,22 ×, juostessa 1,3 ×, uidessa 0,7 ×. Huomattuaan pelaajan eläin tarkkailee 1,2–2,4 s ja pakenee, jos pelaaja tulee yli 2,5 m lähemmäs tai alle 55 %:n näköetäisyydelle. Pako 2,5–4 s (haavoittuneena 3,5–5 s), väsymys paetessa enintään −45 %, haavoittunut hitaampi. Lauma varoitetaan 15 m:n säteeltä 0,2–0,8 s viiveellä. Saalis: lihaa, taljoja, luita, jänteitä ja sulkia.
+- **Haamu (sessio 10):** 70 terveyttä, isku 17 vahinkoa (tönäisy 7), syöksy 10,5 m/s, varoitus 0,9 s (kädet ylös, hehku kirkastuu), huomaa pelaajan 30 m:stä (kyykyssä 18 m). Leijuu 8–11 m maasta ja vähintään 5,5 m pelaajan yläpuolella, kiertää pelaajaa 10 m:n säteellä 3–6 s ennen syöksyä. Syntyy vain öisin (päivänvalo alle 12 %), kun pelaaja on sademetsässä, 32–52 m:n päähän, ei 18 m:n säteelle nuotiosta; tarkistus 35–75 s välein, 40 %, enintään 1 kerrallaan, edellisen jälkeen tauko 1,5–2,5 min. Nuotion valo: ei syöksy, jos pelaaja on 9 m:n säteellä nuotiosta (kiertää 16 m:n päässä). Aamulla haihtuu savuna. Saalis: kaurikotiloita 1–3, pronssirannerengas 0–1. Ensimmäisellä kerralla viesti "Latvuksissa leijuu jotain... Nuotion valo pitää haamut loitolla." Ulkonäkö: musta riekaleinen kaapu ja huppu, kasvojen kohdalla pimeää ja kaksi violettia silmää, tummansininen / violetti hehku (n. 2,3 m) ja himmeä jälkihehku.
+- **Tumbleweedien elinympäristö (sessio 10):** aavikko, dyynit, laterittitasanko ja puoliksi pöytävuoret, ei keitaita ("mesabiomi" tulkittu laterittitasangoksi ja pöytävuoriksi).
+- **Sademetsän tunnelma (sessio 10):** tihku = sade vähintään 0,24 × kosteus (tihkuna hitaammat, lyhyemmät ja himmeämmät pisarat), pilviä vähintään 62 %. Märkyys 0,85 sademetsässä (sateessa 0,9 × sateen määrä), kastuu n. 6 s:ssa ja kuivuu n. 45 s:ssa. Lammikot: 9 / chunk sademetsässä, 0,8 / chunk kausilammella, 0,7–1,8 m, vain tasaisella maalla.
+- **Aavikon kuumuusväreily (sessio 10):** aavikon osuus × selkeä taivas (pilvet alle n. 0,3, ei sadetta, vähän pölyä) × aurinko korkealla (n. klo 9–15) × ei kosteutta; vaikuttaa yli 25–110 m:n päässä horisontin tuntumassa, kangastus yli 90–220 m:n päässä aivan horisontin alla.
+- **Muiden biomien tunnusmerkit (sessio 10, Clauden ehdotus):** tulikärpäset (savanni, metsiköt, sademetsä; illalla ja yöllä, ei sateella eikä kovalla tuulella), pölypyörteet (aavikko ja savanni kuumina päivinä; 14–26 m korkeita, kulkevat tuulen mukana 1,5–3,3 m/s, kestävät 25–45 s, enintään 2).
+- **Pudotetut esineet (sessio 10):** hehku 0,55–1,5 m (esineen koon mukaan), arvoesineillä kultainen. Heitetty esine: automaattinen poiminta vasta 10 s jälkeen ja kun pelaaja on käynyt yli 3 m:n päässä.
 - **Säätaulukot ilmastoittain (sessio 9, painot):** aavikko: selkeä 4, hiekkausva 3, hiekkamyrsky 1,6, pilvinen 0,5. Savanni: selkeä 4, pilvinen 3, hiekkausva 2, hiekkamyrsky 0,4, sade 1, ukkonen 0,3. Sademetsä: selkeä 2, pilvinen 3, sade 3, ukkonen 1,5, sumu 1,5. Vuoristo: selkeä 3, pilvinen 3, sumu 2, sade 1, ukkonen 0,4. Meri: selkeä 3, pilvinen 2, sade 1,5, ukkonen 0,6, sumu 0,5.
 - **Riimukivet (sessio 9):** 38 suomenkielistä tekstiä (`src/game/lore.js`) ovat **Clauden luonnoksia**: abstrakteja lauseita savipeikoista, joista, tähdistä, raunioista, kylistä, meren takaa tulleista laivoista ja saaren salaisuuksista. Käyttäjä voi kirjoittaa tilalle omat tekstinsä tai tarinansa.
 - **Veneet (sessio 9):**
@@ -255,6 +279,9 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 - Mistä viidakkoveitsi saadaan: arkuista (nyt) vai valmistetaanko se (metalli, seppä)?
 - Mitä kuollessa tapahtuu: säilyykö reppu (nyt säilyy), jääkö hautakivi, herätäänkö sängystä?
 - Sopiiko savipeikko yön viholliseksi (nimi, ulkonäkö), vai jokin muu olento?
+- Haamu vai Aave (nyt Haamu)? Onko se sopivan vaarallinen ja harvinainen, sopiiko nuotion valo vastakeinoksi ja mitä siitä pitäisi saada saaliiksi?
+- Tarkoittiko "mesabiomi" punaista laterittitasankoa (nyt tumbleweedit ovat aavikolla, dyyneillä, laterittitasangolla ja pöytävuorilla)?
+- Mitä tunnusomaista grafiikkaa vuoristoon ja merelle (nyt tulikärpäset savannilla ja metsissä, pölypyörteet kuumilla tasangoilla)?
 - Lisää eläimiä ja vihollisia (esim. hyeena, krokotiili vesistöissä, kalat)? Viholliset rakennelmiin tai luoliin? (Sessio 9: gaselli, helmikana, apina, aavikkokettu, kutojalinnut.)
 - Kyykky: kytkin (nyt) vai pohjassa pidettävä? (Ctrl+W sulkee selaimen välilehden, siksi nyt kytkin.)
 - Rakentaminen (sessio 9: vasara ja työstöpenkki, Valheimin tapaan): mitä osia vielä tarvitaan (portaat, ovet, kivimuurit, varastoarkut, savimajat)?

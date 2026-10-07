@@ -115,6 +115,8 @@ export class Environment {
     this.w = { ...WEATHER.clear, tint: new THREE.Color(WEATHER.clear.tint) };
     this.humid = 0;
     this.humidTarget = 0;
+    this.wet = 0;      // pintojen märkyys 0..1 (materials.js: wetUniforms)
+    this.heat = 0;     // kuumuusväreily 0..1 (post.js): aavikko, selkeä keskipäivä
     this.frozen = false; // päävalikossa aika ja sää eivät etene
     this.maxVis = 330;   // näköetäisyysasetuksen mukaan
     // Salamat
@@ -288,7 +290,12 @@ export class Environment {
       we.wind = g.wind * (1 - 0.6 * H);
       we.tintAmt = lerp(g.tintAmt, Math.min(g.tintAmt, 0.3), H);
       we.tint.lerp(HUMID_TINT, H);
+      // Sademetsän yllä on aina pilviä, ja siellä tihuttaa (main.js: sade).
+      we.cloud = Math.max(g.cloud, 0.62 * H);
     }
+    // Märkyys: sademetsässä ja sateessa pinnat kastuvat nopeasti ja kuivuvat hitaasti.
+    const wetT = Math.max(H * 0.85, we.rain * 0.9);
+    this.wet += (wetT - this.wet) * (1 - Math.exp(-clockDt / (wetT > this.wet ? 6 : 45)));
 
     // Meren aallot kasvavat tuulen mukana (myrskyssä metrien aallokko).
     this.waveAmp = 0.15 + Math.pow(g.wind, 1.5) * 1.6;
@@ -325,6 +332,13 @@ export class Environment {
     const lerpC = (key, out) => out.copy(A[key]).lerp(B[key], f);
     const sunI = lerp(A.sunI, B.sunI, f);
     this.daylight = smoothstep(-0.12, 0.25, this.sunDir.y);
+
+    // Kuumuusväreily: aavikolla kirkkaana päivänä keskipäivän tienoilla
+    // (n. klo 9-15). Pilvet, sade, hiekkapöly ja latvuston kosteus vievät sen.
+    const ww = this.w;
+    const clearSky = smoothstep(0.5, 0.15, ww.cloud) * (1 - ww.rain) * (1 - smoothstep(0.15, 0.4, ww.dust));
+    const heatT = this.climate.desert * clearSky * smoothstep(0.35, 0.75, this.sunDir.y) * (1 - this.humid);
+    this.heat += (heatT - this.heat) * (1 - Math.exp(-clockDt / 4));
 
     const w = this.w;
     const greyAmt = w.grey;

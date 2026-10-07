@@ -14,6 +14,7 @@ const DEATH_TEXT = {
   drown: 'Hukuit. Uidessa kestävyys kuluu: lepää rannalla ajoissa.',
   warthog: 'Pahkasika puski sinut kumoon.',
   clay: 'Savipeikot saivat sinut.',
+  haamu: 'Haamu syöksyi kimppuusi latvusten pimeydestä. Nuotion valo pitää haamut loitolla.',
   starve: 'Nääntyit nälkään. Syö ajoissa: marjat, hedelmät ja paistettu liha täyttävät.',
 };
 

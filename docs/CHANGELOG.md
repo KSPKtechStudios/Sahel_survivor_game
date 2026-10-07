@@ -2,6 +2,36 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-07 (sessio 10): vesiseinät, tumbleweedit, purjeet, eläimet, biomien tunnelma, meri, Haamu, pudotetut esineet
+
+**Korjaukset**
+- **Vedessä ei enää näy pystysuoria "seiniä".** Syy: kun sivujoki tai puro yhtyi pääuomaan (tai järveen), molempien uomien vedenpinnat laskettiin erikseen, ja vierekkäiset maastopisteet saivat eri uoman vedenpinnan. Korkeampi sivujoen pinta päättyi pystysuoraan pudotukseen matalamman pääuoman viereen (pahimmillaan 9 m). Samaa aiheuttivat jyrkillä rinteillä virtaavat kapeat purot, järven kaivama maasto jokien kohdalla ja rakennelmien tasoittama maa uomissa. Nyt yhtymäkohdassa korkeampi vedenpinta lasketaan matalamman tasolle ja sivujoen pinta liukuu loppuosallaan pääuoman tasoon, kapeat purot seuraavat maastoa, järven kaivama kohta laskee myös joen pintaa, eivätkä rakennelmat tasoita maata uomien päällä. Testissä 88/442 yhtymäkohdasta oli yli 1,2 m:n porras; korjauksen jälkeen 1 (koskipaikka).
+- **Tumbleweedit (risukasat) vain aavikolla ja punaisella laterittitasangolla** (dyynit ja pöytävuoret mukaan lukien, ei keitailla). Aiemmin niitä syntyi kaikkialle savanneille, eikä vieriessä tarkistettu maastoa, joten ne vierivät jokiin ja mereen. Nyt veteen vierinyt uppoaa ja muualle (kasvillisuuteen) vierinyt juuttuu ja katoaa.
+- **Purjeet käyttäytyvät luonnollisesti.** Syy: purjeveneen käärityn latinalaispurjeen pitkä vino raakapuu jäi yläasentoon, ja purje kääriytyi sen ympärille paksuksi valkoiseksi tangoksi ilmaan; käärityt purjeet myös kääntyivät tuulen mukana, ja lepatus oli liian voimakasta. Nyt raakapuu lasketaan purjeita käärittäessä alas veneen suuntaiseksi ja nostetaan ennen avaamista, käärityt purjeet pysyvät keskilinjassa ja lepatus on pientä väreilyä.
+
+**Eläimet**
+- Arat eläimet ovat vähemmän arkoja ja hitaampia: huomaamisetäisyydet noin 40 % lyhyempiä (gaselli 18 m, helmikana 11 m, apina 13 m, aavikkokettu 14 m, lintu 7 m) ja pakonopeudet pienempiä (gaselli 7,6 m/s, helmikana 5,2, apina 6,2, kettu 6,8; pelaaja juoksee 7,2). Huomattuaan pelaajan eläin pysähtyy ensin tarkkailemaan ja pakenee vasta, jos pelaaja tulee lähemmäs. Pako kestää vain muutaman sekunnin, eläin väsyy paetessaan (hidastuu jopa 45 %) ja haavoittunut juoksee hitaammin, joten juoksemallakin voi saada kiinni. Hiipiminen auttaa enemmän (kyykyssä 0,3 ×, paikallaan kyykyssä 0,22 ×).
+
+**Biomien tunnelma**
+- **Sademetsä:** siellä tihuttaa aina vähän (hento tihkusade, myös selkeällä säällä), ja taivaalla on aina pilviä. Kaikki on märkää ja kiiltävää: pinnat tummuvat, värit syvenevät, auringon heijastukset terävöityvät ja maassa on laikuittain taivasta heijastavia vesikalvoja. Maassa on vesilammikoita, joihin sade piirtää laajenevia renkaita. Pinnat kastuvat myös sateessa muualla ja kuivuvat hitaasti.
+- **Aavikko:** kirkkaana, helteisenä päivänä (noin klo 9–15) horisontti väreilee kuumuudesta: kaukaiset ääriviivat aaltoilevat, ja horisontin alla näkyy kangastus (maa heijastaa taivasta kuin väreilevä vesi). Pilvet, hiekkapöly ja ilta vievät väreilyn. Vaatii jälkikäsittelyn (valonsäteet, DOF tai liike-epäterävyys päällä; oletuksena päällä keskitasolta ylöspäin).
+- **Kuumat tasangot:** aavikolla ja savannilla (myös laterittitasangolla) kiertyy kuumina päivinä kaukana pölypyörteitä, jotka kulkevat tuulen mukana ja hajoavat veden yllä.
+- **Savannin, metsien ja sademetsän illat ja yöt:** tyynellä säällä ilmassa vilkkuu tulikärpäsiä.
+
+**Meri**
+- Meri syvenee rannasta paljon nopeammin: noin 50 m rannasta vettä on 3–5 m (ennen 1–1,5 m) ja 80 m:ssä 5–8 m (ennen 1,5–2 m). Purjelaivalla pääsee nyt avovedelle lähes rannasta.
+
+**Haamu (uusi vihollinen)**
+- Harvinainen ja vaarallinen mustakaapuinen olento, jonka ympärillä hohtaa pieni tummansininen / violetti kehä ja hupun alla kaksi violettia silmää. Se ilmestyy vain öisin sademetsään ja leijuu latvusten tasolla (8–11 m). Huomattuaan pelaajan se kiertää tämän yläpuolella ja syöksyy iskuun (17 vahinkoa ja tönäisy). Ennen syöksyä se pysähtyy, nostaa kätensä ja sen hehku kirkastuu: silloin kannattaa väistää sivuun tai torjua. Ylhäällä siihen osuu vain nuolella, syöksyn aikana myös lähitaistelussa. 70 terveyttä; kuollessaan se hajoaa savuksi ja pudottaa kaurikotiloita ja joskus pronssirannerenkaan. Nuotion valo pitää haamut loitolla, ja aamulla ne haihtuvat. Enintään yksi kerrallaan, ja seuraava tulee vasta pitkän ajan päästä. Haamu lähellä estää nukkumisen.
+- Lähitaistelu ei enää yllä kaukana ylä- tai alapuolella oleviin olentoihin.
+
+**Esineet**
+- Maahan pudonneilla esineillä on pieni sykkivä hehku, jotta ne erottaa (arvoesineillä kultainen).
+- Heitettyä esinettä ([Q]) ei poimita automaattisesti takaisin: poiminta odottaa 10 s ja sitä, että pelaaja käy välillä yli 3 m:n päässä. [E] poimii aina.
+
+**Kehittäjätyökalut**
+- [F3] → Olennot: Haamu-nappi.
+
 ## 2026-10-06–07 (sessio 9): joet, biomit, rakennelmat, keräily ja ruoka, työkalut ja rakentaminen, jousi, eläimet, taivas ja sää, riimukivet, veneet
 
 **Maailma**

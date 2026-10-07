@@ -54,6 +54,152 @@ uniform float uFlutter;`,
   return material;
 }
 
+// Märkyys (sademetsä, sade): pinnat tummuvat, siloittuvat (terävämmät
+// auringon heijastukset) ja heijastavat taivasta viistossa kulmassa.
+// Märkyys vaihtelee laikuittain, ettei pinta näytä tasaisen sumuiselta.
+// uWet 0..1 (environment.js), uWetSky = taivaan väri heijastukseen,
+// uRain = sateen voimakkuus (lammikoiden renkaat).
+export const wetUniforms = {
+  uWet: { value: 0 },
+  uWetSky: { value: new THREE.Color(0.5, 0.55, 0.6) },
+  uRain: { value: 0 },
+};
+
+const WET_NOISE = `
+float wetH(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float wetN(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(wetH(i), wetH(i + vec2(1.0, 0.0)), f.x), mix(wetH(i + vec2(0.0, 1.0)), wetH(i + vec2(1.0, 1.0)), f.x), f.y);
+}`;
+
+// k = märkyyden voimakkuus, sky = taivasheijastuksen voimakkuus (maassa
+// vesikalvot heijastavat taivasta, lehdissä vain vähän).
+export function addWet(material, k = 1, sky = 1) {
+  const prev = material.onBeforeCompile;
+  const uK = { value: k };
+  const uSky = { value: sky };
+  material.onBeforeCompile = (shader, renderer) => {
+    if (prev) prev(shader, renderer);
+    shader.uniforms.uWet = wetUniforms.uWet;
+    shader.uniforms.uWetSky = wetUniforms.uWetSky;
+    shader.uniforms.uWetK = uK;
+    shader.uniforms.uWetSkyK = uSky;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', `#include <common>
+varying vec3 vWetW;`)
+      .replace('#include <project_vertex>', `#include <project_vertex>
+{
+  vec4 wp = vec4(transformed, 1.0);
+#ifdef USE_INSTANCING
+  wp = instanceMatrix * wp;
+#endif
+  vWetW = (modelMatrix * wp).xyz;
+}`);
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>
+uniform float uWet;
+uniform vec3 uWetSky;
+uniform float uWetK;
+uniform float uWetSkyK;
+varying vec3 vWetW;
+${WET_NOISE}`)
+      .replace('#include <color_fragment>', `#include <color_fragment>
+  float wetAmt = 0.0, wetPool = 0.0;
+  if (uWet * uWetK > 0.001) {
+    float wetN1 = wetN(vWetW.xz * 0.23) * 0.7 + wetN(vWetW.xz * 1.1) * 0.3;
+    wetAmt = uWet * uWetK * (0.6 + 0.4 * smoothstep(0.3, 0.7, wetN1));
+    // Vesikalvot: laikut, jotka kiiltävät kuin peili.
+    wetPool = uWet * uWetK * uWetSkyK * smoothstep(0.6, 0.7, wetN1);
+    float wetL = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+    diffuseColor.rgb = max(mix(vec3(wetL), diffuseColor.rgb, 1.0 + 0.35 * wetAmt), 0.0) * (1.0 - 0.25 * wetAmt - 0.2 * wetPool);
+  }`)
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+  roughnessFactor = mix(mix(roughnessFactor, 0.28, wetAmt), 0.1, wetPool);`)
+      .replace('#include <lights_physical_fragment>', `#include <lights_physical_fragment>
+  material.specularColor *= 1.0 + 1.5 * wetAmt;`)
+      .replace('#include <opaque_fragment>', `if (wetAmt > 0.0) {
+    float nv = clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
+    float fw = 0.02 + 0.98 * pow(1.0 - nv, 5.0);
+    float up = smoothstep(0.6, 0.9, inverseTransformDirection(normal, viewMatrix).y);
+    // Metsässä heijastuu enimmäkseen tumma latvusto: heijastusväri on
+    // taivaan ja tumman vihreän sekoitus.
+    vec3 wetRefl = mix(vec3(0.03, 0.05, 0.03), uWetSky, 0.6);
+    outgoingLight += wetRefl * fw * (wetAmt * 0.06 * uWetSkyK + wetPool * up * 0.28);
+  }
+  #include <opaque_fragment>`);
+  };
+  const prevKey = material.customProgramCacheKey;
+  material.customProgramCacheKey = () => `${prevKey ? prevKey.call(material) : ''}-wet`;
+  return material;
+}
+
+// Lammikko: läpikuultava, sileä vesipinta, jonka reuna sulautuu maahan.
+// Ylhäältä katsottuna pohja näkyy tummana, viistosti pinta heijastaa taivasta
+// (Schlickin fresnel, veden F0 ~0.03). Sade piirtää laajenevia renkaita.
+function createPuddleMaterial() {
+  const m = new THREE.MeshStandardMaterial({
+    vertexColors: true, roughness: 0.06, metalness: 0,
+    transparent: true, depthWrite: false,
+    polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2,
+  });
+  m.onBeforeCompile = (shader) => {
+    shader.uniforms.uTime = windUniforms.uTime;
+    shader.uniforms.uRain = wetUniforms.uRain;
+    shader.uniforms.uWetSky = wetUniforms.uWetSky;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', `#include <common>
+varying vec3 vPudW;
+varying float vPudRim;`)
+      .replace('#include <begin_vertex>', `#include <begin_vertex>
+// Keskipiste 0, reunapisteet 1: interpoloituna etäisyys reunasta.
+vPudRim = length(position.xz) > 0.01 ? 1.0 : 0.0;
+{
+  vec4 pw = vec4(transformed, 1.0);
+#ifdef USE_INSTANCING
+  pw = instanceMatrix * pw;
+#endif
+  vPudW = (modelMatrix * pw).xyz;
+}`);
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>
+uniform float uTime;
+uniform float uRain;
+uniform vec3 uWetSky;
+varying vec3 vPudW;
+varying float vPudRim;
+float pudH(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float pudRings(vec2 p, float t) {
+  float r = 0.0;
+  vec2 cell = floor(p * 3.0);
+  for (int j = -1; j <= 1; j++) {
+    for (int i = -1; i <= 1; i++) {
+      vec2 c = cell + vec2(float(i), float(j));
+      float h = pudH(c);
+      if (pudH(c + 11.0) > uRain * 1.4) continue;
+      vec2 ctr = (c + 0.5 + (vec2(pudH(c + 7.3), pudH(c + 3.1)) - 0.5) * 0.8) / 3.0;
+      float ph = fract(t * (0.7 + h * 0.9) + h * 10.0);
+      float d = length(p - ctr);
+      r += (1.0 - ph) * smoothstep(0.025, 0.0, abs(d - ph * 0.3));
+    }
+  }
+  return r;
+}`)
+      .replace('#include <lights_physical_fragment>', `#include <lights_physical_fragment>
+  material.specularColor = vec3(0.1);`)
+      .replace('#include <opaque_fragment>', `{
+    float nv = clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
+    float fr = 0.03 + 0.97 * pow(1.0 - nv, 5.0);
+    float rg = clamp(pudRings(vPudW.xz, uTime), 0.0, 1.0);
+    outgoingLight += uWetSky * (fr * (1.0 - 0.5 * rg) + rg * 0.1);
+    diffuseColor.a = smoothstep(1.0, 0.6, vPudRim) * (0.6 + 0.4 * fr);
+  }
+  #include <opaque_fragment>`);
+  };
+  m.customProgramCacheKey = () => 'puddle';
+  return m;
+}
+
 export function createSharedMaterials(groundDetail) {
   const terrain = new THREE.MeshStandardMaterial({
     vertexColors: true,
@@ -81,7 +227,12 @@ export function createSharedMaterials(groundDetail) {
     0.15,
   );
   const solid = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, metalness: 0 });
+  addWet(terrain);
+  for (const m of [vegetation, bush, tall]) addWet(m, 1, 0.3);
+  addWet(grass, 1, 0.5);
+  addWet(solid, 0.8, 0.6);
+  const puddle = createPuddleMaterial();
 
   // Vesi luodaan erikseen (render/water.js), koska se tarvitsee taivaan värit.
-  return { terrain, vegetation, bush, grass, tall, solid };
+  return { terrain, vegetation, bush, grass, tall, solid, puddle };
 }

@@ -237,7 +237,7 @@ export function updateSail(mesh, amount, fill, side, flap, t) {
   const n = S.normal;
   const am = Math.max(0.04, amount);
   const depth = S.depth * fill * side * am;
-  const fl = flap * am * S.depth * 0.45;
+  const fl = flap * am * S.depth * 0.14;
   const W = nu + 1;
   for (let g = 0, k = 0; g < gu.length; g++, k += 3) {
     const u = gu[g], v0 = gv[g];
@@ -254,7 +254,8 @@ export function updateSail(mesh, amount, fill, side, flap, t) {
       w = (Math.sin(Math.PI * u) * (v0 * (1 - 0.6 * v0))) / 0.4167;
     }
     let d = depth * w;
-    if (fl > 0) d += fl * Math.sin(t * 11 + u * 7 + v0 * 5 + S.seed) * Math.sin(Math.PI * u) * v0;
+    // Lepatus: pieniä nopeita väreitä, voimakkaimmin takaliepeessä.
+    if (fl > 0) d += fl * Math.sin(t * 13 + u * 11 + v0 * 7 + S.seed) * Math.sin(Math.PI * u) * v0;
     gpos[k] = _p.x + n.x * d;
     gpos[k + 1] = _p.y + n.y * d;
     gpos[k + 2] = _p.z + n.z * d;
@@ -400,21 +401,27 @@ export function makeSailboat(seed = 1) {
   for (const sx of [1, -1]) parts.push(rod(V(0, 6.1, mastZ + 0.24), V(sx * 0.95, 0.55, mastZ - 0.4), 0.012, 0.012, 0x2a2018, rand, 3));
   parts.push(rod(V(0, 6.1, mastZ + 0.24), V(0, 1.0, L / 2 - 0.05), 0.012, 0.012, 0x2a2018, rand, 3));
   const group = finish(parts, mats);
-  // Latinalaispurje: vino raakapuu kääntyy maston ympäri.
+  // Latinalaispurje: vino raakapuu kääntyy maston ympäri. Kun purje on
+  // käärittynä, raakapuu lasketaan alas veneen suuntaiseksi (hoist kääntyy
+  // etupään ympäri).
   const yard = new THREE.Group();
   yard.position.set(0, 0, mastZ);
   const T = [0, 1.05, 1.9], P = [0, 8.4, -1.3], C = [0, 2.1, -4.1];
-  const spar = new THREE.Mesh(merge([rod(V(...T), V(...P), 0.06, 0.04, 0x6e5238, rand, 6)]), mats.wood);
+  const rel = (q) => [q[0] - T[0], q[1] - T[1], q[2] - T[2]];
+  const hoist = new THREE.Group();
+  hoist.position.set(...T);
+  yard.add(hoist);
+  const spar = new THREE.Mesh(merge([rod(V(0, 0, 0), V(...rel(P)), 0.06, 0.04, 0x6e5238, rand, 6)]), mats.wood);
   spar.castShadow = true;
-  yard.add(spar);
-  const sail = sailMesh(mats.sail, [T, P, C], 10, 8, canvasCol(0xece4d0, 0xdcd2ba));
-  yard.add(sail);
+  hoist.add(spar);
+  const sail = sailMesh(mats.sail, [[0, 0, 0], rel(P), rel(C)], 10, 8, canvasCol(0xece4d0, 0xdcd2ba));
+  hoist.add(sail);
   group.add(yard);
   const pen = new THREE.Group();
   pen.position.set(0, 6.35, mastZ + 0.25);
   pen.add(new THREE.Mesh(pennant(rand, 1.1, 0xa8442e), mats.sail));
   group.add(pen);
-  return { group, mats, oars: [], sails: [{ mesh: sail, rig: 'lateen', yard }], pennants: [pen], wheel: null };
+  return { group, mats, oars: [], sails: [{ mesh: sail, rig: 'lateen', yard, hoist, lower: 0.97 }], pennants: [pen], wheel: null };
 }
 
 // ---- Purjelaiva (karakki, n. 24 m) -------------------------------------------
@@ -527,7 +534,7 @@ export function makeShip(seed = 1) {
       canvasCol(0xece3cc, 0xddd2b8, cross));
     yard.add(sail);
     group.add(yard);
-    sails.push({ mesh: sail, rig: 'square', yard });
+    sails.push({ mesh: sail, rig: 'square', yard, hoist: null, lower: 0 });
   };
   square(8.6, 15.6, 6.8, 9.5, 10.8, true, 16, 14);
   square(8.6, 20.0, 16.6, 6.0, 8.2);
@@ -541,7 +548,7 @@ export function makeShip(seed = 1) {
   const msail = sailMesh(mats.sail, [T, P, C], 12, 10, canvasCol(0xece3cc, 0xddd2b8));
   miz.add(msail);
   group.add(miz);
-  sails.push({ mesh: msail, rig: 'lateen', yard: miz });
+  sails.push({ mesh: msail, rig: 'lateen', yard: miz, hoist: null, lower: 0 });
   for (const [z, y, len] of [[0.8, 27.5, 4.5], [8.6, 20.5, 3.4], [-9.6, 17, 2.6]]) {
     const pen = new THREE.Group();
     pen.position.set(0, y, z);

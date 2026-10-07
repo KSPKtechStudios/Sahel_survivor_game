@@ -206,7 +206,9 @@ function coastHeight(x, z, c) {
   const dune = N.dune(x / 45, z / 45) * 0.5 + 0.5;
   let h = 1.1 + dune * 0.8 * (1 - smoothstep(-0.004, 0.004, c));
   h -= 2.6 * smoothstep(-0.002, 0.009, c);     // ranta laskee veteen
-  h -= 15 * smoothstep(0.006, 0.07, c);         // merenpohja
+  // Merenpohja (sessio 10: syvenee nopeammin, n. 2 m jo 50 m rannasta,
+  // jotta laivoilla pääsee lähelle rantaa).
+  h -= 16 * smoothstep(0.005, 0.03, c);
   h += N.ripple(x / 14, z / 30) * 0.15;
   // Harvinaiset saaret avomerellä
   const isl = smoothstep(0.62, 0.84, fbm(N.island, x / 800, z / 800, 3)) * smoothstep(0.02, 0.05, c);
@@ -573,8 +575,9 @@ function riverNet() {
   // Sivujoet liittyvät pääuomaan kukin omassa kohdassaan loivassa kulmassa,
   // joten liitokset ovat kahden uoman yhtymiä (ei usean joen solmukohtia).
   const P = [];
-  const addPiece = (ax, az, bx, bz, cx, cz, w0, w1, wl0, wl1) => {
-    P.push([ax, az, bx, bz, cx, cz, w0, w1, wl0, wl1]);
+  // parent = pääuoman pala, johon sivujoki liittyy; jw = pääuoman leveys liitoskohdassa.
+  const addPiece = (ax, az, bx, bz, cx, cz, w0, w1, wl0, wl1, parent = -1, jw = 0) => {
+    P.push([ax, az, bx, bz, cx, cz, w0, w1, wl0, wl1, parent, jw]);
   };
   const ups = new Map();
   for (let k = 0; k < n; k++) {
@@ -598,7 +601,9 @@ function riverNet() {
       const kx = nx[k], kz = nz[k];
       const ax = (nx[u1] + kx) / 2, az = (nz[u1] + kz) / 2;
       const wlA = (wlN[u1] + wlN[k]) / 2;
-      addPiece(ax, az, kx, kz, mx, mz, rivWidth(Fout[u1]), wk, wlA, wlM);
+      const mainIdx = P.length;
+      const wA = rivWidth(Fout[u1]);
+      addPiece(ax, az, kx, kz, mx, mz, wA, wk, wlA, wlM);
       // Sivujoet liittyvät eri kohtiin: yläjuoksun suunnasta tuleva liittyy
       // aikaisemmin, jotta sivujoet eivät risteä keskenään eivätkä
       // vastakkaisilta puolilta tulevat osu samaan kohtaan (näyttäisi risteykseltä).
@@ -628,7 +633,7 @@ function riverNet() {
           const L = Math.hypot(sx - jx, sz - jz);
           const cx = jx - tx * L * 0.45 + px * L * 0.3, cz = jz - tz * L * 0.45 + pz * L * 0.3;
           const wu = rivWidth(Fout[u]);
-          addPiece(sx, sz, cx, cz, jx, jz, wu, wu, (wlN[u] + wlN[k]) / 2, wlA + (wlM - wlA) * tau);
+          addPiece(sx, sz, cx, cz, jx, jz, wu, wu, (wlN[u] + wlN[k]) / 2, wlA + (wlM - wlA) * tau, mainIdx, wA + (wk - wA) * tau);
         }
       }
     }
@@ -640,6 +645,7 @@ function riverNet() {
   const np = P.length;
   const pts = new Float32Array(np * (RIV_SEG + 1) * 2);
   const pw = new Float32Array(np * 5); // w0, w1, wl0, wl1, jyrkkyys
+  const pj = new Float32Array(np * 2); // sivujoelle: pääuoman pala ja sen leveys liitoksessa (muuten -1)
   const box = new Float32Array(np * 4);
   const counts = new Int32Array(n + 1);
   const mask = new Uint8Array(n);
@@ -651,7 +657,9 @@ function riverNet() {
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) fn(j * G + i);
   };
   for (let pi = 0; pi < np; pi++) {
-    const [ax, az, bx, bz, cx, cz, w0, w1, wl0, wl1] = P[pi];
+    const [ax, az, bx, bz, cx, cz, w0, w1, wl0, wl1, parent, jw] = P[pi];
+    pj[pi * 2] = parent;
+    pj[pi * 2 + 1] = jw;
     let minx = Infinity, minz = Infinity, maxx = -Infinity, maxz = -Infinity, len = 0;
     for (let q = 0; q <= RIV_SEG; q++) {
       const t = q / RIV_SEG, it = 1 - t;
@@ -681,7 +689,7 @@ function riverNet() {
   const fill = counts.slice(0, n);
   for (let pi = 0; pi < np; pi++) cellsOf(pi, (c) => { list[fill[c]++] = pi; });
 
-  RIV = { seed: SEED, start: counts, list, pts, pw, box, mask, pieces: np };
+  RIV = { seed: SEED, start: counts, list, pts, pw, pj, box, mask, pieces: np };
   return RIV;
 }
 
@@ -747,6 +755,11 @@ function carveH(raw, dc, w, V, wl, depth) {
 }
 
 const _rq = { x: 0, z: 0 };
+// Pisteen lähellä olevat uomat (enintään 8): pinnan korkeus lasketaan ensin
+// kaikille, sitten pinnat sovitetaan yhteen ja lopuksi uomat kaivetaan.
+const _cand = [];
+for (let i = 0; i < 8; i++) _cand.push({ o: 0, dc: 0, w: 0, V: 0, wl: 0, lim: 0, dx: 0, dz: 0 });
+
 function applyRivers(x, z, out) {
   if (out.ocean > 0.9) return;
   const R = riverNet();
@@ -761,14 +774,14 @@ function applyRivers(x, z, out) {
   if (a === b) return;
   const raw = out.h;
   const notRock = 1 - Math.min(1, out.rock * 2 + out.mesa * 2);
-  let vary = -1, ref = NaN;
-  let hMin = raw, hMax = raw, bestN = Infinity;
-  for (let e = a; e < b; e++) {
+  let vary = -1, ref = NaN, n = 0;
+  for (let e = a; e < b && n < _cand.length; e++) {
     const pi = R.list[e];
     const bx = pi * 4;
     if (qx < R.box[bx] || qz < R.box[bx + 1] || qx > R.box[bx + 2] || qz > R.box[bx + 3]) continue;
     const dc = pieceDist(R, pi, qx, qz);
     const t = _pt;
+    const pdx = _pdx, pdz = _pdz;
     const o = pi * 5;
     if (vary < 0) vary = 0.8 + 0.4 * (N.width(x / 420, z / 420) * 0.5 + 0.5);
     let w = (R.pw[o] + (R.pw[o + 1] - R.pw[o]) * t) * notRock * vary;
@@ -781,25 +794,65 @@ function applyRivers(x, z, out) {
     // Pinta laskee alajuoksulle; notkoissa se seuraa maastoa (ei penkereitä).
     let wl = Math.max(WATER_LEVEL, Math.min(R.pw[o + 2] + (R.pw[o + 3] - R.pw[o + 2]) * t, ref - 1.0));
     // Pienet purot ja kuivat uomat kulkevat lähellä maan pintaa (matala oja).
-    if (w < 2) wl += Math.max(0, ref - 0.5 - wl) * (1 - smoothstep(0.8, 2.0, w));
+    // Sivujoen loppuosalla nosto liukuu pääuoman nostoon, jotta pinnat
+    // kohtaavat liitoksessa samalla korkeudella.
+    let wr = w;
+    const par = R.pj[pi * 2];
+    if (par >= 0) {
+      const bl = smoothstep(0.35, 1.0, t);
+      if (bl > 0) {
+        let wm = R.pj[pi * 2 + 1] * notRock * vary;
+        if (out.mountains > 0.05) wm *= 1 - out.mountains * R.pw[par * 5 + 4];
+        wr = w + (wm - w) * bl;
+      }
+    }
+    if (wr < 2) {
+      // Nosto enintään todellisen maanpinnan alle, eikä pieni puro kellu
+      // maan yläpuolella (loiva vertailukorkeus voi olla notkon yläpuolella).
+      const f = 1 - smoothstep(0.8, 2.0, wr);
+      wl += Math.max(0, Math.min(ref - 0.5, raw - 0.2) - wl) * f;
+      wl = Math.max(WATER_LEVEL, Math.min(wl, raw - 0.2 + (1 - f) * 8));
+    }
+    const k = _cand[n++];
+    k.o = o; k.dc = dc; k.w = w; k.V = V; k.wl = wl; k.dx = pdx; k.dz = pdz;
+  }
+  if (!n) return;
+  // Pintojen yhteensovitus: kapea uoma ei saa olla toisen (yhtä leveän tai
+  // leveämmän) uoman pintaa paljon korkeammalla sen laakson kohdalla, muuten
+  // liitoksiin ja vierekkäisiin uomiin syntyy pystysuora vesiseinä. Pinta
+  // laskee loivasti (0,3 m / m) kohti matalampaa uomaa, laakson rinnettä loivemmin.
+  for (let i = 0; i < n; i++) {
+    const A = _cand[i];
+    let lim = A.wl;
+    for (let j = 0; j < n; j++) {
+      const B = _cand[j];
+      if (j === i || B.wl >= lim || A.w > B.w + 1) continue;
+      lim = Math.min(lim, B.wl + Math.max(0, B.dc - B.w) * 0.3);
+    }
+    A.lim = lim;
+  }
+  let hMin = raw, hMax = raw, bestN = Infinity;
+  for (let i = 0; i < n; i++) {
+    const k = _cand[i];
+    const w = k.w, wl = k.lim;
     // Kapenevan uoman pohja nousee pinnan yläpuolelle: vesi loppuu pehmeästi
     // ja uoma jatkuu kuivana.
     const ds = smoothstep(0.9, 2.0, w);
     const depth = (0.35 + w * 0.2) * ds - 0.2 * (1 - ds);
-    const h = carveH(raw, dc, w, V, wl, depth);
+    const h = carveH(raw, k.dc, w, k.V, wl, depth);
     if (h < hMin) hMin = h;
     if (h > hMax) hMax = h;
-    out.chan = Math.max(out.chan, 1 - smoothstep(w, V, dc));
-    if (dc < w + 1.5 && raw > WATER_LEVEL && wl > out.wl - 0.01 && dc / w < bestN) {
-      bestN = dc / w;
+    out.chan = Math.max(out.chan, 1 - smoothstep(w, k.V, k.dc));
+    if (k.dc < w + 1.5 && raw > WATER_LEVEL && wl > out.wl - 0.01 && k.dc / w < bestN) {
+      bestN = k.dc / w;
       out.wl = Math.max(out.wl, wl);
       out.wtype = w >= 4.5 ? WATER.RIVER : WATER.STREAM;
       // Virtaus alajuoksulle päin; nopeus pinnan kaltevuudesta.
-      const len = Math.hypot(_pdx, _pdz) || 1;
-      const slope = Math.max(0, R.pw[o + 2] - R.pw[o + 3]) / (len * RIV_SEG);
+      const len = Math.hypot(k.dx, k.dz) || 1;
+      const slope = Math.max(0, R.pw[k.o + 2] - R.pw[k.o + 3]) / (len * RIV_SEG);
       const speed = Math.min(1.5, 0.3 + slope * 12) * (w >= 4.5 ? 1 : 1.2);
-      out.flowX = (_pdx / len) * speed;
-      out.flowZ = (_pdz / len) * speed;
+      out.flowX = (k.dx / len) * speed;
+      out.flowZ = (k.dz / len) * speed;
     }
   }
   out.h = hMin < raw ? hMin : hMax;
@@ -818,8 +871,10 @@ function nearChannel(x, z, margin) {
       for (let e = R.start[c]; e < R.start[c + 1]; e++) {
         const pi = R.list[e];
         const w = Math.max(R.pw[pi * 5], R.pw[pi * 5 + 1]);
-        if (w < 0.6) continue;
-        if (pieceDist(R, pi, qx, qz) < margin + w) return true;
+        // Myös pienet purot laaksoineen (järvi tai kallio niiden päällä jättäisi
+        // puron veden ilmaan).
+        if (w * 1.2 < 0.3) continue;
+        if (pieceDist(R, pi, qx, qz) < margin + rivValley(w * 1.2)) return true;
       }
     }
   }
@@ -892,7 +947,11 @@ function applyLakes(x, z, out) {
       let h = Math.min(out.h, target);
       // Pehmeä penger rannan takana (ei pystysuoria seinämiä)
       if (t >= 1 && h < L.wl + 0.15) h += (L.wl + 0.15 - h) * (1 - smoothstep(1.15, 1.4, t));
+      const hOld = out.h;
       out.h = h + (out.h - h) * smoothstep(1.3, 1.7, t);
+      // Uoman vesi laskee järven painanteen mukana (ei jää ilmaan).
+      const drop = hOld - out.h;
+      if (drop > 0 && (out.wtype === WATER.RIVER || out.wtype === WATER.STREAM)) out.wl = Math.max(WATER_LEVEL, out.wl - drop);
       if (t < 1.25 && L.wl > out.wl) {
         out.wl = L.wl;
         out.wtype = WATER.LAKE;
@@ -920,7 +979,8 @@ export function sampleTerrain(x, z, out = {}) {
     const d = Math.hypot(x - st.x, z - st.z);
     const r = st.radius;
     if (d < r * 1.5) {
-      const w = 1 - smoothstep(r * 0.75, r * 1.5, d);
+      // Ei tasoitusta uomien kohdalla (muuten puro jäisi ilmaan tai hautautuisi).
+      const w = (1 - smoothstep(r * 0.75, r * 1.5, d)) * (1 - Math.min(1, out.chan * 2));
       out.h += (st.baseH - out.h) * w;
     }
   }
