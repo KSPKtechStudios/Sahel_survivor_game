@@ -105,7 +105,7 @@ export class InventoryUI {
     this.info.innerHTML = '<b></b><span></span><em></em>';
     this.info.querySelector('b').textContent = d.name + extra;
     this.info.querySelector('span').textContent = d.desc || '';
-    this.info.querySelector('em').textContent = itemStats(d);
+    this.info.querySelector('em').textContent = itemStats(d, id);
   }
 
   showInfo(i) {

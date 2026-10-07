@@ -2,6 +2,17 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-07 (sessio 14)
+**Tehtiin**
+- Käyttöliittymä uusiksi kysymys kerrallaan (käyttäjän vastaukset `DESIGN.md`:ssä), kolme versiota: (1) kehykset köysin ja niitein → "mobiilipelimäinen"; (2) hillitty veistetty lauta → puu näytti piirretyltä ja tikut kapeilta; (3) valaistu korkeuskartta, leveämpi lauta, kestävyys keskelle.
+- Ruokajärjestelmä (`game/survival.js` uusiksi; `player/player.js`: `maxHealth`, `maxStamina`; `game/combat.js`, `ui/devtools.js`, `ui/inventoryUI.js`: ruoan tiedot; `main.js`: kuolema).
+- Puukuvat (`ui/woodArt.js` uusi), HUD (`index.html`, `styles.css`, `ui/hud.js`).
+- Testattiin headless-Chromiumilla: lähtöeväät 70/70, kuusi ruokaa → 100/100, kylläisenä syöminen estyy, tallennus; kuvat versioista. ESLint ja savutesti puhtaat.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute versiosta 3; mahdollisesti sama tyyli pikapalkkiin, minikarttaan ja muuhun.
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-07 (sessio 13)
 **Tehtiin**
 - Käyttäjän toiveet (kirjattu `DESIGN.md`:hen).

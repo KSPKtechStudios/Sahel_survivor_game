@@ -2,6 +2,15 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-07 (sessio 14): uusi ruokajärjestelmä ja veistetyt puupalkit
+
+- **Syödyt ruoat nostavat maksimiterveyttä ja -kestävyyttä:** ilman ruokaa maksimit ovat 25, ruoat nostavat ne enintään 100:aan. Jokainen ruoka vaikuttaa 5–20 min ja hiipuu lopussa. Ruokia saa syödä rajattomasti, kunnes maksimiterveys on 100. Liha ja padat painottavat terveyttä, hedelmät ja juomat kestävyyttä.
+- **Nälkäpalkki poistui**, eikä nälkään enää kuole. Uusi peli alkaa lähtöeväillä.
+- **Terveys veistetyllä puulaudalla** vasemmassa alakulmassa: muotoillut päät, kaiverretut kuviot, köysisidokset, messinkiniitit ja kulumat, valo ja varjot kuin oikeassa puussa. Veripisara-ikoni. Maksimin yläpuolinen osa näkyy lukittuna. Numero näkyy hetken, kun terveys muuttuu.
+- **Kestävyys Valheimin tapaan** vaakapalkkina ruudun alaosan keskellä; näkyy vain kun sitä kuluu.
+- **Syödyt ruoat puisina kiekkoina** terveyslaudan vieressä; kaari näyttää jäljellä olevan ajan.
+- Värit hillityt (viininpunainen ja okra).
+
 ## 2026-10-07 (sessio 13): fontti, nimilaput, pystypalkit, kaatuvat puut, soihtu, kuun vaiheet, lammikot
 
 - **Kaikki teksti Eagle Lake -fontilla** (sama kuin valikon logossa): valikot, HUD, viestit, kartat ja minikartta.

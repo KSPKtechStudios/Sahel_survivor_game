@@ -189,7 +189,7 @@ export class Combat {
       if (this.comboWeapon !== wkey) { this.comboIdx = 0; this.comboWeapon = wkey; }
       const a = vm.action;
       const cur = this.attacking;
-      const comboOk = player.stamina > COMBO_MIN * CONFIG.staminaMax;
+      const comboOk = player.stamina > COMBO_MIN * player.maxStamina;
       let start = false;
       if (!a) start = this.cooldown <= 0;
       else if (cur && a === cur.action && a.hitDone && a.t >= cur.step.chain) {

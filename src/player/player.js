@@ -39,6 +39,9 @@ export class Player {
     // Terveys ja taistelu
     this.health = CONFIG.healthMax;
     this.healthDelay = 0;
+    // Maksimit tulevat syödyistä ruoista (game/survival.js, sessio 14).
+    this.maxHealth = CONFIG.healthMax;
+    this.maxStamina = CONFIG.staminaMax;
     this.dead = false;
     this.deathCause = '';
     this.deathT = 0;
@@ -380,12 +383,12 @@ export class Player {
     }
 
     // --- Kestävyyden ja terveyden palautuminen
-    if (this.god && alive) { this.stamina = CONFIG.staminaMax; this.health = CONFIG.healthMax; }
+    if (this.god && alive) { this.stamina = this.maxStamina; this.health = this.maxHealth; }
     if (this.staminaDelay > 0) this.staminaDelay -= dt;
-    else this.stamina = Math.min(CONFIG.staminaMax, this.stamina + CONFIG.staminaRegenPerSec * this.staminaRegenMul * this.survivalStaminaMul * dt);
+    else this.stamina = Math.min(this.maxStamina, this.stamina + CONFIG.staminaRegenPerSec * this.staminaRegenMul * this.survivalStaminaMul * dt);
     if (alive) {
       if (this.healthDelay > 0) this.healthDelay -= dt;
-      else if (this.health < CONFIG.healthMax) this.health = Math.min(CONFIG.healthMax, this.health + CONFIG.healthRegenPerSec * this.survivalHealthMul * dt);
+      else if (this.health < this.maxHealth) this.health = Math.min(this.maxHealth, this.health + CONFIG.healthRegenPerSec * this.survivalHealthMul * dt);
     } else {
       this.deathT += dt;
     }

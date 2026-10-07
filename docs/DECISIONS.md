@@ -2,6 +2,13 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-07 (sessio 14)
+- **Puukuvat piirretään koodilla kankaalle (`ui/woodArt.js`), valaistus korkeuskartasta.** Syy: ei kuvatiedostoja eikä ulkoisia työkaluja; korkeuskartta antaa kaiverruksille ja reunoille aidon valon ja varjon (käyttäjästä tasainen versio näytti piirretyltä).
+- **Ruokapalkin 100 = kehyksen täysi korkeus; maksimin yläpuoli lukittuna.** Syy: käyttäjä hyväksyi; näkee heti, paljonko ruoka voi vielä nostaa.
+- **Lähtöeväät uuteen peliin ja vanhoihin tallennuksiin.** Syy: muuten peli alkaisi 25 terveydellä ja kestävyydellä, ja esim. uinti (kestävyys) olisi heti vaarallista. Paikkamerkki; käyttäjältä kysyttävä.
+- **Kuoltaessa ruoat säilyvät.** Syy: aiemminkin nälkä säilyi osittain kuolemassa; ankarampi malli (Valheim) on helppo vaihtaa.
+- **Syöminen estetään vasta kun maksimiterveys on 100** (käyttäjän sanamuoto), vaikka kestävyys ei olisi täynnä.
+
 ## 2026-10-07 (sessio 13)
 - **Fontti Eagle Lake yhdellä painolla (400), synteettinen lihavointi pois.** Syy: käyttäjä halusi kaiken tekstin logon fontilla; fontista on vain yksi paino, ja selaimen tekemä keinolihavointi näyttää sotkuiselta.
 - **Olentojen nimilaput näkyvät aina lähellä (24 m), muiden kohteiden vain katsottaessa.** Syy: käyttäjä halusi nimen kohteeseen; jos jokaisella puulla ja pensaalla olisi aina lappu, ruutu täyttyisi teksteistä.

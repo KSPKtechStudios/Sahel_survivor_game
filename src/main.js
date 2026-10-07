@@ -575,7 +575,7 @@ async function respawnPlayer() {
   const sp = bed ? { x: bed.x + 1.2 * Math.cos(bed.rot), z: bed.z - 1.2 * Math.sin(bed.rot) } : findSpawn();
   combat.reset();
   archery.reset();
-  survival.reset(Math.max(50, survival.hunger));
+  survival.clearEffects();
   player.respawn(sp.x, sp.z);
   player.yaw = Math.PI * 0.75;
   player.pitch = 0;

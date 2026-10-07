@@ -1,6 +1,9 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 14: ruokajärjestelmä (maksimit, kesto, kylläisyys), terveyslauta, kestävyys keskellä, ruokakiekot, terveyden numero
+- [ ] Vastaus: sopivatko lähtöeväät, ruokien arvot ja se, että ruoat säilyvät kuoltaessa? Pitäisikö syömisen estyä vasta kun sekä terveys että kestävyys ovat 100?
+- [ ] Puinen tyyli muuhun käyttöliittymään (pikapalkki, minikartta, nimilaput, viestit, reppu), jos käyttäjä haluaa
 - [ ] Käyttäjä testaa session 13: fontti kaikkialla, nimilaput (olennot lähellä, puut ja pensaat katsottaessa), huomattu-merkki (silmä), pystypalkit vasemmassa alakulmassa, kaatuvan puun vahinko ja ketjukaato, soihtu vedessä ja sateessa, kuun vaiheet ja täysikuun viholliset, lammikot
 - [ ] Vastaus: silmä vai huutomerkki huomattu-merkiksi? Pitäisikö puiden ja pensaiden nimen näkyä aina (nyt vain katsottaessa)?
 - [ ] Vastaus: miten sammunut soihtu sytytetään (nyt nuotion vieressä)? Sopiiko kuun kierto 8 vuorokautta?

@@ -1,7 +1,6 @@
 // Kehittäjätyökalut [F3]: tiedot, siirtyminen, olentojen ja esineiden
 // kutsuminen, lentäminen, nopeus, kuolemattomuus, kartan paljastus, sää ja aika.
 // Paneeli on ruudun oikeassa reunassa; maailma jatkaa kulkuaan sen takana.
-import { CONFIG } from '../config.js';
 import { ITEMS } from '../game/items.js';
 import { STRUCT_NAMES } from '../game/ruins.js';
 import { BOATS } from '../game/boats.js';
@@ -86,7 +85,7 @@ export class DevTools {
     row = this._row(sec);
     this._range(row, 'Nopeus', 0.5, 10, 0.5, () => player.speedBoost, (v) => { player.speedBoost = v; }, (v) => `${v}×`);
     row = this._row(sec);
-    this._button(row, 'Paranna', () => { player.health = CONFIG.healthMax; player.stamina = CONFIG.staminaMax; player.drowning = 0; return 'Terveys ja kestävyys täynnä'; });
+    this._button(row, 'Paranna', () => { player.health = player.maxHealth; player.stamina = player.maxStamina; player.drowning = 0; return 'Terveys ja kestävyys täynnä'; });
     this._button(row, 'Kuole (testi)', () => { player.hurt(9999, { cause: '' }); if (!player.dead) player.die(''); return 'Kuolit'; });
 
     // Siirry
