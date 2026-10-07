@@ -195,6 +195,17 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Linnunradassa näkyy pikseleitä** tai muuta ei-toivottua efektiä: korjattava.
 - **Äänet:** "bird" soi välillä viidakossa ja savannilla (savannilla harvemmin). "whoosh1" ja "whoosh2" soivat satunnaisesti, kun työkalulla tai aseella huitoo ilmaan (sävelkorkeutta saa vaihdella); ne kuuluvat myös olentoa lyödessä, mutta jonkin verran hiljempaa.
 
+## Sessio 12e (käyttäjän kertoma, 2026-10-07)
+- **Linssiheijastukset** aurinkoa tai valoa katsottaessa; asetuksista päälle. **Linssiheijastukset ja DOF oletuksena päällä.**
+- **Vesipisarat pois näytöltä** (käyttäjä ei pitänyt niistä). Ainoa tilanne, jossa ne voivat tulla, on purjehdus myräkässä, ja silloinkin todella hillittyinä.
+- **Haamujen syntymistä hieman harvemmaksi.**
+- **Puiden hakkaamisen ja kaatumisen äänet, olentojen äänet ja huitominen eivät erotu**, kun taustalla soi musiikki ja kuuluu sade ja tuuli.
+- **Esineen pudotuksen napsahdus** pienemmälle.
+- **[Shift] + [Q] heittää kaikki esineet** yhdellä kertaa.
+- **Soihdulla näkee huonosti**; valon pitää olla realistisempi. **Soihdulla lyöty olento syttyy palamaan.**
+- **Huitomisen äänenvoimakkuutta** hitusen alemmas.
+- **Iskuäänet ("lyänti1", "llyänti2")** kuuluvat, kun lyö mitä tahansa elävää olentoa (olennon omien vahinkoäänien lisäksi). Saa muokata ja vaihdella korkeutta; ei liian kovalle, koska äänet ovat rajuja ja teräviä.
+
 ## Teknologia
 - Selaimessa toimiva peli: three.js (WebGL), ei käännösvaihetta. Ks. `DECISIONS.md`.
 - Kohdealusta toistaiseksi tietokoneen selain (hiiri + näppäimistö).
@@ -237,6 +248,7 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - Sessio 11: tulikärpäsparvet, pienemmät aallot, ei vettä veneiden sisällä, realistinen sade ja sadeverhot, kuivuvat lammikot, säät biomeittain (kuiva laterittitasanko), rakennelmia n. 3 700 ja hylkyjä n. 120, hienovarainen linnunrata ja tähdenlennot, purjeen saumat ja vastavalo, hento kimallus, Haamu latvusten alla ja pako, jousi oikeassa kädessä ja nuolten jälki, sujuvampi iskujen tahti, tuulen nuolen suunta.
 
 ## Paikkamerkit (Clauden valitsemia, voi muuttaa vapaasti)
+- **Sessio 12e:** linssiheijastus: hehku, säteet, vaakajuova ja 5 väriheijastusta, peittyy esteiden takana, heikkenee pilvissä ja pölyssä. Linssipisarat vain kyydissä ukkosella (taso 0,35). Haamu: 40–80 s / 33 % (ukkosella 22–40 s / 60 %, enintään 2). Väistö: puu kaatuessa taustaäänet 0,5 ja musiikki 0,5, isku 0,6, Haamu 0,6, puun lyönti 0,7. Iskuääni 0,11–0,13 (alipäästö 5,2 kHz). Napsahdus 0,45 (ennen 0,65). Huitaisu −2 dB. [Shift]+[Q] = koko pino. Soihtu: valo kädessä liekin kohdalla, 1,7 × nuotion perustaso (ennen 0,75 ×), kantama 32 m, loivempi vaimeneminen. Soihdun sytytys: 5 s, 3,5 vahinkoa / s.
 - **Sessio 12d:** veneiden nopeudet: soutu 2,0 / 2,9 m/s (ennen 2,4 / 3,4), purjevene enintään 5,6 m/s × tuuli (ennen 8,5), "hiljaa" 1,0; purjelaiva 8,4 m/s × tuuli (ennen 13), "hiljaa" 0,9. Tyrskyt: keulan iskeytyminen aaltoon (veden nousunopeus keulaa vasten × aallokko) + vauhti yli 1,4 m/s; suihku keulan molemmin puolin ulos, ylös ja tuulen mukana, laivalla isompi. Linssipisarat: kun sade > 0,25 ja katse on aurinkoa kohti (kosini > 0,25), harvoja pisaroita, jotka elävät 10–20 s (valuvat hieman ja haihtuvat); vaatii jälkikäsittelyn (kytkeytyy automaattisesti). Lintu: sademetsässä 6–18 s välein, savannilla ja metsiköissä 18–48 s välein, vain päivällä eikä kovassa sateessa, 8–38 m:n päässä satunnaisessa suunnassa. Huitaisu: kaikilla työkaluilla ja aseilla (ei nyrkeillä), satunnainen tiedosto, sävelkorkeus 0,92–1,22 × (raskas ase 0,72–1,02 ×), olento iskun tiellä 45 %.
 - **Sessio 12c:** Haamun äänet vaimenevat vasta 22 m:stä (kuuluvat n. 95 m:iin), tasot 0,38–0,45; satunnainen ääntely vuorottelee kahden tiedoston välillä. Ukkosella päivällä valotus × (1 − 0,42 × ukkonen), eli n. 40 % hämärämpi. Ukkosmyrskyssä haamun tarkistus 15–30 s välein, todennäköisyys 85 %, enintään 2 kerrallaan (muuten 35–75 s, 40 %, 1). Salaman isku maahan (vain lähisalamat, ei veteen): hiekkaa ja multaa lentää, pölypilvi nousee hitaasti (2,6 s), pieni tulipallo leimahtaa (0,6 s). Aavikon tuuli 0,3 × (aavikolla 0,1, hiekkamyrskyssä 1), myrskytuuli 0,3 (merellä ukkosella; hiekkamyrskyssä puuskittain). Esineen heitto: napsahdus 0,65. Isku puuhun: 0,07, sävelkorkeus 0,82–1,22 ×. Tuuli (taustatuuli) ei enää soi hiekkamyrskyssä, koska sen hoitavat aavikon tuuli ja myrskytuuli.
 - **Lähisalamat ja Haamun äänet (sessio 12b):** 28 % salamoista iskee 45–155 m:n päähän (muut 250–600 m): välähdys 2,4-kertainen, koko näytön sinertävä välähdys, salama valkoisena nauhana hehkuineen (0,5 s), jyrähdys (satunnaisesti "thunderclap" tai "ukko", hiljaisuus alusta leikattu) salaman suunnasta enintään 0,25 s viiveellä, taso 0,65. Haamu: ilmestymisääni joka kerta kun se ilmestyy ja 40 % todennäköisyydellä ennen syöksyä (taso 0,22), hyökkäysääni syöksyn alkaessa (0,26), satunnainen ääntely 8–18 s välein leijuessa ja kierrellessä alle 45 m:n päässä (0,2). Äänet tulevat haamun suunnasta ja vaimenevat etäisyyden mukaan. Viidakko 0,22 ja alipäästö 4,2 kHz. Puun ääni häivytetään 0,25–0,9 s räsähdyksen jälkeen.

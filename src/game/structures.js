@@ -198,6 +198,19 @@ export class Structures {
       const st = e.st;
       l.position.set(st.x, st.y + (st.fireY ?? 0.9), st.z);
       const t = elapsed * 9 + st.seed;
+      if (st.torch) {
+        // Soihtu: liekki elää epäsäännöllisesti (useita taajuuksia), valo
+        // kantaa pidemmälle ja on hieman keltaisempi kuin nuotiossa.
+        const fl = 0.82 + Math.sin(t * 1.3) * 0.08 + Math.sin(t * 3.7 + 1.1) * 0.06 + Math.sin(t * 7.9 + 2.3) * 0.04;
+        l.intensity = 9 * st.light * fl;
+        l.distance = 32;
+        l.decay = 1.25;
+        l.color.setHex(0xff9a45);
+        return;
+      }
+      l.distance = 22;
+      l.decay = 1.6;
+      l.color.setHex(0xff8a3a);
       l.intensity = 9 * (st.fireScale ? 0.55 + 0.45 * st.fireScale : 1) * (st.light ?? 1) * (0.85 + Math.sin(t) * 0.08 + Math.sin(t * 2.7) * 0.07);
     });
   }

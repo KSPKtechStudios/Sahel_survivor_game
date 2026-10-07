@@ -2,6 +2,24 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-07 (sessio 12e)
+**Tehtiin**
+- Käyttäjän toiveet ja 2 iskuääntä (kirjattu `DESIGN.md`:hen).
+- Linssiheijastukset (`render/post.js`, `main.js`), asetus (`index.html`, `ui/menu.js`), DOF ja heijastukset oletuksena + asetusten versio (`game/save.js`).
+- Linssipisarat vain myrskypurjehdukseen (`main.js`), haamuja harvemmin (`game/mobs.js`).
+- Väistö (`audio/sfx.js`: taustaäänten väylä; `audio/music.js`: duck), iskuääni (`assets/sfx/punch1/2.mp3`, `game/combat.js`: `punch`), napsahdus ja huitaisu hiljemmaksi.
+- [Shift]+[Q] koko pino (`main.js`), soihdun valo (`main.js`, `game/structures.js`), soihdun sytytys (`game/mobs.js`: `setOnFire`, `game/combat.js`).
+
+- Testattiin headless-Chromiumilla: oletusasetukset (DOF ja heijastukset päällä), linssiheijastus kuvana ja voimakkuus 0,85 aurinkoon katsottaessa, iskuääni (−26 dB) ja väistö (taustaäänet 0,8 palautumassa), soihdun valo kuvina ennen/jälkeen (valo liekin kohdalla, maa valaistuu selvästi), sytytys (pahkasika 55 → 48 terveyttä 2 s:ssa), [Q] yksi ja [Shift]+[Q] koko pino (6 kpl). ESLint ja savutesti puhtaat.
+
+**Huomiot**
+- Komentorivin turvatarkistus oli välillä tavoittamattomissa ja istunnon työprosessi käynnistyi kerran uudelleen; muutokset tehtiin silloin Edit-työkalulla ja testattiin, kun komentorivi palasi.
+- Testiselaimessa animaatiot etenevät hyvin hitaasti, joten [Shift]+[Q] näytti ensin toimimattomalta (painallus osui edellisen heiton keskelle); odottamalla animaation loppuun se toimi.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute; [Shift]+[Q]-tulkinta (pino vai koko reppu).
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-07 (sessio 12d)
 **Tehtiin**
 - Käyttäjän palaute ja 3 äänitiedostoa (kirjattu `DESIGN.md`:hen).

@@ -79,12 +79,17 @@ export function saveWorldData(id, data) {
 // --- Asetukset ---------------------------------------------------------------------
 
 // Grafiikan esiasetukset. Kun yksittäistä asetusta muutetaan, laaduksi tulee "oma".
+// Sessio 12e: syväterävyys ja linssiheijastukset oletuksena päällä
+// (matalalla pois, koska jälkikäsittely on silloin pois).
 export const QUALITY_PRESETS = {
-  low: { viewDistance: 3, shadows: 'off', renderScale: 0.7, godRays: false, motionBlur: 'off', dof: false },
-  medium: { viewDistance: 4, shadows: 'normal', renderScale: 0.85, godRays: true, motionBlur: 'off', dof: false },
-  high: { viewDistance: 5, shadows: 'normal', renderScale: 1, godRays: true, motionBlur: 'off', dof: false },
-  ultra: { viewDistance: 7, shadows: 'high', renderScale: 1, godRays: true, motionBlur: 'off', dof: false },
+  low: { viewDistance: 3, shadows: 'off', renderScale: 0.7, godRays: false, motionBlur: 'off', dof: false, lensFlare: false },
+  medium: { viewDistance: 4, shadows: 'normal', renderScale: 0.85, godRays: true, motionBlur: 'off', dof: true, lensFlare: true },
+  high: { viewDistance: 5, shadows: 'normal', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true },
+  ultra: { viewDistance: 7, shadows: 'high', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true },
 };
+// Asetusten versio: vanhoihin tallennettuihin asetuksiin kytketään uudet
+// oletukset kerran (DOF ja linssiheijastukset päälle).
+const SETTINGS_VERSION = 2;
 
 export const DEFAULT_SETTINGS = {
   quality: 'high',    // low | medium | high | ultra | custom
@@ -97,14 +102,21 @@ export const DEFAULT_SETTINGS = {
   showFps: false,
   godRays: true,      // valonsäteet ja ilmakehän hehku
   motionBlur: 'off',  // off | low | high
-  dof: false,         // syväterävyys
+  dof: true,          // syväterävyys (sessio 12e: oletuksena päällä)
+  lensFlare: true,    // linssiheijastukset aurinkoon katsottaessa (sessio 12e)
   masterVolume: 1,    // äänenvoimakkuus 0..1
   musicVolume: 0.8,   // musiikki 0..1 (pelissä musiikki soi lisäksi hiljaa taustalla)
   sfxVolume: 1,       // äänitehosteet 0..1 (tuleville äänille)
 };
 
 export function loadSettings() {
-  return { ...DEFAULT_SETTINGS, ...(read(SETTINGS_KEY) || {}) };
+  const stored = read(SETTINGS_KEY) || {};
+  const s = { ...DEFAULT_SETTINGS, ...stored };
+  if ((stored.v || 1) < SETTINGS_VERSION) {
+    if (s.quality !== 'low') { s.dof = true; s.lensFlare = true; }
+  }
+  s.v = SETTINGS_VERSION;
+  return s;
 }
 
 export function saveSettings(s) {

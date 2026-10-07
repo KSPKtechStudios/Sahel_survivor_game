@@ -82,6 +82,12 @@ export class Music {
     }
   }
 
+  // Musiikki väistää hetkeksi (to = kerroin, hold = s).
+  duck(to, hold) {
+    this.duckTo = Math.min(this.duckHold > 0 ? this.duckTo : 1, to);
+    this.duckHold = Math.max(this.duckHold || 0, hold);
+  }
+
   setVolumes(master, music) {
     this.master = Math.max(0, Math.min(1, master));
     this.music = Math.max(0, Math.min(1, music));
@@ -149,11 +155,16 @@ export class Music {
     }
 
     // --- Voimakkuudet
+    // Väistö (sessio 12e): tärkeä äänitehoste painaa musiikkia hetkeksi
+    // hiljemmaksi (sfx.js: duck), jotta tehosteet erottuvat.
+    this.duckHold = (this.duckHold || 0) - dt;
+    const duckT = this.duckHold > 0 ? this.duckTo : 1;
+    this.duckMul = (this.duckMul ?? 1) + (duckT - (this.duckMul ?? 1)) * Math.min(1, dt * (duckT < (this.duckMul ?? 1) ? 25 : 2.5));
     for (const t of Object.values(this.tracks)) {
       if (!t.el) continue;
       const level = t.key === 'menu' ? MENU_LEVEL : GAME_LEVEL;
       // Neliöllinen käyrä: häivytys kuulostaa tasaiselta (lähes desibeleinä).
-      const v = t.norm * level * t.fade * t.fade * this.music * this.master;
+      const v = t.norm * level * t.fade * t.fade * this.music * this.master * (t.key === 'menu' ? 1 : this.duckMul);
       t.el.volume = Math.max(0, Math.min(1, v));
     }
   }

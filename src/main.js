@@ -275,6 +275,7 @@ function applySettings(s) {
   post.godRays = s.godRays !== false;
   post.motionBlur = s.motionBlur === 'high' ? 2 : s.motionBlur === 'low' ? 1 : 0;
   post.dof = !!s.dof;
+  post.lensFlare = s.lensFlare !== false;
   music.setVolumes(s.masterVolume ?? 1, s.musicVolume ?? 0.8);
   sfx.setVolumes(s.masterVolume ?? 1, s.sfxVolume ?? 1);
 }
@@ -516,7 +517,7 @@ window.addEventListener('keydown', (e) => {
     input.lock();
     setTimeout(() => { if (state === 'inventory' && !input.locked) setState('paused'); }, 600);
   } else if (state === 'playing' && e.code === 'KeyQ') {
-    throwSelected();
+    throwSelected(e.shiftKey);
   } else if (state === 'playing' && e.code === 'KeyM') {
     e.preventDefault();
     wantMap = true;
@@ -535,9 +536,10 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-// Heitä valittu esine [Q] (yksi kerrallaan) katseen suuntaan.
+// Heitä valittu esine [Q] (yksi kerrallaan) katseen suuntaan; [Shift]+[Q]
+// heittää koko pinon kerralla (sessio 12e).
 const _throwDir = new THREE.Vector3();
-function throwSelected() {
+function throwSelected(all = false) {
   const sel = inventory.selectedItem;
   if (!sel || viewmodel.busy) return;
   const id = sel.id;
@@ -545,12 +547,13 @@ function throwSelected() {
   viewmodel.swing('punch', () => {
     const now = inventory.slots[slot];
     if (!now || now.id !== id) return;
+    const n = all ? now.count : 1;
     camera.getWorldDirection(_throwDir);
     const pos = camera.position.clone().addScaledVector(_throwDir, 0.5);
     pos.y -= 0.2;
-    drops.throwItem(id, 1, pos, _throwDir, elapsed);
+    drops.throwItem(id, n, pos, _throwDir, elapsed);
     sfx.click();
-    inventory.removeFromSlot(slot, 1);
+    inventory.removeFromSlot(slot, n);
   });
 }
 
@@ -625,6 +628,7 @@ events.on('hitFeedback', ({ strength }) => { shake = Math.max(shake, strength * 
 // (sessio 12c). Kaikki voivat soida päällekkäin.
 let birdT = 4;
 const _camDir = new THREE.Vector3();
+const _sunP = new THREE.Vector3();
 const _sm = (a, b, x) => Math.max(0, Math.min(1, (x - a) / (b - a)));
 function updateSfx(game, rainAmt, realDt) {
   if (game) {
@@ -670,6 +674,9 @@ function stepMaterial() {
 }
 player.onFootstep = (k) => sfx.step(stepMaterial(), k);
 events.on('swing', ({ heavy, quiet }) => sfx.whoosh(heavy, quiet));
+events.on('punch', ({ heavy }) => sfx.punch(heavy));
+// Tärkeät tehosteet painavat myös musiikkia hetkeksi hiljemmaksi (väistö).
+sfx.onDuck = (to, hold) => music.duck(Math.max(0.45, to), hold);
 events.on('woodHit', ({ x, z }) => sfx.chop(x, z, { x: player.position.x, z: player.position.z, yaw: player.yaw }));
 events.on('haamuSound', ({ kind, x, z }) => {
   sfx.ghost(kind, x, z, { x: player.position.x, z: player.position.z, yaw: player.yaw });
@@ -686,7 +693,9 @@ let saveTimer = CONFIG.autosaveSec;
 let edgeMsgTimer = 0;
 let drawTimer = 0;
 let menuShadowTimer = 0;
-const torchFire = { x: 0, y: 0, z: 0, seed: 7, light: 0.75 };
+// Soihtu: kirkkaampi ja kantavampi kuin ennen, lämmin, elävästi lepattava
+// liekki (structures.js: torch).
+const torchFire = { x: 0, y: 0, z: 0, seed: 7, light: 1.7, fireY: 0, torch: true };
 const fps = { frames: 0, t: 0, value: 0 };
 const _s = {};
 
@@ -767,11 +776,18 @@ function frame(now) {
   wetUniforms.uRain.value = rainAmt;
   wetUniforms.uPuddle.value = inGame && state !== 'menu' ? env.puddleWet : 0;
   updateSfx(musicMode === 'game' && state !== 'loading', rainAmt, Math.min(0.25, rawDt));
-  // Vesipisarat linssillä: sateella ja ukkosella, kun katsotaan valoa kohti.
-  camera.getWorldDirection(_camDir);
-  const toSun = _sm(0.25, 0.85, _camDir.dot(env.sunDir)) * _sm(-0.02, 0.12, env.sunDir.y);
-  const lensT = inGame && state !== 'menu' ? _sm(0.25, 0.7, env.w.rain) * toSun : 0;
+  // Vesipisarat linssillä (sessio 12e): vain purjehdittaessa myrskyssä
+  // (tyrskyt ja sade), ja hyvin hillitysti.
+  const sailingStorm = inGame && state !== 'menu' && player.riding && env.w.thunder > 0.4;
+  const lensT = sailingStorm ? 0.35 * _sm(0.4, 0.8, env.w.thunder) : 0;
   post.lens += (lensT - post.lens) * Math.min(1, Math.min(0.25, rawDt) * 1.5);
+  // Linssiheijastus: auringon paikka kuvassa; heikkenee pilvisellä, auringon
+  // laskiessa ja kuvan reunoilla.
+  _sunP.copy(camera.position).addScaledVector(env.sunDir, 1000).project(camera);
+  const sunFront = _sunP.z < 1 && Math.abs(_sunP.x) < 1.25 && Math.abs(_sunP.y) < 1.25;
+  const edge = 1 - _sm(0.85, 1.25, Math.max(Math.abs(_sunP.x), Math.abs(_sunP.y)));
+  post.flare = sunFront ? edge * (1 - 0.92 * env.w.cloud) * (1 - env.w.dust) * _sm(-0.03, 0.08, env.sunDir.y) : 0;
+  post.sunUV.set(_sunP.x * 0.5 + 0.5, _sunP.y * 0.5 + 0.5);
   // Lähisalaman välähdys koko näytölle.
   lightningEl.style.opacity = env.flashK > 1 && env.flash > 0 ? Math.min(0.75, env.flash * 0.3).toFixed(3) : '0';
   rain.fogFar = scene.fog.far;
@@ -821,9 +837,13 @@ function frame(now) {
   // Kädessä oleva soihtu valaisee ympäristön (jaettu tulivalo).
   const torchHeld = inGame && !player.dead && inventory.selectedItem && inventory.selectedItem.id === 'torch';
   if (torchHeld) {
-    torchFire.x = player.position.x;
-    torchFire.y = player.position.y + 0.55;
-    torchFire.z = player.position.z;
+    // Valo soihdun liekin kohdalla (oikea käsi, hieman edessä ja yläpuolella),
+    // ei vartalon keskellä (sessio 12e: soihdulla näki huonosti).
+    camera.getWorldDirection(_camDir);
+    const rx = -_camDir.z, rz = _camDir.x, rl = Math.hypot(rx, rz) || 1;
+    torchFire.x = camera.position.x + _camDir.x * 0.45 + (rx / rl) * 0.32;
+    torchFire.y = camera.position.y + 0.12;
+    torchFire.z = camera.position.z + _camDir.z * 0.45 + (rz / rl) * 0.32;
   }
   structures.held = torchHeld ? torchFire : null;
   // Nukkuminen: ruutu pimenee, aika siirtyy aamuun.

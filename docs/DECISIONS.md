@@ -2,6 +2,17 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-07 (sessio 12e)
+- **Linssiheijastus lasketaan jälkikäsittelyn lopussa (hehku, säteet, vaakajuova, 5 haamua auringon ja kuvan keskipisteen kautta) ja peitetään syvyyspuskurin testillä auringon kohdalta (5 näytettä).** Syy: käyttäjän toive; syvyystesti on kevyt tapa peittää heijastus puiden ja maaston takana. Voimakkuus × (1 − 0,92 × pilvet) × (1 − pöly) × kuvan reunalla häivytys. Jälkikäsittely kytkeytyy päälle, kun heijastus näkyy.
+- **DOF ja linssiheijastukset oletuksena päällä keskitasolta ylöspäin; asetuksiin versionumero, jolla vanhoihin tallennettuihin asetuksiin kytketään uudet oletukset kerran.** Syy: käyttäjän toive "jo oletuksena päällä"; ilman versiota vanhat asetukset (dof: false) olisivat jääneet voimaan.
+- **Linssipisarat vain kyydissä ukkosmyrskyssä, taso 0,35.** Syy: käyttäjä ei pitänyt pisaroista; ainoa sallittu tilanne on purjehdus myräkässä, "todella hillittyinä".
+- **Haamu: tavallisesti 40–80 s / 33 %, ukkosella 22–40 s / 60 % (enintään 2).** Syy: käyttäjän mukaan hieman liian yleinen.
+- **Väistö (ducking): taustaäänille oma väylä, jota tehosteet painavat (puu 0,5 kaatumisen ajan, isku 0,6, Haamu 0,6, puun lyönti 0,7), ja musiikki väistää samalla (vähintään 0,45).** Syy: tehosteet hukkuivat musiikin, sateen ja tuulen alle; väistö on pelien tavallinen ratkaisu, eikä yleistä tasoa tarvitse nostaa.
+- **Iskuääni 0,11–0,13 (n. −26 dB huippu, huitaisua hiljempi), alipäästö 5,2 kHz, korkeus 0,9–1,12 × (raskas 0,78–1,0 ×).** Syy: käyttäjän mukaan äänet ovat rajuja ja teräviä.
+- **[Shift]+[Q] heittää valitun pinon kokonaan (ei koko reppua).** Syy: tulkinta "kaikki esineet yhdellä kertaa" = koko pino kuten muissa peleissä; kysytään käyttäjältä.
+- **Soihdun valo liekin kohdalla (oikea käsi), voimakkuus 1,7 × (ennen 0,75 ×), kantama 32 m ja loivempi vaimeneminen, oma monitaajuinen lepatus ja keltaisempi sävy.** Syy: käyttäjän mukaan soihdulla näki huonosti; valo vartalon keskellä varjosti kättä ja oli himmeä.
+- **Soihdun isku sytyttää olennon: 5 s, 3,5 vahinkoa / s, liekit ja savu, arat pakenevat; savipeikko käyttää olemassa olevaa palamistaan; Haamu ei syty.** Syy: käyttäjän toive; Haamulla ei ole kiinteää ruumista, ja nuotion valo on jo sen vastakeino.
+
 ## 2026-10-07 (sessio 12d)
 - **Puun kaatumisääni muokattiin tiedostona (ffmpeg: narina venytetty 2×, ristiinhäivytys, basso + kompressio, jälkiräsähdys pois; räsähdys 1,74 s:ssa) eikä koodissa päällekkäisillä kopioilla.** Syy: kopio katkesi tiedoston kohdassa ja kuului nykäyksenä; nyt kaatumisaika 1,5–2,2 s osuu tiedoston rajoihin ilman päällekkäisyyttä.
 - **Tyrskyt lasketaan keulan ja aallon suhteellisesta nousunopeudesta (vesi nousee keulaa vasten nopeammin kuin runko ehtii nousta) ja vauhdista; roiskepooli kasvatettiin 900 → 2 400 pistettä.** Syy: tyrsky syntyy fyysisesti juuri keulan iskeytyessä aaltoon; pelkkä vauhti antoi tasaista roisketta, ja nopeuden nerfauksen jälkeen roiskeita ei olisi juuri tullut.

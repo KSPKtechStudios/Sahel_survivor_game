@@ -77,6 +77,9 @@ const FACTORY = { warthog: makeWarthog, gazelle: makeGazelle, fennec: makeFennec
 const MAX_WARTHOGS = 3;
 const MAX_CLAY = 3;
 const MAX_HAAMU = 1;
+// Soihdun sytyttämä olento palaa näin kauan (s) ja ottaa vahinkoa / s.
+const FIRE_TIME = 5;
+const FIRE_DPS = 3.5;
 const DESPAWN = { warthog: 150, clay: 70, gazelle: 170, guineafowl: 150, monkey: 150, fennec: 150, bird: 120, haamu: 120 };
 const PLAYER_R = 0.35;
 
@@ -471,6 +474,36 @@ export class Mobs {
   }
 
   // Palon tehosteet joka ruudulla: liekit, kipinät, savu, hiiltyminen.
+  // Soihdun isku sytyttää olennon (sessio 12e). Savipeikko palaa loppuun kuten
+  // aamulla; muut palavat hetken (vahinkoa ajan mukana) ja pakenevat.
+  setOnFire(m) {
+    if (m.state === 'dead' || m.def.ghost || !this.list.includes(m)) return;
+    if (m.type === 'clay') { if (!m.burning) this._ignite(m); return; }
+    const fresh = !(m.fireT > 0);
+    m.fireT = FIRE_TIME;
+    if (fresh && this.fire) this.fire.burst(m.pos.x, m.pos.y + m.def.height * 0.5, m.pos.z, 0.3, 22);
+    if (m.def.skittish) this._startFlee(m, true);
+  }
+
+  _fireTick(m, dt, elapsed) {
+    m.fireT -= dt;
+    m.hp -= FIRE_DPS * dt;
+    const y = m.pos.y + m.def.height * 0.5;
+    if (this.fire) {
+      const n = Math.floor(dt * 40 + Math.random());
+      for (let i = 0; i < n; i++) this.fire.flames(m.pos.x + (Math.random() - 0.5) * m.def.radius, y + Math.random() * m.def.height * 0.3, m.pos.z + (Math.random() - 0.5) * m.def.radius, 0.18, 0.9);
+      if (Math.random() < dt * 8) this.fire.smokePuff(m.pos.x, y + 0.4, m.pos.z, 0.2, 1);
+    }
+    const md = m.model;
+    if (md && md.material && md.material.emissive) {
+      const flick = 0.6 + Math.sin(elapsed * 23 + m.phase) * 0.2;
+      md.material.emissive.setRGB(0.7 * flick, 0.25 * flick, 0.04);
+      if (m.fireT <= 0) md.material.emissive.setRGB(0, 0, 0);
+    }
+    this.fires.push({ x: m.pos.x, y: m.pos.y, z: m.pos.z, seed: m.phase * 10, light: 0.6 });
+    if (m.hp <= 0) this._kill(m);
+  }
+
   _burnFx(m, dt, elapsed) {
     const md = m.model;
     const k = Math.min(1, m.burnT / m.burnDur);
@@ -525,11 +558,11 @@ export class Mobs {
       if (night && !player.dead) {
         this.haamuTimer -= dt;
         if (this.haamuTimer <= 0) {
-          // Ukkosmyrskyssä haamuja tulee selvästi useammin (sessio 12c):
-          // tarkistus 15–30 s välein, 85 %, enintään 2 kerrallaan.
+          // Ukkosmyrskyssä haamuja tulee useammin (sessio 12c, hillitty 12e):
+          // tarkistus 22–40 s välein, 60 %, enintään 2; muuten 40–80 s, 33 %.
           const storm = (this.env?.w?.thunder || 0) > 0.4;
-          this.haamuTimer = storm ? 15 + Math.random() * 15 : 35 + Math.random() * 40;
-          if (this.count('haamu') < (storm ? MAX_HAAMU + 1 : MAX_HAAMU) && Math.random() < (storm ? 0.85 : 0.4)) this._trySpawnHaamu();
+          this.haamuTimer = storm ? 22 + Math.random() * 18 : 40 + Math.random() * 40;
+          if (this.count('haamu') < (storm ? MAX_HAAMU + 1 : MAX_HAAMU) && Math.random() < (storm ? 0.6 : 0.33)) this._trySpawnHaamu();
         }
       } else if (!night) {
         this.haamuTimer = 20 + Math.random() * 30;
@@ -569,6 +602,8 @@ export class Mobs {
       if (m.burning) {
         this._burnFx(m, dt, elapsed);
         this.fires.push({ x: m.pos.x, y: m.pos.y, z: m.pos.z, seed: m.phase * 10 });
+      } else if (m.fireT > 0 && dt > 0 && m.state !== 'dead') {
+        this._fireTick(m, dt, elapsed);
       }
     }
     if (this.structures) this.structures.extraFires = this.fires;

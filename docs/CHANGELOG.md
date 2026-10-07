@@ -2,6 +2,19 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-07 (sessio 12e): linssiheijastukset, äänimiksaus, iskuäänet, soihtu, Shift+Q
+
+- **Linssiheijastukset:** aurinkoa kohti katsottaessa auringon ympärillä hehkuu ja säteilee, ja kuvan poikki näkyy värillisiä heijastuksia. Heijastukset häviävät, kun aurinko on puiden tai maaston takana tai pilvien peitossa. Asetuksissa uusi valinta **Linssiheijastukset**.
+- **Syväterävyys ja linssiheijastukset ovat oletuksena päällä** (keskitasolta ylöspäin; myös vanhoissa asetuksissa kerran).
+- **Vesipisarat linssillä** tulevat nyt vain purjehdittaessa ukkosmyrskyssä, ja hyvin hillitysti.
+- **Haamuja tulee hieman harvemmin** (myös ukkosmyrskyssä).
+- **Äänet erottuvat paremmin:** puun hakkaaminen ja kaatuminen, iskut ja Haamun äänet painavat hetkeksi musiikkia, sadetta ja tuulta hiljemmaksi (väistö).
+- **Uusi iskuääni**, kun lyö elävää olentoa (kaksi ääntä, vaihteleva korkeus, hillitty voimakkuus).
+- Esineen heiton napsahdus ja huitaisu ovat hieman hiljaisempia.
+- **[Shift] + [Q] heittää koko pinon** kerralla ([Q] yksi kerrallaan kuten ennen).
+- **Soihtu valaisee paremmin:** valo on liekin kohdalla kädessä (ei vartalon keskellä), kirkkaampi, kantaa pidemmälle ja lepattaa elävästi.
+- **Soihdulla lyöty olento syttyy palamaan:** palaa noin 5 sekuntia ja ottaa vahinkoa (savipeikko palaa loppuun), arat eläimet pakenevat.
+
 ## 2026-10-07 (sessio 12d): tyrskyt, linssipisarat, hitaammat veneet, palmut, linnunrata, lintujen ja huitaisujen äänet
 
 - **Puun kaatumisääni ei enää tökkää.** Syy: pitkässä kaatumisessa alun narina soitettiin erillisenä kopiona, joka katkesi kesken. Nyt ääni on yksi yhtenäinen tiedosto, jossa narina on venytetty (sävelkorkeus ennallaan), basso vahvistettu ja jälkiräsähdys leikattu.

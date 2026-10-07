@@ -39,10 +39,12 @@ const ONESHOTS = {
   bird: 'assets/sfx/bird.mp3',
   whoosh1: 'assets/sfx/whoosh1.mp3',
   whoosh2: 'assets/sfx/whoosh2.mp3',
+  punch1: 'assets/sfx/punch1.mp3',
+  punch2: 'assets/sfx/punch2.mp3',
 };
 // Huitominen: tasattu huipputason mukaan (tiedostojen huiput −1,6 / −6,8 dB),
 // jolloin huitaisu on n. −24 dB ja olentoon osuessa n. −31 dB.
-const WHOOSH_LEVEL = { whoosh1: 0.076, whoosh2: 0.14 };
+const WHOOSH_LEVEL = { whoosh1: 0.06, whoosh2: 0.11 };  // sessio 12e: −2 dB
 const BIRD_LEVEL = 0.22;
 // Puun kaatuminen: räsähdyksen kohta tiedostossa (s) ja voimakkuus 10 m:stä.
 // Räsähdyksen jälkeen ääni häivytetään pois (TREE_TAIL s), ettei maassa
@@ -58,8 +60,10 @@ const CLAP_LEVEL = 0.65;
 // 22 m:stä (sessio 12c; ennen 8 m, jolloin ilmestymisääni jäi lähes kuulumattomiin).
 const GHOST_LEVEL = { ghostSpawn: 0.45, ghostIdle: 0.4, ghostIdle2: 0.38, ghostAttack: 0.4 };
 const GHOST_REF = 22, GHOST_RANGE = 95;
-const CLICK_LEVEL = 0.65;  // tiedosto on hiljainen (n. −31 LUFS)
-const CHOP_LEVEL = 0.07;   // puun lyönti: hyvin hiljaa
+const CLICK_LEVEL = 0.45;  // tiedosto on hiljainen (n. −31 LUFS); sessio 12e hiljemmaksi
+const CHOP_LEVEL = 0.1;    // puun lyönti: hiljaa (väistö auttaa erottumaan)
+// Isku elävään olentoon (sessio 12e): terävä, joten hiljaa ja tummennettuna.
+const PUNCH_LEVEL = { punch1: 0.11, punch2: 0.13 };
 
 class Bed {
   constructor(sfx, key, def) {
@@ -77,9 +81,9 @@ class Bed {
       lp.type = 'lowpass';
       lp.frequency.value = def.lowpass;
       lp.Q.value = 0.5;
-      this.out.connect(lp).connect(sfx.bus);
+      this.out.connect(lp).connect(sfx.bedBus);
     } else {
-      this.out.connect(sfx.bus);
+      this.out.connect(sfx.bedBus);
     }
   }
 
@@ -187,6 +191,10 @@ export class Sfx {
     this.ctx = new AC();
     this.bus = this.ctx.createGain();
     this.bus.connect(this.ctx.destination);
+    // Taustaäänet omalla väylällään, jota tärkeät tehosteet painavat hetkeksi
+    // hiljemmaksi (väistö, sessio 12e).
+    this.bedBus = this.ctx.createGain();
+    this.bedBus.connect(this.bus);
     this._applyVolume();
     for (const [k, def] of Object.entries(BEDS)) this.beds[k] = new Bed(this, k, def);
     // Valkoinen kohina askelia varten (1 s).
@@ -264,6 +272,7 @@ export class Sfx {
     // hieman viiveellä.
     if (delay >= 0) src.start(now + delay);
     else src.start(now, -delay);
+    if (sp.dist < 60) this.duck(0.5, Math.max(0.4, fallTime) + 1.2);
     src.stop(crashT + TREE_TAIL + 0.05);
   }
 
@@ -297,6 +306,7 @@ export class Sfx {
   ghost(kind, x, z, listener) {
     const name = kind === 'spawn' ? 'ghostSpawn' : kind === 'attack' ? 'ghostAttack' : Math.random() < 0.5 ? 'ghostIdle' : 'ghostIdle2';
     this._oneShot(name, GHOST_LEVEL[name], x, z, listener, GHOST_REF, 0, GHOST_RANGE);
+    if (Math.hypot(x - listener.x, z - listener.z) < 60) this.duck(0.6, 1.2);
   }
 
   // Esineen heitto (napsahdus, ei suuntaa).
@@ -315,6 +325,39 @@ export class Sfx {
   // Isku puuhun: hiljainen kopsahdus, sävelkorkeus vaihtelee joka iskulla.
   chop(x, z, listener) {
     this._oneShot('chop', CHOP_LEVEL * (0.8 + Math.random() * 0.4), x, z, listener, 4, 0, 60, 0.82 + Math.random() * 0.4);
+    this.duck(0.7, 0.25);
+  }
+
+  // Väistö: taustaäänet ja musiikki painuvat hetkeksi hiljemmaksi, jotta
+  // tärkeä tehoste (puu, isku, olento) erottuu sateen, tuulen ja musiikin alta.
+  duck(to = 0.55, hold = 0.45) {
+    if (!this.ctx || !this.bedBus) return;
+    const now = this.ctx.currentTime, g = this.bedBus.gain;
+    g.cancelScheduledValues(now);
+    g.setValueAtTime(g.value, now);
+    g.linearRampToValueAtTime(Math.min(g.value, to), now + 0.04);
+    g.setTargetAtTime(1, now + hold, 0.35);
+    if (this.onDuck) this.onDuck(to, hold);
+  }
+
+  // Isku elävään olentoon: kumpi tahansa kahdesta, vaihteleva korkeus, hieman
+  // tummennettu (terävimmät korkeat pois).
+  punch(heavy = false) {
+    const name = Math.random() < 0.5 ? 'punch1' : 'punch2';
+    const buf = this.bufs[name];
+    if (!this.ctx || !buf || this.ctx.state !== 'running') return;
+    const ctx = this.ctx;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = (heavy ? 0.78 : 0.9) + Math.random() * 0.22;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 5200;
+    const g = ctx.createGain();
+    g.gain.value = PUNCH_LEVEL[name] * (heavy ? 1.15 : 1) * (0.85 + Math.random() * 0.3);
+    src.connect(lp).connect(g).connect(this.bus);
+    src.start();
+    this.duck(0.6, 0.35);
   }
 
   // Huitaisu työkalulla tai aseella: satunnainen tiedosto ja sävelkorkeus.

@@ -3,7 +3,7 @@ import { listWorlds, createWorld, deleteWorld, saveSettings, QUALITY_PRESETS } f
 
 const QUALITY_NAMES = { low: 'Matala', medium: 'Keskitaso', high: 'Korkea', ultra: 'Ultra', custom: 'Oma' };
 // Asetukset, jotka kuuluvat grafiikan laatuun (niiden muutos = "oma").
-const GRAPHICS_KEYS = new Set(['viewDistance', 'shadows', 'renderScale', 'godRays', 'motionBlur', 'dof']);
+const GRAPHICS_KEYS = new Set(['viewDistance', 'shadows', 'renderScale', 'godRays', 'motionBlur', 'dof', 'lensFlare']);
 import { seedFromString, randomSeed } from '../world/terrain.js';
 
 const $ = (id) => document.getElementById(id);
@@ -285,6 +285,7 @@ export class Menu {
     $('set-fps').addEventListener('change', (e) => { s.showFps = e.target.checked; this._changed(); });
     $('set-rays').addEventListener('change', (e) => { s.godRays = e.target.checked; s.quality = 'custom'; this._syncQuality(); this._changed(); });
     $('set-dof').addEventListener('change', (e) => { s.dof = e.target.checked; s.quality = 'custom'; this._syncQuality(); this._changed(); });
+    $('set-flare').addEventListener('change', (e) => { s.lensFlare = e.target.checked; s.quality = 'custom'; this._syncQuality(); this._changed(); });
     $('set-quality').addEventListener('click', (e) => {
       const b = e.target.closest('button');
       if (!b) return;
@@ -332,6 +333,7 @@ export class Menu {
     for (const b of $('set-mblur').children) b.classList.toggle('on', b.dataset.v === s.motionBlur);
     $('set-rays').checked = !!s.godRays;
     $('set-dof').checked = !!s.dof;
+    $('set-flare').checked = s.lensFlare !== false;
     this._syncQuality();
   }
 

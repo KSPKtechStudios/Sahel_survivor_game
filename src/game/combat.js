@@ -262,7 +262,11 @@ export class Combat {
         _v.set(m.pos.x + (dx / d) * m.def.radius, m.pos.y + m.def.height * 0.55, m.pos.z + (dz / d) * m.def.radius);
         if (m.type === 'clay') this.debris.chips(_v, 0x9c4a2a, 5, null, 0.9);
         this.mobs.bleed(m, _v, -dx, -dz, step.dmg);
+        // Soihtu sytyttää lyödyn olennon palamaan (sessio 12e).
+        if (this.inventory.selectedItem && this.inventory.selectedItem.id === 'torch') this.mobs.setOnFire(m);
       }
+      // Iskuääni elävään olentoon osuessa (sessio 12e).
+      events.emit('punch', { heavy: !!step.heavy, n });
       this.viewmodel.hitStop(step.heavy || killed ? 0.11 : 0.06);
       events.emit('hitFeedback', { strength: 0.3 + step.dmg / 35 });
       return;

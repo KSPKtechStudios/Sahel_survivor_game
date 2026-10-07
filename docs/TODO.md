@@ -1,6 +1,8 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 12e: linssiheijastukset (asetus), DOF oletuksena, äänten erottuvuus (väistö), iskuääni, [Shift]+[Q], soihdun valo ja sytytys, haamujen määrä
+- [ ] Vastaus: tarkoittiko [Shift]+[Q] koko pinoa (nyt) vai koko reppua?
 - [ ] Käyttäjä testaa session 12d: puun kaatumisääni, tyrskyt veneillä (myrskyssä), linssipisarat sateella aurinkoa kohti, veneiden nopeus, kaadetun palmun hakkaaminen, linnunrata, linnut ja huitaisut
 - [ ] Käyttäjä testaa session 12c: Haamun äänet (kuuluvatko nyt), ukkosen hämärä päivällä, haamut ukkosmyrskyssä, salaman isku maahan, aavikon tuuli ja myrskytuuli, heiton napsahdus, puun lyönnin ääni
 - [ ] Käyttäjä testaa session 12b: sumun pehmeys sateessa ja sademetsässä, lähisalamat (välähdys, salama, jyrähdys), Haamun äänet, puun äänen loppu, viidakon voimakkuus
@@ -67,6 +69,7 @@
 - [ ] Päätä lopullinen nimi (Sahel vai jokin muu)
 
 ## Valmis
+- [x] Linssiheijastukset (asetus), DOF oletuksena, linssipisarat vain myrskypurjehdukseen, haamuja harvemmin, väistö, iskuääni, Shift+Q, soihdun valo ja sytytys (2026-10-07, sessio 12e)
 - [x] Tyrskyt, sade vedessä, linssipisarat, hitaammat veneet, palmun hakkaaminen, linnunradan korjaus, puun äänen korjaus, linnut ja huitaisut (2026-10-07, sessio 12d)
 - [x] Haamun äänet kuuluviksi, ukkosen hämärä, haamuja myrskyssä, salaman isku maahan, aavikon tuuli, myrskytuuli, heiton ja puun lyönnin äänet (2026-10-07, sessio 12c)
 - [x] Pehmeämpi sumu (sadeverhot), lähisalamat äänineen, Haamun äänet, puun ja viidakon äänien hienosäätö (2026-10-07, sessio 12b)

@@ -143,7 +143,50 @@ uniform float uTime;
 uniform mat4 uViewProj;
 uniform float uLens;
 uniform float uAspect;
+uniform float uFlare;
+uniform vec2 uSunUV;
+uniform vec3 uFlareColor;
 varying vec2 vUv;
+
+// Linssiheijastus (sessio 12e): hehku ja säteet auringon ympärillä, hento
+// vaakajuova ja värilliset "haamut" auringon ja kuvan keskipisteen kautta
+// kulkevalla linjalla. Peittyy, jos aurinko on puun, maaston tms. takana.
+float flareGhost(vec2 uv, vec2 sp, vec2 toC, float k, float r) {
+  vec2 gp = sp + toC * k;
+  float gd = length((uv - gp) * vec2(uAspect, 1.0));
+  return smoothstep(r, r * 0.7, gd) * (0.35 + 0.65 * smoothstep(0.0, r, gd));
+}
+vec3 lensFlare(vec2 uv) {
+  vec2 sp = uSunUV;
+  float vis = 0.0;
+  for (int i = 0; i < 5; i++) {
+    vec2 o = i == 0 ? vec2(0.0) : vec2(i == 1 ? 0.006 : i == 2 ? -0.006 : 0.0, i == 3 ? 0.008 : i == 4 ? -0.008 : 0.0);
+    vec2 q = sp + o;
+    if (q.x > 0.0 && q.x < 1.0 && q.y > 0.0 && q.y < 1.0) vis += step(0.99999, texture2D(tDepth, q).r);
+  }
+  vis *= 0.2;
+  if (vis <= 0.0) return vec3(0.0);
+  vec2 asp = vec2(uAspect, 1.0);
+  vec2 dv = (uv - sp) * asp;
+  float d = length(dv);
+  vec3 c = vec3(0.0);
+  // Hehku ja tähtimäiset säteet
+  c += uFlareColor * (exp(-d * 7.0) * 0.22 + exp(-d * 26.0) * 0.45);
+  float ang = atan(dv.y, dv.x);
+  c += uFlareColor * (pow(abs(cos(ang * 3.0)), 60.0) + pow(abs(cos(ang * 2.0 + 0.6)), 90.0) * 0.6) * exp(-d * 5.0) * 0.12;
+  // Vaakajuova
+  c += uFlareColor * exp(-abs(uv.y - sp.y) * 140.0) * exp(-abs(dv.x) * 2.2) * 0.06;
+  // Haamut (linssien heijastukset)
+  vec2 toC = vec2(0.5) - sp;
+  c += vec3(0.55, 0.75, 1.0) * flareGhost(uv, sp, toC, 0.55, 0.035) * 0.10;
+  c += vec3(1.0, 0.8, 0.45) * flareGhost(uv, sp, toC, 1.15, 0.07) * 0.07;
+  c += vec3(0.6, 1.0, 0.7) * flareGhost(uv, sp, toC, 1.45, 0.025) * 0.12;
+  c += vec3(0.85, 0.6, 1.0) * flareGhost(uv, sp, toC, 1.85, 0.11) * 0.05;
+  c += vec3(1.0, 0.7, 0.5) * flareGhost(uv, sp, toC, 2.2, 0.05) * 0.08;
+  // Heikko rengas auringon ympärillä
+  c += uFlareColor * smoothstep(0.03, 0.0, abs(d - 0.32)) * 0.025;
+  return c * vis * uFlare;
+}
 
 // Vesipisarat "linssillä" (sessio 12d): sateella ja ukkosella satunnaisia
 // pisaroita, jotka taittavat kuvaa (pisara toimii pienenä linssinä), valuvat
@@ -258,6 +301,7 @@ void main() {
   }
 
   if (uUseRays > 0.5) col += texture2D(tRays, vUv).rgb * uRayColor * uRayStrength;
+  if (uFlare > 0.01) col += lensFlare(vUv);
   if (uLens > 0.01) col = lensDrops(vUv, col);
 
   gl_FragColor = vec4(col, 1.0);
@@ -291,6 +335,9 @@ export class PostFX {
     this.motionBlur = 0; // 0 = pois, 1 = kevyt, 2 = vahva
     this.dof = false;
     this.lens = 0; // vesipisarat linssillä 0..1 (main.js)
+    this.lensFlare = true; // asetus
+    this.flare = 0;        // linssiheijastuksen voimakkuus 0..1 (main.js)
+    this.sunUV = new THREE.Vector2(0.5, 0.5);
 
     const depthTexture = new THREE.DepthTexture(1, 1);
     depthTexture.type = THREE.UnsignedIntType;
@@ -325,6 +372,7 @@ export class PostFX {
       uNear: { value: 0.1 }, uFar: { value: 1500 }, uCamPos: { value: new THREE.Vector3() },
       uSunDir: { value: new THREE.Vector3() }, uSunColor: { value: new THREE.Color() }, uInscatter: { value: 0 },
       uLens: { value: 0 }, uAspect: { value: 1 },
+      uFlare: { value: 0 }, uSunUV: { value: new THREE.Vector2(0.5, 0.5) }, uFlareColor: { value: new THREE.Color(1, 0.92, 0.8) },
       uFogNear: { value: 50 }, uFogFar: { value: 330 },
       uHeat: { value: 0 }, uTime: { value: 0 }, uViewProj: { value: new THREE.Matrix4() },
     });
@@ -342,7 +390,7 @@ export class PostFX {
   }
 
   get active() {
-    return this.godRays || this.motionBlur > 0 || this.dof || this.lens > 0.01;
+    return this.godRays || this.motionBlur > 0 || this.dof || this.lens > 0.01 || (this.lensFlare && this.flare > 0.01);
   }
 
   _resize() {
@@ -463,6 +511,8 @@ export class PostFX {
     // --- Ilmakehän hehku
     cu.uSunDir.value.copy(env.sunDir);
     cu.uLens.value = this.lens;
+    cu.uFlare.value = this.lensFlare ? this.flare : 0;
+    cu.uSunUV.value.copy(this.sunUV);
     cu.uSunColor.value.copy(env.sky.uniforms.uSunColor.value).multiplyScalar(env.sky.uniforms.uSunVisible.value);
     cu.uInscatter.value = 0.9 * env.daylight * (1 - env.w.cloud * 0.6);
     cu.uFogNear.value = env.scene.fog.near;
