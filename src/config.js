@@ -43,8 +43,8 @@ export const CONFIG = {
   crouchSpeed: 0.5,           // kerroin kävelynopeuteen
 
   // Reppu
-  hotbarSize: 8,
-  backpackSize: 24,
+  hotbarSize: 6,          // sessio 19: ennen 8
+  backpackSize: 30,       // 5 riviä × 6 (sessio 19: ennen 24)
 
   // Tallennus
   saveKey: 'sahel.save.v1',

@@ -217,6 +217,20 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 19 (käyttäjän kertoma, 2026-10-08)
+- Taistelusta tykätään, mutta **savipeikkojen ja pahkasikojen tappaminen on liian helppoa, koska ne ovat liian staattisia**: hyökkäävät vain suoraan päin (tai pahkasiat juoksevat pois). Niiden pitäisi esim. **kiertää ympyrää** tai **iskun jälkeen perääntyä ja iskeä takaisin**. **Savipeikko on ehkä turhankin heikko.**
+- **Linnun äänitehoste** (useassa biomissa) alkaa liian yhtäkkiä: pehmennettävä.
+- **Kirveen hakkaus on liian nopeaa:** pidetään hitaana, koska kirves on raskas eikä puuta voi kombottaa.
+- **Kaatuvat puut tuhoavat** toisten puiden lisäksi **myös muita kasveja alta**, riippuen siitä, kuinka pahan osuman puu tekee.
+- **Terveyspalkki ym. ovat hyviä**, mutta hienosäätöä ulkonäköön; (kuvassa:) terveyspaneeli ja pikapalkki **hieman suuremmiksi?**, minikarttaan **hienompi kehys**, opaspaneeli **pois**.
+- **Panssarin näyttö terveyden viereen** (panssareita ei vielä ole, tulevat myöhemmin): kilpi-ikoni ja numero.
+- **Pikapalkki ja reppu täysin uusiksi** (ei tarpeeksi intuitiivinen):
+  - esineitä **vedetään ja pudotetaan**; Shift+klikkaus ja pinon jako
+  - **varusteet ovat repussa ja varustetaan sieltä** (ei erillisiä paikkoja)
+  - **valmistus aukeaa repusta, mutta omana ikkunanaan toisella reunalla**; näkyy **vain siinä paikassa tehtävät** reseptit (ilman työstöpenkkiä niitä on niukasti); **valitaan resepti ja painetaan Valmista** (×1 / ×5 / kaikki)
+  - pikapalkissa **6 paikkaa**
+- **Vinkit (opas) pois näkyvistä**, saa esiin **T-näppäimellä**.
+
 ## Sessio 18 (käyttäjän kertoma, 2026-10-07)
 - **Soihtu ei sammu sateessa**, vaan palaa heikommin ja yskivästi; se sammuu vain, kun sen kanssa menee uimaan.
 - **Energia (kestävyys) kuluu hitusen liian nopeasti.**
@@ -298,6 +312,7 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - Sessio 11: tulikärpäsparvet, pienemmät aallot, ei vettä veneiden sisällä, realistinen sade ja sadeverhot, kuivuvat lammikot, säät biomeittain (kuiva laterittitasanko), rakennelmia n. 3 700 ja hylkyjä n. 120, hienovarainen linnunrata ja tähdenlennot, purjeen saumat ja vastavalo, hento kimallus, Haamu latvusten alla ja pako, jousi oikeassa kädessä ja nuolten jälki, sujuvampi iskujen tahti, tuulen nuolen suunta.
 
 ## Paikkamerkit (Clauden valitsemia, voi muuttaa vapaasti)
+- **Sessio 19:** pahkasika: 60 % todennäköisyydellä kiertää ensin (säde 4,5 m, 1,1–2,5 s), iskun jälkeen perääntyy 0,8–1,6 s katse pelaajaan ja hyökkää uudelleen. Savipeikko: 42 terveyttä (ennen 28), 11 vahinkoa (8), juoksu 3,9 (3,5), kiertää välillä (säde 3,3 m), perääntyy iskun jälkeen (65 %), enintään 2 hyökkää kerralla (muut kiertävät). Linnun ääni alkaa 0,9 s häivytyksellä. Kirves: yksi isku 0,55 s + jäähdytys 0,38 s, 13 vahinkoa. Kasvien murskaus: pensaat ja pienet kasvit (kukat, marjapensaat, sienet, ruokotuppaat ym.) rungon ja latvuksen alla; todennäköisyys 25 % + 75 % × voima (nopeus ja puun pituus). Reppu: 30 paikkaa (5 × 6) + pikapalkki 6 (ennen 24 + 8); vanhojen tallennusten pikapaikat 7–8 siirtyvät reppuun. Panssari: esineille `armor: { slot, value }`, yksi kutakin paikkaa kohti, näyttö piilossa kun 0. Minikartta: kompassirengas (asteikko 10° välein, P I E L), kääntyy kartan mukana. Terveyspaneeli 282 × 52 px, pikapalkin paikat 66 px. Repun ollessa auki pikapalkki ja minikartta piilossa.
 - **Sessio 18:** soihtu sateessa: liekki 65–100 % (rankkasade), notkahdukset 0,15–0,45 s × 0,62, liekki näkyy vähintään 45 % koossa, valo vähintään 35 %. Kestävyys: juoksu 12/s (ennen 14), uinti 3,9/s (4,5), paikallaan uinti 1,3/s (1,5), kertakulutus (iskut, hypyt) × 0,88, jousen jännitys hieman halvempi. Paraneminen: 30 s syömisen jälkeen 1,5/s, muuten 0,375/s. Kirves: 2 iskua (toinen 0,36 s ensimmäisen jälkeen, 12 + 11 vahinkoa, 7 + 11 kestävyyttä). Nuija: 2 iskua (toinen 0,53 s jälkeen, 19 + 23 vahinkoa). Viidakkoveitsi: iskut 0,45 s välein. Puu ilman kirvestä: 1 % kirveen iskusta (n. 500 lyöntiä). Kuumuusväreily 60 % entisestä. Jousi 1,45 s (ennen 0,95), jännejousi 1,3 s (0,85). Olennon nimilappu: säde osuu olennon kapseliin (todellinen säde ja korkeus), eikä esine (puu, kivi) ole edessä.
 - **Sessio 17:** olennon nimilappu näkyy, kun olento on alle 14 m:n päässä ja tähtäimen kohdalla (näennäisen koon mukaan, vähintään 26 px); lappu viipyy 1,2 s; lyödyn olennon lappu näkyy 5 s (alle 32 m). Jousen tähtäin kiristyy jännitettäessä (115 % → 75 %), palkki hehkuu täysin jännitettynä. Nuolilaskuri näyttää kaikkien nuolityyppien yhteismäärän, punertava kun nuolet ovat loppu.
 - **Sessio 16:** Philosopher kaikessa tekstissä paitsi valikon Sahel-logossa (Eagle Lake). Naulat puukylttien kulmissa (terveys 4, kestävyys 2). Animaatiot: vahinko näkyy palkissa lähes heti (~30 ms), parannus pehmeämmin (~110 ms) hennolla hehkulla; menetetty osa viipyy 0,45 s ja kutistuu; osumasta 0,26 s tärähdys (1–3 px) ja välähdys; numero hypähtää vähintään 2 yksikön muutoksesta; kestävyys liukuu esiin 0,2 s ja häipyy 0,42 s; ruoka ponnahtaa esiin joustaen 0,38 s, loppunut kutistuu pois 0,22 s, muut liukuvat paikoilleen 0,26 s; pikapalkin valinta 0,16 s; viestit liukuvat ylös. Loppuva ruoka: viimeinen minuutti, välke 1,9 s jaksolla (läpinäkyvyys 100 → 55 %) ja pieni oranssi hehku.

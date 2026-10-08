@@ -20,7 +20,7 @@ export const GUIDE_STEPS = [
       { key: 'craft:stone_axe', label: 'Valmista kivikirves', need: 1 },
       { key: 'craft:hammer', label: 'Valmista vasara', need: 1 },
     ],
-    hint: '[Tab] reppu ja valmistus',
+    hint: '[Tab] reppu ja valmistus · [T] opas',
   },
   {
     title: 'Puuta',
@@ -29,7 +29,7 @@ export const GUIDE_STEPS = [
       { key: 'harvest:acacia', label: 'Kaada akasia', need: 1 },
       { key: 'harvest:log', label: 'Pilko kaatunut runko', need: 1 },
     ],
-    hint: '[1–8] tai rulla: valitse kirves',
+    hint: '[1–6] tai rulla: valitse kirves',
   },
   {
     title: 'Työstöpenkki',

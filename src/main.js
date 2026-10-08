@@ -19,6 +19,7 @@ import { Music, BIOME_MUSIC } from './audio/music.js';
 import { Sfx } from './audio/sfx.js';
 import { createModelLibrary } from './models/models.js';
 import { World } from './world/world.js';
+import { OBJECT_TYPES } from './world/objectTypes.js';
 import { Tumbleweeds } from './world/tumbleweeds.js';
 import { findSpawn, setWorldSeed, seedFromString, sampleTerrain, heightAt, displayBiome, waterAt } from './world/terrain.js';
 import { Player } from './player/player.js';
@@ -134,6 +135,16 @@ const mobs = new Mobs({ scene, world, drops, debris, bursts, player, env, struct
 fallen.player = player;
 fallen.mobs = mobs;
 fallen.knockTree = (obj, dir, depth) => breakables.fellTree(obj, dir, depth);
+// Kaatuva puu murskaa alleen jääviä kasveja (sessio 19).
+fallen.crushPlant = (obj, power, from) => {
+  const def = OBJECT_TYPES[obj.type];
+  const at = new THREE.Vector3(obj.x, obj.y + 0.4, obj.z);
+  if (def.kind === 'bush') breakables.hit(obj, at, from.clone(), (def.harvest ? def.harvest.hp : 1) * (0.4 + 0.8 * power));
+  else {
+    debris.chips(at, 0x6a7a3a, 4, null, 0.6);
+    world.removeObject(obj);
+  }
+};
 const boats = new Boats({ scene, camera, player, env, drops, waves: player.waves });
 boats.fx = {
   ripple: (x, z, r, s) => ripples.disturb(x, z, r, s),
@@ -157,10 +168,22 @@ const explored = new ExploredMap(world.gen);
 const minimap = new Minimap(explored);
 const bigMap = new BigMap(explored, player);
 bigMap.boats = boats;
-new GuideUI(guide);
+const guideUI = new GuideUI(guide);
 const invUI = new InventoryUI(inventory, icons, {
   stations: () => structures.stationsNear(player.position.x, player.position.z),
   use: (i) => useSlot(i),
+  // Repusta ulos raahattu pino pudotetaan pelaajan eteen (sessio 19).
+  drop: (i, n) => {
+    const s = inventory.slots[i];
+    if (!s) return false;
+    camera.getWorldDirection(_throwDir);
+    const pos = camera.position.clone().addScaledVector(_throwDir, 0.6);
+    pos.y -= 0.3;
+    drops.throwItem(s.id, n, pos, _throwDir, elapsed);
+    sfx.click();
+    inventory.removeFromSlot(i, n);
+    return true;
+  },
 });
 const buildMenu = new BuildMenu({
   inventory, itemIcons: icons, pieceIcons,
@@ -303,6 +326,8 @@ function setState(s) {
   state = s;
   const inGame = s === 'playing' || s === 'paused' || s === 'inventory' || s === 'map' || s === 'dev' || s === 'build';
   $('hud').classList.toggle('hidden', !inGame);
+  // Repun ollessa auki pikapalkki ja minikartta piiloon (reppu näyttää ne).
+  $('hud').classList.toggle('inv', s === 'inventory');
   if (s !== 'inventory') invUI.hide();
   if (s !== 'build') buildMenu.hide();
   if (s === 'menu' || s === 'loading') runePanel.hide();
@@ -525,6 +550,9 @@ window.addEventListener('keydown', (e) => {
     invUI.hide();
     input.lock();
     setTimeout(() => { if (state === 'inventory' && !input.locked) setState('paused'); }, 600);
+  } else if (state === 'playing' && e.code === 'KeyT') {
+    // Opas piilossa oletuksena; [T] näyttää / piilottaa (sessio 19).
+    guideUI.toggle();
   } else if (state === 'playing' && e.code === 'KeyQ') {
     throwSelected(e.shiftKey);
   } else if (state === 'playing' && e.code === 'KeyM') {

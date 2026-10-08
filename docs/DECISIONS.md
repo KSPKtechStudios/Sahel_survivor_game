@@ -2,6 +2,15 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-08 (sessio 19)
+- **Repun ja valmistuksen ratkaisut kysyttiin käyttäjältä** (raahaus, varusteet repussa, valmistus omana ikkunana, vain paikan reseptit, valitse + Valmista, 6 pikapaikkaa, panssari kilpi-ikonina, hienompi minikartan kehys).
+- **Reppu 30 paikkaa (ennen 24).** Syy: pikapalkki pieneni 8 → 6, ja vanhojen tallennusten kaikki esineet mahtuvat; 6 sarakkeen ruudukko on yhtenäinen pikapalkin kanssa.
+- **Hiiren oikea klikkaus = käytä / varusta, oikealla raahaus = jaa pino.** Syy: sekä jako että käyttö haluttiin samalle painikkeelle; liike erottaa ne.
+- **Varustettu esine merkitään vihreällä pisteellä** (ei erillisiä varustepaikkoja). Syy: käyttäjä halusi varustaa repusta.
+- **Repusta ulos raahaaminen pudottaa pinon.** Syy: tavallinen tapa peleissä; nopea tapa tyhjentää reppua.
+- **Viholliset: kiertäminen ja perääntyminen uusina tiloina** (`circle`, `retreat`), savipeikoilla vuorottelu. Syy: käyttäjän esimerkit; vuorottelu estää peikkoja kasautumasta yhteen kohtaan.
+- **Kasvien murskaus vain pensaille ja pienille kasveille**, ei kiville eikä irtotavaralle. Syy: käyttäjä puhui kasveista.
+
 ## 2026-10-07 (sessio 18)
 - **Soihdun "sammuminen" sateessa oli näköharha:** mikään ei sammuttanut sitä, mutta notkahdus kutisti liekin n. 13 %:iin ja valon lähes pois. Sateen vaikutusta lievennettiin ja liekin vähimmäiskoko nostettiin.
 - **Kestävyyden kulutus pieneni n. 12–15 %** (käyttäjä: "hitusen").

@@ -2,6 +2,18 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-08 (sessio 19)
+**Tehtiin**
+- Kysyttiin repusta, valmistuksesta, panssarista ja minikartasta 8 kysymystä kahdessa erässä.
+- Viholliset (`game/mobs.js`: `_strafe`, `_circle`, `_attackers`, tilat `circle` ja `retreat`, vahvempi savipeikko; `ui/nameplates.js`), linnun ääni (`audio/sfx.js`), kirves (`game/combat.js`), kasvien murskaus (`game/fallen.js`, `main.js`).
+- Reppu ja valmistus uusiksi (`ui/inventoryUI.js` uusi, `game/inventory.js`: `splitTo`, `quickMove`, `canEquip`, `armor`, tallennuksen siirto; `config.js`: 6 + 30; `index.html`, `styles.css`, `main.js`: pudotus).
+- HUD: panssari, isompi terveys ja pikapalkki, minikartan kompassirengas (`ui/minimap.js`), opas [T] (`ui/guideUI.js`, `main.js`), ohjeet (`index.html`, `game/guide.js`).
+- Testattiin headless-Chromiumilla: kasvien murskaus (7 kasvia 8 puusta), pahkasian kierto/perääntyminen; repussa oikeilla hiiritoiminnoilla raahaus, jako 12 → 6 + 6, Shift+klikkaus, varustus, pudotus maahan, valmistus (köysi), työkaluvihje; kuvat repusta ja HUD:sta. ESLint ja savutesti puhtaat.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute uudesta repusta.
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-07 (sessio 18)
 **Tehtiin**
 - Kysyttiin ensin 4 epäselvää kohtaa (kirves/nuija, viidakkoveitsi, paraneminen, kivet), sitten:

@@ -29,7 +29,10 @@
       <div class="hpbar"><i></i></div>
     </div>
     <div id="minimap">
-      <canvas id="minimap-canvas" width="176" height="176"></canvas>
+      <div id="minimap-frame">
+        <canvas id="minimap-canvas" width="176" height="176"></canvas>
+        <svg id="minimap-ring" viewBox="0 0 204 204"></svg>
+      </div>
       <div id="biome-name"></div>
     </div>
     <div id="guide">
@@ -44,10 +47,13 @@
     <div id="item-name"></div>
     <div id="vitals">
       <div id="foods"></div>
-      <div class="vital hp glass" title="Terveys (maksimi nousee syödyistä ruoista)">
-        <div class="tag"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3c3 4.2 6 7.6 6 11a6 6 0 0 1-12 0c0-3.4 3-6.8 6-11z"/></svg></div>
-        <div class="bar"><b></b><i></i><span class="lock"></span></div>
-        <span class="num"></span>
+      <div class="vrow">
+        <div class="vital hp glass" title="Terveys (maksimi nousee syödyistä ruoista)">
+          <div class="tag"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3c3 4.2 6 7.6 6 11a6 6 0 0 1-12 0c0-3.4 3-6.8 6-11z"/></svg></div>
+          <div class="bar"><b></b><i></i><span class="lock"></span></div>
+          <span class="num"></span>
+        </div>
+        <div id="armor" class="glass" title="Panssari"><svg viewBox="0 0 24 24"><path d="M12 2.8 4.5 5.6v5.6c0 4.7 3.2 8.6 7.5 10 4.3-1.4 7.5-5.3 7.5-10V5.6z"/></svg><span></span></div>
       </div>
     </div>
     <div class="vital st glass" id="stamina" title="Kestävyys (iskusarja jatkuu vain, kun kestävyyttä on yli puolet)">
@@ -94,18 +100,21 @@
   </div>
 
   <div id="inventory" class="hidden">
-    <div class="inv-card">
-      <div class="inv-col">
-        <h2>Reppu</h2>
-        <div id="inv-grid"></div>
-        <div id="inv-info"></div>
-      </div>
-      <div class="inv-col craft">
-        <h2>Valmistus</h2>
-        <div id="recipes"></div>
-      </div>
-      <div class="inv-close">[Tab] sulje</div>
+    <div id="inv-window" class="win glass">
+      <div class="win-head"><h2>Reppu</h2><span class="win-key">[Tab] sulje</span></div>
+      <div id="inv-grid" class="igrid"></div>
+      <div class="win-sub">Pikapalkki</div>
+      <div id="inv-hotbar" class="igrid"></div>
+      <div class="win-help">Raahaa siirtääksesi · Shift+klikkaus: pikapalkki ↔ reppu · Hiiren oikea: syö / varusta · Raahaa oikealla: jaa pino · Raahaa ikkunan ulkopuolelle: pudota</div>
     </div>
+    <div id="craft-window" class="win glass">
+      <div class="win-head"><h2>Valmistus</h2><span id="craft-where" class="win-key"></span></div>
+      <div id="craft-tabs"></div>
+      <div id="craft-list"></div>
+      <div id="craft-detail"></div>
+    </div>
+    <div id="inv-tooltip" class="glass"></div>
+    <div id="drag-ghost"><img alt=""><span></span></div>
   </div>
   <div id="buildmenu" class="hidden">
     <div class="inv-card build-card">
@@ -136,7 +145,6 @@
       </div>
     </div>
   </div>
-  <div id="drag-cursor"><img alt=""></div>
   <div id="devtools" class="hidden"></div>
 
   <!-- ===================== Valikon osat (mallit) ===================== -->
@@ -269,8 +277,9 @@
           <dt>Hiiri 1</dt><dd>lyö / hakkaa (sarjat: klikkaa tahdissa)</dd>
           <dt>Hiiri 2</dt><dd>torju (alussa parry) / aseta</dd>
           <dt>E</dt><dd>poimi</dd>
-          <dt>1–8 / rulla</dt><dd>valitse esine</dd>
-          <dt>Tab / I</dt><dd>reppu</dd>
+          <dt>1–6 / rulla</dt><dd>valitse esine</dd>
+          <dt>Tab / I</dt><dd>reppu ja valmistus</dd>
+          <dt>T</dt><dd>opas (vinkit)</dd>
           <dt>Q</dt><dd>heitä esine</dd>
           <dt>M</dt><dd>kartta</dd>
           <dt>F3</dt><dd>kehittäjätyökalut</dd>

@@ -44,6 +44,9 @@ export class Hud {
     this.hpTrail = this.hp.querySelector('.bar b');
     this.hpLock = this.hp.querySelector('.lock');
     this.hpNum = this.hp.querySelector('.num');
+    this.armorEl = $('armor');
+    this.armorNum = this.armorEl.querySelector('span');
+    this.armorShown = -1;
     this.numShown = -1;   // näytetty terveysarvo
     this.numT = 0;
     this.stShowT = 0;
@@ -346,6 +349,14 @@ export class Hud {
     if (this.numT > 0) {
       this.numT -= dt;
       if (this.numT <= 0) this.hpNum.classList.remove('flash');
+    }
+
+    // Panssari (sessio 19): kilpi-ikoni ja arvo terveyden vieressä, piilossa kun 0.
+    const armor = Math.round(this.inventory.armor());
+    if (armor !== this.armorShown) {
+      this.armorShown = armor;
+      this.armorEl.classList.toggle('none', armor <= 0);
+      if (armor > 0) this.armorNum.textContent = armor;
     }
 
     // Kestävyys (keskellä): näkyy vain kun sitä kuluu.

@@ -15,8 +15,8 @@ const HIT_RANGE = 32;    // lyödyn olennon lappu näkyy tähän asti
 const LINGER = 1.2;      // lappu viipyy katseen siirryttyä (s)
 const HIT_LINGER = 5;    // lyödyn olennon lappu (s)
 // Tilat, joissa olento on huomannut pelaajan.
-const AWARE = new Set(['alert', 'flee', 'fly', 'chase', 'attack', 'recover', 'windup', 'dive', 'rise', 'stalk', 'stagger', 'escape']);
-const HOSTILE = new Set(['chase', 'attack', 'windup', 'dive', 'stalk', 'recover']);
+const AWARE = new Set(['circle', 'retreat', 'alert', 'flee', 'fly', 'chase', 'attack', 'recover', 'windup', 'dive', 'rise', 'stalk', 'stagger', 'escape']);
+const HOSTILE = new Set(['circle', 'retreat', 'chase', 'attack', 'windup', 'dive', 'stalk', 'recover']);
 const EYE = '<svg viewBox="0 0 24 24"><path d="M12 5C6.5 5 2.4 9.2 1 12c1.4 2.8 5.5 7 11 7s9.6-4.2 11-7c-1.4-2.8-5.5-7-11-7zm0 11.2A4.2 4.2 0 1 1 12 7.8a4.2 4.2 0 0 1 0 8.4zm0-6.4a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 0 0 0-4.4z"/></svg>';
 
 const _v = new THREE.Vector3();

@@ -16,8 +16,8 @@ import { events } from './events.js';
 // dmg = vahinko, kb = tönäisy, up = heitto ylös, stam = kestävyys,
 // arc = osumakaaren puolikulma (rad), reach = lisäulottuvuus,
 // multi = osuu useampaan, stagger = horjuttaa (s).
-// Iskusarja: viidakkoveitsellä kolme iskua, kirveellä ja nuijalla lyhyt
-// kahden iskun sarja (sessio 18); muilla yksi isku ja jäähdytys.
+// Iskusarja: viidakkoveitsellä kolme iskua, nuijalla lyhyt kahden iskun sarja
+// (sessio 18); muilla (myös kirveellä, sessio 19) yksi isku ja jäähdytys.
 // Sessio 11: tahti on sujuva mutta ei loputon. Yhden iskun kierto (kesto +
 // jäähdytys) on nyrkeillä n. 0,65 s, kirveellä n. 0,8 s ja raskaalla nuijalla
 // n. 1,45 s. Kun isku osuu maailmaan (puu, kivi, pensas) tai ilmaan, jäähdytys
@@ -46,8 +46,8 @@ export const WEAPONS = {
   },
   axe: {
     name: 'Kirves', block: 'tool', reach: 2.4, combo: [
-      { anim: 'swing', dur: 0.42, hitAt: 0.5, chain: 0.85, cd: 0.3, dmg: 12, kb: 7, up: 1.6, stam: 7, arc: 0.5 },
-      { anim: 'slashL', dur: 0.44, hitAt: 0.5, chain: 1, cd: 0.55, dmg: 11, kb: 7.5, up: 1.8, stam: 11, arc: 0.6 },
+      // Sessio 19: kirves on raskas eikä puuta voi kombottaa: yksi hidas isku.
+      { anim: 'swing', dur: 0.55, hitAt: 0.5, chain: 1, cd: 0.38, dmg: 13, kb: 7.5, up: 1.7, stam: 8, arc: 0.5 },
     ],
   },
   pick: {

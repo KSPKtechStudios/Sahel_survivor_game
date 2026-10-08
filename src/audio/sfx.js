@@ -277,7 +277,7 @@ export class Sfx {
   }
 
   // Lyhyt ääni paikasta (x, z): suunta ja etäisyysvaimennus.
-  _oneShot(name, level, x, z, listener, ref = 10, delay = 0, range = 140, rate = null) {
+  _oneShot(name, level, x, z, listener, ref = 10, delay = 0, range = 140, rate = null, fadeIn = 0) {
     const buf = this.bufs[name];
     if (!this.ctx || !buf || this.ctx.state !== 'running') return;
     const sp = this._spatial(x, z, listener, ref, range);
@@ -287,11 +287,18 @@ export class Sfx {
     src.buffer = buf;
     src.playbackRate.value = rate ?? 0.96 + Math.random() * 0.08;
     const g = ctx.createGain();
-    g.gain.value = level * sp.gain;
+    const t0 = ctx.currentTime + delay;
+    if (fadeIn > 0) {
+      // Pehmeä alku (sessio 19: linnun ääni alkoi turhan yhtäkkiä).
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, level * sp.gain), t0 + fadeIn);
+    } else {
+      g.gain.value = level * sp.gain;
+    }
     const pan = ctx.createStereoPanner();
     pan.pan.value = sp.pan;
     src.connect(g).connect(pan).connect(this.bus);
-    src.start(ctx.currentTime + delay);
+    src.start(t0);
   }
 
   // Lähelle iskevän salaman jyrähdys (satunnaisesti jompikumpi tiedosto).
@@ -381,7 +388,7 @@ export class Sfx {
   // Lintu jossain lähellä (satunnainen suunta ja etäisyys).
   bird(listener) {
     const a = Math.random() * Math.PI * 2, r = 8 + Math.random() * 30;
-    this._oneShot('bird', BIRD_LEVEL * (0.6 + Math.random() * 0.5), listener.x + Math.cos(a) * r, listener.z + Math.sin(a) * r, listener, 12, 0, 80, 0.88 + Math.random() * 0.25);
+    this._oneShot('bird', BIRD_LEVEL * (0.6 + Math.random() * 0.5), listener.x + Math.cos(a) * r, listener.z + Math.sin(a) * r, listener, 12, 0, 80, 0.88 + Math.random() * 0.25, 0.9);
   }
 
   // Askel. kind: sand | grass | leaves | rock | gravel | wood | water.

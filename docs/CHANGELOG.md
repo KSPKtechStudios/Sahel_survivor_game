@@ -2,6 +2,21 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-08 (sessio 19): eläväisemmät viholliset, uusi reppu ja valmistus
+
+- **Pahkasiat ja savipeikot liikkuvat ovelammin:** ne kiertävät pelaajaa ennen hyökkäystä ja perääntyvät iskun jälkeen ennen kuin tulevat uudelleen. Savipeikot vuorottelevat (enintään kaksi hyökkää kerralla, muut kiertävät).
+- **Savipeikko on vahvempi** (enemmän terveyttä ja vahinkoa, hieman nopeampi).
+- **Linnun ääni alkaa pehmeästi.**
+- **Kirves on taas raskas:** yksi hidas isku, ei sarjaa.
+- **Kaatuva puu murskaa alleen pensaita ja pieniä kasveja** osuman voiman mukaan.
+- **Uusi reppu:** esineitä raahataan hiirellä, Shift+klikkaus siirtää pikapalkin ja repun välillä, hiiren oikealla raahaaminen jakaa pinon, hiiren oikea syö tai varustaa, repusta ulos raahattu pino putoaa maahan. Työkaluvihje näyttää tiedot. Varustetut esineet merkitään repussa.
+- **Valmistus omassa ikkunassaan** repun toisella puolella: vain tässä paikassa tehtävät reseptit, valitse resepti ja paina Valmista (×1 / ×5 / kaikki).
+- **Pikapalkissa 6 paikkaa**, reppu 30 paikkaa (vanhat tallennukset siirtyvät automaattisesti).
+- **Panssarin näyttö** terveyden vieressä (kilpi ja numero; näkyy, kun panssareita lisätään).
+- **Minikartan uusi kehys:** kompassirengas asteikkoineen ja ilmansuuntineen.
+- **Terveyspaneeli ja pikapalkki hieman isompia**, pikapalkki samaa lasityyliä.
+- **Opas piilossa**, avataan [T]:llä.
+
 ## 2026-10-07 (sessio 18): tasapainotus, soihtu sateessa, vähemmän tekstiä
 
 - **Soihtu ei näytä sammuvan sateessa:** liekki heikkenee ja yskii, mutta palaa. Se sammuu vain uidessa.

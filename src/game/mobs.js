@@ -29,9 +29,10 @@ export const MOB_TYPES = {
     sight: 10, poise: 15, turn: 5, drops: [['raw_meat', 1, 2], ['hide', 1, 1], ['bone', 0, 1], ['sinew', 0, 1]], cause: 'warthog',
   },
   clay: {
-    name: 'Savipeikko', hp: 28, radius: 0.36, height: 1.25, walk: 0.9, run: 3.5, mass: 0.9,
-    damage: 8, knock: 4, up: 0, reach: 1.4, windup: 0.65, attack: 0.28, recover: 0.8,
-    sight: 24, poise: 6, turn: 4, drops: [['clay', 1, 2]], cause: 'clay',
+    // Sessio 19: vahvempi (ennen 28 hp, 8 vahinkoa, juoksu 3,5).
+    name: 'Savipeikko', hp: 42, radius: 0.36, height: 1.25, walk: 0.9, run: 3.9, mass: 0.9,
+    damage: 11, knock: 4.5, up: 0, reach: 1.4, windup: 0.6, attack: 0.28, recover: 0.7,
+    sight: 24, poise: 9, turn: 4.5, drops: [['clay', 1, 2]], cause: 'clay',
   },
   // --- Arat eläimet. sight = huomaamisetäisyys kävelevästä pelaajasta
   // (paikallaan 0,75 ×, kyykyssä 0,3 ×, paikallaan kyykyssä 0,22 ×, juostessa
@@ -794,8 +795,29 @@ export class Mobs {
       }
       case 'chase':
         if (m.provoked <= 0 || d > 30 || this.player.dead) { this._set(m, 'graze', 2); break; }
+        // Sessio 19: ei aina suoraan päin, vaan välillä kiertää ensin.
+        if (!m.circled && d < 7 && d > 3.2 && Math.random() < 0.6) {
+          m.circled = true;
+          m.circleDir = Math.random() < 0.5 ? -1 : 1;
+          this._set(m, 'circle', 1.1 + Math.random() * 1.4);
+          break;
+        }
         this._steer(m, dx, dz, def.run * 0.92, dt);
         if (d - PLAYER_R < def.reach + 0.6) this._set(m, 'windup');
+        break;
+      case 'circle':
+        // Kiertää pelaajaa katse häneen ja syöksyy sitten kohti.
+        if (m.provoked <= 0 || this.player.dead) { this._set(m, 'graze', 2); break; }
+        this._circle(m, dx, dz, d, 4.5, def.run * 0.5, dt);
+        if (m.timer <= 0 || d < 2.4) this._set(m, 'chase');
+        break;
+      case 'retreat':
+        // Iskun jälkeen perääntyy hetken katse pelaajaan ja hyökkää uudelleen.
+        this._strafe(m, -dx * def.run * 0.55, -dz * def.run * 0.55, dx, dz, dt);
+        if (m.timer <= 0) {
+          m.circled = Math.random() < 0.5;
+          this._set(m, m.provoked > 0 ? 'chase' : 'flee', 3);
+        }
         break;
       case 'windup':
         // Lyö päätä alas ja kuopii maata ennen syöksyä (varoitus pelaajalle).
@@ -813,11 +835,17 @@ export class Mobs {
       }
       case 'recover':
         this._steer(m, 0, 0, 0, dt);
-        if (m.stateT >= def.recover) this._set(m, m.provoked > 0 ? 'chase' : 'flee', 3);
+        if (m.stateT >= def.recover * 0.7) {
+          if (m.provoked <= 0) this._set(m, 'flee', 3);
+          else this._set(m, 'retreat', 0.8 + Math.random() * 0.8);
+        }
         break;
       case 'stagger':
         this._steer(m, 0, 0, 0, dt);
-        if (m.stateT >= m.staggerDur) this._set(m, m.provoked > 0 && m.hp / def.hp >= 0.35 ? 'chase' : 'flee', 4);
+        if (m.stateT >= m.staggerDur) {
+          if (m.provoked > 0 && m.hp / def.hp >= 0.35) this._set(m, Math.random() < 0.5 ? 'retreat' : 'chase', 0.9);
+          else this._set(m, 'flee', 4);
+        }
         break;
       case 'dead':
         m.deadT += dt;
@@ -1011,8 +1039,27 @@ export class Mobs {
       }
       case 'chase':
         if (this.player.dead || d > 45) { this._set(m, 'wander', 0); break; }
+        // Sessio 19: lähellä peikot vuorottelevat (enintään 2 hyökkää kerralla)
+        // ja kiertävät välillä ennen iskua.
+        if (d < 4.5 && d > 2.2 && (this._attackers('clay') > 2 || (!m.circled && Math.random() < dt * 1.2))) {
+          m.circled = true;
+          m.circleDir = Math.random() < 0.5 ? -1 : 1;
+          this._set(m, 'circle', 1 + Math.random() * 1.5);
+          break;
+        }
         this._steer(m, dx, dz, def.run, dt);
         if (d - PLAYER_R < def.reach + 0.25) this._set(m, 'windup');
+        break;
+      case 'circle':
+        if (this.player.dead || d > 45) { this._set(m, 'wander', 0); break; }
+        this._circle(m, dx, dz, d, 3.3, def.walk * 2.2, dt);
+        if (m.timer <= 0 && this._attackers('clay') < 2) this._set(m, 'chase');
+        else if (m.timer <= -2) m.timer = 0.6;
+        break;
+      case 'retreat':
+        // Iskun jälkeen askeltaa taaksepäin ja tulee uudelleen.
+        this._strafe(m, -dx * def.walk * 2, -dz * def.walk * 2, dx, dz, dt);
+        if (m.timer <= 0) { m.circled = Math.random() < 0.4; this._set(m, 'chase'); }
         break;
       case 'windup':
         // Nostaa kädet ylös ennen iskua (varoitus).
@@ -1029,11 +1076,11 @@ export class Mobs {
       }
       case 'recover':
         this._steer(m, 0, 0, 0, dt);
-        if (m.stateT >= def.recover) this._set(m, 'chase');
+        if (m.stateT >= def.recover) this._set(m, Math.random() < 0.65 ? 'retreat' : 'chase', 0.6 + Math.random() * 0.6);
         break;
       case 'stagger':
         this._steer(m, 0, 0, 0, dt);
-        if (m.stateT >= m.staggerDur) this._set(m, 'chase');
+        if (m.stateT >= m.staggerDur) this._set(m, Math.random() < 0.5 ? 'retreat' : 'chase', 0.7);
         break;
       case 'panic': {
         // Paniikki: juoksee sinne tänne; syttyy hetken päästä palamaan ja
@@ -1260,6 +1307,43 @@ export class Mobs {
 
   // Kääntyy kohti suuntaa (dx, dz) ja liikkuu nopeudella speed.
   // face = käänny vain (ei liikettä).
+  // Liike katse pelaajaan päin (sivuaskel tai perääntyminen, sessio 19).
+  // (vx, vz) = haluttu nopeus, (fx, fz) = katseen suunta.
+  _strafe(m, vx, vz, fx, fz, dt) {
+    if (m.hitStun > 0) {
+      m.hitStun -= dt;
+      m.vel.multiplyScalar(Math.exp(-dt * 10));
+      m.wantSpeed = 0;
+      return;
+    }
+    const want = Math.atan2(fx, fz);
+    const diff = angleDiff(want, m.yaw);
+    const turn = m.def.turn * 1.2;
+    m.yaw += Math.max(-turn * dt, Math.min(turn * dt, diff));
+    const k = 1 - Math.exp(-dt * 7);
+    m.vel.x += (vx - m.vel.x) * k;
+    m.vel.z += (vz - m.vel.z) * k;
+    m.wantSpeed = Math.hypot(vx, vz);
+  }
+
+  // Kiertää pelaajaa säteellä R (suunta m.circleDir), lähestyy/loittonee sädettä kohti.
+  _circle(m, dx, dz, d, R, speed, dt) {
+    const dir = m.circleDir || 1;
+    const tx = -dz * dir, tz = dx * dir;           // tangentti
+    const pull = Math.max(-1, Math.min(1, (d - R) * 0.7)); // + = pelaajaa kohti
+    let vx = tx + dx * pull, vz = tz + dz * pull;
+    const l = Math.hypot(vx, vz) || 1;
+    vx /= l; vz /= l;
+    this._strafe(m, vx * speed, vz * speed, dx, dz, dt);
+  }
+
+  // Montako saman lajin olentoa hyökkää juuri nyt (savipeikot vuorottelevat).
+  _attackers(type) {
+    let n = 0;
+    for (const o of this.list) if (o.type === type && (o.state === 'chase' || o.state === 'windup' || o.state === 'attack')) n++;
+    return n;
+  }
+
   _steer(m, dx, dz, speed, dt, face = false) {
     if (m.hitStun > 0) {
       // Osumasta horjuva olento ei ohjaa itseään (tönäisy vie).

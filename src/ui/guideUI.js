@@ -15,7 +15,21 @@ export class GuideUI {
       this.render();
       if (d && d.advanced) this.flash();
     });
+    // Sessio 19: opas on piilossa, kunnes pelaaja avaa sen [T]:llä.
+    let open = false;
+    try { open = localStorage.getItem('sahel.guideOpen') === '1'; } catch { /* ei tallennusta */ }
+    this.setOpen(open);
     this.render();
+  }
+
+  setOpen(on) {
+    this.open = on;
+    this.el.classList.toggle('closed', !on);
+    try { localStorage.setItem('sahel.guideOpen', on ? '1' : '0'); } catch { /* ei tallennusta */ }
+  }
+
+  toggle() {
+    this.setOpen(!this.open);
   }
 
   flash() {

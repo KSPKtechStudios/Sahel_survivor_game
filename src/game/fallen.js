@@ -13,6 +13,8 @@ const _v = new THREE.Vector3();
 const _w = new THREE.Vector3();
 const _a = new THREE.Vector3();
 const _b = new THREE.Vector3();
+// Pienet kasvit, jotka kaatuva puu murskaa (sessio 19).
+const CRUSHABLE = new Set(['flowers', 'jujubeBush', 'moringaPlant', 'hibiscusPlant', 'reedClump', 'fonioTuft', 'mushBrown', 'mushPale', 'mushRed', 'mushTermite']);
 const _cols = [];
 
 export class FallenTrees {
@@ -211,6 +213,27 @@ export class FallenTrees {
           log.crushed.add(m);
           this.mobs.damage(m, dmg, { fromX: _a.x, fromZ: _a.z, knock: 4 });
         }
+      }
+    }
+    // Kasvit rungon alla (sessio 19): pensaat ja pienet kasvit murskautuvat,
+    // todennäköisyys osuman voiman mukaan (iso, nopeasti kaatuva puu murskaa).
+    if (this.crushPlant && log.theta > 0.5) {
+      log.plantT = (log.plantT || 0) - 1;
+      if (log.plantT <= 0) {
+        log.plantT = 3; // tarkistetaan joka kolmas ala-askel
+        const power = Math.min(1, speed * 0.6 + log.L / 22);
+        const mx = (_a.x + _b.x) / 2, mz = (_a.z + _b.z) / 2;
+        this.world.forEachChunkNear(mx, mz, log.L * 0.6 + 2, (ch) => {
+          for (const o of ch.objects) {
+            if (o.removed || o.stump || log.crushed.has(o)) continue;
+            const def = OBJECT_TYPES[o.type];
+            if (!def || !(def.kind === 'bush' || CRUSHABLE.has(o.type))) continue;
+            if (segDist2D(_a, _b, o.x, o.z) > r + crownR * 0.8 + 0.4) continue;
+            if (segMinY(_a, _b, o.x, o.z) > (o.y ?? 0) + 1.4 + crownR * 0.5) continue;
+            log.crushed.add(o);
+            if (Math.random() < 0.25 + 0.75 * power) this.crushPlant(o, power, _a);
+          }
+        });
       }
     }
     // Pystyssä olevat puut rungon tiellä
