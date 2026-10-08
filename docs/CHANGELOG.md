@@ -2,6 +2,16 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-08 (sessio 30): ote kahvasta, sormet kahvan ympäri, jousi, juoksu ja hakatut puut
+
+- **Ote kahvasta ("socket"):** jokaisen esineen kahvan keskipiste ja paksuus luetaan esineen mallista, ja käsi asettuu sen kohdalle. Kahva lepää kämmentä vasten.
+- **Sormet kiertyvät kahvan ympäri:** jokainen nivel koukistuu tyvestä kärkeen, kunnes sormi koskettaa kahvan pintaa, joten sormet eivät mene kahvan läpi eivätkä solmuun. Peukalo kiertää vastakkaiselta puolelta. Veitsen ohut kahva saa tiukan otteen ja paksu keppi väljemmän. Toimii myös vasemmassa kädessä (soihtu, kilpi, jousi, hyppyiskun kahden käden ote).
+- **Ei reikiä sormissa:** käden pinta piirretään molemmin puolin, ja nivelten koukistus on rajattu luontevaksi.
+- **Jousi:** käsi pitää kahvaa nuolen alapuolelta, ja nuoli lepää käden päällä.
+- **Juoksu:** myös vasen käsi (kilpi, soihtu) ja jousi heiluvat kävellessä ja juostessa, vuorotahdissa oikean käden kanssa. Oikean käden juoksutärinää pienennetty ja otteen kierto tasoitettu.
+- **Iho** vähemmän punertava.
+- **Hakatut puut:** kun kaadettu runko hakataan palasiksi, palat saavat saman kaarnapinnan kuin puu. Pinnat ovat sileät (ennen jokainen kolmio näkyi), ja rungon palat ovat umpinaisia ja sisältä tuoretta puuta. Sademetsäpuun hakattavan rungon porras korjattu.
+
 ## 2026-10-08 (sessio 29): uudet kädet, pehmeät animaatiot, juuret ja tähdenlennot
 
 - **Uudet kädet:** pelaajan käsi on nyt käyttäjän antama malli (FPS Female Arms) omilla tekstuureillaan. Molemmat kädet näkyvät: oikea pitää työkalua tai asetta, vasen kilpeä, soihtua tai jousta, ja hyppyiskussa molemmat tarttuvat varteen. Muuten vasen käsi lepää näkymän alapuolella.

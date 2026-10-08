@@ -3,7 +3,8 @@
 // Lisäksi pienet lastut/kivensirut jokaisesta osumasta.
 import * as THREE from 'three';
 import { heightAt } from '../world/terrain.js';
-import { leafTexture } from './surfaces.js';
+import { leafTexture, addSurfaceDetail } from './surfaces.js';
+import { addWet } from './materials.js';
 import { kitMaterial } from './kitMaterials.js';
 import { WHITE_UV } from '../models/util.js';
 
@@ -13,7 +14,9 @@ const _axis = new THREE.Vector3();
 // Jaa (ei-indeksoitu, vertex-väritetty) geometria k palaan. Palat suljetaan
 // lisäämällä jokaisesta kolmion sivusta kolmio palan keskipisteeseen.
 // closed = lisätäänkö sisäpinnat (vain umpinaisille kappaleille, esim. kivet;
-// ohuista oksista ja lehdistä syntyisi muuten isoja levyjä).
+// ohuista oksista ja lehdistä syntyisi muuten isoja levyjä). Sessio 30:
+// closed voi olla myös verteksiväli [a, b] (esim. puun runko), jolloin vain
+// sen kolmiot suljetaan: rungon palat ovat umpinaisia ja sisältä tuoretta puuta.
 export function fractureGeometry(geo, k, innerHex = 0x8a6a48, seed = 1, closed = true) {
   let s = seed >>> 0;
   const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
@@ -22,6 +25,10 @@ export function fractureGeometry(geo, k, innerHex = 0x8a6a48, seed = 1, closed =
   // Sessio 25: UV ja varjostus mukaan (lehtikortit pysyvät lehtinä).
   const uvA = geo.attributes.uv;
   const aoA = geo.attributes.aAO;
+  // Sessio 30: alkuperäiset (pehmeät) normaalit säilyvät; ennen ne laskettiin
+  // uudelleen, ja palat näyttivät särmikkäiltä.
+  const nA = geo.attributes.normal;
+  const closeTri = (t) => (Array.isArray(closed) ? t * 3 >= closed[0] && t * 3 < closed[1] : !!closed);
   const triCount = Math.floor(pos.count / 3);
   if (triCount === 0) return [];
   const cents = new Float32Array(triCount * 3);
@@ -55,7 +62,7 @@ export function fractureGeometry(geo, k, innerHex = 0x8a6a48, seed = 1, closed =
     const c = new THREE.Vector3();
     for (const t of g) c.x += cents[t * 3], c.y += cents[t * 3 + 1], c.z += cents[t * 3 + 2];
     c.divideScalar(g.length);
-    const P = [], C = [], U = [], A = [];
+    const P = [], C = [], U = [], A = [], N = [];
     for (const t of g) {
       const v = [0, 1, 2].map((i) => new THREE.Vector3().fromArray(pos.array, t * 9 + i * 3).sub(c));
       for (let i = 0; i < 3; i++) {
@@ -63,11 +70,16 @@ export function fractureGeometry(geo, k, innerHex = 0x8a6a48, seed = 1, closed =
         C.push(col.array[t * 9 + i * 3], col.array[t * 9 + i * 3 + 1], col.array[t * 9 + i * 3 + 2]);
         if (uvA) U.push(uvA.array[t * 6 + i * 2], uvA.array[t * 6 + i * 2 + 1]);
         if (aoA) A.push(aoA.array[t * 3 + i]);
+        if (nA) N.push(nA.array[t * 9 + i * 3], nA.array[t * 9 + i * 3 + 1], nA.array[t * 9 + i * 3 + 2]);
+        else N.push(0, 1, 0);
       }
       // Sisäpinnat (sulkevat palan)
-      for (let i = 0; closed && i < 3; i++) {
+      const cl = closeTri(t);
+      for (let i = 0; cl && i < 3; i++) {
         const a = v[i], b = v[(i + 1) % 3];
         P.push(b.x, b.y, b.z, a.x, a.y, a.z, 0, 0, 0);
+        const fn = new THREE.Vector3().subVectors(a, b).cross(new THREE.Vector3().copy(b).negate()).normalize();
+        N.push(fn.x, fn.y, fn.z, fn.x, fn.y, fn.z, fn.x, fn.y, fn.z);
         C.push(inner.r, inner.g, inner.b, inner.r, inner.g, inner.b, inner.r * 0.8, inner.g * 0.8, inner.b * 0.8);
         if (uvA) U.push(WHITE_UV[0], WHITE_UV[1], WHITE_UV[0], WHITE_UV[1], WHITE_UV[0], WHITE_UV[1]);
         if (aoA) A.push(1, 1, 1);
@@ -78,7 +90,8 @@ export function fractureGeometry(geo, k, innerHex = 0x8a6a48, seed = 1, closed =
     fg.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
     if (uvA) fg.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2));
     if (aoA) fg.setAttribute('aAO', new THREE.Float32BufferAttribute(A, 1));
-    fg.computeVertexNormals();
+    fg.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3));
+    if (!nA) fg.computeVertexNormals();
     fg.computeBoundingSphere();
     out.push({ geometry: fg, center: c });
   }
@@ -91,7 +104,9 @@ export class Debris {
     this.list = [];
     this.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide });
     // Sessio 25: lehtiatlasta käyttävien mallien (puut, pensaat) sirpaleet.
-    this.leafMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide, map: leafTexture, alphaTest: 0.42, alphaToCoverage: true });
+    // Sessio 30: sama kaarnapinta ja märkyys kuin pystyssä olevilla ja
+    // kaadetuilla puilla (ennen palat olivat sileitä, ilman kaarnaa).
+    this.leafMaterial = addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide, map: leafTexture, alphaTest: 0.42, alphaToCoverage: true }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 0.3, 0);
     this.chipGeo = new THREE.TetrahedronGeometry(0.06, 0);
     this.chipMats = new Map();
   }

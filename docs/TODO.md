@@ -1,6 +1,7 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 30: ote (sormet kahvan ympäri) kirveellä, viidakkoveitsellä, puukolla, kepillä ja nuijalla; soihtu ja kilpi vasemmassa; jousen ote ja nuoli käden päällä; juoksu kahdella kädellä (heiluuko vasen, täriseekö oikea); hakatun rungon palat
 - [ ] Käyttäjä testaa session 29: uudet kädet (ote kirveestä, viidakkoveitsestä, nuijasta, nyrkeistä; kilpi ja soihtu vasemmassa; jousi; hyppyisku kahdella kädellä; syöminen ja poiminta), iskujen ja torjunnan pehmeys (tuntuuko taistelun tahti samalta?), ihon mattapinta, juuret, tähdenlennot
 - [ ] Vastaus: pidetäänkö vaalea iho (käyttäjän tekstuuri) vai tummennetaanko sävyä (aiempi paikkamerkki: tumma iho, peli sijoittuu Burkina Fasoon)?
 - [ ] Animaatiot uudelle kädelle, jatko: pistot (thrust), nuijan murskaus ja osa viilloista vaativat yhä ranteen korjausta (esine kääntyy käden mukana). Jos ne näyttävät oudoilta, avainasennot kannattaa tehdä uudelleen käsivarren ehdoilla (käsi kaaressa olkapään ympäri)

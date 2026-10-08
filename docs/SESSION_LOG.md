@@ -2,6 +2,18 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-08 (sessio 30)
+**Tehtiin**
+- Ote kahvasta: `player/viewmodel.js` `measureSocket` (kahvan keskipiste ja säde esineen mallista: esineet, soihtu, jousen kahva), käsi kahvan kohdalle ja esine seuraa korjattua otetta.
+- Sormet kahvan ympäri: `player/arms.js` `setGrip` ja `_wrapPose` (nivelet koukistuvat kosketukseen asti, peukalo vastakkain, välimuisti säteen mukaan); ranne säteen mukaan (`wrist0` + `wristR`). Materiaali kaksipuolinen, sirontaa vähemmän.
+- Jousi: käsi nuolen alapuolelle (`BOW_HAND_Y`). Juoksuheilunta vasemmalle kädelle ja jouselle, oikean käden juoksutärinä pienemmäksi, otteen kierto pehmennetty (`arms.js`: `S.roll`).
+- Hakatut puut: `render/debris.js` (palojen kaarnapinta ja märkyys, alkuperäiset normaalit, rungon palat suljetaan), `game/fallen.js` (rungon väli suljetaan), `models/trees.js` (rungon porras).
+- Testattiin: otteen kalibrointi kolmesta kulmasta (keppi, viidakkoveitsi, puukko), jousi, juoksun kuvasarja, puiden vertailu (seisova ja hakattava), murskattu runko, ESLint.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute otteista ja juoksusta. Sormien geometria on mallin oma, joten hyvin ohuilla kahvoilla nivelten iho voi yhä taittua.
+- Pushaa haara, kun GitHub-tili toimii.
+
 ## 2026-10-08 (sessio 29)
 **Tehtiin**
 - Käyttäjän käsimalli peliin: FBX → GLB muunnos selaimessa (FBXLoader + GLTFExporter; luiden lepokierrot nollattu, metrit, valmiit asennot GLB:n userDataan), tekstuurit 1024 px WebP (`assets/models/arms/`).

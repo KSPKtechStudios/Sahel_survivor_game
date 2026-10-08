@@ -217,6 +217,13 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 30 (käyttäjän kertoma, 2026-10-08)
+- **Hakatut (rikotut) puut** ovat yhä huonolaatuisia.
+- **Ote ei voi olla tällainen:** sormet ovat solmussa ja niistä näkee läpi (käyttäjän kuva kepistä). **Veistä ei pidetä kunnolla kiinni.**
+- **Jousen kiinnipito-ote** ei käy järkeen (käyttäjän kuva).
+- Kun **kaksi kättä** on näkyvissä, juostessa vain toinen heiluu ja tärisee, ja **vasen käsi on paikallaan**.
+- Käyttäjän ehdotus: **erillinen socket-järjestelmä** (Socket/Attachment). Aseelle tyhjä `GripSocket`-piste, joka määrittää, mihin kohtaan kahvaa käsi asettuu. Käsi on oma mallinsa, joka kiinnitetään siihen. Sormille kierto-ohjaus tai asentologiikka, jolla ne puristuvat kahvan ympärille.
+
 ## Sessio 29 (käyttäjän kertoma, 2026-10-08)
 - **Pelaajan käsi vaihdetaan** käyttäjän antamaan malliin (FPS_Female_Arms.fbx ja kolme tekstuuria: väri, karheus, normaali), ja **animaatiot tehdään siihen sopiviksi**. Nykyinen käsi on huononäköinen.
 - **Iho ei saa kiiltää eikä näyttää muoviselta**, vaan kädeltä.

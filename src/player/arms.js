@@ -17,9 +17,17 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const DIR = 'assets/models/arms/';
-// Otteen keskipiste ranteesta (Hand-luusta): sormien suuntaan, kämmenen
-// puolelle ja rystyslinjaa pitkin (etusormen suuntaan) metreinä.
-const GRIP_AT = [0.08, 0.04, -0.006];
+// Otteen keskipiste ranteesta (Hand-luusta): sormien suuntaan ja rystyslinjaa
+// pitkin (etusormen suuntaan) metreinä. Kämmenen puolelle kahvan säteen verran
+// + kämmenen paksuus (PALM_T), jolloin kahva lepää kämmentä vasten.
+const GRIP_AT = [0.074, -0.004];
+const PALM_T = 0.024;
+// Sormien kierto kahvan ympäri (sessio 30): sormen ja peukalon säde ja
+// nivelten suurimmat koukistukset (tyvi, keski, kärki).
+const FINGER_R = 0.0085;
+const THUMB_R = 0.0105;
+const FLEX_MAX = [1.6, 1.45, 1.1];
+const THUMB_MAX = [1.0, 1.3];
 // Varren vinous kämmenessä (rad).
 const GRIP_DIAG = 0.35;
 // Olkapään (solisluun) suurin siirtymä, jotta olkavarsi ylettää kyynärpäähän.
@@ -171,6 +179,9 @@ export class Arms {
       sheen: 0.25,
       sheenRoughness: 0.75,
       sheenColor: new THREE.Color(0xffd2bc),
+      // Sessio 30: kaksipuolinen, ettei jyrkästi taipuvien nivelten kohdalla
+      // näy reikiä (iho kääntyy taitteessa nurin) eikä olkapään aukko näy.
+      side: THREE.DoubleSide,
     });
     this.material.onBeforeCompile = (sh) => {
       sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
@@ -178,7 +189,7 @@ export class Arms {
         {
           float wn = dot(normal, directionalLights[0].direction);
           float sss = max(0.0, (wn + 0.6) / 1.6) - max(0.0, wn);
-          reflectedLight.directDiffuse += directionalLights[0].color * vec3(1.0, 0.5, 0.38) * sss * 0.3 * diffuseColor.rgb;
+          reflectedLight.directDiffuse += directionalLights[0].color * vec3(1.0, 0.62, 0.52) * sss * 0.18 * diffuseColor.rgb;
         }
         #endif`);
     };
@@ -255,6 +266,11 @@ export class Arms {
     // Varattu (esim. poiminta): auki.
     lib.OPEN = lib.FLAT.map((q, i) => new THREE.Quaternion().slerp(lib.CUP[i], 0.3));
     this.lib = lib;
+    this.wrapCache = new Map();
+    // Oikean käden sormien lepopaikat kiertoratkaisijaa varten (vasen peilataan).
+    this.fingerRest = rNames.map((n) => restOf(bone(n)));
+    this.fingerNames = rNames;
+    this.fistQ = lib.FIST;
 
     for (const s of ['R', 'L']) {
       const sign = s === 'R' ? 1 : -1;
@@ -281,8 +297,12 @@ export class Arms {
       Y.crossVectors(Z, X).normalize();
       const qG0 = basisQuat(X, Y, Z, new THREE.Quaternion());
       // Otteen keskipiste levossa: kämmenen puolella sormien tyven kohdalla.
-      const Cg = Ph.clone().addScaledVector(h0, GRIP_AT[0]).addScaledVector(b0, -GRIP_AT[1]).addScaledVector(l0, GRIP_AT[2]);
-      const wrist = Ph.clone().sub(Cg).applyQuaternion(qG0.clone().invert());
+      // Ranne otteen kehyksessä kahvan säteellä r: wrist0 + r * wristR.
+      const Cg0 = Ph.clone().addScaledVector(h0, GRIP_AT[0]).addScaledVector(b0, -PALM_T).addScaledVector(l0, GRIP_AT[1]);
+      const qG0i = qG0.clone().invert();
+      const wrist0 = Ph.clone().sub(Cg0).applyQuaternion(qG0i);
+      const wristR = b0.clone().applyQuaternion(qG0i);
+      const wrist = wrist0.clone().addScaledVector(wristR, 0.015);
       const fingers = (s === 'R' ? rNames : lNames).map((n) => bone(n));
       this.sides[s] = {
         s, sign, clav, upper, fore, hand, fingers,
@@ -291,7 +311,7 @@ export class Arms {
         qU0: basisQuat(u0, bd0, n0, new THREE.Quaternion()),
         qF0: basisQuat(f0, n0, f0.clone().cross(n0), new THREE.Quaternion()),
         qG0, qG0inv: qG0.clone().invert(),
-        wrist,
+        wrist, wrist0, wristR, Ph,
         h0, l0,
         // Koukistus- ja värttinäluun puoleisen kallistuksen akselit (peilattu vasemmalle).
         flexAxis: l0.clone().multiplyScalar(sign),
@@ -315,11 +335,118 @@ export class Arms {
     }
   }
 
+  // Sessio 30: ote kahvasta (käyttäjä: "socket"-järjestelmä). Käsi asettuu
+  // kahvaan, jonka säde on r (luettu esineen mallista): kahva lepää kämmentä
+  // vasten ja sormet ja peukalo kiertyvät sen ympäri (_wrapPose).
+  setGrip(side, r) {
+    const S = this.sides[side];
+    if (!S) return;
+    r = Math.max(0.006, Math.min(0.035, r));
+    const A = this._wrapPose(r);
+    for (let i = 0; i < S.fingers.length; i++) {
+      S.tgt[i].copy(A[i]);
+      if (side === 'L') mirrorQ(S.tgt[i], S.tgt[i]);
+    }
+    S.wrist.copy(S.wrist0).addScaledVector(S.wristR, r);
+  }
+
+  // Sormien asento kahvan ympärillä (oikean käden lepokoordinaateissa, käsi
+  // lepoasennossa): jokainen nivel koukistuu tyvestä kärkeen, kunnes seuraava
+  // nivel tai sormenpää koskettaa kahvan pintaa (ei mene läpi, ei solmuun).
+  _wrapPose(r) {
+    const key = Math.round(r * 1000);
+    const hit = this.wrapCache.get(key);
+    if (hit) return hit;
+    const S = this.sides.R;
+    const P = this.fingerRest;
+    const C = S.Ph.clone().addScaledVector(S.h0, GRIP_AT[0]).addScaledVector(S.b0, -(PALM_T + r)).addScaledVector(S.l0, GRIP_AT[1]);
+    const Y = new THREE.Vector3(0, 1, 0).applyQuaternion(S.qG0);
+    const palm = S.b0.clone().negate();
+    const out = P.map(() => new THREE.Quaternion());
+    const v = new THREE.Vector3();
+    const dist = (p) => {
+      v.subVectors(p, C);
+      v.addScaledVector(Y, -v.dot(Y));
+      return v.length();
+    };
+    const seg = new THREE.Vector3(), segR = new THREE.Vector3(), child = new THREE.Vector3(), mid = new THREE.Vector3();
+    const axis = new THREE.Vector3(), q = new THREE.Quaternion();
+    // Koukistus kulmaan th: osuuko seuraava nivel tai jänteen keskikohta kahvaan?
+    const touches = (pos, th, D) => {
+      segR.copy(seg).applyQuaternion(q.setFromAxisAngle(axis, th));
+      child.copy(pos).add(segR);
+      mid.copy(pos).addScaledVector(segR, 0.5);
+      return Math.min(dist(child), dist(mid)) <= D;
+    };
+    const solveJoint = (pos, D, max) => {
+      if (touches(pos, 0, D)) {
+        // Jo kahvan sisällä: ojenna, kunnes irti.
+        let lo = -0.5, hi = 0;
+        if (touches(pos, lo, D)) return lo;
+        for (let k = 0; k < 7; k++) { const m = (lo + hi) / 2; if (touches(pos, m, D)) hi = m; else lo = m; }
+        return lo;
+      }
+      let prev = 0;
+      for (let th = 0.05; th <= max + 1e-6; th += 0.05) {
+        if (touches(pos, th, D)) {
+          let lo = prev, hi = th;
+          for (let k = 0; k < 7; k++) { const m = (lo + hi) / 2; if (touches(pos, m, D)) hi = m; else lo = m; }
+          return lo;
+        }
+        prev = th;
+      }
+      return max;
+    };
+    const Wp = new THREE.Quaternion(), Wb = new THREE.Quaternion(), pos = new THREE.Vector3();
+    // Sormet 1-4 (pikkusormi … etusormi): kämmenluu, tyvi, keski, kärki.
+    for (let f = 0; f < 4; f++) {
+      const i0 = f * 4;
+      out[i0].identity().slerp(this.fistQ[i0], 0.5); // kämmenen kaari
+      Wp.copy(out[i0]);
+      pos.subVectors(P[i0 + 1], P[i0]).applyQuaternion(Wp).add(P[i0]);
+      // Sormen sivuttaisakseli levossa (koukistusakseli).
+      const lat = new THREE.Vector3().subVectors(P[i0 + 3], P[i0 + 1]).normalize().cross(palm).normalize();
+      for (let j = 1; j <= 3; j++) {
+        const off = j < 3 ? new THREE.Vector3().subVectors(P[i0 + j + 1], P[i0 + j]) : new THREE.Vector3().subVectors(P[i0 + 3], P[i0 + 2]).multiplyScalar(0.9);
+        seg.copy(off).applyQuaternion(Wp);
+        axis.copy(lat).applyQuaternion(Wp);
+        const th = solveJoint(pos, r + FINGER_R, FLEX_MAX[j - 1]);
+        out[i0 + j].setFromAxisAngle(lat, th);
+        Wb.copy(Wp).multiply(out[i0 + j]);
+        if (j < 3) pos.add(off.applyQuaternion(Wb));
+        Wp.copy(Wb);
+      }
+    }
+    // Peukalo: tyvi vastakkain (nyrkin asennosta), sitten kaksi niveltä
+    // kiertyy kahvaa kohti.
+    out[16].identity().slerp(this.fistQ[16], 0.55);
+    Wp.copy(out[16]);
+    pos.subVectors(P[17], P[16]).applyQuaternion(Wp).add(P[16]);
+    const qa = new THREE.Vector3();
+    for (let j = 1; j <= 2; j++) {
+      const off = j < 2 ? new THREE.Vector3().subVectors(P[18], P[17]) : new THREE.Vector3().subVectors(P[18], P[17]).multiplyScalar(0.95);
+      seg.copy(off).applyQuaternion(Wp);
+      // Akseli kohti kahvan akselia.
+      v.subVectors(pos, C);
+      qa.copy(C).addScaledVector(Y, v.dot(Y)).sub(pos);
+      axis.crossVectors(seg, qa).normalize();
+      const th = solveJoint(pos, r + THUMB_R, THUMB_MAX[j - 1]);
+      const la = axis.clone().applyQuaternion(Wp.clone().invert());
+      out[16 + j].setFromAxisAngle(la, th);
+      Wb.copy(Wp).multiply(out[16 + j]);
+      if (j < 2) pos.add(off.applyQuaternion(Wb));
+      Wp.copy(Wb);
+    }
+    this.wrapCache.set(key, out);
+    return out;
+  }
+
   // Sormien ote: name = FIST | GRIP | CUP | RELAX | HOOK | OPEN | FLAT,
   // mix = 0..1 (sekoitus edelliseen nimettyyn otteeseen), snap = heti.
   setFingers(side, name, mix = 1, snap = false, name2 = null) {
     const S = this.sides[side];
     if (!S) return;
+    S.wrist.copy(S.wrist0).addScaledVector(S.wristR, 0.013);
     const A = this.lib[name] || this.lib.RELAX;
     const B = name2 ? this.lib[name2] || A : null;
     for (let i = 0; i < S.fingers.length; i++) {
@@ -357,7 +484,9 @@ export class Arms {
       th -= Math.max(-0.25, Math.min(0.25, h2 > 1e-4 ? g / h2 : g * 4));
       th = Math.max(-ROLL_MAX, Math.min(ROLL_MAX, th));
     }
-    S.roll = th;
+    // Pehmeästi: ratkaisu ei saa hyppiä ruudusta toiseen (tärinä).
+    S.roll += (th - S.roll) * (dt > 0 ? 1 - Math.exp(-dt * 12) : 1);
+    th = S.roll;
     _qg.setFromAxisAngle(_yw, th).multiply(gripQuat);
     gripQuat = _qg;
     // Käden kierto ja ranteen paikka.

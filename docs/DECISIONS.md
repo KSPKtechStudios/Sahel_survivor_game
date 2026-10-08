@@ -2,6 +2,13 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-08 (sessio 30)
+- **Ote "socket"-periaatteella (käyttäjän ehdotus):** kahvan kohta mitataan esineen mallista (keskipiste ja säde 3 cm:n viipaleesta otteen kohdalla). Käsi asettuu siihen, ja käsivarsi seuraa IK:lla. Erillisiä socket-pisteitä ei kirjoitettu käsin jokaiselle esineelle. Syy: kymmenille esineille, myös tuleville, sama mittaus toimii automaattisesti.
+- **Sormet ratkaistaan geometrisesti** eikä valmiista asennoista: jokainen nivel koukistuu, kunnes seuraava nivel, jänteen keskikohta tai sormenpää koskettaa kahvaa (sormen säde 8,5 mm, peukalon 10,5 mm). Tulos lasketaan kerran kahvan paksuutta kohti ja tallennetaan välimuistiin. Syy: kivääriasennosta kopioidut sormet menivät solmuun ja kahvan läpi.
+- **Käden materiaali kaksipuolinen.** Syy: jyrkästi taipuvissa nivelissä ihon kolmiot kääntyvät nurin, jolloin näkyi reikiä.
+- **Jousen kahvassa käsi 4,8 cm nuolen alapuolella.** Syy: nuoli lepää käden päällä kuten oikeassa jousiammunnassa.
+- **Murskattujen palojen alkuperäiset normaalit säilytetään, ja rungon palat suljetaan.** Syy: uudelleen lasketut normaalit tekivät paloista särmikkäitä, ja avoimet kuoret näyttivät ontoilta.
+
 ## 2026-10-08 (sessio 29)
 - **Käsimalli muunnettiin FBX:stä GLB:ksi** (`assets/models/arms/arms.glb`, 1,4 Mt; kolmiot ennallaan, kaksoisverteksit yhdistetty). Luiden lepokierrot nollattiin ja yksiköt muutettiin metreiksi, ja mallin valmiit asennot (nyrkki, kivääriote ym.) tallennettiin GLB:hen. Syy: pelissä on valmiina GLTF-lataaja, eikä FBX-lataajaa tarvita pelissä. Nollatut lepokierrot yksinkertaistavat IK:n.
 - **Tekstuurit 1024 px WebP-kuvina** (yhteensä n. 160 kt). Karheuskartta skaalattiin välille 0,6–0,8 (alkuperäinen n. 0,4 näytti muovilta). Syy: pieni lataus ja vähän muistia, iho mattapintaiseksi käyttäjän toiveen mukaan.

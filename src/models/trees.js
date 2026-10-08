@@ -255,7 +255,7 @@ export function makeJungleTree(seed, q = 1) {
     const rm = r0 + (r1 - r0) * ((3.2 - base.y) / (top.y - base.y));
     parts.push(tag(paint(limb(base, cut, r0, rc, 12, false, 9), bark, { rand: jr() }), 'trunk'));
     parts.push(tag(paint(limb(cut, mid, rc, rm, 12, false, 6), bark, { rand: jr() }), 'trunk'));
-    parts.push(tag(paint(limb(mid, top, rm, r1, 8, false, 3), bark, { rand: jr() }), 'trunk'));
+    parts.push(tag(paint(limb(mid, top, rm, r1, 12, false, 3), bark, { rand: jr() }), 'trunk')); // sessio 30: sama sivumäärä (ei porrasta)
   } else {
     jr(); jr(); jr();
     parts.push(paint(limb(base, top, r0, r1, q ? 8 : 5, false, q ? 3 : 1), bark, { rand: partRand(seed, 99) }));

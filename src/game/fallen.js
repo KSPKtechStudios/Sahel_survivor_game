@@ -352,7 +352,9 @@ export class FallenTrees {
 
     // Runko hajoaa: palat lentävät ja puut putoavat maahan.
     log.mesh.updateMatrixWorld(true);
-    this.debris.shatter(log.mesh.geometry, log.mesh.matrixWorld, { pieces: 14, inner: 0xc9a679, power: 2, life: 2.4, seed: (Math.random() * 1e9) | 0, closed: false });
+    // Sessio 30: rungon palat umpinaisia (sisältä tuoretta puuta), oksat ja lehdet avoimia.
+    const trunk = log.mesh.geometry.userData.ranges && log.mesh.geometry.userData.ranges.trunk;
+    this.debris.shatter(log.mesh.geometry, log.mesh.matrixWorld, { pieces: 14, inner: 0xc9a679, power: 2, life: 2.4, seed: (Math.random() * 1e9) | 0, closed: trunk || false });
     this._trunkWorld(log, _a, _b);
     for (const [item, n] of def.log.drops) {
       for (let i = 0; i < n; i++) {

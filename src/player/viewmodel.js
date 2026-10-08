@@ -258,6 +258,7 @@ export class ViewModel {
     this.gripK = 0;
 
     this.items = {};
+    this.sockets = {};  // sessio 30: kahvan keskipiste ja säde otteen kohdalla
     for (const [id, geo] of Object.entries(itemGeometries)) {
       const m = new THREE.Mesh(geo, itemMat);
       const h = holdFor(id);
@@ -268,6 +269,7 @@ export class ViewModel {
       attachGlow(m);
       this.anim.add(m);
       this.items[id] = m;
+      if (h) this.sockets[id] = measureSocket(m);
     }
 
     // Soihdun liekki (kädessä olevan soihdun kärjessä)
@@ -292,7 +294,7 @@ export class ViewModel {
       body.scale.setScalar(BOW_SCALE);
       body.visible = false;
       this.bowGroup.add(body);
-      this.bowBodies[id] = { body, pts: bowPoints(style.recurve, 10, style.long || 1) };
+      this.bowBodies[id] = { body, pts: bowPoints(style.recurve, 10, style.long || 1), sock: measureSocket(body, BOW_HAND_Y) };
     }
     const strGeo = new THREE.CylinderGeometry(0.0022, 0.0022, 1, 4);
     strGeo.translate(0, 0.5, 0);
@@ -326,6 +328,7 @@ export class ViewModel {
     this.leftTorch.position.set(0, -0.04, 0);
     this.leftTorch.scale.setScalar(0.6);
     this.leftTorch.visible = false;
+    this.torchSock = measureSocket(this.leftTorch);
     this.leftAnim.add(this.shieldMesh, this.leftTorch, this.leftArm);
     this.leftFlames = [];
     for (let i = 0; i < 2; i++) {
@@ -546,7 +549,7 @@ export class ViewModel {
       this.basePos.z + sinP * 0.02 * sp,
     );
     this.root.rotation.set(
-      this.baseRot.x - sp * 0.34 + sinP * 0.1 * sp + step * 0.015 * bob + lowered * 0.5 + this.sway.y * 1.2,
+      this.baseRot.x - sp * 0.34 + sinP * 0.06 * sp + step * 0.015 * bob + lowered * 0.5 + this.sway.y * 1.2,
       this.baseRot.y + sp * 0.24 - this.sway.x * 1.4,
       this.baseRot.z + cosP * 0.028 * bob + this.sway.x * 0.8,
     );
@@ -669,14 +672,16 @@ export class ViewModel {
       const tp = smooth(this.torchPose);
       // Soihtu pidetään pystymmässä ja hieman edempänä kuin kilpi.
       this.left.position.set(
-        -0.36 + 0.07 * tp + 0.22 * sb + this.sway.x * 0.8 - cosP * 0.008 * amp,
-        -0.34 + 0.07 * tp + 0.12 * sb + this.sway.y * 0.8 - step * 0.014 * amp - hide * 0.35 - sp * 0.05 - this.crouchBlend * 0.01 + breathe,
-        -0.52 - 0.06 * tp + 0.08 * sb + this.impact * 0.05 * sb - parryK * 0.1,
+        // Sessio 30: sama kävely- ja juoksuheilunta kuin oikealla kädellä,
+        // vastavaiheessa (kädet heiluvat vuorotellen).
+        -0.36 + 0.07 * tp + 0.22 * sb + this.sway.x * 0.8 - cosP * 0.011 * amp - sp * 0.01,
+        -0.34 + 0.07 * tp + 0.12 * sb + this.sway.y * 0.8 - step * 0.016 * amp - hide * 0.35 - sp * 0.045 - this.crouchBlend * 0.012 + breathe,
+        -0.52 - 0.06 * tp + 0.08 * sb + this.impact * 0.05 * sb - parryK * 0.1 - sinP * 0.02 * sp,
       );
       this.left.rotation.set(
-        0.18 - 0.08 * tp - 0.12 * sb + this.sway.y * 0.8 + this.impact * 0.1 * sb - sp * 0.2,
-        0.95 - 0.7 * tp - 0.8 * sb - this.sway.x * 1.2 + parryK * 0.2,
-        0.12 - 0.22 * tp - 0.1 * sb,
+        0.18 - 0.08 * tp - 0.12 * sb + this.sway.y * 0.8 + this.impact * 0.1 * sb - sp * 0.28 - sinP * 0.06 * sp + step * 0.015 * bob,
+        0.95 - 0.7 * tp - 0.8 * sb - this.sway.x * 1.2 + parryK * 0.2 - sp * 0.15,
+        0.12 - 0.22 * tp - 0.1 * sb - cosP * 0.028 * bob,
       );
     }
     this._updateArms(dt, player);
@@ -716,12 +721,19 @@ ViewModel.prototype._updateBow = function (dt, player, bob, sinP, cosP, step, am
   // (yläpää kallistuu hieman oikealle).
   const g = this.bowGroup;
   // Jännitettynä nuoli osoittaa tähtäimeen (jousi vasemmalla alhaalla).
+  // Sessio 30: kävely- ja juoksuheilunta koko jouselle (molemmat kädet
+  // liikkuvat yhdessä; jännitettynä vähemmän).
+  const bw = 1 - 0.6 * d;
   g.position.set(
-    -0.24 + 0.11 * d + this.sway.x * 0.8 - cosP * 0.008 * amp,
-    -0.26 + 0.16 * d + this.sway.y * 0.8 - step * 0.014 * amp * (1 - d) - hide * 0.4 - sp * 0.05 + breathe,
-    -0.62,
+    -0.24 + 0.11 * d + this.sway.x * 0.8 - cosP * 0.011 * amp * bw,
+    -0.26 + 0.16 * d + this.sway.y * 0.8 - step * 0.016 * amp * bw - hide * 0.4 - sp * 0.05 + breathe,
+    -0.62 - sinP * 0.015 * sp,
   );
-  g.rotation.set(0.1 + 0.06 * d + this.sway.y * 0.6 - sp * 0.2, 0.25 - 0.45 * d - this.sway.x * 0.8, -0.35 + 0.13 * d + kick * 0.03);
+  g.rotation.set(
+    0.1 + 0.06 * d + this.sway.y * 0.6 - sp * 0.2 - sinP * 0.05 * sp + step * 0.012 * bob * bw,
+    0.25 - 0.45 * d - this.sway.x * 0.8,
+    -0.35 + 0.13 * d + kick * 0.03 - cosP * 0.02 * bob * bw,
+  );
   for (const [id, b] of Object.entries(this.bowBodies)) b.body.visible = id === this.current;
   const bb = this.bowBodies[this.current];
   if (!bb) return;
@@ -785,7 +797,29 @@ const HANG_Q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().
 const SHIELD_GRIP_Q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2);
 const SHIELD_GRIP_P = new THREE.Vector3(0, 0, 0.03);
 const TORCH_GRIP_Q = new THREE.Quaternion();
-const TORCH_GRIP_P = new THREE.Vector3(0, 0, 0);
+const SHIELD_R = 0.014;
+// Jousen kahvassa käsi on nuolen alapuolella (nuoli kulkee y = 0).
+const BOW_HAND_Y = -0.048;
+const _sv = new THREE.Vector3();
+
+// Sessio 30: esineen kahva ("socket", käyttäjän ehdotus): keskipiste ja säde
+// otteen kohdalla (y0) luetaan esineen mallista vanhemman koordinaateissa.
+// Käsi asettuu tähän ja sormet kiertyvät kahvan ympäri (arms.js).
+function measureSocket(mesh, y0 = 0) {
+  mesh.updateMatrix();
+  const pa = mesh.geometry.attributes.position;
+  const xs = [], zs = [];
+  for (let i = 0; i < pa.count; i++) {
+    _sv.fromBufferAttribute(pa, i).applyMatrix4(mesh.matrix);
+    if (Math.abs(_sv.y - y0) < 0.03) { xs.push(_sv.x); zs.push(_sv.z); }
+  }
+  if (xs.length < 6) return { x: 0, z: 0, r: 0.015 };
+  let cx = 0, cz = 0;
+  for (let i = 0; i < xs.length; i++) { cx += xs[i]; cz += zs[i]; }
+  cx /= xs.length; cz /= xs.length;
+  const rs = xs.map((x, i) => Math.hypot(x - cx, zs[i] - cz)).sort((a, b) => a - b);
+  return { x: cx, z: cz, r: rs[Math.floor(rs.length * 0.6)] };
+}
 const PUNCHES = new Set(['punch', 'punchB', 'punchC', 'punchD', 'uppercut', 'hook']);
 const _am = new THREE.Matrix4();
 const _ap = new THREE.Vector3();
@@ -833,9 +867,16 @@ ViewModel.prototype._updateArms = function (dt, player) {
   else if (a && a.type === 'eat') fr = 'CUP';
   else if (this.current) fr = cupHold(this.current) ? 'CUP' : 'GRIP';
   else if (this.fistT > 0) fr = 'FIST';
-  A.setFingers('R', fr);
+  // Kahvallinen esine: käsi kahvan kohdalle (socket) ja sormet sen ympärille.
+  const sock = fr === 'GRIP' ? this.sockets[this.current] : null;
+  if (sock) {
+    _ap.add(_w.set(sock.x, 0, sock.z).applyQuaternion(_aq));
+    A.setGrip('R', sock.r);
+  } else A.setFingers('R', fr);
   const R = A.solve('R', _ap, _aq, POLE_R, dt);
   if (R) {
+    // Esine seuraa kättä (otteen kohta takaisin esineen origoon).
+    if (sock) R.outPos.sub(_w.set(sock.x, 0, sock.z).applyQuaternion(R.outQuat));
     _am.compose(R.outPos, R.outQuat, ONE);
     _am2.copy(this.root.matrix).invert().multiply(_am).decompose(this.anim.position, this.anim.quaternion, _as);
     this.anim.updateMatrix();
@@ -845,6 +886,7 @@ ViewModel.prototype._updateArms = function (dt, player) {
   _lp.copy(HANG_POS);
   _lq.copy(HANG_Q);
   let fl = 'RELAX';
+  let rl = 0.015;
   let kOff = 0;
   this.leftAnim.position.set(0, 0, 0);
   this.leftAnim.quaternion.identity();
@@ -854,22 +896,25 @@ ViewModel.prototype._updateArms = function (dt, player) {
     _gp.copy(this.left.position);
     const tp = smooth(this.torchPose);
     _offQ.slerpQuaternions(SHIELD_GRIP_Q, TORCH_GRIP_Q, tp);
-    _offP.lerpVectors(SHIELD_GRIP_P, TORCH_GRIP_P, tp);
+    _offP.lerpVectors(SHIELD_GRIP_P, _w.set(this.torchSock.x, 0, this.torchSock.z), tp);
     _gp.add(_w.copy(_offP).applyQuaternion(_gq));
     _gq.multiply(_offQ);
     kOff = smooth(this.shieldT);
     _lp.lerp(_gp, kOff);
     _lq.slerp(_gq, kOff);
-    if (kOff > 0.3) fl = 'GRIP';
+    if (kOff > 0.3) { fl = 'GRIP'; rl = tp > 0.5 ? this.torchSock.r : SHIELD_R; }
   }
   let kBow = 0;
   if (this.bowMode && this.bowGroup.visible) {
     this.bowGroup.updateMatrix();
     this.bowGroup.matrix.decompose(_gp, _gq, _as);
+    // Käsi jousen kahvassa nuolen alapuolella (nuoli lepää käden päällä).
+    const bs = (this.bowBodies[this.current] || {}).sock || { x: 0, z: 0, r: 0.015 };
+    _gp.copy(_w.set(bs.x, BOW_HAND_Y, bs.z).applyMatrix4(this.bowGroup.matrix));
     kBow = smooth(this.bowT);
     _lp.lerp(_gp, kBow);
     _lq.slerp(_gq, kBow);
-    if (kBow > 0.3) fl = 'GRIP';
+    if (kBow > 0.3) { fl = 'GRIP'; rl = bs.r; }
   }
   let kGrip = 0;
   if (this.gripK > 0.01) {
@@ -878,9 +923,10 @@ ViewModel.prototype._updateArms = function (dt, player) {
     kGrip = smooth(this.gripK);
     _lp.lerp(_gp, kGrip);
     _lq.slerp(_gq, kGrip);
-    if (kGrip > 0.3) fl = 'GRIP';
+    if (kGrip > 0.3) { fl = 'GRIP'; rl = (sock && sock.r) || 0.016; }
   }
-  A.setFingers('L', fl);
+  if (fl === 'GRIP') A.setGrip('L', rl);
+  else A.setFingers('L', fl);
   const L = A.solve('L', _lp, _lq, POLE_L, dt, kBow > 0.01 || kGrip > 0.01);
   // Kilpi / soihtu seuraa ranteen rajoilla korjattua otetta.
   if (L && kOff > 0.01 && kBow < 0.01 && kGrip < 0.01) {
