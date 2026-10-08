@@ -10,6 +10,7 @@
 // Sessio 22: harvest.minTier = kirveen / hakun vähimmäistaso (1 kivi, 2 piikivi,
 // 3 kupari, 4 rauta), peel = baobabin kuorinta ennen kaatamista, noChain = ei
 // kaadu toisen puun ketjureaktiossa, stumpR = kannon törmäyssäde.
+// surface (sessio 23) = pintatekstuuri: 'rock' | 'wood' | 'earth' (materials.js).
 // HUOM: tiheydet, saaliit ja kestävyydet ovat prototyypin paikkamerkkejä.
 
 export const OBJECT_TYPES = {
@@ -73,7 +74,7 @@ export const OBJECT_TYPES = {
     log: { name: 'Kaadettu baobab', hp: 12, drops: [['heartwood', 6], ['wood', 3], ['baobab_fruit', 2]] },
   },
   deadTree: {
-    name: 'Kuollut puu', model: 'deadTree', kind: 'bush', material: 'solid', castShadow: true,
+    name: 'Kuollut puu', model: 'deadTree', kind: 'bush', material: 'solid', surface: 'wood', castShadow: true,
     density: { desert: 0.5, dunes: 0.35, savanna: 0.15, mountains: 0.35, laterite: 0.2 },
     scale: [0.8, 1.3], maxSlope: 0.5, collider: 0.22, hit: { y: 1.0, r: 0.6 }, drawDist: 99,
     harvest: { tool: 'axe', hp: 3, drops: [['wood', 2], ['stick', 2]], needMsg: 'Tarvitset kirveen' },
@@ -97,13 +98,13 @@ export const OBJECT_TYPES = {
     harvest: { tool: null, hp: 4, drops: [['bamboo', 3], ['stick', 1]] },
   },
   log: {
-    name: 'Lahopuu', model: 'log', kind: 'bush', material: 'solid', castShadow: false,
+    name: 'Lahopuu', model: 'log', kind: 'bush', material: 'solid', surface: 'wood', castShadow: false,
     density: { savanna: 0.45, woodland: 1.2, mare: 0.3, laterite: 0.15 },
     scale: [0.9, 1.2], maxSlope: 0.4, collider: 0, hit: { y: 0.3, r: 1.0 }, drawDist: 4,
     harvest: { tool: 'axe', hp: 3, drops: [['wood', 2], ['stick', 1]], needMsg: 'Tarvitset kirveen' },
   },
   mossyLog: {
-    name: 'Sammaloitunut runko', model: 'mossyLog', kind: 'bush', material: 'solid', castShadow: false,
+    name: 'Sammaloitunut runko', model: 'mossyLog', kind: 'bush', material: 'solid', surface: 'wood', castShadow: false,
     density: { rainforest: 2.4 },
     scale: [0.9, 1.3], maxSlope: 0.5, collider: 0, hit: { y: 0.3, r: 1.0 }, drawDist: 3,
     harvest: { tool: 'axe', hp: 3, drops: [['wood', 2], ['fiber', 1]], needMsg: 'Tarvitset kirveen' },
@@ -132,41 +133,41 @@ export const OBJECT_TYPES = {
     scale: [0.8, 1.3], maxSlope: 0.7, collider: 0.35, hit: { y: 1.2, r: 0.5 } /* sessio 20: nimilappu */, drawDist: 4,
   },
   stick: {
-    name: 'Risu', model: 'stick', kind: 'pickup', material: 'solid', castShadow: false,
+    name: 'Risu', model: 'stick', kind: 'pickup', material: 'solid', surface: 'wood', castShadow: false,
     density: { savanna: 7, woodland: 14, mare: 4, laterite: 2, dunes: 1, desert: 0.3, rainforest: 10, mountains: 1.5, oasis: 3 },
     scale: [0.9, 1.1], maxSlope: 0.6, collider: 0, hit: { y: 0.05, r: 0.42 }, drawDist: 2,
     pickup: { item: 'stick', count: 1 },
   },
   stone: {
-    name: 'Kivi', model: 'stone', kind: 'pickup', material: 'solid', castShadow: false,
+    name: 'Kivi', model: 'stone', kind: 'pickup', material: 'solid', surface: 'rock', castShadow: false,
     density: { savanna: 5, woodland: 3, mare: 2, laterite: 16, dunes: 0.6, desert: 2.5, rainforest: 3, mountains: 14, oasis: 1 },
     scale: [0.85, 1.25], maxSlope: 0.8, collider: 0, hit: { y: 0.08, r: 0.32 }, drawDist: 2,
     pickup: { item: 'stone', count: 1 },
   },
   driftwood: {
-    name: 'Ajopuu', model: 'driftwood', kind: 'pickup', material: 'solid', castShadow: false,
+    name: 'Ajopuu', model: 'driftwood', kind: 'pickup', material: 'solid', surface: 'wood', castShadow: false,
     density: { beach: 5 },
     scale: [0.9, 1.2], maxSlope: 0.6, collider: 0, hit: { y: 0.08, r: 0.55 }, drawDist: 2,
     pickup: { item: 'wood', count: 1 },
   },
   boulder: {
-    name: 'Lohkare', model: 'boulder', kind: 'rock', material: 'solid', castShadow: true,
+    name: 'Lohkare', model: 'boulder', kind: 'rock', material: 'solid', surface: 'rock', castShadow: true,
     density: { savanna: 0.9, woodland: 0.6, mare: 0.4, laterite: 5, dunes: 0.3, desert: 0.9, rainforest: 0.8, mountains: 10, beach: 0.6, rock: 22, mesa: 5 },
     scale: [0.7, 1.6], maxSlope: 1, collider: 1.05, hit: { y: 0.5, r: 1.25 }, drawDist: 99,
     harvest: { tool: 'pickaxe', hp: 4, drops: [['stone', 4]], needMsg: 'Liian kovaa!' },
   },
   outcrop: {
-    name: 'Kalliomuodostelma', model: 'outcrop', kind: 'static', material: 'solid', castShadow: true,
+    name: 'Kalliomuodostelma', model: 'outcrop', kind: 'static', material: 'solid', surface: 'rock', castShadow: true,
     density: { desert: 0.8, mountains: 1.2, laterite: 0.35 },
     scale: [0.8, 1.6], maxSlope: 1, collider: 1.7, hit: { y: 1.1, r: 1.8 } /* sessio 20: nimilappu */, drawDist: 99,
   },
   spire: {
-    name: 'Kalliotorni', model: 'spire', kind: 'static', material: 'solid', castShadow: true,
+    name: 'Kalliotorni', model: 'spire', kind: 'static', material: 'solid', surface: 'rock', castShadow: true,
     density: { mountains: 1.5 },
     scale: [0.8, 1.5], maxSlope: 1, collider: 1.5, hit: { y: 1.8, r: 1.5 } /* sessio 20: nimilappu */, drawDist: 99,
   },
   termite: {
-    name: 'Termiittikeko', model: 'termite', kind: 'static', material: 'solid', castShadow: true,
+    name: 'Termiittikeko', model: 'termite', kind: 'static', material: 'solid', surface: 'earth', castShadow: true,
     density: { savanna: 1.2, woodland: 1.6, mare: 0.3, laterite: 0.8, rainforest: 0.15 },
     scale: [0.8, 1.3], maxSlope: 0.4, collider: 0.75, hit: { y: 0.9, r: 0.85 } /* sessio 20: nimilappu */, drawDist: 99,
   },
@@ -217,7 +218,7 @@ export const OBJECT_TYPES = {
     pickup: { drops: [['bone', 2, 4]] },
   },
   scree: {
-    name: 'Kivikko', model: 'scree', kind: 'decor', material: 'solid', castShadow: false, decorative: true,
+    name: 'Kivikko', model: 'scree', kind: 'decor', material: 'solid', surface: 'rock', castShadow: false, decorative: true,
     density: { mountains: 30, rock: 25, mesa: 20, beach: 4 },
     scale: [0.8, 1.6], maxSlope: 1, collider: 0, hit: null,
   },
@@ -297,7 +298,7 @@ export const OBJECT_TYPES = {
     pickup: { drops: [['fonio', 2, 4]] },
   },
   clayLump: {
-    name: 'Savikokkare', model: 'clayLump', kind: 'pickup', material: 'solid', castShadow: false,
+    name: 'Savikokkare', model: 'clayLump', kind: 'pickup', material: 'solid', surface: 'earth', castShadow: false,
     density: { mare: 1.5, rainforest: 0.8, savanna: 0.5, woodland: 0.5, oasis: 1 },
     scale: [0.85, 1.2], maxSlope: 0.7, collider: 0, hit: { y: 0.08, r: 0.45 }, drawDist: 2,
     nearWater: true,

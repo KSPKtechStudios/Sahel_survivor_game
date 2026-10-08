@@ -1324,6 +1324,25 @@ export function groundColor(x, z, s, slope, out) {
   return out;
 }
 
+// Sessio 23: maalajien painot maaston tekstuureille (materials.js):
+// out = [hiekka, kuiva maa, metsänpohja, kallio], summa 1. slope: 0..1.
+export function groundWeights(x, z, s, slope, out) {
+  const dryOasis = s.oasis > 0 ? smoothstep(1.4, 2.6, s.h) : 0;
+  let sand = s.dunes + s.desert + s.beach + s.ocean + s.oasis * dryOasis * 0.8;
+  let soil = s.savanna + s.laterite + s.woodland + s.mare * 0.75 + s.mountains * 0.35;
+  let forest = s.rainforest + s.oasis * (1 - dryOasis * 0.8) + s.mare * 0.25;
+  let rock = s.mountains * 0.65;
+  const sum = sand + soil + forest + rock || 1;
+  sand /= sum; soil /= sum; forest /= sum; rock /= sum;
+  // Peittävät kerrokset kuten väreissä: jyrkät rinteet, graniitti, pöytävuoret.
+  const over = (t) => { sand *= 1 - t; soil *= 1 - t; forest *= 1 - t; rock = rock * (1 - t) + t; };
+  over(smoothstep(0.35, 0.7, slope) * 0.85);
+  if (s.rock > 0) over(s.rock * (0.55 + 0.45 * slope));
+  if (s.mesa > 0) over(s.mesa * Math.min(1, 0.35 + slope * 1.5));
+  out[0] = sand; out[1] = soil; out[2] = forest; out[3] = rock;
+  return out;
+}
+
 // Kartan väri (sRGB 0..255).
 const _mapCache = {};
 export function mapColorRGB(x, z, out) {

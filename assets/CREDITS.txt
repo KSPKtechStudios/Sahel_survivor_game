@@ -1,0 +1,16 @@
+Sahel – ulkopuoliset materiaalit
+================================
+
+Tekstuurit ja mallit ovat CC0-lisensoituja (public domain): ne saa käyttää
+vapaasti ilman mainintaa. Lähteet kirjataan silti tähän.
+
+Tekstuurit (assets/textures/), ambientCG (https://ambientcg.com), CC0:
+  sand    = Ground054      soil   = Ground072      forest = Ground078
+  rock    = Rock030        bark   = Bark014        planks = Planks012
+  (1K-JPG; väri- ja normaalikartta, uudelleenpakattu JPEG:ksi)
+
+Mallit (assets/models/, src/models/scanned/), Poly Haven (https://polyhaven.com), CC0:
+  rocks/boulder_02..06 = namaqualand_boulder_02 .. namaqualand_boulder_06
+  (1k glTF, kevennetty gltf-transform + meshoptimizer)
+
+Fontit: ks. assets/fonts (OFL).

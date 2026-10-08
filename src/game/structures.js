@@ -5,6 +5,7 @@
 // valot annetaan lähimmille, joten valojen määrä ei muutu eikä shadereita
 // tarvitse kääntää uudelleen. Lattiat ovat kävelypintoja (world.platforms).
 import * as THREE from 'three';
+import { addSurfaceDetail } from '../render/surfaces.js';
 import { createFlameTexture } from '../render/textures.js';
 import { PIECES } from './pieces.js';
 import { STATIONS } from './items.js';
@@ -19,7 +20,12 @@ export class Structures {
     this.world = world;
     this.list = [];
     this.geos = models.build;
-    this.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
+    // Sessio 23: rakennelmien laudat, saviseinät ja kivet teksturoituina.
+    this.material = addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 }), [
+      { layer: 'planks', mask: 'darkWood', scale: 1.6, strength: 0.9 },
+      { layer: 'soil', mask: 'warm', scale: 1.8, strength: 0.8 },
+      { layer: 'rock', mask: 'grey', scale: 2.0, strength: 0.85 },
+    ]);
     this.flameMat = new THREE.SpriteMaterial({
       map: createFlameTexture(),
       blending: THREE.AdditiveBlending,

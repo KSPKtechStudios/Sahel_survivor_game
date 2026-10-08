@@ -1,5 +1,6 @@
 // Sahel: käynnistys, tilat (päävalikko / lataus / peli / tauko / reppu) ja pääsilmukka.
 import * as THREE from 'three';
+import { loadSurfaces, addSurfaceDetail } from './render/surfaces.js';
 import { updateGlow } from './render/itemGlow.js';
 import { CONFIG } from './config.js';
 import { createGroundDetailTexture } from './render/textures.js';
@@ -79,7 +80,9 @@ const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerH
 
 // --- Järjestelmät -------------------------------------------------------------
 const materials = createSharedMaterials(createGroundDetailTexture());
-const activeMaterial = addWet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 }), 1, 0.3);
+// Hakattavat ja kaatuvat puut: sama kaarna kuin seisovissa (sessio 23).
+const activeMaterial = addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 1, 0.3);
+loadSurfaces(renderer);
 const models = createModelLibrary();
 const sky = new Sky(scene);
 materials.water = createWaterMaterial(sky);

@@ -5,6 +5,7 @@
 // vesiraja. Mallit palauttavat ryhmän ja liikkuvat osat (airot, purjeet,
 // raakapuut, viirit, ruori), joita game/boats.js animoi.
 import * as THREE from 'three';
+import { addSurfaceDetail } from '../render/surfaces.js';
 import { mulberry32 } from '../noise.js';
 import { V, paint, limb, merge } from './util.js';
 
@@ -371,7 +372,7 @@ function sailMaterial() {
 
 function boatMaterials() {
   return {
-    wood: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.88 }),
+    wood: addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.88 }), 'planks', { scale: 1.6, strength: 0.85, mask: 'notGreen' }),
     sail: sailMaterial(),
   };
 }

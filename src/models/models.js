@@ -5,7 +5,8 @@
 // nimillä (ks. docs/DECISIONS.md).
 import { makeAcacia, makeBaobab, makeJungleTree, makePalm, makeCanopyTree, makeDeadTree } from './trees.js';
 import { makeBush, makeFern, makeTumbleweed, makeGrassTuft, makeBamboo, makeThicket, makeEuphorbia, makeReeds, makeUndergrowth } from './plants.js';
-import { makeGroundStick, makeStone, makeBoulder, makeTermiteMound, makeOutcrop, makeSpire } from './rocks.js';
+import { makeGroundStick, makeStone, makeTermiteMound, makeOutcrop, makeSpire } from './rocks.js';
+import { scannedBoulder, SCANNED_BOULDER_COUNT } from './scanned/build.js';
 import { makeCampfireBase, createItemModels } from './items.js';
 import { createBuildModels } from './building.js';
 import {
@@ -26,7 +27,8 @@ const VARIANTS = {
   fern: [makeFern, 3, 31],
   stick: [makeGroundStick, 3, 4],
   stone: [makeStone, 3, 5],
-  boulder: [makeBoulder, 3, 6],
+  // Sessio 23: skannatut Namaqualand-lohkareet (Poly Haven, CC0).
+  boulder: [(s, q) => scannedBoulder(Math.round((s - 6) / 101), q), SCANNED_BOULDER_COUNT, 6],
   termite: [makeTermiteMound, 2, 7],
   grass: [(s) => makeGrassTuft(s, 'dry'), 3, 8],
   grassGreen: [(s) => makeGrassTuft(s, 'green'), 3, 41],
@@ -76,7 +78,7 @@ const VARIANTS = {
 // Mallit, joilla on kevyt kaukoversio (ilman varjoa).
 const HAS_FAR = new Set(['acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut']);
 // Mallit, joista tehdään tiheärunkoinen versio hakkaamista varten.
-const HAS_HI = new Set(['acacia', 'jungle', 'palm', 'canopy', 'shea', 'doum', 'coconut']);
+const HAS_HI = new Set(['acacia', 'jungle', 'palm', 'canopy', 'shea', 'doum', 'coconut', 'baobab']);
 
 function seedsFor(model) {
   const [, n, base] = VARIANTS[model];

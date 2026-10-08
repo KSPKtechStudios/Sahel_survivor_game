@@ -4,7 +4,7 @@
 import { CONFIG } from '../config.js';
 import { mulberry32, hashSeed } from '../noise.js';
 import {
-  sampleTerrain, heightAt, groundColor, getWorldSeed, BIOME_KEYS, insideStructure, mapColorRGB,
+  sampleTerrain, heightAt, groundColor, groundWeights, getWorldSeed, BIOME_KEYS, insideStructure, mapColorRGB,
 } from './terrain.js';
 import { OBJECT_TYPES, OBJECT_TYPE_KEYS, DECOR_TYPES } from './objectTypes.js';
 import { openFactor } from './waves.js';
@@ -57,7 +57,9 @@ export function generateChunk(cx, cz, variantCounts) {
   const normals = new Float32Array(row * row * 3);
   const colors = new Float32Array(row * row * 3);
   const uvs = new Float32Array(row * row * 2);
+  const gw = new Float32Array(row * row * 4);
   const col = [0, 0, 0];
+  const gwv = [0, 0, 0, 0];
   const uvOx = Math.floor(x0 / 3) * 3;
   const uvOz = Math.floor(z0 / 3) * 3;
   let minH = Infinity;
@@ -86,6 +88,8 @@ export function generateChunk(cx, cz, variantCounts) {
       colors[v * 3] = col[0];
       colors[v * 3 + 1] = col[1];
       colors[v * 3 + 2] = col[2];
+      groundWeights(x, z, samples[v], 1 - ny, gwv);
+      gw[v * 4] = gwv[0]; gw[v * 4 + 1] = gwv[1]; gw[v * 4 + 2] = gwv[2]; gw[v * 4 + 3] = gwv[3];
       uvs[v * 2] = (x - uvOx) / 3;
       uvs[v * 2 + 1] = (z - uvOz) / 3;
       rain += samples[v].rainforest;
@@ -181,7 +185,7 @@ export function generateChunk(cx, cz, variantCounts) {
 
   return {
     cx, cz, minH, rain: rain / (row * row),
-    positions, normals, colors, uvs,
+    positions, normals, colors, uvs, gw,
     objects: new Float32Array(objs),
     decor: new Float32Array(decor),
     water,

@@ -11,6 +11,7 @@
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 import { OBJECT_TYPES, OBJECT_TYPE_KEYS, DECOR_TYPES } from './objectTypes.js';
+import { scannedMaterial } from '../render/scannedMaterials.js';
 import { InstancePool } from './instancePool.js';
 import { GenPool } from './genPool.js';
 import { OBJ_STRIDE, DECOR_STRIDE } from './chunkGen.js';
@@ -72,13 +73,14 @@ export class World {
       const near = models.world[def.model];
       const far = models.far[def.model];
       variantCounts[def.model] = near.length;
-      const mat = materials[def.material];
+      const mat = (def.surface && materials[`${def.material}_${def.surface}`]) || materials[def.material];
       this.pools[type] = {
-        near: near.map((geo) => new InstancePool(scene, geo, mat, { capacity: def.decorative ? 4096 : 256, castShadow: def.castShadow })),
-        far: far ? far.map((geo) => new InstancePool(scene, geo, mat, { capacity: 512, castShadow: false })) : null,
+        // Sessio 23: skannatuilla malleilla on oma tekstuurimateriaalinsa.
+        near: near.map((geo) => new InstancePool(scene, geo, geo.userData.tex ? scannedMaterial(geo.userData.tex) : mat, { capacity: def.decorative ? 4096 : 256, castShadow: def.castShadow })),
+        far: far ? far.map((geo) => new InstancePool(scene, geo, geo.userData.tex ? scannedMaterial(geo.userData.tex) : mat, { capacity: 512, castShadow: false })) : null,
       };
       if (def.kind === 'tree') {
-        this.stumpPools[type] = near.map((_, v) => new InstancePool(scene, splitTree(models.hi(def.model, v)).stump, materials.solid, { capacity: 64, castShadow: true }));
+        this.stumpPools[type] = near.map((_, v) => new InstancePool(scene, splitTree(models.hi(def.model, v)).stump, materials.solid_wood || materials.solid, { capacity: 64, castShadow: true }));
       }
     }
     this.gen = new GenPool(variantCounts);
@@ -254,6 +256,7 @@ export class World {
     geo.setAttribute('normal', new THREE.BufferAttribute(data.normals, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(data.colors, 3));
     geo.setAttribute('uv', new THREE.BufferAttribute(data.uvs, 2));
+    if (data.gw) geo.setAttribute('groundW', new THREE.BufferAttribute(data.gw, 4)); // sessio 23: maalajit
     geo.setIndex(this.terrainIndex);
     geo.computeBoundingSphere();
     geo.computeBoundingBox();

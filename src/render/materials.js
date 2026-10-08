@@ -1,5 +1,6 @@
 // Jaetut materiaalit ja tuulen huojunta (vertex shader -lisäys).
 import * as THREE from 'three';
+import { applyTerrainSurfaces, addSurfaceDetail } from './surfaces.js';
 
 // Kaikki tuulta käyttävät materiaalit jakavat nämä uniformit.
 export const windUniforms = {
@@ -213,12 +214,14 @@ float pudRings(vec2 p, float t) {
 }
 
 export function createSharedMaterials(groundDetail) {
-  const terrain = new THREE.MeshStandardMaterial({
+  // Sessio 23: maasto saa oikeat tekstuurit (surfaces.js); vanha
+  // proseduraalinen jyvä jää vain varalle, kun tekstuurit eivät ole latautuneet.
+  void groundDetail;
+  const terrain = applyTerrainSurfaces(new THREE.MeshStandardMaterial({
     vertexColors: true,
-    map: groundDetail,
     roughness: 0.97,
     metalness: 0,
-  });
+  }));
 
   const vegetation = addWind(
     new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 }),
@@ -239,6 +242,16 @@ export function createSharedMaterials(groundDetail) {
     0.15,
   );
   const solid = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, metalness: 0 });
+  // Sessio 23: kaarna puiden rungoissa ja oksissa (lehdet jäävät ennalleen),
+  // kuivissa pensaissa ohuemmin. Kivet, lahopuut ja maa omina materiaaleinaan.
+  addSurfaceDetail(vegetation, 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' });
+  addSurfaceDetail(bush, 'bark', { scale: 0.45, strength: 0.55, normal: 0.6, mask: 'notGreen' });
+  const solidRock = addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 }), 'rock', { scale: 2.2, strength: 0.95, normal: 1.0 });
+  const solidWood = addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 }), 'bark', { scale: 0.8, strength: 0.9 });
+  const solidEarth = addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.97, metalness: 0 }), 'soil', { scale: 1.6, strength: 0.9 });
+  addWet(solidRock, 0.8, 0.6);
+  addWet(solidWood, 0.8, 0.5);
+  addWet(solidEarth, 0.8, 0.4);
   addWet(terrain);
   for (const m of [vegetation, bush, tall]) addWet(m, 1, 0.3);
   addWet(grass, 1, 0.5);
@@ -246,5 +259,5 @@ export function createSharedMaterials(groundDetail) {
   const puddle = createPuddleMaterial();
 
   // Vesi luodaan erikseen (render/water.js), koska se tarvitsee taivaan värit.
-  return { terrain, vegetation, bush, grass, tall, solid, puddle };
+  return { terrain, vegetation, bush, grass, tall, solid, solid_rock: solidRock, solid_wood: solidWood, solid_earth: solidEarth, puddle };
 }

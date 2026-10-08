@@ -2,6 +2,8 @@
 // säröjä ja ne murskautuvat, pensaat rytisevät ja hajoavat. Saaliit putoavat
 // aina maahan fyysisinä esineinä.
 import * as THREE from 'three';
+import { addSurfaceDetail } from '../render/surfaces.js';
+import { scannedMaterial } from '../render/scannedMaterials.js';
 import { OBJECT_TYPES } from '../world/objectTypes.js';
 import { makeChoppable, addNotch, trunkAxis, applyNotches } from './treeCut.js';
 import { events } from './events.js';
@@ -30,8 +32,12 @@ const CHIP = {
 };
 
 // Kiven materiaali, johon piirtyy säröjä vaurion kasvaessa (uDamage 0..1).
-function createCrackMaterial(seed) {
-  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92 });
+function createCrackMaterial(seed, tex = null) {
+  // Sessio 23: skannattu kivi käyttää omia tekstuurejaan, muut kolmitasoprojektiota.
+  const base = tex ? scannedMaterial(tex) : null;
+  const mat = base
+    ? new THREE.MeshStandardMaterial({ map: base.map, normalMap: base.normalMap, roughness: 0.9 })
+    : new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92 });
   const uDamage = { value: 0 };
   const uSeed = { value: seed };
   mat.onBeforeCompile = (shader) => {
@@ -84,6 +90,8 @@ if (uDamage > 0.001) {
   };
   mat.customProgramCacheKey = () => 'crack';
   mat.userData.uDamage = uDamage;
+  // Pintatekstuuri säröjen päälle (ketjuttaa yllä olevan shaderin).
+  if (!base) addSurfaceDetail(mat, 'rock', { scale: 2.2, strength: 0.95, normal: 1.0 });
   return mat;
 }
 
@@ -219,7 +227,7 @@ export class Breakables {
     const def = OBJECT_TYPES[obj.type];
     if (!obj.active) {
       const geo = this.models.world[def.model][obj.variant].clone();
-      const mat = createCrackMaterial((obj.x * 13.1 + obj.z * 7.7) % 100);
+      const mat = createCrackMaterial((obj.x * 13.1 + obj.z * 7.7) % 100, geo.userData.tex);
       const mesh = this._activeMesh(obj, geo, mat);
       mesh.userData.onDispose = () => { mat.dispose(); geo.dispose(); };
       this.world.activate(obj, mesh);

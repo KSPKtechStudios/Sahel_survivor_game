@@ -3,6 +3,7 @@
 // rakennetaan, kun pelaaja tulee lähelle, ja puretaan kauempana.
 // Arkun avaaminen [E]: kansi aukeaa ja saaliit lennähtävät maahan.
 import * as THREE from 'three';
+import { addSurfaceDetail } from '../render/surfaces.js';
 import { mulberry32 } from '../noise.js';
 import { structuresNear } from '../world/terrain.js';
 import { buildStructure, makeChestModels } from '../models/structures.js';
@@ -73,7 +74,12 @@ export class Ruins {
     this.active = new Map(); // id -> { st, group, colliders, chest, rune }
     this.opened = new Set();
     this.read = new Set();   // käännetyt riimukivet
-    this.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
+    // Sessio 23: laudat, saviseinät ja kivet saavat oikeat pintatekstuurit.
+    this.material = addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 }), [
+      { layer: 'planks', mask: 'darkWood', scale: 1.6, strength: 0.9 },
+      { layer: 'soil', mask: 'warm', scale: 1.8, strength: 0.8 },
+      { layer: 'rock', mask: 'grey', scale: 2.0, strength: 0.85 },
+    ]);
     this.chestModels = makeChestModels();
     this.timer = 0;
   }
