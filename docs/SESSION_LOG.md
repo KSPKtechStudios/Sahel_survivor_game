@@ -2,6 +2,19 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-08 (sessio 28)
+**Tehtiin**
+- Haamun viitta joka olennolle (`game/mobs.js`: `instantiate`).
+- Lahopuun kuori (`assets/models/nature/deadbark*.jpg`, Poly Haven bark_willow_02; `render/kitMaterials.js`: toisto ja mittakaava; `assets/CREDITS.txt`).
+- Bambu uusiksi (`models/plants.js`: `makeBamboo`, `bambooLeaves`; `models/models.js`: kaukoversio).
+- Pehmeät normaalit loveissa (`game/treeCut.js`: `applyNotches`), rungon jatke latvukseen ja pyöreämmät oksat (`models/trees.js`, `models/flora.js`).
+- Selkeän sään sumu (`render/environment.js`).
+- Testattiin: testisivut (puut, bambu), pelikuva yöllä haamun kanssa, ESLint, savutesti.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute.
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-08 (sessio 27)
 **Tehtiin**
 - Pikakorjaukset: viidakon taustaäänen uudelleenyritys (`audio/sfx.js`: Bed), aavikon tuuli (`main.js`), silmän mukautuminen ja yön yläraja (`render/post.js`), jalanjäljet isommiksi (`render/footprints.js`).

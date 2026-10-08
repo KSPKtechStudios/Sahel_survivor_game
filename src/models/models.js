@@ -139,7 +139,7 @@ const VARIANTS = {
   beachStones: [makeBeachStones, 4, 831],
 };
 // Mallit, joilla on kevyt kaukoversio (ilman varjoa).
-const HAS_FAR = new Set(['banana', 'acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);
+const HAS_FAR = new Set(['bamboo', 'banana', 'acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);
 // Mallit, joista tehdään tiheärunkoinen versio hakkaamista varten.
 const HAS_HI = new Set(['acacia', 'jungle', 'palm', 'canopy', 'shea', 'doum', 'coconut', 'baobab']);
 

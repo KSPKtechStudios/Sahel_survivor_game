@@ -51,6 +51,8 @@ export function makeSheaTree(seed, q = 1) {
   const top = V((rand() - 0.5) * 0.5, H * 0.55, (rand() - 0.5) * 0.5);
   const cutY = 0.8;
   parts.push(...trunk(base, top, 0.3, 0.22, cutY, q, bark, jr, 7));
+  // Sessio 28: runko jatkuu kapenevana latvukseen (ei tylppää päätä).
+  if (q) parts.push(paint(limb(top, V(top.x, H - 0.2, top.z), 0.22, 0.05, 8, true, 2), bark, { rand: partRand(seed, 603) }));
   const nb = 4 + Math.floor(rand() * 2);
   const tips = [];
   for (let i = 0; i < nb; i++) {

@@ -2,6 +2,14 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-08 (sessio 28)
+- **Haamun viitta luodaan joka olennolle erikseen (mobs.js: instantiate).** Syy: mallipohjan kopio jakoi viitan geometrian, jota kukaan ei päivittänyt (vartalo näkymätön).
+- **Kitin jpg-tekstuurit toistuvat (RepeatWrapping); lahopuun kuori 1 toisto / ~1 m.** Syy: lahopuun UV kiertää rungon pituudella 11–13 kertaa; ilman toistoa reunan pikselit venyivät raidoiksi.
+- **Lahopuun kuoreksi Poly Havenin bark_willow_02 haalistettuna** (72 % harmaaksi, vaalennus). Syy: uurteinen, haalistunut kuori sopii kuolleeseen puuhun; Quaterniuksen sileä kuori ei toiminut.
+- **Bambu omana mallinaan nivelineen (ei tekstuuria).** Poly Havenissa ei ole bambun varsitekstuuria; vertex-väreillä saa nivelet, vahavyön ja värivaihtelun. Kaukoversio (HAS_FAR) pitää kolmiomäärän kohtuullisena.
+- **Rungon normaalit lovien jälkeen pehmeinä (samassa kohdassa olevien verteksien kolmioiden summa).** Syy: tasaiset kolmionormaalit näyttivät pilkotussa rungossa särmikkäiltä.
+- **Selkeän sään sumun alku 12 % -> ~32 % näköetäisyydestä** (sademetsässä vähemmän muutosta). Syy: käyttäjä halusi hieman vähemmän sumua; kauko-utu säilyy ja peittää maailman reunan.
+
 ## 2026-10-08 (sessio 27)
 - **Liaanit ovat oma järjestelmänsä (render/vines.js), ei osa puun geometriaa.** Puumalli kertoo vain kiinnityskohdat (`userData.vines`). Köydet luodaan 46 m:n säteellä, simuloidaan 26 m:n säteellä (Verlet, 11 pistettä, 6 rajoitekierrosta) ja piirretään yhtenä dynaamisena verkkona (enintään 260 köyttä). Syy: fysiikka (tuuli, pelaaja, kaatuminen) vaatii köydet erikseen; yksi verkko on kevyt piirtää.
 - **Kaatuvan latvuksen lehtien liike jousena prosessorilla** (vain kaatuessa ja hetken sen jälkeen). Syy: yksi tai kaksi kaatuvaa puuta kerrallaan; varjostimen muutos olisi vaatinut materiaalikopion.

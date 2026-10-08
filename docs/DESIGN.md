@@ -217,6 +217,14 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 28 (käyttäjän kertoma, 2026-10-08)
+- Session 27 muutokset hyviä ("hienoa työtä", "muuten ei valittamista").
+- **Lahopuun tekstuurit** eivät ole hyvät; **bambun** tekstuurit eivät myöskään (käyttäjän kuvat).
+- Kun puuta **hakkaa palasiksi**, sen **tekstuurit huononevat** paljon (kuva kaatuneesta puusta): korjattava.
+- **Puun runko töksähtää latvassa** epärealistisesti (kuva: runko päättyy tasaiseen päähän latvuksen alla).
+- **Haamun vartalo ei näy ollenkaan** (bugi).
+- **Selkeällä säällä sumua vähemmän:** aivan vähän, ettei kauas näe täysin selkeästi, mutta kuitenkin näkee.
+
 ## Sessio 27 (käyttäjän kertoma, 2026-10-08)
 - Tehdään **session 26 lisätoiveet** (fysiikka liaaneille ja lehdille, kaislat vesistöjen varsille, baobab, juuret ja kannot, lahopuun kaatuminen, haamun viitta) rauhassa.
 - **Palmuihin kookospähkinöitä latvaan.** Niitä saa **kaatamalla palmun tai ravistelemalla** sitä, ja ne **kasvavat takaisin** (voi farmata).

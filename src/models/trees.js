@@ -261,6 +261,9 @@ export function makeJungleTree(seed, q = 1) {
     parts.push(paint(limb(base, top, r0, r1, q ? 8 : 5, false, q ? 3 : 1), bark, { rand: partRand(seed, 99) }));
   }
 
+  // Sessio 28: runko jatkuu kapenevana latvukseen.
+  if (q) parts.push(paint(limb(top, V(top.x, H + 1.3, top.z), r1, 0.05, 8, true, 2), bark, { rand: partRand(seed, 602) }));
+
   // Pönkkäjuuret
   const nf = 4 + Math.floor(rand() * 2);
   for (let i = 0; i < nf; i++) {
@@ -281,7 +284,7 @@ export function makeJungleTree(seed, q = 1) {
     const b0 = V(top.x * (hb / H), hb, top.z * (hb / H));
     const tip = V(b0.x + Math.cos(a) * len, hb + 1.0 + rand() * 1.2, b0.z + Math.sin(a) * len);
     const j = jr();
-    if (q) parts.push(paint(limb(b0, tip, 0.17, 0.08, 5), bark, { rand: j }));
+    if (q) parts.push(paint(limb(b0, tip, 0.17, 0.08, 8), bark, { rand: j }));
     tips.push(tip);
     // Liaani
     const hasLiana = rand() < 0.45;
@@ -337,6 +340,8 @@ export function makeCanopyTree(seed, q = 1) {
   const top = V((rand() - 0.5) * 0.8, H * 0.78, (rand() - 0.5) * 0.8);
   const cutY = 0.9;
   parts.push(...trunkParts(base, top, 0.34, 0.2, cutY, q, bark, jr, 7));
+  // Sessio 28: runko jatkuu kapenevana latvukseen (ennen se päättyi tylppänä).
+  if (q) parts.push(paint(limb(top, V(top.x * 1.1, H + 0.35, top.z * 1.1), 0.2, 0.035, 8, true, 2), bark, { rand: partRand(seed, 601) }));
   const nb = 3 + Math.floor(rand() * 2);
   const tips = [];
   for (let i = 0; i < nb; i++) {
@@ -346,7 +351,7 @@ export function makeCanopyTree(seed, q = 1) {
     const len = 1.6 + rand() * 1.4;
     const tip = V(b0.x + Math.cos(a) * len, hb + 1.2 + rand() * 1.0, b0.z + Math.sin(a) * len);
     const j = jr();
-    if (q) parts.push(paint(limb(b0, tip, 0.13, 0.06, 5), bark, { rand: j }));
+    if (q) parts.push(paint(limb(b0, tip, 0.13, 0.06, 8), bark, { rand: j }));
     tips.push(tip);
   }
   let crowns;

@@ -479,7 +479,10 @@ export class Environment {
     // Sessio 26: selkeällä säällä sademetsässä vähemmän usvaa (ennen 95 m).
     if (this.humid > 0.001) vis = lerp(vis, Math.min(vis, 200), this.humid * 0.8);
     this.scene.fog.far = vis;
-    this.scene.fog.near = vis < 100 ? 0 : vis * 0.12;
+    // Sessio 28: selkeällä säällä sumu alkaa vasta noin kolmanneksen päästä
+    // (käyttäjä: hieman vähemmän sumua, kauas ei silti näe täysin selkeästi).
+    const clearK = Math.min(1, Math.max(0, (w.vis - 200) / 100)) * (1 - 0.6 * this.humid);
+    this.scene.fog.near = vis < 100 ? 0 : vis * (0.12 + 0.2 * clearK);
 
     // Valot: päivällä aurinko, yöllä kuu.
     const sunUp = this.sunDir.y > 0;

@@ -2,6 +2,15 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-08 (sessio 28): haamun vartalo, lahopuu, bambu ja hakatut puut
+
+- **Korjattu: haamun vartalo (viitta) ei näkynyt.** Jokainen haamu saa nyt oman kangasviittansa.
+- **Lahopuun kuori uusittu:** haalistunut harmaa kuori (Poly Haven bark_willow_02, CC0) normaalikarttoineen. Korjattu: kuoren kuva venyi pitkiksi oransseiksi raidoiksi (tekstuuria ei toistettu rungon pituudella).
+- **Uusi bambu:** pyöreät, kaartuvat varret, tummat nivelrenkaat ja vahamainen vyö niiden yläpuolella, vihreitä ja kellertäviä varsia, kuivia tuppia tyvellä, sivuoksat ja kapeista lehdistä tehdyt roikkuvat lehtiviuhkat. Kaukana kevyempi versio.
+- **Hakattu ja kaatunut puu pysyy siistinä:** lovet ja pilkotut kohdat varjostetaan pehmeästi (ennen jokainen isku teki rungosta särmikkään).
+- **Rungot jatkuvat latvukseen kapenevana** (ennen runko päättyi tylppänä latvuksen alle); oksat pyöreämpiä.
+- **Selkeällä säällä vähemmän sumua:** sumu alkaa vasta noin kolmanneksen päästä näköetäisyydestä; kaukana on yhä hentoa utua.
+
 ## 2026-10-08 (sessio 27): liaanien fysiikka, kookokset, haamun viitta ja uudet puut
 
 - **Liaanien fysiikka:** liaanit ovat nyt köysiä, jotka roikkuvat painovoiman mukaan, heiluvat tuulessa ja heilahtavat sivuun, kun pelaaja kävelee niihin (pää ja vartalo työntävät). Kun puu kaadetaan, liaanit seuraavat kaatuvaa latvaa ja maahan kiinnittyneet repeävät irti. Kun kaatunut runko pilkotaan, liaanit putoavat. Liaanit ovat ohuempia ja niissä on lehtiä (ennen paksut, kaarevat sauvat).

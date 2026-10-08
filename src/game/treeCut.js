@@ -98,20 +98,34 @@ export function applyNotches(geo) {
       oc[i * 3 + 2] + (INNER.b - oc[i * 3 + 2]) * t,
     );
   }
-  // Rungon kolmioille tasaiset normaalit uudelleen
+  // Sessio 28: rungon normaalit pehmeinä. Samassa kohdassa olevien
+  // verteksien kolmioiden normaalit lasketaan yhteen (ennen tasaiset
+  // kolmionormaalit tekivät lovista ja pilkotusta rungosta särmikkään).
+  // Lovettomissa kohdissa käytetään suoraan säteen suuntaa.
   const nrm = geo.attributes.normal;
+  const acc = new Map();
+  const key = (i) => `${Math.round(pos.getX(i) * 500)},${Math.round(pos.getY(i) * 500)},${Math.round(pos.getZ(i) * 500)}`;
+  const keys = new Array(range[1] - range[0]);
   for (let i = range[0]; i < range[1]; i += 3) {
     _a.fromBufferAttribute(pos, i);
     _b.fromBufferAttribute(pos, i + 1);
     _c.fromBufferAttribute(pos, i + 2);
-    _n.subVectors(_c, _b).cross(_v.subVectors(_a, _b)).normalize();
+    _n.subVectors(_c, _b).cross(_v.subVectors(_a, _b)); // pituus ~ pinta-ala
     for (let k = 0; k < 3; k++) {
-      const ri = (i + k - range[0]) * 4;
-      if (rad[ri + 3] < 0.004 && Math.abs(rad[ri]) + Math.abs(rad[ri + 1]) + Math.abs(rad[ri + 2]) > 0.5) {
-        nrm.setXYZ(i + k, rad[ri], rad[ri + 1], rad[ri + 2]);
-      } else {
-        nrm.setXYZ(i + k, _n.x, _n.y, _n.z);
-      }
+      const kk = key(i + k);
+      keys[i + k - range[0]] = kk;
+      const s = acc.get(kk);
+      if (s) { s[0] += _n.x; s[1] += _n.y; s[2] += _n.z; } else acc.set(kk, [_n.x, _n.y, _n.z]);
+    }
+  }
+  for (let i = range[0]; i < range[1]; i++) {
+    const ri = (i - range[0]) * 4;
+    if (rad[ri + 3] < 0.004 && Math.abs(rad[ri]) + Math.abs(rad[ri + 1]) + Math.abs(rad[ri + 2]) > 0.5) {
+      nrm.setXYZ(i, rad[ri], rad[ri + 1], rad[ri + 2]);
+    } else {
+      const s = acc.get(keys[i - range[0]]);
+      _n.set(s[0], s[1], s[2]).normalize();
+      nrm.setXYZ(i, _n.x, _n.y, _n.z);
     }
   }
   pos.needsUpdate = true;

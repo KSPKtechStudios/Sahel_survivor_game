@@ -23,5 +23,7 @@ Stylized Nature MegaKit, ilmainen versio (https://quaternius.com), CC0 (sessio 2
   Rock_Medium_1-3, Flower_3_Group, Flower_4_Group, DeadTree_1-3
   (mittakaava pelin metreihin, kiinteät osat kevennetty meshoptimizerilla;
   tekstuurit pienennetty)
+  Sessio 28: lahopuun kuori (deadbark.jpg, deadbark_nrm.jpg) vaihdettu: Poly Haven
+  bark_willow_02 (CC0, 1k), haalistettu harmaaksi.
 
 Fontit: ks. assets/fonts (OFL).

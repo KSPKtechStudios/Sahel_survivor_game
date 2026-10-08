@@ -14,6 +14,9 @@ function tex(file, srgb = true) {
   const t = file.endsWith('.png') ? loadAlphaTexture(`${DIR}/${file}`, { cutoff: 0.5, srgb }) : loader.load(`${DIR}/${file}`);
   if (srgb) t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = 4;
+  // Sessio 28: toistuvat tekstuurit (lahopuun UV kiertää rungon pituudella
+  // monta kertaa; ennen reunan pikselit venyivät pitkiksi raidoiksi).
+  if (!file.endsWith('.png')) t.wrapS = t.wrapT = THREE.RepeatWrapping;
   texCache[file] = t;
   return t;
 }
@@ -59,9 +62,14 @@ const BUILD = {
   }), 0.35, 0.6), true),
   mushrooms: () => addWet(addAO(new THREE.MeshStandardMaterial({ map: tex('mushrooms.jpg'), roughness: 0.6, metalness: 0 }), true), 1, 0.5),
   rocks: () => addWet(addAO(new THREE.MeshStandardMaterial({ map: tex('rocks.jpg'), roughness: 0.92, metalness: 0 })), 0.9, 0.6),
-  deadbark: () => addWet(addAO(new THREE.MeshStandardMaterial({
-    map: tex('deadbark.jpg'), normalMap: tex('deadbark_nrm.jpg', false), roughness: 0.95, metalness: 0,
-  })), 0.8, 0.4),
+  // Sessio 28: haalistunut kuori (Poly Haven bark_willow_02, CC0), noin
+  // metri tekstuuria rungon pituudella.
+  deadbark: () => {
+    const map = tex('deadbark.jpg'), nrm = tex('deadbark_nrm.jpg', false);
+    map.repeat.set(1, 0.5);
+    nrm.repeat.set(1, 0.5);
+    return addWet(addAO(new THREE.MeshStandardMaterial({ map, normalMap: nrm, roughness: 0.95, metalness: 0 })), 0.8, 0.4);
+  },
 };
 const matCache = {};
 

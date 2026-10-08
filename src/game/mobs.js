@@ -22,6 +22,7 @@ import { makeWarthog, makeClayGolem, makeGazelle, makeFennec, makeMonkey, makeGu
 import { createFlameTexture, createSoftDotTexture } from '../render/textures.js';
 import { events } from './events.js';
 import { windUniforms } from '../render/materials.js';
+import { GhostCloak } from '../models/ghostCloak.js';
 
 export const MOB_TYPES = {
   warthog: {
@@ -139,6 +140,14 @@ function instantiate(type, n, eyeMat) {
   const out = { group, material, kind: t.kind };
   for (const k of ['body', 'head', 'tail', 'torso', 'glow', 'core']) if (t[k]) out[k] = map.get(t[k]);
   for (const k of ['legs', 'arms', 'eyes', 'wings']) if (t[k]) out[k] = t[k].map((o) => map.get(o));
+  // Sessio 28: haamun viitta on jokaisella oma (kangas simuloidaan
+  // yksilöllisesti). Ennen kopio jäi päivittämättä ja vartalo näkymättömäksi.
+  if (t.cloak) {
+    const old = map.get(t.cloak.mesh);
+    if (old && old.parent) old.parent.remove(old);
+    out.cloak = new GhostCloak(n * 13 + 1);
+    group.add(out.cloak.mesh);
+  }
   // Haamun hehku himmenee ja kirkastuu yksilöllisesti.
   if (out.glow) out.glow.material = out.glow.material.clone();
   if (out.core) out.core.material = out.core.material.clone();
@@ -366,6 +375,7 @@ export class Mobs {
     m.model.material.dispose(); // geometriat ovat yhteisiä (templates)
     if (m.model.glow) m.model.glow.material.dispose();
     if (m.model.core) m.model.core.material.dispose();
+    if (m.model.cloak) { m.model.cloak.geo.dispose(); m.model.cloak.material.dispose(); } // sessio 28
     if (m.trail) for (const t of m.trail) { this.scene.remove(t); t.material.dispose(); }
     if (m.dazeStars) this._clearDaze(m);
     if (m.emergeGlow) { this.scene.remove(m.emergeGlow); m.emergeGlow.material.dispose(); m.emergeGlow = null; }

@@ -1,6 +1,7 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 28: haamun vartalo ja viitta, lahopuun kuori, bambu, kaatuneen puun pilkkominen (pysyykö siistinä), rungon latva, selkeän sään sumu
 - [ ] Käyttäjä testaa session 27: liaanit (kävele niihin, tuuli, kaada puu jossa on liaaneja), kaatuvan puun lehdet, kookokset ([E] ravista, lyö, kaada; kasvavat takaisin), haamun viitta (yöllä sademetsässä), baobab, sademetsän puut, pönkkäjuuret ja kannot, banaanit, lahopuun kaato, lammikot sademetsän notkoissa, kaislat jokien ja järvien rannoilla, leijuvat pisteet, silmän tottuminen (katso ylös latvuston aukkoon ja takaisin alas), yön kirkkaus, aavikon tuuli, jalanjäljet
 - [ ] Käyttäjä testaa session 26: latvukset alta (ei ytimiä), valokeilat sademetsässä aamulla aurinkoa kohti ja sivulta, sademetsän usva selkeällä, lehtien kiilto yöllä, leijuvat pikselit, palmut, kookospalmut, doumpalmut ja banaanit, simpukat rannalla ([E] poimii), jalanjäljet hiekassa, iskujen muunnelmat, musiikki ja äänet aavikolla ja savannilla
 - [ ] Jos aavikolla ei vieläkään kuulu musiikkia: [F3] näyttää musiikin tilan (ja "puuttuu: …", jos musiikkitiedosto puuttuu; musiikkipaketti puretaan samaan sahel-kansioon). Huom: yöllä biomien musiikki on tarkoituksella hiljaa
