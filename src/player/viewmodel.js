@@ -761,19 +761,23 @@ ViewModel.prototype._updateBow = function (dt, player, bob, sinP, cosP, step, am
   // Oikea käsi jänteelle: lepoasennossa alhaalla, jännittäessä poskella.
   if (d > 0.001 || this.bowT > 0.01) {
     _bw.copy(nock).applyEuler(g.rotation).add(g.position);
-    const tx = THREE.MathUtils.lerp(this.basePos.x - 0.02, _bw.x + 0.035, d);
-    const ty = THREE.MathUtils.lerp(this.basePos.y - 0.08, _bw.y - 0.035, d);
-    const tz = THREE.MathUtils.lerp(this.basePos.z + 0.05, _bw.z + 0.03, d);
+    // Sessio 31: levossa jännekäsi seuraa samaa kävely- ja juoksuheiluntaa
+    // kuin muu käsi (ennen se oli paikallaan).
+    const rp = this.root.position;
+    const tx = THREE.MathUtils.lerp(rp.x - 0.02, _bw.x + 0.035, d);
+    const ty = THREE.MathUtils.lerp(rp.y - 0.08, _bw.y - 0.035, d);
+    const tz = THREE.MathUtils.lerp(rp.z + 0.05, _bw.z + 0.03, d);
     const k = this.bowT;
     this.root.position.set(
       THREE.MathUtils.lerp(this.root.position.x, tx, k),
       THREE.MathUtils.lerp(this.root.position.y, ty, k),
       THREE.MathUtils.lerp(this.root.position.z, tz, k),
     );
+    const rr = this.root.rotation, br = this.baseRot, nd = 1 - d;
     this.root.rotation.set(
-      THREE.MathUtils.lerp(this.root.rotation.x, -0.1 + 0.3 * d, k),
-      THREE.MathUtils.lerp(this.root.rotation.y, 0.5 + 0.6 * d, k),
-      THREE.MathUtils.lerp(this.root.rotation.z, 0.9 + 0.5 * d, k),
+      THREE.MathUtils.lerp(rr.x, -0.1 + 0.3 * d + (rr.x - br.x) * nd, k),
+      THREE.MathUtils.lerp(rr.y, 0.5 + 0.6 * d + (rr.y - br.y) * nd, k),
+      THREE.MathUtils.lerp(rr.z, 0.9 + 0.5 * d + (rr.z - br.z) * nd, k),
     );
     applyPose(this.anim, ZERO);
     this.anim.updateMatrix();

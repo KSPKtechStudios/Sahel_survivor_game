@@ -552,6 +552,9 @@ export class Arms {
     // Olkavarsi: (u, taivutussuunta).
     const u = _v.subVectors(E, Sh).normalize();
     const fd = _c.subVectors(T, E).normalize();
+    // Sessio 31: ranteen todellinen paikka (ulottumattomissa käsi jää
+    // tavoitteesta), jotta esine seuraa kättä eikä irtoa siitä.
+    _T.copy(E).addScaledVector(fd, S.b);
     const bd = _b.copy(fd).addScaledVector(u, -fd.dot(u));
     if (bd.lengthSq() < 1e-8) bd.copy(_n);
     bd.normalize();
