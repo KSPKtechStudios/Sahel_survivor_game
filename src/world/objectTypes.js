@@ -239,11 +239,13 @@ export const OBJECT_TYPES = {
     scale: [0.9, 1.15], maxSlope: 0.8, collider: 0, hit: { y: 0.06, r: 0.3 }, drawDist: 2,
     pickup: { drops: [['flint', 1, 2]] },
   },
-  // Sessio 22: simpukankuoret ovat koristetta (esine poistettiin).
+  // Sessio 22: simpukankuoret koristeeksi; sessio 26: taas poimittavia
+  // (käyttäjä), ja rannoilla tiheämmin.
   seashellPick: {
     name: 'Simpukankuoria', model: 'shell', kind: 'pickup', material: 'solid', castShadow: false,
-    density: { beach: 4 },
-    scale: [0.9, 1.2], maxSlope: 0.8, collider: 0, hit: null, drawDist: 2,
+    density: { beach: 14, ocean: 2 },
+    scale: [0.9, 1.2], maxSlope: 0.8, collider: 0, hit: { y: 0.04, r: 0.3 }, drawDist: 2,
+    pickup: { drops: [['seashell', 1, 2]] },
   },
   featherPick: {
     name: 'Sulka', model: 'feather', kind: 'pickup', material: 'solid', castShadow: false,

@@ -254,18 +254,10 @@ export function liana(top, rand, groundY = 0, q = 1) {
     p.z += Math.sin(t * Math.PI) * sag * Math.sin(a + 1.3) + Math.cos(t * 7 + a) * 0.06;
     pts.push(p);
   }
-  const r = 0.025 + rand() * 0.02;
-  for (let i = 0; i < segs; i++) parts.push(paint(limb(pts[i], pts[i + 1], r, r * 0.9, 4), 0x4a4626, { rand, jitter: 0.12 }));
-  if (q) {
-    const P = [], N = [], C = [], U = [];
-    for (let i = 1; i < segs; i++) {
-      if (rand() < 0.35) continue;
-      const p = pts[i].clone().lerp(pts[i + 1], rand());
-      sprig(p, 0.16 + rand() * 0.14, 0x3a6a28, rand, P, N, C, U);
-    }
-    if (!toGround) sprig(end, 0.22, 0x44752c, rand, P, N, C, U);
-    if (P.length) parts.push(sprigGeo(P, N, C, U));
-  }
+  // Sessio 26: liaani on paksumpi eikä siinä ole irtolehtiä (kaukaa ohut
+  // varsi katosi ja lehtitupsut näyttivät leijuvilta pikseleiltä).
+  const r = 0.04 + rand() * 0.025;
+  for (let i = 0; i < segs; i++) parts.push(paint(limb(pts[i], pts[i + 1], r, r * 0.85, 5), 0x4a4626, { rand, jitter: 0.12 }));
   return parts;
 }
 

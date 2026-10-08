@@ -476,7 +476,8 @@ export class Environment {
     // Selkeällä/pilvisellä säällä näkyvyys = näköetäisyys, usvassa ja myrskyssä sään oma.
     let vis = Math.min(w.vis >= 290 ? this.maxVis : w.vis, this.maxVis);
     // Sademetsässä näkyvyys on lyhyt (tiheä kasvillisuus ja kosteus).
-    if (this.humid > 0.001) vis = lerp(vis, Math.min(vis, 95), this.humid * 0.9);
+    // Sessio 26: selkeällä säällä sademetsässä vähemmän usvaa (ennen 95 m).
+    if (this.humid > 0.001) vis = lerp(vis, Math.min(vis, 200), this.humid * 0.8);
     this.scene.fog.far = vis;
     this.scene.fog.near = vis < 100 ? 0 : vis * 0.12;
 

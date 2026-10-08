@@ -36,9 +36,9 @@ export const GAME_LEVEL = 0.25;   // −12 dB: taustamusiikki
 
 // Ajat sekunteina
 const FIRST_DELAY = 3;     // pelin alussa ennen ensimmäistä kappaletta
-const ENTER_DELAY = 5;     // uudessa biomissa oltava näin kauan ennen vaihtoa
+const ENTER_DELAY = 4;     // uudessa biomissa oltava näin kauan ennen vaihtoa
 const LEAVE_DELAY = 10;    // musiikittomalle alueelle: hiljenee vasta tämän jälkeen
-const MIN_HOLD = 20;       // kappale soi vähintään näin kauan ennen vaihtoa
+const MIN_HOLD = 10;       // kappale soi vähintään näin kauan ennen vaihtoa (sessio 26: ennen 20)
 const FADE_IN = 6;         // biomin kappale voimistuu
 const FADE_OUT = 3.5;      // biomin kappale hiljenee
 const GAP = 1;             // hiljaisuus kahden biomikappaleen välissä
@@ -50,7 +50,7 @@ export class Music {
   constructor() {
     this.tracks = {};
     for (const [key, t] of Object.entries(TRACKS)) {
-      this.tracks[key] = { key, ...t, norm: Math.min(1, 10 ** ((REF_LUFS - t.lufs) / 20)), el: null, fade: 0, playing: false, stoppedAt: -1e9, blocked: false };
+      this.tracks[key] = { key, ...t, norm: Math.min(1, 10 ** ((REF_LUFS - t.lufs) / 20)), el: null, fade: 0, playing: false, stoppedAt: -1e9, blocked: false, failed: false, retryT: 0 };
     }
     this.master = 1;
     this.music = 0.8;
@@ -165,6 +165,12 @@ export class Music {
     if (!Number.isFinite(this.duckMul)) this.duckMul = 1;
     for (const t of Object.values(this.tracks)) {
       if (!t.el) continue;
+      // Sessio 26: jos soivaksi tarkoitettu kappale on jäänyt tauolle (selain
+      // esti toiston tai lataus katkesi), yritetään uudelleen parin sekunnin välein.
+      if (t.playing && t.el.paused && !this.hidden && this.unlocked) {
+        t.retryT -= dt;
+        if (t.retryT <= 0) { t.retryT = 2; this._play(t); }
+      }
       if (!Number.isFinite(t.fade)) t.fade = 0;
       const level = t.key === 'menu' ? MENU_LEVEL : GAME_LEVEL;
       // Neliöllinen käyrä: häivytys kuulostaa tasaiselta (lähes desibeleinä).
@@ -189,6 +195,8 @@ export class Music {
       parts.push(`seuraavaksi ${name} ${Math.min(need, this.candT).toFixed(0)}/${need} s`);
     }
     if (!this.unlocked) parts.push('odottaa klikkausta');
+    const failed = Object.values(this.tracks).filter((t) => t.failed).map((t) => t.file.split('/').pop());
+    if (failed.length) parts.push(`puuttuu: ${failed.join(', ')}`);
     return parts.join(' · ');
   }
 
@@ -199,6 +207,19 @@ export class Music {
     el.preload = 'auto';
     el.loop = true;
     el.volume = 0;
+    // Sessio 26: jos tiedosto puuttuu (esim. musiikkipakettia ei ole purettu
+    // samaan kansioon), soitetaan sen sijaan valikon kappaletta, ettei peli
+    // jää hiljaiseksi; kehittäjätyökalut [F3] kertovat puuttuvan tiedoston.
+    el.addEventListener('error', () => {
+      if (t.failed) return;
+      t.failed = true;
+      console.warn(`Musiikkitiedostoa ei löytynyt: ${t.file}`);
+      const fb = TRACKS.menu.file;
+      if (t.file !== fb) {
+        el.src = fb;
+        if (t.playing) this._play(t);
+      }
+    });
     el.src = t.file;
     t.el = el;
     return el;

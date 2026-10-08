@@ -32,6 +32,7 @@ export const ITEMS = {
   iron_rings: { name: 'Rautarenkaat', stack: 50, cat: 'material', desc: 'Pieniä toisiinsa punottavia renkaita rengaspanssariin.' },
   flint: { name: 'Piikivi', stack: 50, cat: 'material', desc: 'Lasimaisesti lohkeava kivi. Siitä saa teräviä teriä ja nuolenkärkiä. Löytyy kivikkoisilta paikoilta.' },
   bone: { name: 'Luu', stack: 50, cat: 'material', desc: 'Kuivunut luu. Kova ja kevyt: nuolenkärkiin ja jouseen.' },
+  seashell: { name: 'Simpukankuori', stack: 50, cat: 'material', desc: 'Kaunis kuori rannalta.' },
   feather: { name: 'Sulka', stack: 50, floats: true, cat: 'material', desc: 'Linnun sulka nuolen ohjaimiksi.' },
   reed: { name: 'Ruoko', stack: 50, floats: true, cat: 'material', desc: 'Vesirajan ruokoa. Olkikattoihin.' },
   bamboo: { name: 'Bambunvarsi', stack: 50, floats: true, cat: 'material', desc: 'Kevyt ja luja varsi.' },

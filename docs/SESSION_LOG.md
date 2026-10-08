@@ -2,6 +2,24 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-08 (sessio 26)
+**Tehtiin**
+- Latvukset pelkistä lehtikorteista (`models/trees.js`, `models/flora.js`: `blob`; `models/util.js`: `leafCards(…, size, under)`; `models/plants.js`: tiheikkö).
+- Lehtien kiilto pois (`render/materials.js`, `render/kitMaterials.js`, `main.js`: `addWet(…, 0.3, 0)`), sademetsän usva (`render/environment.js`, `main.js`: hfog), liaanien tupsut pois (`models/ancient.js`), sadepisarat (`render/rain.js`).
+- Volumetriset valokeilat varjokartasta (`render/post.js`: `volFS`, `volRT`, `uVolCol`; `main.js`: `post.shafts`).
+- Leijuvat pikselit: alfatekstuurien reunavärit ja peittävyyden säilyttävät mipmapit (`render/alphaMips.js` uusi; `render/surfaces.js`, `render/kitMaterials.js`, `render/grassField.js`).
+- Uudet palmut, kookospalmut, doumpalmut ja banaanit (`models/palms.js` uusi; vanhat poistettu `models/trees.js`, `models/flora.js`; `models/models.js`).
+- Simpukat (`models/shells.js` uusi; `models/items2.js`, `models/pickups.js`, `models/shore.js`, `world/objectTypes.js`: `seashellPick`, `game/items.js`: `seashell`).
+- 3D-jalanjäljet (`render/footprints.js` uusiksi; `main.js`).
+- Iskujen lisämuunnelmat (`player/viewmodel.js`: swingD, swingE, punchC, punchD, slashR3, slashL3, thrust3, smash3).
+- Musiikki ja äänet (`audio/music.js`: uudelleenyritys, varakappale, lyhyempi pitoaika; `main.js`: aavikon ja savannin tuuli). Testattiin: nopealla silmukalla aavikon kappale alkaa ~3 s:ssa.
+- Suorituskyky: vertailu session 25 versioon samassa paikassa; raskaat uudet mallit kevennettiin.
+- Testattiin: kuvat (sademetsän valokeilat, latvukset, ranta), simpukka-, jalanjälki- ja palmukuvat erillisellä testisivulla, ESLint puhdas, savutesti.
+
+**Kesken / seuraavaksi**
+- Käyttäjän lisätoiveet (ks. DESIGN.md sessio 26 ja TODO): liaanien ja lehtien fysiikka, kaislat vesistöjen varsille, baobab, juuret ja kannot, lahopuun kaatuminen, haamun viitta ja sen fysiikka.
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-08 (sessio 25)
 **Tehtiin**
 - Session 24 viimeistely: paketti ja kuvat toimitettiin (testiajoja lyhennettiin, ettei hidas ohjelmistorenderöinti jumita).

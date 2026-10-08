@@ -44,7 +44,8 @@ export function ensureUv(geo) {
 // pinnalle asetetaan läpikuultavia kortteja, jotka näyttävät lehtiatlaksen
 // oksarypästä (kind 'acacia' = vasen puolisko, 'broad' = oikea). Normaalit
 // osoittavat ulos latvuksen keskeltä (pehmeä, pallomainen valaistus).
-export function leafCards(center, scale, rotY, hex, rand, kind = 'broad', density = 1, size = 1) {
+// under = kuinka paljon kortteja alapinnalle (0,5 = vähän, 1 = tasaisesti).
+export function leafCards(center, scale, rotY, hex, rand, kind = 'broad', density = 1, size = 1, under = 0.5) {
   const area = 4 * Math.PI * Math.pow((scale.x * scale.y + scale.x * scale.z + scale.y * scale.z) / 3, 1);
   const n = Math.max(4, Math.round(area * 2.2 * density));
   const u0 = kind === 'acacia' ? 0 : 0.5;
@@ -54,7 +55,7 @@ export function leafCards(center, scale, rotY, hex, rand, kind = 'broad', densit
   const d = new THREE.Vector3(), t1 = new THREE.Vector3(), t2 = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
   for (let i = 0; i < n; i++) {
     // Suunta: painottuu ylös ja sivuille (alapinta harvempi).
-    const yy = rand() * 1.5 - 0.5;
+    const yy = rand() * (1 + under) - under;
     const th = rand() * Math.PI * 2;
     const rr = Math.sqrt(Math.max(0, 1 - yy * yy));
     d.set(Math.cos(th) * rr, yy, Math.sin(th) * rr).normalize();

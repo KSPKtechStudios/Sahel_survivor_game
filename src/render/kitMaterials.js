@@ -2,6 +2,7 @@
 // Lehdet ja kukat ovat alfaleikattuja kortteja, jotka huojuvat tuulessa;
 // kivet ja kuollut puu saavat märkyyden. aAO = mallin oma varjostus.
 import * as THREE from 'three';
+import { loadAlphaTexture } from './alphaMips.js';
 import { addWind, addWet, addTranslucency } from './materials.js';
 
 const DIR = 'assets/models/nature';
@@ -9,7 +10,8 @@ const loader = new THREE.TextureLoader();
 const texCache = {};
 function tex(file, srgb = true) {
   if (texCache[file]) return texCache[file];
-  const t = loader.load(`${DIR}/${file}`);
+  // Sessio 26: alfatestatut (lehdet, kukat) peittävyyden säilyttävin mipmapein.
+  const t = file.endsWith('.png') ? loadAlphaTexture(`${DIR}/${file}`, { cutoff: 0.5, srgb }) : loader.load(`${DIR}/${file}`);
   if (srgb) t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = 4;
   texCache[file] = t;
@@ -51,7 +53,7 @@ diffuseColor.rgb *= vKitAO;`);
 const BUILD = {
   leaves: () => addTranslucency(addWet(addAO(addWind(new THREE.MeshStandardMaterial({
     map: tex('leaves.png'), alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.8, metalness: 0,
-  }), 0.35, 0.6), true), 1, 0.3), 0.3, false),
+  }), 0.35, 0.6), true), 0.3, 0), 0.3, false),
   flowers: () => addAO(addWind(new THREE.MeshStandardMaterial({
     map: tex('flowers.png'), alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.7, metalness: 0,
   }), 0.35, 0.6), true),

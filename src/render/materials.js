@@ -302,7 +302,10 @@ export function createSharedMaterials(groundDetail) {
   addWet(solidWood, 0.8, 0.5);
   addWet(solidEarth, 0.8, 0.4);
   addWet(terrain);
-  for (const m of [vegetation, bush, tall]) addWet(m, 1, 0.3);
+  // Sessio 26: lehdet eivät saa kiiltää (märkyys teki niistä peilaavia, yöllä
+  // kuunvalo heijastui sinisenä); vain lievä tummuminen.
+  for (const m of [vegetation, bush]) addWet(m, 0.3, 0);
+  addWet(tall, 0.6, 0.2);
   addTranslucency(vegetation, 0.38);
   addTranslucency(bush, 0.3);
   addWet(grass, 1, 0.5);

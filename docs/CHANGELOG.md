@@ -2,6 +2,21 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-08 (sessio 26): lehtilatvukset, valokeilat, palmut, simpukat ja jalanjäljet
+
+- **Puiden latvukset pelkistä lehdistä:** kiinteä ydin poistettiin kokonaan kaikista lehtipuista ja tiheiköistä; alta katsottuna näkyy nyt lehtiä, ei harmaita möhkäleitä. Lehtikortteja on tiheämmin, myös latvuksen alapinnalla.
+- **Valokeilat latvuston läpi:** auringonvalo paistaa näkyvinä keiloina latvuston aukoista (sademetsässä, aamu-usvassa ja utuisella säällä). Keilat lasketaan auringon varjokartasta, joten ne tulevat oikeista kohdista. Tasaisesti valaistu ilma ei utuunnu.
+- **Vähemmän usvaa sademetsässä selkeällä säällä.**
+- **Lehdet eivät enää kiillä** (märkyyden kiilto lehdiltä pois; rungot, kivet ja maa kiiltävät yhä sateella).
+- **Korjattu: lehtien lähellä leijuvat pikselit.** Syy oli lehtitekstuurien mustat reunat ja kaukana harvenevat lehdet. Nyt läpinäkyvät reunat saavat lehden värin, ja kaukaiset lehvästöt säilyttävät tiheytensä (myös ruoho ja kukat).
+- **Uudet palmut:** oikeat sulkalehdet (kymmeniä riippuvia lehdyköitä), rengaskuvioinen runko, tyvipaksunnos ja juuret, lehtitupet latvassa, muutama kuivunut lehti, kookospalmuissa kookostertut. **Doumpalmussa** viuhkalehdet taitetuista liuskoista.
+- **Uudet banaanit:** isot melamaiset lehdet, jotka tuuli on repinyt suikaleiksi, kuivuneet lehdet varren ympärillä, sivuversot sekä joskus banaaniterttu ja punavioletti kukka.
+- **Simpukat poimittavia ja hienompia:** kampasimpukka (harjanteet, saranan korvat, kasvurenkaat), sydänsimpukka, täplikäs kauri ja kierteinen tornikotilo. Rannoilla niitä on enemmän. Uusi esine: **Simpukankuori**.
+- **Jalanjäljet isompia ja kolmiulotteisia:** kantapää, päkiä ja varpaat painuvat hiekkaan ja ympärille nousee valli; auringon suunta valaisee painauman seinämät.
+- **Lyönteihin lisää animaatioita:** raskas hakkuu (ennakoiva notkahdus ja syvä jälkiheilahdus), vaakahakkuu, harhautus ja suora, ylhäältä kaartava isku, jyrkkä vinoviilto, matala nouseva rystyviilto, syöksypisto ranteen kierrolla ja nuijan sivupyyhkäisy. Jokaisella iskutyypillä on nyt 3–5 muunnelmaa.
+- **Musiikki ja äänet:** musiikki vaihtuu biomin mukaan nopeammin (kappale soi vähintään 10 s, ennen 20 s). Jos toisto jää tauolle, sitä yritetään uudelleen; jos musiikkitiedosto puuttuu, soi valikon kappale ja [F3] kertoo puuttuvan tiedoston. Aavikon tuuli kuuluu nyt selvästi, ja savannilla on hiljainen tuuli (ennen lähes äänetöntä).
+- **Liaanit** ilman pieniä lehtitupsuja (ne näkyivät kaukaa leijuvina pisteinä).
+
 ## 2026-10-08 (sessio 25): valaistus, silmän mukautuminen, rannat ja iskut
 
 - **Silmän mukautuminen:** valotus mukautuu kuvan kirkkauteen: pimeään noin 3 sekunnissa, kirkkaaseen nopeammin. Soihdun valaisema lähiympäristö "sokaisee": kaukaiset pimeät alueet tummuvat, ja kun soihdun laskee, silmä tottuu pimeään ja siluetit alkavat erottua.

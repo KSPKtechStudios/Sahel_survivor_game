@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
 import { V, displace, paint, limb, flatNormals, merge, strip } from './util.js';
 import { glowShell } from './items3.js';
+import { makeShell } from './shells.js';
 
 function lash(y, r, col = 0xb39a68) {
   const g = new THREE.CylinderGeometry(r, r, 0.045, 8);
@@ -137,19 +138,9 @@ export function itemRope() {
   return merge(parts);
 }
 
+// Sessio 26: kampasimpukka (shells.js).
 export function itemShell() {
-  const rand = mulberry32(69);
-  const g = new THREE.CircleGeometry(0.06, 12, 0, Math.PI);
-  displace(g, (x, y) => {
-    const a = Math.atan2(y, x);
-    return [0, 0, Math.hypot(x, y) * (0.25 + Math.abs(Math.sin(a * 6)) * 0.12)];
-  });
-  g.rotateX(-Math.PI / 2 + 0.15);
-  g.translate(0, 0.012, 0.02);
-  const back = g.clone();
-  const idx = back.index.array;
-  for (let i = 0; i < idx.length; i += 3) { const t = idx[i + 1]; idx[i + 1] = idx[i + 2]; idx[i + 2] = t; }
-  return merge([paint(flatNormals(g), 0xf0d8c0, { rand, jitter: 0.1 }), paint(flatNormals(back), 0xe8a888, { rand, jitter: 0.1 })]);
+  return makeShell('scallop', 69);
 }
 
 export function itemSinew() {
@@ -603,6 +594,7 @@ export function createItemModels2() {
     flint: itemFlint(),
     bone: itemBone(),
     feather: itemFeather(),
+    seashell: itemShell(),
     reed: itemReed(),
     bamboo: itemBamboo(),
     palm_leaf: itemPalmLeaf(),

@@ -877,6 +877,75 @@ const ANIMS = {
     [0.72, [-0.08, 0.09, -0.19, 0.33, -1.6, 0.33, 0], 'out'],
     [1, ZERO, 'inOut'],
   ],
+  // --- Sessio 26: lisää muunnelmia (käyttäjä: enemmän animaatioita ja
+  // variaatioita). Osassa ennakoiva liike ja jälkiheilahdus.
+  // Raskas hakkuu: pieni notkahdus, korkea nosto, syvä jälkiheilahdus.
+  swingD: [
+    [0, ZERO],
+    [0.12, [0.01, -0.02, 0.02, 0, -0.14, 0, 0], 'out'],
+    [0.34, [0.0, 0.11, 0.08, -0.05, 0.98, -0.06, 0], 'inOut'],
+    [0.5, [-0.045, -0.12, -0.17, 0.02, -1.3, 0.12, 0], 'strike'],
+    [0.66, [-0.04, -0.135, -0.12, 0.02, -1.22, 0.1, 0], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  // Vaakahakkuu sivulta (terä vaakatasossa).
+  swingE: [
+    [0, ZERO],
+    [0.3, [0.14, 0.04, 0.03, -1.35, -0.45, -0.3, Q], 'inOut'],
+    [0.5, [-0.02, 0.0, -0.13, 0.25, -0.6, 0.15, Q], 'strike'],
+    [0.64, [-0.17, -0.01, -0.06, 1.05, -0.55, 0.25, Q], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  // Harhautus ja suora: nopea vale-isku, veto takaisin, varsinainen isku.
+  punchC: [
+    [0, ZERO],
+    [0.12, [-0.045, 0.02, -0.09, 0.1, -0.12, -0.05, 0], 'out'],
+    [0.24, [0.025, -0.005, 0.05, 0, 0.08, -0.05, 0], 'inOut'],
+    [0.42, [-0.11, 0.035, -0.27, 0.28, -0.28, -0.18, 0], 'strike'],
+    [0.54, [-0.095, 0.03, -0.23, 0.24, -0.25, -0.15, 0], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  // Ylhäältä kaartava isku (overhand).
+  punchD: [
+    [0, ZERO],
+    [0.2, [0.05, 0.065, 0.06, -0.15, 0.45, -0.3, 0], 'inOut'],
+    [0.42, [-0.1, -0.01, -0.24, 0.3, -0.55, 0.05, 0], 'strike'],
+    [0.55, [-0.095, -0.02, -0.21, 0.28, -0.5, 0.04, 0], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  // Jyrkkä vinoviilto ylhäältä.
+  slashR3: [
+    [0, ZERO],
+    [0.28, [0.08, 0.2, 0.05, -0.9, -1.2, -0.75, Q], 'inOut'],
+    [0.5, [-0.04, 0.02, -0.13, 0.4, -1.5, 0.6, Q], 'strike'],
+    [0.66, [-0.15, -0.05, -0.06, 0.9, -1.45, 0.75, Q], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  // Matala, nouseva rystyviilto.
+  slashL3: [
+    [0, ZERO],
+    [0.3, [-0.14, -0.06, 0.03, 1.45, -0.35, 0.3, -Q], 'inOut'],
+    [0.5, [0.0, 0.03, -0.13, -0.2, -0.75, -0.1, -Q], 'strike'],
+    [0.64, [0.15, 0.08, -0.05, -1.25, -1.0, -0.3, -Q], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  // Syöksypisto ranteen kierrolla.
+  thrust3: [
+    [0, ZERO],
+    [0.3, [0.05, 0.07, 0.12, -0.12, -1.5, 0.15, 0.6], 'inOut'],
+    [0.48, [-0.07, 0.11, -0.33, 0.12, -1.58, -0.1, 0], 'strike'],
+    [0.62, [-0.07, 0.1, -0.31, 0.12, -1.58, -0.1, 0], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  // Nuijan sivupyyhkäisy.
+  smash3: [
+    [0, ZERO],
+    [0.36, [0.14, 0.12, 0.06, -1.1, 0.4, -0.8, 0], 'inOut'],
+    [0.46, [0.15, 0.13, 0.07, -1.2, 0.45, -0.85, 0], 'out'],
+    [0.6, [-0.08, 0.02, -0.2, 0.7, -1.0, 0.6, 0], 'strike'],
+    [0.72, [-0.1, 0.0, -0.18, 0.8, -0.95, 0.65, 0], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
   pickup: [
     [0, ZERO],
     [0.5, [-0.05, -0.12, -0.1, 0, 0.5, 0.2, 0], 'inOut'],
@@ -906,14 +975,14 @@ const EASE = {
   inOut: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
 };
 
-// Sessio 25: iskujen muunnelmat (play valitsee vuorotellen).
+// Sessio 25: iskujen muunnelmat (play valitsee vuorotellen); sessio 26: lisää.
 const VARIANTS = {
-  swing: ['swing', 'swingB', 'swingC'],
-  punch: ['punch', 'punchB', 'uppercut'],
-  slashR: ['slashR', 'slashR2'],
-  slashL: ['slashL', 'slashL2'],
-  thrust: ['thrust', 'thrust2'],
-  smash: ['smash', 'smash2'],
+  swing: ['swing', 'swingB', 'swingD', 'swingC', 'swingE'],
+  punch: ['punch', 'punchB', 'punchC', 'uppercut', 'punchD'],
+  slashR: ['slashR', 'slashR2', 'slashR3'],
+  slashL: ['slashL', 'slashL2', 'slashL3'],
+  thrust: ['thrust', 'thrust2', 'thrust3'],
+  smash: ['smash', 'smash2', 'smash3'],
 };
 
 // Laskee asennon hetkellä t (out). Ensimmäinen kehys korvataan from-asennolla.

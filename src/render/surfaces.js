@@ -6,6 +6,7 @@
 // Värit säilyvät taiteellisesti ennallaan: tekstuuri kertoo vain yksityiskohdat
 // (tekstuuri / sen keskiväri), ja vertex-väri antaa sävyn.
 import * as THREE from 'three';
+import { applyCoverageMips } from './alphaMips.js';
 
 // Tekstuurien keskivärit (lineaarinen RGB), laskettu valmiiksi.
 const AVG = {
@@ -54,9 +55,9 @@ export function loadSurfaces(renderer, onDone = null) {
   const loader = new THREE.TextureLoader(manager);
   const aniso = renderer ? Math.min(8, renderer.capabilities.getMaxAnisotropy()) : 4;
   new THREE.ImageLoader(manager).load('assets/textures/leaves.png', (img) => {
-    leafTexture.image = img;
+    // Sessio 26: reunavärit ja peittävyyden säilyttävät mipmapit (alphaMips.js).
     leafTexture.anisotropy = aniso;
-    leafTexture.needsUpdate = true;
+    applyCoverageMips(leafTexture, img, 0.42);
   });
   for (const n of NAMES) {
     const c = loader.load(`assets/textures/${n}_col.jpg`);

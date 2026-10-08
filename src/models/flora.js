@@ -30,34 +30,11 @@ function trunk(base, top, r0, r1, cutY, q, hex, jr, radial) {
 // Sessio 23: latvus = pienempi, tummempi ydin + lehtikortit (leafCards).
 // kind: 'acacia' (pariliuskaiset lehdet) tai 'broad' (leveät lehdet).
 function blob(center, scale, detail, hex, jr, shadeCut = null, rotY = 0, kind = 'broad') {
+  // Sessio 26: latvus pelkistä lehtikorteista (kiinteä ydin poistettiin, se
+  // näkyi alta katsottuna rumana möhkäleenä). Kortteja tiheämmin, myös alapinnalla.
+  void shadeCut;
   const r = jr();
-  let g = new THREE.IcosahedronGeometry(1, detail);
-  displace(g, () => [(r() - 0.5) * 0.35, (r() - 0.5) * 0.4, (r() - 0.5) * 0.35]);
-  // Sessio 25: ydin pienempi ja tummempi (latvuksen sisäinen varjo), ettei
-  // kulmikas muoto paljastu lehtien välistä lähietäisyydeltä; kortteja tiheämmin.
-  g.scale(scale.x * 0.74, scale.y * 0.72, scale.z * 0.74);
-  g.rotateY(rotY);
-  g.translate(center.x, center.y, center.z);
-  g = flatNormals(g);
-  const shade = shadeCut !== null ? (x, y) => (y < shadeCut ? 0.26 : 0.42) : () => 0.42;
-  const core = paint(g, hex, { rand: r, jitter: 0.12, shade });
-  const cards = leafCards(center, scale, rotY, hex, r, kind, detail ? 1.3 : 0.2, detail ? 1 : 2.0);
-  return merge([core, cards]);
-}
-
-// Viuhkalehti (doumpalmu): säteittäisiä suikaleita yhdestä pisteestä.
-function fanLeaf(at, dir, size, hex, rand, segs) {
-  const parts = [];
-  const side = V(-dir.z, 0, dir.x).normalize();
-  for (let i = 0; i < segs; i++) {
-    const t = (i / (segs - 1) - 0.5) * 1.6;
-    const d = dir.clone().multiplyScalar(Math.cos(t)).addScaledVector(side, Math.sin(t)).normalize();
-    const tip = at.clone().addScaledVector(d, size).add(V(0, size * 0.25 - Math.abs(t) * size * 0.15, 0));
-    const mid = at.clone().lerp(tip, 0.5).add(V(0, size * 0.12, 0));
-    const s2 = V(-d.z, 0, d.x);
-    parts.push(strip([at, mid, tip], [0.05, 0.16, 0.02], s2, hex, rand));
-  }
-  return parts;
+  return leafCards(center, scale, rotY, hex, r, kind, detail ? 1.75 : 0.3, detail ? 1.05 : 2.0, 0.85);
 }
 
 // --- Karitepuu (shea): matala, kyhmyinen runko ja tiheä pyöreä latvus ----------------
@@ -94,54 +71,6 @@ export function makeSheaTree(seed, q = 1) {
   return treeMeta(merge(parts), {
     kind: 'shea', base: base.toArray(), top: top.toArray(), r0: 0.3, r1: 0.22, cutY,
     height: H + 1.5, fallLen: H - cutY + 1.0, logR: 0.3,
-  });
-}
-
-// --- Doumpalmu: haarautuva palmu, jonka haarojen päissä viuhkalehdet ---------------
-
-export function makeDoumPalm(seed, q = 1) {
-  const rand = mulberry32(seed);
-  let k = 0;
-  const jr = () => partRand(seed, k++);
-  const parts = [];
-  const bark = [0x6d604f, 0x5f5446][seed % 2];
-  const leafCols = [0x6f8a3c, 0x7d9444, 0x8a9a4e];
-  const forkY = 2.2 + rand() * 1.2;
-  const base = V(0, -0.2, 0);
-  const fork = V((rand() - 0.5) * 0.4, forkY, (rand() - 0.5) * 0.4);
-  const cutY = 0.8;
-  parts.push(...trunk(base, fork, 0.2, 0.17, cutY, q, bark, jr, 7));
-  const nb = 2 + Math.floor(rand() * 2);
-  for (let i = 0; i < nb; i++) {
-    const a = (i / nb) * Math.PI * 2 + rand() * 0.8;
-    const len = 1.6 + rand() * 1.4;
-    const tip = V(fork.x + Math.cos(a) * len * 0.55, fork.y + len, fork.z + Math.sin(a) * len * 0.55);
-    const j = jr();
-    parts.push(paint(limb(fork, tip, 0.14, 0.12, q ? 6 : 4), bark, { rand: j }));
-    // Joskus haara haarautuu vielä kerran
-    const ends = [tip];
-    if (rand() < 0.5) {
-      const a2 = a + (rand() - 0.5) * 1.4;
-      const t2 = V(tip.x + Math.cos(a2) * 0.9, tip.y + 1.0, tip.z + Math.sin(a2) * 0.9);
-      const j2 = jr();
-      parts.push(paint(limb(tip, t2, 0.11, 0.1, q ? 5 : 3), bark, { rand: j2 }));
-      ends.push(t2);
-    } else {
-      jr();
-    }
-    for (const e of ends) {
-      const nl = q ? 5 : 3;
-      for (let l = 0; l < nl; l++) {
-        const la = (l / nl) * Math.PI * 2 + rand() * 0.4;
-        const dir = V(Math.cos(la), 0.35 + rand() * 0.4, Math.sin(la)).normalize();
-        const j3 = jr();
-        parts.push(...fanLeaf(e, dir, 1.0 + rand() * 0.4, leafCols[l % 3], j3, q ? 4 : 3));
-      }
-    }
-  }
-  return treeMeta(merge(parts), {
-    kind: 'doum', base: base.toArray(), top: fork.toArray(), r0: 0.2, r1: 0.17, cutY,
-    height: forkY + 4, fallLen: forkY + 2.5 - cutY, logR: 0.22,
   });
 }
 
@@ -183,34 +112,6 @@ export function makeLog(seed, mossy = false) {
   return merge(parts);
 }
 
-// --- Villibanaani: isot, repaleiset lehdet ---------------------------------------------
-
-export function makeBanana(seed) {
-  const rand = mulberry32(seed);
-  const parts = [];
-  const H = 1.6 + rand() * 1.0;
-  const lean = V((rand() - 0.5) * 0.3, H, (rand() - 0.5) * 0.3);
-  parts.push(paint(limb(V(0, -0.1, 0), lean, 0.13, 0.09, 6), 0x5a7a34, { rand, shade: (x, y) => 0.75 + Math.min(0.25, y * 0.1) }));
-  const n = 7 + Math.floor(rand() * 3);
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2 + rand() * 0.5;
-    const len = 1.5 + rand() * 0.8;
-    const elev = 0.5 + rand() * 0.5;
-    const dir = V(Math.cos(a), 0, Math.sin(a));
-    const side = V(-Math.sin(a), 0, Math.cos(a));
-    const pts = [];
-    for (let s = 0; s <= 4; s++) {
-      const t = s / 4;
-      const d = t * len;
-      pts.push(V(lean.x + dir.x * d * Math.cos(elev), lean.y + Math.sin(elev) * d - t * t * len * 0.75, lean.z + dir.z * d * Math.cos(elev)));
-    }
-    const widths = pts.map((_, s) => Math.sin((s / 4) * Math.PI) * 0.55 + 0.04);
-    const col = i % 3 === 0 ? 0x6f8f34 : rand() < 0.5 ? 0x3f7a2a : 0x4c8a30;
-    parts.push(strip(pts, widths, side, col, rand, (x, y) => 0.65 + Math.min(0.35, (y / H) * 0.4)));
-  }
-  return merge(parts);
-}
-
 // --- Aavikkopensas (Calotropis): harmaanvihreä, isolehtinen -------------------------
 
 export function makeDesertShrub(seed) {
@@ -237,78 +138,6 @@ export function makeDesertShrub(seed) {
     }
   }
   return merge(parts);
-}
-
-// --- Kookospalmu: kalteva runko ja kookospähkinät ----------------------------------
-
-export function makeCoconutPalm(seed, q = 1) {
-  const rand = mulberry32(seed);
-  let k = 0;
-  const jr = () => partRand(seed, k++);
-  const parts = [];
-  const H = 6.5 + rand() * 2.5;
-  const bendA = rand() * Math.PI * 2;
-  const bend = 1.8 + rand() * 1.4;
-  const n = 6;
-  const pts = [];
-  for (let i = 0; i <= n; i++) {
-    const t = i / n;
-    pts.push(V(Math.cos(bendA) * bend * Math.pow(t, 1.6), -0.2 + t * (H + 0.2), Math.sin(bendA) * bend * Math.pow(t, 1.6)));
-  }
-  const cutY = 0.8;
-  const rAt = (i) => 0.2 - (i / n) * 0.06;
-  const cols = [0x8a7a62, 0x7a6b55];
-  if (q === 2) {
-    const t = (cutY - pts[0].y) / (pts[1].y - pts[0].y);
-    const cut = pts[0].clone().lerp(pts[1], t);
-    const rc = rAt(0) + (rAt(1) - rAt(0)) * t;
-    parts.push(tag(paint(limb(pts[0], cut, rAt(0), rc, 10, false, 6), cols[0], { rand: jr() }), 'trunk'));
-    parts.push(tag(paint(limb(cut, pts[1], rc, rAt(1), 10, false, 4), cols[0], { rand: jr() }), 'trunk'));
-  } else {
-    jr(); jr();
-    parts.push(paint(limb(pts[0], pts[1], rAt(0), rAt(1), q ? 7 : 4), cols[0], { rand: partRand(seed, 98) }));
-  }
-  for (let i = 1; i < n; i++) {
-    const j = jr();
-    parts.push(paint(limb(pts[i], pts[i + 1], rAt(i), rAt(i + 1), q ? 7 : 4, true), cols[i % 2], { rand: j }));
-  }
-  const crown = pts[n];
-  const nf = 11 + Math.floor(rand() * 3);
-  for (let i = 0; i < nf; i++) {
-    const a = (i / nf) * Math.PI * 2 + rand() * 0.3;
-    const old = i % 4 === 0;
-    const elev = old ? -0.35 - rand() * 0.3 : 0.25 + rand() * 0.45;
-    const len = 3.0 + rand() * 1.0;
-    const dir = V(Math.cos(a), 0, Math.sin(a));
-    const side = V(-Math.sin(a), 0, Math.cos(a));
-    const segs = q ? 6 : 3;
-    const fp = [];
-    for (let s = 0; s <= segs; s++) {
-      const t = s / segs;
-      const d = t * len;
-      const droop = (old ? 1.7 : 1.25) * t * t * len * 0.45;
-      fp.push(V(crown.x + dir.x * d * Math.cos(elev), crown.y + Math.sin(elev) * d - droop, crown.z + dir.z * d * Math.cos(elev)));
-    }
-    const widths = fp.map((_, s) => Math.sin((s / segs) * Math.PI) * 0.5 + 0.03);
-    const col = old ? 0x9a8a4a : rand() < 0.5 ? 0x4f8a32 : 0x62993a;
-    const j = jr();
-    if (q || i % 2 === 0) parts.push(strip(fp, widths, side, col, j));
-  }
-  const fj = jr();
-  if (q) {
-    const nc = 3 + Math.floor(rand() * 4);
-    for (let i = 0; i < nc; i++) {
-      const a = rand() * Math.PI * 2;
-      let c = new THREE.IcosahedronGeometry(0.17, 0);
-      c.scale(1, 1.15, 1);
-      c.translate(crown.x + Math.cos(a) * 0.25, crown.y - 0.3 - rand() * 0.15, crown.z + Math.sin(a) * 0.25);
-      parts.push(paint(flatNormals(c), rand() < 0.6 ? 0x5a6a2a : 0x6a4a28, { rand: fj, jitter: 0.15 }));
-    }
-  }
-  return treeMeta(merge(parts), {
-    kind: 'coconut', base: pts[0].toArray(), top: pts[1].toArray(), logTop: pts[n].toArray(), r0: rAt(0), r1: rAt(1), cutY,
-    height: H + 1, fallLen: H - cutY + 1.5, logR: 0.2,
-  });
 }
 
 // --- Ajopuu rannalla (poimitaan: puuta) -------------------------------------------

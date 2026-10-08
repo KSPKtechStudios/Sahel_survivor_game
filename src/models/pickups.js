@@ -3,7 +3,8 @@
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
 import { V, displace, paint, limb, flatNormals, merge } from './util.js';
-import { itemFlint, itemShell, itemFeather, itemCoconut, itemBaobabFruit, itemNuts, itemMushroom } from './items2.js';
+import { makeShell, SHELL_KINDS } from './shells.js';
+import { itemFlint, itemFeather, itemCoconut, itemBaobabFruit, itemNuts, itemMushroom } from './items2.js';
 
 // Esineen kopioita satunnaisesti maahan (pieni kasa).
 function scatter(seed, make, n, scale, spread, lie = false) {
@@ -22,7 +23,23 @@ function scatter(seed, make, n, scale, spread, lie = false) {
 }
 
 export const makeFlintGround = (seed) => scatter(seed, () => itemFlint(), 1 + (seed % 3), 1.7, 0.18);
-export const makeShellGround = (seed) => scatter(seed, () => itemShell(), 1 + (seed % 2), 1.9, 0.15);
+// Sessio 26: rannan simpukat (kampa-, sydän-, kauri- ja tornisimpukka), osa ylösalaisin.
+export function makeShellGround(seed) {
+  const rand = mulberry32(seed);
+  const n = 1 + Math.floor(rand() * 3);
+  const parts = [];
+  for (let i = 0; i < n; i++) {
+    const kind = SHELL_KINDS[Math.floor(rand() * SHELL_KINDS.length)];
+    const g = makeShell(kind, seed * 7 + i * 13, rand() < 0.3, 0.45);
+    const s = 1.35 + rand() * 0.35;
+    g.scale(s, s, s);
+    g.rotateY(rand() * Math.PI * 2);
+    const a = rand() * Math.PI * 2, r = i === 0 ? 0 : 0.08 + rand() * 0.14;
+    g.translate(Math.cos(a) * r, 0, Math.sin(a) * r);
+    parts.push(g);
+  }
+  return merge(parts);
+}
 export const makeFeatherGround = (seed) => scatter(seed, (i) => itemFeather(63 + i + seed), 1, 1.8, 0, true);
 export const makeCoconutGround = (seed) => scatter(seed, () => itemCoconut(), 1 + (seed % 2), 1.25, 0.25);
 export const makeBaobabFruitGround = (seed) => scatter(seed, () => itemBaobabFruit(), 1 + (seed % 2), 1.4, 0.25, true);

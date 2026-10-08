@@ -1,12 +1,17 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 26: latvukset alta (ei ytimiä), valokeilat sademetsässä aamulla aurinkoa kohti ja sivulta, sademetsän usva selkeällä, lehtien kiilto yöllä, leijuvat pikselit, palmut, kookospalmut, doumpalmut ja banaanit, simpukat rannalla ([E] poimii), jalanjäljet hiekassa, iskujen muunnelmat, musiikki ja äänet aavikolla ja savannilla
+- [ ] Jos aavikolla ei vieläkään kuulu musiikkia: [F3] näyttää musiikin tilan (ja "puuttuu: …", jos musiikkitiedosto puuttuu; musiikkipaketti puretaan samaan sahel-kansioon). Huom: yöllä biomien musiikki on tarkoituksella hiljaa
+- [ ] Suorituskyky: lehtikortteja on nyt enemmän (latvukset ilman ydintä) ja valokeilat lisäävät yhden puolikkaan resoluution passin. Jos FPS laskee: Asetukset → Kasvillisuus tai Valonsäteet pois
+- [ ] **Seuraavaksi (käyttäjän lisätoiveet, sessio 26):** fysiikka liaaneille ja lehdille (kaato, tuuli, pää osuu), kaislat kaikkien vesistöjen varsille (ei hiekkarannoille), baobab uusiksi, juuret ja kannot pyöreämmiksi, lahopuu kaatuu eikä hajoa, haamun viitta viittamaiseksi ja paremmat tekstuurit (+ vapaaehtoisesti kangasfysiikka)
+- [ ] CGTraderin palmu (käyttäjän linkki): lisenssi "Royalty Free No AI" ja lataus vaatii kirjautumisen, joten en voi ladata sitä itse. Uudet palmut tehtiin itse; jos haluat silti sen mallin, lataa se ja lähetä tiedosto (.glb/.gltf/.obj), niin liitän sen
 - [ ] Käyttäjä testaa session 25: silmän mukautuminen (ilta, yö, soihtu päälle/pois), hämärän hajavalo, sateen ja sumun yö, lehtien läpikuultavuus sademetsässä, DOF ja liike-epäterävyys (Asetukset), merenpohja ja rannat, jalanjäljet hiekassa, roiskeet vedessä, iskujen muunnelmat, kello kädessä, kuu
 - [ ] Vastaus: onko yö nyt sopivan pimeä? (säätö: post.js `ae.max`, environment.js hämärän `hemiI`)
 - [ ] Käyttäjä testaa session 24 (stilisoitu realismi): pehmeä maasto (mäet, harjanteet, dyynit, vuoret), tiheä ruoho (savanni, kausilampi, keidas), sademetsän pohja (saniaiset, lehväkasvit, sienet, sammal), liaanit ja köynnökset, muinaiset pylväät, ruostuneet kilvet, juuret, rauniot, kuolleet puut, korkeussumu ja aamu-usva, itiöt, sade ja roiskeet
 - [ ] Suorituskyky omalla koneella: ruoho ja aluskasvit lisäävät piirtotyötä. Jos FPS laskee, kokeile Asetukset → Kasvillisuus: Normaali / Harva, ja kerro tulos
 - [ ] Sketchfabin mallit: lataukset vaativat käyttäjän API-avaimen (sketchfab.com → asetukset → Password & API). Jos haluat niitä, anna avain ympäristön salaisuudeksi, ja kerro mitä malleja toivot
-- [ ] Ulkoasu jatkuu: palmut, akasiat ja baobabit valmiilla malleilla tai paremmin teksturoituina, olennot, esineet kädessä, rakennelmat; pudonneet oksat maahan (nyt oksat ovat poimittavia keppejä)
+- [ ] Ulkoasu jatkuu: (palmut ja banaanit uusittu sessiossa 26) akasiat ja baobabit valmiilla malleilla tai paremmin teksturoituina, olennot, esineet kädessä, rakennelmat; pudonneet oksat maahan (nyt oksat ovat poimittavia keppejä)
 - [ ] Käyttäjä testaa session 23 (ulkoasu, osa 1): maaston tekstuurit, lehvästöt, pensaat, kaarna, kivet, skannatut lohkareet; myös suorituskyky omalla koneella (lehtikortit lisäävät piirtotyötä)
 - [x] Ulkoasu, osa 2: ruoho, metsänpohja, kuolleet puut, sammal, rauniot (sessio 24); palmut, olennot, esineet ja rakennelmat jatkuvat
 - [ ] Käyttäjä testaa session 22: tasot ([F3] → Esineet → Taso… / Metallit), puulajit (jalopuu, ydinpuu), baobabin kuorinta ja kaato, panssarit ja kilvet, rubiinin hehku ja voimat, jouset ja nuolet

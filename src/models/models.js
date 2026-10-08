@@ -3,7 +3,9 @@
 // Väliaikaisia malleja: jokainen malli on BufferGeometry (position, normal,
 // color). Kun grafiikkaa jalostetaan, nämä voi korvata glTF-malleilla samoilla
 // nimillä (ks. docs/DECISIONS.md).
-import { makeAcacia, makeBaobab, makeJungleTree, makePalm, makeCanopyTree } from './trees.js';
+import { makeAcacia, makeBaobab, makeJungleTree, makeCanopyTree } from './trees.js';
+// Sessio 26: uudet palmut ja banaanit.
+import { makePalm, makeCoconutPalm, makeDoumPalm, makeBanana } from './palms.js';
 import { makeBush, makeTumbleweed, makeGrassTuft, makeBamboo, makeThicket, makeEuphorbia, makeReeds } from './plants.js';
 import { makeGroundStick, makeStone, makeTermiteMound, makeOutcrop, makeSpire } from './rocks.js';
 import { scannedBoulder, SCANNED_BOULDER_COUNT } from './scanned/build.js';
@@ -14,7 +16,7 @@ import { ensureUv } from './util.js';
 import { makeCampfireBase, createItemModels } from './items.js';
 import { createBuildModels } from './building.js';
 import {
-  makeSheaTree, makeDoumPalm, makeLog, makeBanana, makeDesertShrub, makeCoconutPalm, makeDriftwood,
+  makeSheaTree, makeLog, makeDesertShrub, makeDriftwood,
   makeTallGrass, makeFlowers, makeLilies, makeSeaweed, makeBones, makeScree, makePuddle,
 } from './flora.js';
 import {
@@ -70,7 +72,7 @@ const VARIANTS = {
   scree: [makeScree, 3, 291],
   // Sessio 9: poimittavat
   flint: [makeFlintGround, 3, 401],
-  shell: [makeShellGround, 2, 411],
+  shell: [makeShellGround, 6, 411], // sessio 26: enemmän muunnelmia
   feather: [makeFeatherGround, 2, 421],
   coconutGround: [makeCoconutGround, 2, 431],
   baobabFruit: [makeBaobabFruitGround, 2, 441],
@@ -105,7 +107,7 @@ const VARIANTS = {
   beachStones: [makeBeachStones, 4, 831],
 };
 // Mallit, joilla on kevyt kaukoversio (ilman varjoa).
-const HAS_FAR = new Set(['acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);
+const HAS_FAR = new Set(['banana', 'acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);
 // Mallit, joista tehdään tiheärunkoinen versio hakkaamista varten.
 const HAS_HI = new Set(['acacia', 'jungle', 'palm', 'canopy', 'shea', 'doum', 'coconut', 'baobab']);
 

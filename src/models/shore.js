@@ -2,7 +2,7 @@
 // - Levä: pystyssä huojuvia, aaltoilevia nauhoja järvien ja meren pohjassa.
 // - Pohjakivet: pyöristyneitä kiviä, joissa levän vihreää.
 // - Rantakivikko: isompia, märkiä kiviä vesirajassa.
-// - Rantakivet ja simpukat: pieniä kiviä ja ajautuneita simpukankuoria.
+// - Rantakivet: pieniä kiviä (sessio 26: simpukat omina poimittavina).
 // Kaikki vertex-väritettyjä, kevyitä (vedenalaiset eivät näy tarkasti).
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
@@ -84,30 +84,6 @@ export function makeShoreRocks(seed) {
   return merge(parts);
 }
 
-// Simpukankuori: litistetty puolipallo uurteineen (kampasimpukka) tai
-// kartiomainen kotilo.
-function shell(rand) {
-  const cols = [0xe8dcc8, 0xe6c8b0, 0xd8c0a0, 0xf0e6d8, 0xc8a890];
-  const col = cols[Math.floor(rand() * cols.length)];
-  if (rand() < 0.6) {
-    let g = new THREE.SphereGeometry(0.045 + rand() * 0.025, 10, 4, 0, Math.PI * 2, 0, Math.PI / 2);
-    displace(g, (x, y, z) => {
-      const a = Math.atan2(z, x);
-      return [0, Math.abs(Math.sin(a * 6)) * 0.004, 0];
-    });
-    g.scale(1, 0.45, 1.1);
-    if (rand() < 0.4) g.rotateX(Math.PI); // ylösalaisin
-    g = flatNormals(g);
-    return paint(g, col, { rand, jitter: 0.08 });
-  }
-  let g = new THREE.ConeGeometry(0.03, 0.09, 7, 3);
-  displace(g, (x, y, z) => [x * Math.sin(y * 60) * 0.15, 0, z * Math.sin(y * 60) * 0.15]);
-  g.rotateZ(Math.PI / 2);
-  g.translate(0, 0.02, 0);
-  g = flatNormals(g);
-  return paint(g, col, { rand, jitter: 0.1 });
-}
-
 export function makeBeachStones(seed) {
   const rand = mulberry32(seed);
   const parts = [];
@@ -120,13 +96,6 @@ export function makeBeachStones(seed) {
     g.translate(Math.cos(a) * r, 0.01, Math.sin(a) * r);
     parts.push(g);
   }
-  const ns = 1 + Math.floor(rand() * 3);
-  for (let i = 0; i < ns; i++) {
-    const g = shell(rand);
-    g.rotateY(rand() * Math.PI * 2);
-    const a = rand() * Math.PI * 2, r = rand() * 0.7;
-    g.translate(Math.cos(a) * r, 0.005, Math.sin(a) * r);
-    parts.push(g);
-  }
+  // Sessio 26: simpukat ovat nyt omia poimittavia esineitään (seashellPick).
   return merge(parts);
 }

@@ -5,7 +5,7 @@
 // samalta puulta. geometry.userData.tree kertoo rungon akselin ja kaatokohdan.
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
-import { V, partRand, displace, paint, limb, flatNormals, strip, merge, tag, leafCards } from './util.js';
+import { V, partRand, displace, paint, limb, flatNormals, merge, tag, leafCards } from './util.js';
 import { liana, climbingVine } from './ancient.js';
 
 function treeMeta(geo, meta) {
@@ -32,19 +32,11 @@ function trunkParts(base, top, r0, r1, cutY, q, hex, jr, radial) {
 // Sessio 23: latvus = pienempi, tummempi ydin + lehtikortit (leafCards).
 // kind: 'acacia' (pariliuskaiset lehdet) tai 'broad' (leveät lehdet).
 function blob(center, scale, detail, hex, jr, shadeCut = null, rotY = 0, kind = 'broad') {
+  // Sessio 26: latvus pelkistä lehtikorteista (kiinteä ydin poistettiin, se
+  // näkyi alta katsottuna rumana möhkäleenä). Kortteja tiheämmin, myös alapinnalla.
+  void shadeCut;
   const r = jr();
-  let g = new THREE.IcosahedronGeometry(1, detail);
-  displace(g, () => [(r() - 0.5) * 0.35, (r() - 0.5) * 0.4, (r() - 0.5) * 0.35]);
-  // Sessio 25: ydin pienempi ja tummempi (latvuksen sisäinen varjo), ettei
-  // kulmikas muoto paljastu lehtien välistä lähietäisyydeltä; kortteja tiheämmin.
-  g.scale(scale.x * 0.74, scale.y * 0.72, scale.z * 0.74);
-  g.rotateY(rotY);
-  g.translate(center.x, center.y, center.z);
-  g = flatNormals(g);
-  const shade = shadeCut !== null ? (x, y) => (y < shadeCut ? 0.26 : 0.42) : () => 0.42;
-  const core = paint(g, hex, { rand: r, jitter: 0.12, shade });
-  const cards = leafCards(center, scale, rotY, hex, r, kind, detail ? 1.3 : 0.2, detail ? 1 : 2.0);
-  return merge([core, cards]);
+  return leafCards(center, scale, rotY, hex, r, kind, detail ? 1.75 : 0.3, detail ? 1.05 : 2.0, 0.85);
 }
 
 // --- Akasia ------------------------------------------------------------------
@@ -240,77 +232,6 @@ export function makeJungleTree(seed, q = 1) {
   return treeMeta(merge(parts), {
     kind: 'jungle', base: base.toArray(), top: top.toArray(), r0, r1, cutY,
     height: H + 2, fallLen: H - cutY + 1.5, logR: 0.5,
-  });
-}
-
-// --- Palmu ---------------------------------------------------------------------
-
-export function makePalm(seed, q = 1) {
-  const rand = mulberry32(seed);
-  let k = 0;
-  const jr = () => partRand(seed, k++);
-  const parts = [];
-  const H = 5.5 + rand() * 2.5;
-  const bendA = rand() * Math.PI * 2;
-  const bend = 0.6 + rand() * 0.8;
-  const n = 5;
-  const pts = [];
-  for (let i = 0; i <= n; i++) {
-    const t = i / n;
-    pts.push(V(Math.cos(bendA) * bend * t * t, -0.2 + t * (H + 0.2), Math.sin(bendA) * bend * t * t));
-  }
-  const cutY = 0.8;
-  const ringCols = [0x7a6a52, 0x6a5a45];
-  const rAt = (i) => 0.21 - (i / n) * 0.06;
-  if (q === 2) {
-    const t = (cutY - pts[0].y) / (pts[1].y - pts[0].y);
-    const cut = pts[0].clone().lerp(pts[1], t);
-    const rc = rAt(0) + (rAt(1) - rAt(0)) * t;
-    parts.push(tag(paint(limb(pts[0], cut, rAt(0), rc, 10, false, 6), ringCols[0], { rand: jr() }), 'trunk'));
-    parts.push(tag(paint(limb(cut, pts[1], rc, rAt(1), 10, false, 4), ringCols[0], { rand: jr() }), 'trunk'));
-  } else {
-    jr(); jr();
-    parts.push(paint(limb(pts[0], pts[1], rAt(0), rAt(1), q ? 7 : 4), ringCols[0], { rand: partRand(seed, 98) }));
-  }
-  for (let i = 1; i < n; i++) {
-    const j = jr();
-    parts.push(paint(limb(pts[i], pts[i + 1], rAt(i), rAt(i + 1), q ? 7 : 4, true), ringCols[i % 2], { rand: j }));
-  }
-  const crown = pts[n];
-  const nf = 12 + Math.floor(rand() * 3);
-  for (let i = 0; i < nf; i++) {
-    const a = (i / nf) * Math.PI * 2 + rand() * 0.3;
-    const old = i % 4 === 0;
-    const elev = old ? -0.2 - rand() * 0.3 : 0.35 + rand() * 0.5;
-    const len = 2.6 + rand() * 0.9;
-    const dir = V(Math.cos(a), 0, Math.sin(a));
-    const side = V(-Math.sin(a), 0, Math.cos(a));
-    const segs = q ? 6 : 3;
-    const fp = [];
-    for (let s = 0; s <= segs; s++) {
-      const t = s / segs;
-      const d = t * len;
-      const droop = (old ? 1.6 : 1.1) * t * t * len * 0.45;
-      fp.push(V(crown.x + dir.x * d * Math.cos(elev), crown.y + Math.sin(elev) * d - droop, crown.z + dir.z * d * Math.cos(elev)));
-    }
-    const widths = fp.map((_, s) => Math.sin((s / segs) * Math.PI) * 0.42 + 0.03);
-    const col = old ? 0x8f8044 : rand() < 0.5 ? 0x4e7d2e : 0x5f8f36;
-    const j = jr();
-    if (q || i % 2 === 0) parts.push(strip(fp, widths, side, col, j));
-  }
-  const hasFruit = rand() < 0.8;
-  const fj = jr();
-  if (hasFruit && q) {
-    let f = new THREE.IcosahedronGeometry(0.28, 0);
-    f.translate(crown.x + 0.15, crown.y - 0.35, crown.z);
-    f = flatNormals(f);
-    parts.push(paint(f, 0xb5521f, { rand: fj, jitter: 0.2 }));
-  }
-  return treeMeta(merge(parts), {
-    // logTop: kaarevan rungon latva (kaatuneen rungon osumat; top on vain
-    // ensimmäinen pätkä, jota käytetään kaatokohdan laskentaan).
-    kind: 'palm', base: pts[0].toArray(), top: pts[1].toArray(), logTop: pts[n].toArray(), r0: rAt(0), r1: rAt(1), cutY,
-    height: H + 1, fallLen: H - cutY + 1.5, logR: 0.22,
   });
 }
 

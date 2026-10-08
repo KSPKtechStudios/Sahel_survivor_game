@@ -11,6 +11,7 @@
 // heinää ympäriltään, kaukana tupsut painuvat maahan (ei äkillistä katoamista),
 // ja vastavaloon katsottaessa ohuet korret hehkuvat läpi.
 import * as THREE from 'three';
+import { loadAlphaTexture } from './alphaMips.js';
 import { windUniforms } from './materials.js';
 import { COVER_STRIDE, COVER_CELLS } from '../world/groundCover.js';
 
@@ -202,14 +203,9 @@ export class GrassField {
     this.cells = new Set();
     this.density = 1;  // osuus tupsuista (asetus)
     this.enabled = true;
-    const tex = new THREE.TextureLoader().load(new URL('../../assets/textures/grass.png', import.meta.url).href);
-    tex.colorSpace = THREE.NoColorSpace;
-    tex.anisotropy = 4;
-    grassUniforms.uGrassTex.value = tex;
-    const floor = new THREE.TextureLoader().load(new URL('../../assets/textures/forestfloor.png', import.meta.url).href);
-    floor.colorSpace = THREE.SRGBColorSpace;
-    floor.anisotropy = 4;
-    grassUniforms.uFloorTex.value = floor;
+    // Sessio 26: peittävyyden säilyttävät mipmapit (kaukainen ruoho ei harvene pisteiksi).
+    grassUniforms.uGrassTex.value = loadAlphaTexture(new URL('../../assets/textures/grass.png', import.meta.url).href, { srgb: false });
+    grassUniforms.uFloorTex.value = loadAlphaTexture(new URL('../../assets/textures/forestfloor.png', import.meta.url).href);
   }
 
   // Chunkin tupsut (chunkGen.generateChunk: cover + coverCells).

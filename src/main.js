@@ -83,7 +83,7 @@ const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerH
 // --- Järjestelmät -------------------------------------------------------------
 const materials = createSharedMaterials(createGroundDetailTexture());
 // Hakattavat ja kaatuvat puut: sama kaarna kuin seisovissa (sessio 23).
-const activeMaterial = addTranslucency(addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, map: leafTexture, alphaTest: 0.42, side: THREE.DoubleSide }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 1, 0.3), 0.38);
+const activeMaterial = addTranslucency(addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, map: leafTexture, alphaTest: 0.42, side: THREE.DoubleSide }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 0.3, 0), 0.38);
 loadSurfaces(renderer);
 const models = createModelLibrary();
 const sky = new Sky(scene);
@@ -707,13 +707,16 @@ function updateSfx(game, rainAmt, realDt) {
     const thunder = env.w.thunder * (1 - dry);
     const sand = _sm(0.45, 0.9, env.w.dust);
     const open = Math.max(_sm(0.2, 0.7, _s.mountains || 0), _sm(0.2, 0.7, _s.ocean || 0));
+    // Sessio 26: avoimilla savanneilla hiljainen tuuli (ennen täysin hiljaista).
+    const plains = _sm(0.3, 0.8, (_s.savanna || 0) + (_s.laterite || 0) + (_s.woodland || 0) * 0.6 + (_s.mare || 0) * 0.6);
     sfx.setLevels({
-      wind: Math.max(thunder, open * (0.6 + 0.4 * Math.min(1, env.w.wind))),
+      wind: Math.max(thunder, open * (0.6 + 0.4 * Math.min(1, env.w.wind)), plains * (0.22 + 0.25 * Math.min(1, env.w.wind))),
       jungle: _sm(0.3, 0.7, _s.rainforest || 0),
       rain: _sm(0.05, 0.12, rainAmt) * Math.pow(Math.min(1, rainAmt), 1.2),
       thunder,
-      // Aavikon tuuli: aina hyvin hiljaa, hiekkamyrskyssä kovaa.
-      desertWind: Math.max(0.1 * _sm(0.3, 0.7, (_s.desert || 0) + (_s.dunes || 0)), sand),
+      // Aavikon tuuli: aina kuuluvissa (sessio 26: ennen 0,1, käyttäjälle
+      // aavikko kuulosti äänettömältä), hiekkamyrskyssä kovaa.
+      desertWind: Math.max((0.38 + 0.25 * Math.min(1, env.w.wind)) * _sm(0.3, 0.7, (_s.desert || 0) + (_s.dunes || 0)), sand),
       // Raju tuuli: merellä ukkosella ja hiekkamyrskyssä puuskittain.
       stormWind: Math.max(thunder * _sm(0.2, 0.7, _s.ocean || 0), sand * Math.max(0, Math.sin(elapsed * 0.21) * Math.sin(elapsed * 0.077 + 1)) * 1.6),
     });
@@ -895,11 +898,15 @@ function frame(now) {
     const wetland = Math.min(1, _s.mare + _s.oasis * 0.7);
     const hf = post.hfog;
     hf.density = inGame && state !== 'menu'
-      ? Math.max(env.humid * 0.03, env.w.rain * 0.026, dawn * (0.008 + wetland * 0.022) * dryK, night * 0.006 * dryK)
+      ? Math.max(env.humid * 0.008, env.w.rain * 0.026, dawn * (0.008 + wetland * 0.022) * dryK, night * 0.006 * dryK)
       : 0;
     hf.base = Math.max(CONFIG.waterLevel, _s.h - 1.5);
     hf.falloff = 0.1 + 0.06 * (1 - env.humid);
     hf.color.copy(scene.fog.color);
+    // Sessio 26: valokeilojen ilman tiheys (sademetsän kostea ilma, aamu-usva, utu).
+    post.shafts = inGame && state !== 'menu'
+      ? Math.min(1.2, env.humid * 1.1 + dawn * 0.6 * dryK + env.w.haze * 0.35 + env.w.rain * 0.3)
+      : 0;
   }
   world.grass.update(camera.position, player.position, env);
   updateSfx(musicMode === 'game' && state !== 'loading', rainAmt, Math.min(0.25, rawDt));
@@ -940,7 +947,7 @@ function frame(now) {
   splashes.update(simDt, env.lightColor, materials.water.uniforms.uAmbient.value);
   fire.update(simDt, materials.water.uniforms.uAmbient.value);
   blood.update(simDt, 0.35 + 0.65 * env.daylight);
-  footprints.update(simDt);
+  footprints.update(simDt, env.sun.position, env.hemi.intensity / Math.max(0.05, env.sun.intensity) * 0.9);
   tumbleweeds.update(simDt, player.position, env.w.wind, env.windDir);
   if (state === 'playing' && !player.dead) {
     const wasRiding = boats.riding;
@@ -1038,7 +1045,7 @@ function frame(now) {
   debris.update(running ? dt : 0);
   bursts.update(simDt);
   dust.update(elapsed, camera.position, env);
-  ambient.update(simDt, elapsed, camera.position, env, rainAmt);
+  ambient.update(simDt, elapsed, camera.position, env, env.w.rain);
   sky.update(camera.position);
 
   if (inGame) {

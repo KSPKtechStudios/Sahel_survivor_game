@@ -1,7 +1,7 @@
 // Pensaat, saniaiset, tumbleweed ja ruohotupsut.
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
-import { leafCards, V, paint, limb, flatNormals, strip, merge } from './util.js';
+import { leafCards, V, paint, limb, strip, merge } from './util.js';
 
 // Kuivunut pensas: ohuita oksia ja muutama kuiva lehtitupsu.
 export function makeBush(seed) {
@@ -171,25 +171,12 @@ export function makeThicket(seed) {
   for (let i = 0; i < n; i++) {
     const a = rand() * Math.PI * 2;
     const r = rand() * 0.9;
-    let g = new THREE.IcosahedronGeometry(0.55 + rand() * 0.35, 0);
+    rand(); // (ennen ytimen koko; arvontajärjestys säilyy)
     const jr = mulberry32(seed * 31 + i);
-    g.translate(0, 0, 0);
-    const pos = g.attributes.position;
-    for (let v = 0; v < pos.count; v++) {
-      const x = pos.getX(v), y = pos.getY(v), z = pos.getZ(v);
-      const kk = 0.85 + Math.abs(Math.sin(x * 9.1 + y * 7.3 + z * 5.7 + i)) * 0.3;
-      pos.setXYZ(v, x * kk, y * kk * 0.85, z * kk);
-    }
     const cy = 0.45 + rand() * 0.5;
-    // Sessio 25: ydin pienempi ja tummempi, ettei kulmikas möhkäle näy
-    // lehtien välistä; lehtikortteja enemmän ja laajemmalle.
-    g.scale(0.56, 0.52, 0.56);
-    g.translate(Math.cos(a) * r, cy, Math.sin(a) * r);
-    g = flatNormals(g);
     const col = cols[Math.floor(rand() * 3)];
-    parts.push(paint(g, col, { rand: jr, jitter: 0.14, shade: (x, y) => 0.24 + Math.min(0.16, y * 0.16) }));
-    // Sessio 23: lehtikortit möhkäleen pinnalle.
-    parts.push(leafCards(V(Math.cos(a) * r, cy, Math.sin(a) * r), V(0.7, 0.58, 0.7), rand() * 3, col, jr, 'broad', 1.9, 0.62));
+    // Sessio 26: pelkät lehtikortit (kiinteä ydin poistettiin), tiheämmin.
+    parts.push(leafCards(V(Math.cos(a) * r, cy, Math.sin(a) * r), V(0.7, 0.58, 0.7), rand() * 3, col, jr, 'broad', 2.4, 0.66, 0.8));
   }
   for (let i = 0; i < 8; i++) {
     const a = rand() * Math.PI * 2;

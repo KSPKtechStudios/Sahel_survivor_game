@@ -187,6 +187,9 @@ uniform sampler2D tLum;  // sessio 25: sopeutunut kirkkaus (log)
 uniform vec4 uAE;        // x = viitekirkkaus, y = voimakkuus (0 = pois), z = min, w = max
 uniform vec4 uHFog;      // sessio 24: korkeussumu x = tiheys, y = pohja (m), z = vaimeneminen, w = aika
 uniform vec3 uHFogColor;
+uniform sampler2D tVol;  // sessio 26: valokeilat (r = valaistu matka m, g = säteen pituus)
+uniform vec3 uVolCol;    // auringon väri * voimakkuus * ilman tiheys
+uniform vec2 uVolTexel;
 varying vec2 vUv;
 float hfH(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float hfN(vec2 p) {
@@ -445,6 +448,21 @@ void main() {
     col += uSunColor * phase * f * uInscatter;
   }
 
+  // Sessio 26: volumetriset valokeilat (latvuston aukoista). Neljän näytteen
+  // pehmennys tasoittaa värisytyksen. Täysin valaistua ilmaa vaimennetaan,
+  // jotta avoimilla paikoilla ei synny tasaista utua vaan keilat korostuvat.
+  if (uVolCol.r + uVolCol.g + uVolCol.b > 0.0) {
+    vec2 v = texture2D(tVol, vUv + uVolTexel * vec2(0.75, 0.25)).rg + texture2D(tVol, vUv + uVolTexel * vec2(-0.25, 0.75)).rg
+      + texture2D(tVol, vUv + uVolTexel * vec2(-0.75, -0.25)).rg + texture2D(tVol, vUv + uVolTexel * vec2(0.25, -0.75)).rg;
+    v *= 0.25;
+    float litF = v.x / max(v.y, 0.001);
+    float mu = dot(ray, uSunDir);
+    float g = 0.55;
+    float hg = (1.0 - g * g) / pow(1.0 + g * g - 2.0 * g * mu, 1.5);
+    float phase = 0.45 + 0.55 * hg;
+    col += uVolCol * phase * v.x * (1.0 - 0.85 * pow(litF, 1.5));
+  }
+
   if (uUseRays > 0.5) col += texture2D(tRays, vUv).rgb * uRayColor * uRayStrength;
   if (uFlare > 0.01) col += lensFlare(vUv);
   if (uLens > 0.01) col = lensDrops(vUv, col);
@@ -458,6 +476,52 @@ void main() {
   gl_FragColor = vec4(col, 1.0);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
+}
+`;
+
+// Sessio 26: volumetriset valokeilat. Jokaiselle kuvapisteelle kuljetaan
+// katsesädettä pitkin (enintään uMaxDist m) ja katsotaan auringon
+// varjokartasta, onko kukin näytepiste valossa. Valaistu matka (m)
+// tallennetaan; latvuston aukoista tulevat keilat erottuvat varjoisasta
+// ilmasta. Puolikkaalla resoluutiolla, värisytetty aloituskohta.
+const volFS = /* glsl */ `
+uniform sampler2D tDepth;
+uniform sampler2DShadow tShadow;
+uniform mat4 uShadowM0;
+uniform mat4 uShadowM1;
+uniform float uCascEnd;
+uniform mat4 uInvViewProj;
+uniform vec3 uCamPos;
+uniform vec3 uCamFwd;
+uniform float uMaxDist;
+uniform float uFrame;
+varying vec2 vUv;
+
+float sunVis(vec3 p, float vz) {
+  bool c0 = vz < uCascEnd;
+  vec4 s = c0 ? uShadowM0 * vec4(p, 1.0) : uShadowM1 * vec4(p, 1.0);
+  float lo = c0 ? 0.0 : 0.5;
+  if (s.x < lo || s.x > lo + 0.5 || s.y < 0.0 || s.y > 1.0 || s.z > 1.0) return 1.0;
+  return texture(tShadow, vec3(s.xy, s.z));
+}
+
+void main() {
+  float depth = texture2D(tDepth, vUv).r;
+  vec4 wp = uInvViewProj * vec4(vUv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+  wp /= wp.w;
+  vec3 d = wp.xyz - uCamPos;
+  float L = min(length(d), uMaxDist);
+  vec3 ray = normalize(d);
+  float cosF = max(dot(ray, uCamFwd), 0.05);
+  const int N = 28;
+  float stepL = L / float(N);
+  float j = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + uFrame * 0.618034);
+  float acc = 0.0;
+  for (int i = 0; i < N; i++) {
+    float t = (float(i) + j) * stepL;
+    acc += sunVis(uCamPos + ray * t, t * cosF);
+  }
+  gl_FragColor = vec4(acc * stepL, L, 0.0, 1.0);
 }
 `;
 
@@ -530,7 +594,18 @@ export class PostFX {
       uHeat: { value: 0 }, uTime: { value: 0 }, uViewProj: { value: new THREE.Matrix4() },
       uHFog: { value: new THREE.Vector4(0, 0, 0.12, 0) }, uHFogColor: { value: new THREE.Color(0.7, 0.72, 0.74) },
       tLum: { value: null }, uAE: { value: new THREE.Vector4(0.3, 0, 0.6, 3) },
+      tVol: { value: null }, uVolCol: { value: new THREE.Color(0, 0, 0) }, uVolTexel: { value: new THREE.Vector2(1, 1) },
     });
+    // Sessio 26: volumetriset valokeilat (main.js asettaa ilman tiheyden).
+    this.shafts = 0;
+    this.volRT = makeRT(1, 1);
+    this.volMat = mat(volFS, {
+      tDepth: { value: depthTexture }, tShadow: { value: null },
+      uShadowM0: { value: new THREE.Matrix4() }, uShadowM1: { value: new THREE.Matrix4() }, uCascEnd: { value: 40 },
+      uInvViewProj: { value: new THREE.Matrix4() }, uCamPos: { value: new THREE.Vector3() }, uCamFwd: { value: new THREE.Vector3() },
+      uMaxDist: { value: 50 }, uFrame: { value: 0 },
+    }, { toneMapped: false });
+    this.frame = 0;
     // Sessio 25: silmän mukautuminen (1 x 1 -kirkkaus, kaksi vuorottelevaa).
     this.autoExposure = true;
     this.ae = { ref: 0.3, strength: 0.6, min: 0.65, max: 2.8, darkTau: 1.1, brightTau: 0.4 };
@@ -582,6 +657,8 @@ export class PostFX {
     this.raysA.setSize(hw, hh);
     this.raysB.setSize(hw, hh);
     this.dofRT.setSize(hw, hh);
+    this.volRT.setSize(hw, hh);
+    this.compMat.uniforms.uVolTexel.value.set(1 / hw, 1 / hh);
     this.dofMat.uniforms.uTexel.value.set(1 / hw, 1 / hh);
     this.maskMat.uniforms.uAspect.value = w / h;
     this.compMat.uniforms.uAspect.value = w / h;
@@ -653,6 +730,31 @@ export class PostFX {
     }
     cu.uUseRays.value = rays > 0.01 ? 1 : 0;
     cu.uRayStrength.value = rays * 1.35;
+
+    // --- Volumetriset valokeilat varjokartasta
+    const sh = env.sun.shadow;
+    const shadowTex = sh.map && sh.map.depthTexture;
+    let shaft = 0;
+    if (this.godRays && shadowTex && r.shadowMap.enabled && env.sun.castShadow && sunUp) {
+      shaft = this.shafts * sh.intensity * Math.min(1, env.daylight * 1.5) * (1 - env.w.cloud * 0.55);
+    }
+    if (shaft > 0.01) {
+      const vu = this.volMat.uniforms;
+      vu.tShadow.value = shadowTex;
+      vu.uShadowM0.value.copy(sh.getMatrix(0));
+      vu.uShadowM1.value.copy(sh.getMatrix(1));
+      vu.uCascEnd.value = sh._cascadeData[0].y;
+      vu.uInvViewProj.value.copy(cu.uInvViewProj.value);
+      vu.uCamPos.value.copy(camera.position);
+      camera.getWorldDirection(vu.uCamFwd.value);
+      this.frame = (this.frame + 1) % 64;
+      vu.uFrame.value = this.frame;
+      this._pass(this.volMat, this.volRT);
+      cu.tVol.value = this.volRT.texture;
+      cu.uVolCol.value.copy(env.sun.color).multiplyScalar(env.sun.intensity * 0.011 * shaft);
+    } else {
+      cu.uVolCol.value.setRGB(0, 0, 0);
+    }
 
     // --- Syväterävyys
     if (this.dof) {

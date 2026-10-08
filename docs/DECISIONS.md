@@ -2,6 +2,16 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-08 (sessio 26)
+- **Latvukset pelkistä lehtikorteista (ei ydintä).** Syy: käyttäjän toive; ydin näkyi alta rumana. Peittävyys korvattiin tiheämmillä korteilla (lähellä tiheys 1,75, ennen 1,3; kaukana isommat kortit), joista osa latvuksen alapinnalla.
+- **Valokeilat varjokartasta (volumetrinen säteenseuranta jälkikäsittelyssä), puolikkaalla resoluutiolla, 28 näytettä enintään 50 m matkalla.** Syy: ruudun tason "god rays" näkyy vain aurinkoa kohti katsottaessa; varjokartta antaa keilat oikeista latvuston aukoista. Täysin valaistua ilmaa vaimennetaan, jotta keilat korostuvat eikä synny tasaista utua. Kytkeytyy Valonsäteet-asetukseen ja vaatii varjot.
+- **Alfatestattujen tekstuurien mipmapit lasketaan itse latauksessa** (läpinäkyvien reunojen väritäyttö ja peittävyyden säilytys). Syy: leijuvien pikselien todellinen syy; ratkaisu ei vaadi muutoksia varjostimiin ja koskee kaikkia lehtiä, ruohoa ja kukkia.
+- **Palmut ja banaanit tehtiin itse geometriana (ei ladattuja malleja).** Syy: Poly Havenissa ei ole palmuja, Quaterniuksen paketit eivät lataudu suoraan, ja Kenneyn palmut ovat matalapolygonisia. Sulkalehti lehdyköineen (~3 400–3 800 kolmiota lähellä, ~450–600 kaukana) sopii nykyiseen vertex-väri- ja lehtimateriaaliin.
+- **Simpukat poimittavina omana tyyppinään; rantakivistä simpukat poistettiin.** Syy: ettei koristesimpukoita sekoiteta poimittaviin. Uusi esine `seashell` on toistaiseksi materiaali (käyttö avoin).
+- **Jalanjälki on korkeuskartasta laskettu normaalikartta, jonka valaistus kerrotaan maan väriin.** Syy: oikea 3D-kuoppa vaatisi maaston muokkaamista; tämä säilyttää hiekan värin ja tekstuurin ja näyttää painaumalta myös sivusta.
+- **Suorituskyky mitattiin samassa paikassa sademetsässä session 25 versioon verraten** (ohjelmistorenderöinti, 640 × 360): ensimmäinen versio oli ~19 % hitaampi. Syyt: simpukkakasa 6 800 kolmiota, banaani 3 700, palmut 4 400–5 200, tiheikön ja latvusten kortit. Kevennettiin (simpukat maassa harvemmalla verkolla, lehdykät 21–22 per puoli, banaanin lehdissä 7 pätkää, latvusten tiheys 1,75, tiheikön 2,4). Valokeilojen passi ei näkynyt mittauksessa.
+- **Musiikin logiikka todettiin toimivaksi testissä (aavikon kappale alkaa ~3 s:ssa).** Varmuudeksi uudelleenyritys, varakappale puuttuvalle tiedostolle ja lyhyempi pitoaika. Aavikon hiljaisuus johtui osin tarkoituksella hiljaisesta tuulesta, jota voimistettiin.
+
 ## 2026-10-08 (sessio 25)
 - **Silmän mukautuminen mitataan kuvasta näytönohjaimella** (16 × 9 näytettä, ajallinen sopeutuminen 1 × 1 -tekstuurissa, ei lukua takaisin prosessorille). Syy: toimii kaikissa paikoissa (latvuston alla, soihdun valossa, nuotiolla) ilman erikoistapauksia eikä pysäytä ruudunpäivitystä. Keskiarvo painottuu kirkkaisiin kohtiin, jotta soihtu sokaisee; taivas painaa vähän, jotta maasto erottuu iltataivasta vasten.
 - **Sopeutumisaika: pimeään τ ≈ 1,1 s (noin 3 s lähes valmis), kirkkaaseen τ ≈ 0,4 s.** Syy: käyttäjän toive 2–4 s; kirkkaaseen silmä tottuu nopeammin.
