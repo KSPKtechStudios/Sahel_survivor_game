@@ -1,10 +1,11 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 27: liaanit (kävele niihin, tuuli, kaada puu jossa on liaaneja), kaatuvan puun lehdet, kookokset ([E] ravista, lyö, kaada; kasvavat takaisin), haamun viitta (yöllä sademetsässä), baobab, sademetsän puut, pönkkäjuuret ja kannot, banaanit, lahopuun kaato, lammikot sademetsän notkoissa, kaislat jokien ja järvien rannoilla, leijuvat pisteet, silmän tottuminen (katso ylös latvuston aukkoon ja takaisin alas), yön kirkkaus, aavikon tuuli, jalanjäljet
 - [ ] Käyttäjä testaa session 26: latvukset alta (ei ytimiä), valokeilat sademetsässä aamulla aurinkoa kohti ja sivulta, sademetsän usva selkeällä, lehtien kiilto yöllä, leijuvat pikselit, palmut, kookospalmut, doumpalmut ja banaanit, simpukat rannalla ([E] poimii), jalanjäljet hiekassa, iskujen muunnelmat, musiikki ja äänet aavikolla ja savannilla
 - [ ] Jos aavikolla ei vieläkään kuulu musiikkia: [F3] näyttää musiikin tilan (ja "puuttuu: …", jos musiikkitiedosto puuttuu; musiikkipaketti puretaan samaan sahel-kansioon). Huom: yöllä biomien musiikki on tarkoituksella hiljaa
 - [ ] Suorituskyky: lehtikortteja on nyt enemmän (latvukset ilman ydintä) ja valokeilat lisäävät yhden puolikkaan resoluution passin. Jos FPS laskee: Asetukset → Kasvillisuus tai Valonsäteet pois
-- [ ] **Seuraavaksi (käyttäjän lisätoiveet, sessio 26):** fysiikka liaaneille ja lehdille (kaato, tuuli, pää osuu), kaislat kaikkien vesistöjen varsille (ei hiekkarannoille), baobab uusiksi, juuret ja kannot pyöreämmiksi, lahopuu kaatuu eikä hajoa, haamun viitta viittamaiseksi ja paremmat tekstuurit (+ vapaaehtoisesti kangasfysiikka)
+- [x] Käyttäjän lisätoiveet (sessio 26): fysiikka liaaneille ja lehdille, kaislat vesistöjen varsille, baobab, juuret ja kannot, lahopuun kaato, haamun viitta ja kangasfysiikka (tehty sessiossa 27)
 - [ ] CGTraderin palmu (käyttäjän linkki): lisenssi "Royalty Free No AI" ja lataus vaatii kirjautumisen, joten en voi ladata sitä itse. Uudet palmut tehtiin itse; jos haluat silti sen mallin, lataa se ja lähetä tiedosto (.glb/.gltf/.obj), niin liitän sen
 - [ ] Käyttäjä testaa session 25: silmän mukautuminen (ilta, yö, soihtu päälle/pois), hämärän hajavalo, sateen ja sumun yö, lehtien läpikuultavuus sademetsässä, DOF ja liike-epäterävyys (Asetukset), merenpohja ja rannat, jalanjäljet hiekassa, roiskeet vedessä, iskujen muunnelmat, kello kädessä, kuu
 - [ ] Vastaus: onko yö nyt sopivan pimeä? (säätö: post.js `ae.max`, environment.js hämärän `hemiI`)

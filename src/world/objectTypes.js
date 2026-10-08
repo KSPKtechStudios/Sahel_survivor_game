@@ -61,7 +61,7 @@ export const OBJECT_TYPES = {
     density: { beach: 7 },
     scale: [0.85, 1.15], maxSlope: 0.5, collider: 0.24, hit: { y: 1.2, r: 0.45 }, drawDist: 99,
     harvest: { tool: 'axe', hp: 4, needMsg: 'Tarvitset kirveen' },
-    log: { name: 'Kaatunut kookospalmu', hp: 3, drops: [['wood', 2], ['palm_leaf', 2], ['coconut', 2]] },
+    log: { name: 'Kaatunut kookospalmu', hp: 3, drops: [['wood', 2], ['palm_leaf', 2]] }, // sessio 27: kookokset putoavat latvasta (game/coconuts.js)
   },
   // Sessio 22: baobab kuoritaan ensin (ulkopuusta tavallista puuta), ja vasta
   // sitten rungon ytimen voi kaataa rautakirveellä (ydinpuuta).
@@ -74,10 +74,12 @@ export const OBJECT_TYPES = {
     log: { name: 'Kaadettu baobab', hp: 12, drops: [['heartwood', 6], ['wood', 3], ['baobab_fruit', 2]] },
   },
   deadTree: {
-    name: 'Kuollut puu', model: 'deadTree', kind: 'bush', material: 'solid', surface: 'wood', castShadow: true,
+    // Sessio 27: kaatuu kuten muut puut (ennen hajosi palasiksi; käyttäjä).
+    name: 'Kuollut puu', model: 'deadTree', kind: 'tree', material: 'solid', surface: 'wood', castShadow: true,
     density: { desert: 0.5, dunes: 0.35, savanna: 0.15, mountains: 0.35, laterite: 0.2 },
     scale: [0.8, 1.3], maxSlope: 0.5, collider: 0.22, hit: { y: 1.0, r: 0.6 }, drawDist: 99,
-    harvest: { tool: 'axe', hp: 3, drops: [['wood', 2], ['stick', 2]], needMsg: 'Tarvitset kirveen' },
+    harvest: { tool: 'axe', hp: 3, needMsg: 'Tarvitset kirveen' },
+    log: { name: 'Kaatunut kuollut puu', hp: 2, drops: [['wood', 2], ['stick', 2]] },
   },
   bush: {
     name: 'Kuivunut pensas', model: 'bush', kind: 'bush', material: 'bush', castShadow: false,
@@ -227,9 +229,10 @@ export const OBJECT_TYPES = {
   },
   reeds: {
     name: 'Ruoko', model: 'reeds', kind: 'decor', material: 'grass', castShadow: false, decorative: true,
-    density: { mare: 230, oasis: 240, rainforest: 100, savanna: 60, woodland: 60, mountains: 40, beach: 20 },
+    // Sessio 27: jokaisen vesistön varrella (käyttäjä), ei hiekkarannoilla.
+    density: { mare: 420, oasis: 420, rainforest: 360, savanna: 380, woodland: 380, laterite: 320, mountains: 220, desert: 260, dunes: 120, rock: 120, mesa: 120 },
     scale: [0.8, 1.5], maxSlope: 0.9, collider: 0, hit: null,
-    nearWater: true, // vain vesirajassa (myös jokien ja järvien rannoilla); sessio 25: tiheämmin
+    nearWater: true, notBeach: true, // vain vesirajassa (myös jokien ja järvien rannoilla)
   },
   // --- Sessio 9: poimittavat [E]. Uudet tyypit lisätään loppuun, jotta
   // vanhojen esineiden sijainnit (siemenet) eivät muutu.

@@ -136,8 +136,11 @@ export function buildCoverageMips(img, cutoff = 0.5) {
     }
     lw = nw; lh = nh; alpha = nA; rgb = nRGB;
     const n = lw * lh;
+    // Sessio 27: vahvistus vain isoilla tasoilla (≥ 64 px) ja enintään 1,6×:
+    // pienimmillä tasoilla vahvistus teki kaukaisista korteista umpinaisia
+    // tummia neliöitä. Sitä pienemmät kortit saavat haalistua pois.
     const t = thresholdFor(alpha, n, target);
-    const scale = Math.max(1, cutoff / Math.max(t, 1e-3));
+    const scale = Math.max(lw, lh) >= 64 ? Math.min(1.6, Math.max(1, cutoff / Math.max(t, 1e-3))) : 1;
     const out = new ImageData(lw, lh);
     for (let i = 0; i < n; i++) {
       out.data[i * 4] = rgb[i * 3];

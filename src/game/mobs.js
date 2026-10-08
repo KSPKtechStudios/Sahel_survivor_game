@@ -21,6 +21,7 @@ import { waterAt, sampleTerrain, insideStructure } from '../world/terrain.js';
 import { makeWarthog, makeClayGolem, makeGazelle, makeFennec, makeMonkey, makeGuineafowl, makeBird, makeHaamu } from '../models/creatures.js';
 import { createFlameTexture, createSoftDotTexture } from '../render/textures.js';
 import { events } from './events.js';
+import { windUniforms } from '../render/materials.js';
 
 export const MOB_TYPES = {
   warthog: {
@@ -90,6 +91,7 @@ const _cols = [];
 const _v = new THREE.Vector3();
 const _m = new THREE.Matrix4();
 const _w = new THREE.Vector3();
+const _cw = { x: 0, z: 0 }; // sessio 27: tuuli haamun viittaan
 
 // Veren väri lajeittain (savipeikolla punaruskeaa savivelliä).
 const RED = new THREE.Color(0.55, 0.03, 0.02);
@@ -1727,6 +1729,13 @@ export class Mobs {
       const want = armX + (i ? 0.1 : -0.1) * Math.sin(elapsed * 2 + m.phase);
       a.rotation.x += (want - a.rotation.x) * Math.min(1, dt * 8);
       a.rotation.z = (i ? 1 : -1) * armZ;
+    }
+    // Sessio 27: viitta kankaana (lepattaa ja laahaa liikkeen perässä).
+    if (md.cloak && dt > 0) {
+      md.group.updateMatrixWorld(true);
+      _cw.x = windUniforms.uWindDir.value.x * windUniforms.uWindStrength.value * 4;
+      _cw.z = windUniforms.uWindDir.value.y * windUniforms.uWindStrength.value * 4;
+      md.cloak.update(md.torso, dt, elapsed + m.phase, _cw);
     }
     // Hehku sykkii hitaasti.
     const pulse = 1 + Math.sin(elapsed * 2.6 + m.phase) * 0.12;

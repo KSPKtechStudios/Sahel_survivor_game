@@ -170,6 +170,8 @@ export function generateChunk(cx, cz, variantCounts) {
         y = sv.wl + 0.005;
       } else if (def.nearWater) {
         if (h < sv.wl - 0.35 || h > sv.wl + 0.9) continue;
+        // Sessio 27: kaislat eivät kasva hiekkarannoilla eivätkä meren rannassa.
+        if (def.notBeach && sv.beach + sv.ocean > 0.25) continue;
       } else if (def.seabed) {
         // Sessio 25: veden alla pohjassa (levät, pohjakivet).
         const depth = sv.wl - h;
@@ -201,6 +203,50 @@ export function generateChunk(cx, cz, variantCounts) {
       decor.push(ti, Math.floor(r4 * nv), x, y, z, r2 * Math.PI * 2, sc, sy);
     }
   });
+
+  // --- Sessio 27: sademetsän lammikot maaston kuoppiin (käyttäjä: aina
+  // matalimpiin kohtiin). Etsitään verkon paikalliset minimit; vedenpinta on
+  // kuopan reunan matalimmassa kohdassa, joten vesi täyttää notkon eikä
+  // reuna jää leijumaan.
+  {
+    const ti = DECOR_TYPES.indexOf('puddle');
+    if (ti >= 0) {
+      const prand = mulberry32(hashSeed(seed, cx, cz, 1700));
+      const nv = variantCounts.puddle || 1;
+      const H = (i, j) => positions[(j * row + i) * 3 + 1];
+      let placed = 0;
+      for (let j = 2; j <= SEG - 2 && placed < 6; j++) {
+        for (let i = 2; i <= SEG - 2 && placed < 6; i++) {
+          const sv = samples[j * row + i];
+          if (sv.rainforest < 0.45) continue;
+          const h = H(i, j);
+          if (h < sv.wl + 0.15) continue;
+          let isMin = true;
+          for (let dj = -2; dj <= 2 && isMin; dj++) {
+            for (let di = -2; di <= 2; di++) {
+              if ((di || dj) && H(i + di, j + dj) < h) { isMin = false; break; }
+            }
+          }
+          if (!isMin || prand() > 0.8) continue;
+          const x = x0 + i * STEP, z = z0 + j * STEP;
+          for (const R of [3.6, 2.7, 1.9]) {
+            let ringMin = Infinity;
+            for (let k = 0; k < 16; k++) {
+              const a = (k / 16) * Math.PI * 2;
+              ringMin = Math.min(ringMin, meshHeight(x + Math.cos(a) * R, z + Math.sin(a) * R));
+            }
+            const level = ringMin - 0.02;
+            const depth = level - meshHeight(x, z);
+            if (depth >= 0.05 && depth <= 0.8 && !insideStructure(x, z, -1)) {
+              decor.push(ti, Math.floor(prand() * nv), x, level, z, prand() * Math.PI * 2, R / 1.8, 1);
+              placed++;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
 
   // --- Sessio 24: tiheä ruohokenttä (render/grassField.js)
   const { cover, coverCells } = generateCover(cx, cz, samples, positions, normals, gw);

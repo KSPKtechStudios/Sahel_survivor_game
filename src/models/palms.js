@@ -17,7 +17,7 @@ const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _n = new THREE.Vector3
 
 // Kolmioiden kerääjä (paikka, normaali, väri) suoraan taulukoihin.
 class Mesher {
-  constructor() { this.p = []; this.n = []; this.c = []; }
+  constructor() { this.p = []; this.n = []; this.c = []; this.two = false; this.back = 1; }
   // Kolmio; normaali käännetään ylöspäin ja taivutetaan kohti ylöstä
   // (lehdet valaistuvat pehmeämmin kuin litteinä tasoina).
   tri(a, b, c, ca, cb = ca, cc = ca, upBias = 0.5) {
@@ -30,6 +30,17 @@ class Mesher {
       this.p.push(v.x, v.y, v.z);
       this.n.push(_n.x, _n.y, _n.z);
       this.c.push(col.r, col.g, col.b);
+    }
+    // Sessio 27: kaksipuolinen (banaaninlehti): erillinen takapinta, jonka
+    // normaali osoittaa myös ylöspäin. Muuten alapinta näytti mustalta
+    // (DoubleSide kääntää normaalin alaspäin); kuultava lehti on alta vaalea.
+    if (this.two) {
+      const k = this.back;
+      for (const [v, col] of [[c, cc], [b, cb], [a, ca]]) {
+        this.p.push(v.x, v.y, v.z);
+        this.n.push(_n.x, _n.y, _n.z);
+        this.c.push(Math.min(1, col.r * k), Math.min(1, col.g * k), Math.min(1, col.b * k * 0.95));
+      }
     }
   }
   quad(a, b, c, d, ca, cb, cc, cd, upBias) {
@@ -165,18 +176,17 @@ function palmBase(parts, p0, r, hex, rand, q) {
   }
 }
 
-// Kookosterttu latvan alla.
-function coconuts(parts, crown, rand, q) {
-  const nc = q ? 5 + Math.floor(rand() * 6) : 3;
-  for (let i = 0; i < nc; i++) {
+// Kookosterttu latvan alla. Sessio 27: pähkinät ovat erillisiä (game/coconuts.js),
+// malli kertoo vain niiden paikat: [x, y, z, koko, kallistus, väri].
+function coconutPoints(crown, rand, n) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
     const a = rand() * Math.PI * 2, r = 0.16 + rand() * 0.14;
-    let c = new THREE.SphereGeometry(0.15 + rand() * 0.03, q ? 7 : 5, q ? 5 : 4);
-    c.scale(1, 1.15, 0.95);
-    c.rotateZ((rand() - 0.5) * 0.8);
-    c.translate(crown.x + Math.cos(a) * r, crown.y - 0.22 - rand() * 0.22, crown.z + Math.sin(a) * r);
     const ripe = rand();
-    parts.push(paint(c, ripe < 0.55 ? 0x5e7a2a : ripe < 0.85 ? 0x8a7a2e : 0x6a4a28, { rand, jitter: 0.06, shade: (x, y) => 0.85 + 0.15 * Math.sin(y * 20) }));
+    pts.push([crown.x + Math.cos(a) * r, crown.y - 0.22 - rand() * 0.22, crown.z + Math.sin(a) * r,
+      0.9 + rand() * 0.2, (rand() - 0.5) * 0.8, ripe < 0.45 ? 0 : ripe < 0.7 ? 1 : ripe < 0.9 ? 2 : 3]);
   }
+  return pts;
 }
 
 // Lehtitupet latvassa (kuitumainen kaulus lehtien tyvissä).
@@ -239,16 +249,21 @@ export function makePalm(seed, q = 1) {
   }
   const crown = pts[n];
   crownSheaths(parts, crown, rAt(n), jr(), q, 0x6a5a3e);
+  // Sessio 27: myös tällä palmulla kookoksia (käyttäjä).
+  const fj = mulberry32(seed * 53 + 7);
+  const fruit = coconutPoints(crown, fj, 4 + Math.floor(fj() * 4));
   const m = new Mesher();
   frondSet(m, crown, jr(), q, {
     count: 14 + Math.floor(rand() * 3), oldEvery: 6, elev: [0.25, 0.7], len: [2.7, 3.5], droop: 0.42,
     frond: { green: [0x3f7a2a, 0x4a8530, 0x56903a][seed % 3], leaflets: 21, leafW: 0.06, vAngle: 0.45 },
   });
   parts.push(m.geometry());
-  return treeMeta(merge(parts), {
+  const geo = treeMeta(merge(parts), {
     kind: 'palm', base: pts[0].toArray(), top: pts[1].toArray(), logTop: pts[n].toArray(), r0: rAt(0), r1: rAt(1), cutY,
     height: H + 1, fallLen: H - cutY + 1.5, logR: 0.24,
   });
+  geo.userData.fruit = fruit;
+  return geo;
 }
 
 // --- Kookospalmu: kalteva, kaareva sileä runko, riippuvat lehdet ja kookokset -----
@@ -275,17 +290,19 @@ export function makeCoconutPalm(seed, q = 1) {
   const crown = pts[n];
   crownSheaths(parts, crown, rAt(n), jr(), q, 0x8a7a50);
   const cj = jr();
-  coconuts(parts, crown, cj, q);
+  const fruit = coconutPoints(crown, cj, 6 + Math.floor(cj() * 5));
   const m = new Mesher();
   frondSet(m, crown, jr(), q, {
     count: 13 + Math.floor(rand() * 3), oldEvery: 6, elev: [0.15, 0.55], len: [3.2, 4.1], droop: 0.55,
     frond: { green: [0x4f8a2e, 0x5a9434, 0x62993a][seed % 3], leaflets: 22, leafW: 0.05, vAngle: 0.2 },
   });
   parts.push(m.geometry());
-  return treeMeta(merge(parts), {
+  const geo = treeMeta(merge(parts), {
     kind: 'coconut', base: pts[0].toArray(), top: pts[1].toArray(), logTop: pts[n].toArray(), r0: rAt(0), r1: rAt(1), cutY,
     height: H + 1, fallLen: H - cutY + 1.5, logR: 0.21,
   });
+  geo.userData.fruit = fruit;
+  return geo;
 }
 
 // --- Doumpalmu: haarautuva runko, viuhkalehdet --------------------------------------
@@ -379,19 +396,21 @@ export function makeDoumPalm(seed, q = 1) {
 // Banaaninlehti: ruoti, keskisuoni ja kaksi lapaa, jotka tuuli on repinyt
 // suikaleiksi (jokainen suikale roikkuu hieman eri kulmassa).
 function bananaLeaf(m, p, a, elev, len, width, rand, dry, q) {
+  m.two = true;
+  m.back = dry ? 1 : 1.18;
   const dir = V(Math.cos(a), 0, Math.sin(a));
   const side = V(-Math.sin(a), 0, Math.cos(a));
-  const segs = q ? 7 : 4;
+  const segs = q ? 6 : 4;
   const pet = len * 0.18;
   const mid = [];
   for (let s = 0; s <= segs; s++) {
     const t = s / segs, d = pet + t * len;
-    const droop = (dry ? 1.6 : 0.55) * Math.pow(d / (pet + len), 2) * len;
+    const droop = (dry ? 1.6 : 0.42) * Math.pow(d / (pet + len), 2.2) * len;
     mid.push(V(p.x + dir.x * d * Math.cos(elev), p.y + Math.sin(elev) * d - droop, p.z + dir.z * d * Math.cos(elev)));
   }
   const pStart = p.clone();
-  const green = dry ? col(rand() < 0.5 ? 0x8a6a3a : 0x7a5a32) : col([0x4a8a2c, 0x56963a, 0x4e8e30][Math.floor(rand() * 3)], 0.9 + rand() * 0.2);
-  const ribC = dry ? col(0x9a7a48) : col(0xa8c070);
+  const green = dry ? col(rand() < 0.5 ? 0xa08a5a : 0x8a7048) : col([0x5a9c38, 0x66a83e, 0x5e9a34][Math.floor(rand() * 3)], 0.92 + rand() * 0.16);
+  const ribC = dry ? col(0xb09a68) : col(0xb8cc7a);
   const edgeC = dry ? col(0x6a4a28) : green.clone().multiplyScalar(0.8);
   // Ruoti
   m.quad(pStart.clone().addScaledVector(side, -0.03), pStart.clone().addScaledVector(side, 0.03), mid[0].clone().addScaledVector(side, 0.025), mid[0].clone().addScaledVector(side, -0.025), ribC, ribC, ribC, ribC, 0.3);
@@ -399,29 +418,30 @@ function bananaLeaf(m, p, a, elev, len, width, rand, dry, q) {
   for (const sgn of [-1, 1]) {
     // Repeämäkohdat tällä puolella.
     const cuts = [];
-    const nc = dry ? 8 : 2 + Math.floor(rand() * 4);
+    const nc = dry ? 8 : Math.floor(rand() * 3.2);
     for (let i = 0; i < nc; i++) cuts.push(0.15 + rand() * 0.8);
     cuts.sort((x, y) => x - y);
     let curDroop = rand() * 0.3;
     for (let s = 0; s < segs; s++) {
       const t0 = s / segs, t1 = (s + 1) / segs;
-      if (cuts.some((c) => c > t0 && c <= t1)) curDroop = 0.15 + rand() * (dry ? 1.2 : 0.55);
+      if (cuts.some((c) => c > t0 && c <= t1)) curDroop = 0.1 + rand() * (dry ? 1.2 : 0.35);
       const m0 = mid[s], m1 = mid[s + 1];
       const tan = m1.clone().sub(m0).normalize();
       const nrm = new THREE.Vector3().crossVectors(tan, side).normalize();
       if (nrm.y < 0) nrm.negate();
       const gap = cuts.some((c) => c > t0 && c <= t1) ? 0.035 : 0;
       const edge = (mp, t, frac) => mp.clone().addScaledVector(side, sgn * hw(t) * frac)
-        .addScaledVector(nrm, -hw(t) * frac * frac * (0.25 + curDroop));
+        .addScaledVector(nrm, -hw(t) * frac * frac * (0.12 + curDroop * 0.6));
       // Sisäosa (keskisuonen vieressä, ehjä) ja ulko-osa (suikaleet).
       const a0 = m0.clone().addScaledVector(side, sgn * 0.02), a1 = m1.clone().addScaledVector(side, sgn * 0.02);
       const b0 = edge(m0, t0, 0.18), b1 = edge(m1, t1, 0.18);
       const c0 = edge(m0, t0, 1), c1 = edge(m1, t1 - gap, 1);
-      m.quad(a0, b0, b1, a1, ribC, green, green, ribC, 0.5);
-      m.quad(b0, c0, c1, b1, green, edgeC, edgeC, green, 0.5);
+      m.quad(a0, b0, b1, a1, ribC, green, green, ribC, 1.1);
+      m.quad(b0, c0, c1, b1, green, edgeC, edgeC, green, 1.1);
     }
   }
   // Keskisuoni
+  m.two = false;
   for (let s = 0; s < segs; s++) {
     const m0 = mid[s], m1 = mid[s + 1];
     m.quad(m0.clone().addScaledVector(side, -0.02), m0.clone().addScaledVector(side, 0.02), m1.clone().addScaledVector(side, 0.02), m1.clone().addScaledVector(side, -0.02), ribC, ribC, ribC, ribC, 0.4);
@@ -469,21 +489,21 @@ export function makeBanana(seed, q = 1) {
     const top = V(off.x + (rand() - 0.5) * 0.25, H, off.z + (rand() - 0.5) * 0.25);
     const r = main ? 0.13 : 0.08;
     // Valevarsi lehtitupeista: vihreänruskea, tummia läiskiä, tupen saumat.
-    parts.push(paint(limb(V(off.x, -0.1, off.z), top, r * 1.25, r * 0.8, 8, false, 5), 0x5e7a36, {
+    parts.push(paint(limb(V(off.x, -0.1, off.z), top, r * 1.45, r * 0.75, 10, false, 6), 0x5e7a36, {
       rand, jitter: 0.12, shade: (x, y, z) => 0.7 + 0.2 * Math.min(1, y / H) + 0.1 * Math.sin(Math.atan2(z - off.z, x - off.x) * 3 + y * 2),
     }));
     // Kuivuneet lehdet riippuvat varren ympärillä.
     const nd = main ? 2 + Math.floor(rand() * 2) : 1;
     for (let i = 0; i < nd; i++) {
-      bananaLeaf(m, V(top.x, top.y - 0.25, top.z), rand() * Math.PI * 2, -1.05 - rand() * 0.3, (0.9 + rand() * 0.4) * (main ? 1 : 0.6), 0.11, rand, true, q);
+      bananaLeaf(m, V(top.x, top.y - 0.25, top.z), rand() * Math.PI * 2, -1.1 - rand() * 0.3, (0.8 + rand() * 0.4) * (main ? 1 : 0.6), 0.06, rand, true, q);
     }
     const nl = main ? 7 + Math.floor(rand() * 3) : 4 + Math.floor(rand() * 2);
     for (let i = 0; i < nl; i++) {
       const a = (i / nl) * Math.PI * 2 + rand() * 0.5;
       const young = i === nl - 1;
-      const elev = young ? 1.25 : 0.55 + rand() * 0.5;
+      const elev = young ? 1.3 : 0.75 + rand() * 0.45;
       const len = (main ? 1.8 + rand() * 0.8 : 0.9 + rand() * 0.4) * (young ? 0.7 : 1);
-      bananaLeaf(m, top, a, elev, len, len * 0.27, rand, false, q);
+      bananaLeaf(m, top, a, elev, len, len * 0.21, rand, false, q);
     }
     // Kaukoversiossa (q = 0) ei terttua; arvonta silti samassa järjestyksessä.
     const bunch = main && rand() < 0.55;

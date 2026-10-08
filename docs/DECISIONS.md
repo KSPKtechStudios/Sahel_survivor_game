@@ -2,6 +2,18 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-08 (sessio 27)
+- **Liaanit ovat oma järjestelmänsä (render/vines.js), ei osa puun geometriaa.** Puumalli kertoo vain kiinnityskohdat (`userData.vines`). Köydet luodaan 46 m:n säteellä, simuloidaan 26 m:n säteellä (Verlet, 11 pistettä, 6 rajoitekierrosta) ja piirretään yhtenä dynaamisena verkkona (enintään 260 köyttä). Syy: fysiikka (tuuli, pelaaja, kaatuminen) vaatii köydet erikseen; yksi verkko on kevyt piirtää.
+- **Kaatuvan latvuksen lehtien liike jousena prosessorilla** (vain kaatuessa ja hetken sen jälkeen). Syy: yksi tai kaksi kaatuvaa puuta kerrallaan; varjostimen muutos olisi vaatinut materiaalikopion.
+- **Kookokset erillisinä instansseina, tila pelin kellosta** (`day × 24 + time`). Syy: pähkinät voivat kadota ja kasvaa yksitellen ilman puumallien muutoksia; tila on pieni (vain otetut tallennetaan).
+- **Kookoksia myös sademetsän ja keitaan palmuissa.** Syy: käyttäjä puhui palmuista yleisesti.
+- **Poly Havenin puita ei käytetty:** island_tree_01 on 3,7 milj. kolmiota, jacaranda 312 000, ja lehdet ovat geometriaa (eivät keventyisi). Sademetsän puut paranneltiin itse (ryppäät oksien kärjissä).
+- **Haamun viitta on kangassimulaatio (16 × 11 pistettä) maailman koordinaateissa.** Syy: viitta laahaa ja lepattaa luonnollisesti haamun liikkeiden mukaan; haamuja on vähän kerrallaan.
+- **Lahopuu (kitin malli) saa puun tiedot mallin muodosta;** halkaisu säilyttää kitin varjostuksen (aAO) ja materiaalin. Syy: sama kaato- ja pilkontalogiikka kuin muilla puilla.
+- **Lammikot paikallisiin kuoppiin:** verkon 5 × 5 -naapuruston minimi, vedenpinta kuopan reunan (säde 1,9–3,6 m) matalimmasta kohdasta. Syy: vesi ei koskaan leiju eikä reuna jää ilmaan.
+- **Leijuvat pisteet:** atlaksen tummat varret poistettiin pysyvästi tekstuurista; peittävyyden vahvistus vain ≥ 64 px:n mipmap-tasoilla (enintään 1,6×); lehtimateriaaleissa alpha to coverage.
+- **Silmän mukautuminen:** taivaan paino 0,15 → 0,4, voimakkuus 0,6 → 0,82, pimeään τ 1,1 → 1,7 s, yön yläraja 1,9 (päivällä 2,8). Syy: käyttäjä ei huomannut efektiä; selkeä yö hieman tummemmaksi.
+
 ## 2026-10-08 (sessio 26)
 - **Latvukset pelkistä lehtikorteista (ei ydintä).** Syy: käyttäjän toive; ydin näkyi alta rumana. Peittävyys korvattiin tiheämmillä korteilla (lähellä tiheys 1,75, ennen 1,3; kaukana isommat kortit), joista osa latvuksen alapinnalla.
 - **Valokeilat varjokartasta (volumetrinen säteenseuranta jälkikäsittelyssä), puolikkaalla resoluutiolla, 28 näytettä enintään 50 m matkalla.** Syy: ruudun tason "god rays" näkyy vain aurinkoa kohti katsottaessa; varjokartta antaa keilat oikeista latvuston aukoista. Täysin valaistua ilmaa vaimennetaan, jotta keilat korostuvat eikä synny tasaista utua. Kytkeytyy Valonsäteet-asetukseen ja vaatii varjot.

@@ -67,6 +67,10 @@ export function applyNotches(geo) {
   const op = geo.userData.origPos;
   const oc = geo.userData.origCol;
   const notches = geo.userData.notches;
+  // Sessio 27: lovettomat kohdat saavat pyöreät (säteittäiset) normaalit;
+  // ennen koko runko varjostettiin tasaisin normaalein, ja kanto näytti särmikkäältä.
+  if (!geo.userData.rad || geo.userData.rad.length !== (range[1] - range[0]) * 4) geo.userData.rad = new Float32Array((range[1] - range[0]) * 4);
+  const rad = geo.userData.rad;
   for (let i = range[0]; i < range[1]; i++) {
     _v.set(op[i * 3], op[i * 3 + 1], op[i * 3 + 2]);
     const s = _v.clone().sub(ax.base).dot(ax.axis);
@@ -84,6 +88,8 @@ export function applyNotches(geo) {
     }
     const nr = Math.max(r * 0.08, r - depth);
     pos.setXYZ(i, center.x + rv.x * nr, center.y + rv.y * nr, center.z + rv.z * nr);
+    const ri = (i - range[0]) * 4;
+    rad[ri] = rv.x; rad[ri + 1] = rv.y; rad[ri + 2] = rv.z; rad[ri + 3] = depth;
     const t = Math.min(1, depth / Math.max(0.02, r * 0.35));
     col.setXYZ(
       i,
@@ -99,7 +105,14 @@ export function applyNotches(geo) {
     _b.fromBufferAttribute(pos, i + 1);
     _c.fromBufferAttribute(pos, i + 2);
     _n.subVectors(_c, _b).cross(_v.subVectors(_a, _b)).normalize();
-    for (let k = 0; k < 3; k++) nrm.setXYZ(i + k, _n.x, _n.y, _n.z);
+    for (let k = 0; k < 3; k++) {
+      const ri = (i + k - range[0]) * 4;
+      if (rad[ri + 3] < 0.004 && Math.abs(rad[ri]) + Math.abs(rad[ri + 1]) + Math.abs(rad[ri + 2]) > 0.5) {
+        nrm.setXYZ(i + k, rad[ri], rad[ri + 1], rad[ri + 2]);
+      } else {
+        nrm.setXYZ(i + k, _n.x, _n.y, _n.z);
+      }
+    }
   }
   pos.needsUpdate = true;
   col.needsUpdate = true;
@@ -116,8 +129,9 @@ export function splitTree(geo) {
   const nrm = geo.attributes.normal;
   const col = geo.attributes.color;
   const uvA = geo.attributes.uv; // sessio 23: lehtikorttien UV mukaan
-  const stump = { p: [], n: [], c: [], u: [] };
-  const top = { p: [], n: [], c: [], u: [] };
+  const aoA = geo.attributes.aAO; // sessio 27: kitin mallit (lahopuu) varjostuksineen
+  const stump = { p: [], n: [], c: [], u: [], a: [] };
+  const top = { p: [], n: [], c: [], u: [], a: [] };
   const eps = 1e-3;
   const below = (i) => {
     _v.fromBufferAttribute(pos, i);
@@ -133,6 +147,7 @@ export function splitTree(geo) {
       tgt.n.push(nrm.getX(i + k), nrm.getY(i + k), nrm.getZ(i + k));
       tgt.c.push(col.getX(i + k), col.getY(i + k), col.getZ(i + k));
       if (uvA) tgt.u.push(uvA.getX(i + k), uvA.getY(i + k));
+      if (aoA) tgt.a.push(aoA.getX(i + k));
     }
   }
 
@@ -170,6 +185,7 @@ export function splitTree(geo) {
           const c = k === 0 ? RING : INNER;
           tgt.c.push(c.r, c.g, c.b);
           if (uvA) tgt.u.push(WHITE_UV[0], WHITE_UV[1]);
+          if (aoA) tgt.a.push(1);
         });
       }
     };
@@ -190,6 +206,8 @@ export function splitTree(geo) {
     g.setAttribute('normal', new THREE.Float32BufferAttribute(d.n, 3));
     g.setAttribute('color', new THREE.Float32BufferAttribute(d.c, 3));
     if (uvA) g.setAttribute('uv', new THREE.Float32BufferAttribute(d.u, 2));
+    if (aoA) g.setAttribute('aAO', new THREE.Float32BufferAttribute(d.a, 1));
+    if (geo.userData.kit) { g.userData.kit = geo.userData.kit; g.userData.keepUv = true; }
     g.computeBoundingSphere();
     return g;
   };

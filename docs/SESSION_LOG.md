@@ -2,6 +2,22 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-08 (sessio 27)
+**Tehtiin**
+- Pikakorjaukset: viidakon taustaäänen uudelleenyritys (`audio/sfx.js`: Bed), aavikon tuuli (`main.js`), silmän mukautuminen ja yön yläraja (`render/post.js`), jalanjäljet isommiksi (`render/footprints.js`).
+- Leijuvat pisteet: lehtiatlaksen varret pois (`assets/textures/leaves.png`), peittävyyden vahvistuksen raja (`render/alphaMips.js`), alpha to coverage (`render/materials.js`, `render/kitMaterials.js`, `render/debris.js`, `main.js`).
+- Liaanien fysiikka (`render/vines.js` uusi; `models/ancient.js`: `lianaSpec`; `models/trees.js`; `game/fallen.js`: `bindToLog`/`releaseLog`; `main.js`), kaatuvan latvuksen lehtien liike (`game/fallen.js`: `_initSway`, `_updateSway`).
+- Kookokset (`game/coconuts.js` uusi; `models/palms.js`: `userData.fruit`; `game/interaction.js`: ravistus ja kehote; `game/fallen.js`; `main.js`: tallennus).
+- Lahopuun kaato (`models/models.js`: `withTreeMeta`; `world/objectTypes.js`; `game/treeCut.js`: aAO ja kit; `game/breakables.js`, `game/fallen.js`, `world/world.js`: kitin materiaali).
+- Lammikot kuoppiin ja kaislat vesistöjen varsille (`world/chunkGen.js`, `world/objectTypes.js`).
+- Baobab, ryppäiset latvukset, sileät pönkkäjuuret (`models/trees.js`), pyöreät normaalit hakatuissa rungoissa (`game/treeCut.js`: `applyNotches`), banaanit (`models/palms.js`).
+- Haamun viitta kankaana (`models/ghostCloak.js` uusi; `models/creatures.js`; `game/mobs.js`).
+- Testattiin: erilliset testisivut (liaanit, puut, banaani, baobab, haamun viitta), pelikuva sademetsästä, ESLint puhdas, savutesti.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute liaaneista, kookoksista, viitasta ja puista.
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-08 (sessio 26)
 **Tehtiin**
 - Latvukset pelkistä lehtikorteista (`models/trees.js`, `models/flora.js`: `blob`; `models/util.js`: `leafCards(…, size, under)`; `models/plants.js`: tiheikkö).

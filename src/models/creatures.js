@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
 import { V, displace, paint, limb, flatNormals, merge } from './util.js';
+import { GhostCloak } from './ghostCloak.js';
 
 function blob(r, sx, sy, sz, x, y, z, hex, rand, { detail = 1, rough = 0.12, jitter = 0.1, shade = null } = {}) {
   let g = new THREE.IcosahedronGeometry(r, detail);
@@ -437,20 +438,10 @@ export function makeHaamu(seed = 1) {
   const group = new THREE.Group();
   const CLOAK = 0x16111f, CLOAK_D = 0x0c0912, HAND = 0x5d5468;
 
-  // Kaapu: levenevä, riekaleinen helma ja laskokset (nivel vyötäröllä).
-  const k1 = rand() * 6, k2 = rand() * 6, k3 = rand() * 6;
-  let cloak = new THREE.CylinderGeometry(0.16, 0.46, 1.35, 14, 5, true);
-  cloak.translate(0, 0.725 - 0.8, 0);
-  displace(cloak, (x, y, z) => {
-    const a = Math.atan2(z, x);
-    const t = (y + 0.8 - 0.05) / 1.35; // 0 = helma, 1 = hartiat
-    const fold = 1 + (0.09 * Math.sin(a * 3 + k3) + 0.05 * Math.sin(a * 7 + k1)) * (1 - t);
-    let dy = 0;
-    if (t < 0.05) dy = -0.06 + 0.13 * Math.sin(a * 5 + k1) + 0.09 * Math.sin(a * 11 + k2) + (rand() - 0.5) * 0.08;
-    else if (t < 0.3) dy = (0.05 * Math.sin(a * 5 + k1)) * (1 - t / 0.3);
-    return [x * (fold - 1), dy, z * (fold - 1)];
-  });
-  const torsoParts = [paint(flatNormals(cloak), CLOAK, { rand, jitter: 0.14 })];
+  // Sessio 27: kaapu on fysiikkaviitta (ghostCloak.js); vartaloon jää
+  // hartiaviitta, jonka alta kangas laskeutuu. Arvonnat säilyvät.
+  rand(); rand(); rand();
+  const torsoParts = [];
   // Hartiaviitta
   torsoParts.push(blob(0.24, 1.1, 0.45, 0.9, 0, 0.56, -0.01, CLOAK_D, rand, { rough: 0.2 }));
   const torso = joint(merge(torsoParts), material, 0, 0.8, 0);
@@ -512,5 +503,9 @@ export function makeHaamu(seed = 1) {
   core.renderOrder = 2;
   head.add(core);
 
-  return { group, material, torso, head, arms, legs: [], eyes, glow, core, kind: 'haamu' };
+  // Viitta: kangasverkko maailman koordinaateissa (mobs.js päivittää).
+  const cloak = new GhostCloak(seed);
+  group.add(cloak.mesh);
+
+  return { group, material, torso, head, arms, legs: [], eyes, glow, core, cloak, kind: 'haamu' };
 }

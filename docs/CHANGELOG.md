@@ -2,6 +2,22 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-08 (sessio 27): liaanien fysiikka, kookokset, haamun viitta ja uudet puut
+
+- **Liaanien fysiikka:** liaanit ovat nyt köysiä, jotka roikkuvat painovoiman mukaan, heiluvat tuulessa ja heilahtavat sivuun, kun pelaaja kävelee niihin (pää ja vartalo työntävät). Kun puu kaadetaan, liaanit seuraavat kaatuvaa latvaa ja maahan kiinnittyneet repeävät irti. Kun kaatunut runko pilkotaan, liaanit putoavat. Liaanit ovat ohuempia ja niissä on lehtiä (ennen paksut, kaarevat sauvat).
+- **Kaatuvan puun lehdet** laahaavat kaatumisen perässä ja heilahtavat eteen, kun runko iskeytyy maahan.
+- **Kookospähkinät palmujen latvassa:** [E] ravistaa palmua (1–2 putoaa), lyönti runkoon pudottaa joskus yhden, ja kaadetusta palmusta putoavat kaikki. Pähkinät kasvavat takaisin (yksi 6 pelitunnin välein), joten niitä voi "farmata". Tila tallentuu.
+- **Haamun viitta** on oikea kangas: se laskeutuu hartioilta, laahaa liikkeen perässä, lepattaa ja hulmuaa. Uusi tekstuuri: tumma kulunut kudos, riekaleinen helma ja himmeästi hohtavat violetit kirjailut.
+- **Uusi baobab:** leveä pullorunko pystyuurteineen ja kuhmuineen, paksut mutkittelevat oksat kolmessa haarautumistasossa, harvat lehtitupsut ja pitkävartiset hedelmät.
+- **Sademetsän puut:** latvus koostuu monesta lehtiryppäästä haarautuvien oksien kärjissä (luonnollisempi, rosoinen siluetti, aukkoja valolle). **Pönkkäjuuret** ovat sileitä ja kaarevia; **kannot ja hakatut rungot** pysyvät pyöreinä.
+- **Banaanit:** pystymmät, kapeammat lehdet, vaalea alapinta (ei enää mustia alapintoja), vähemmän repeämiä, ohuet kuivat lehdet ja levenevä tyvi.
+- **Lahopuu kaatuu** kuten muut puut (ennen hajosi palasiksi) ja jää maahan pilkottavaksi.
+- **Lammikot sademetsään** maaston kuoppiin: vesi täyttää notkon reunan matalimpaan kohtaan asti.
+- **Kaislat jokaisen vesistön varrella** (joet, purot, järvet, lammet, keitaat), ei hiekkarannoilla.
+- **Leijuvat pisteet:** lehtiatlaksen ohuet tummat varret poistettiin, kaukaisten lehtien tiheyttä ei enää vahvisteta liikaa (tummat neliöt), ja lehtien reunat pehmenevät (alpha to coverage).
+- **Silmän tottuminen** näkyy selvemmin: ylös kirkkaaseen katsottaessa metsä tummuu ja alas katsottaessa silmä tottuu hitaasti takaisin.
+- **Selkeä yö** hieman tummempi; **aavikon tuuli** hiljempi; **viidakon taustaääni** ei enää katoa (toistoa yritetään uudelleen); **jalanjäljet** taas isommat (~1,45×).
+
 ## 2026-10-08 (sessio 26): lehtilatvukset, valokeilat, palmut, simpukat ja jalanjäljet
 
 - **Puiden latvukset pelkistä lehdistä:** kiinteä ydin poistettiin kokonaan kaikista lehtipuista ja tiheiköistä; alta katsottuna näkyy nyt lehtiä, ei harmaita möhkäleitä. Lehtikortteja on tiheämmin, myös latvuksen alapinnalla.

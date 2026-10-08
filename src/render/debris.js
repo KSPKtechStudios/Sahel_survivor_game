@@ -91,7 +91,7 @@ export class Debris {
     this.list = [];
     this.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide });
     // Sessio 25: lehtiatlasta käyttävien mallien (puut, pensaat) sirpaleet.
-    this.leafMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide, map: leafTexture, alphaTest: 0.42 });
+    this.leafMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide, map: leafTexture, alphaTest: 0.42, alphaToCoverage: true });
     this.chipGeo = new THREE.TetrahedronGeometry(0.06, 0);
     this.chipMats = new Map();
   }

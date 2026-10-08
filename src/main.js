@@ -12,6 +12,8 @@ import { Dust, Bursts } from './render/particles.js';
 import { Ambient } from './render/ambient.js';
 import { Debris } from './render/debris.js';
 import { Footprints } from './render/footprints.js';
+import { Vines } from './render/vines.js';
+import { Coconuts } from './game/coconuts.js';
 import { createWaterMaterial, updateWaterMaterial } from './render/water.js';
 import { Ripples } from './render/ripples.js';
 import { Splashes } from './render/splash.js';
@@ -83,7 +85,7 @@ const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerH
 // --- Järjestelmät -------------------------------------------------------------
 const materials = createSharedMaterials(createGroundDetailTexture());
 // Hakattavat ja kaatuvat puut: sama kaarna kuin seisovissa (sessio 23).
-const activeMaterial = addTranslucency(addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, map: leafTexture, alphaTest: 0.42, side: THREE.DoubleSide }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 0.3, 0), 0.38);
+const activeMaterial = addTranslucency(addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, map: leafTexture, alphaTest: 0.42, alphaToCoverage: true, side: THREE.DoubleSide }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 0.3, 0), 0.38);
 loadSurfaces(renderer);
 const models = createModelLibrary();
 const sky = new Sky(scene);
@@ -96,7 +98,13 @@ const ambient = new Ambient(scene, world);
 const bursts = new Bursts(scene);
 const debris = new Debris(scene);
 const drops = new Drops(scene, models.items);
+// Sessio 27: kookospähkinät palmuissa (ravistus, kaato, uudelleenkasvu).
+const coconuts = new Coconuts(scene, world, models, drops);
+const gameHours = () => env.day * 24 + env.time;
 const fallen = new FallenTrees({ scene, world, models, material: activeMaterial, debris, drops, bursts });
+// Sessio 27: liaanien fysiikka (tuuli, pelaaja, kaatuvat puut).
+const vines = new Vines(scene, world, models);
+fallen.vines = vines;
 const breakables = new Breakables({ world, models, debris, drops, fallen, material: activeMaterial });
 const structures = new Structures(scene, models, world);
 const ruins = new Ruins({ scene, world, drops, bursts });
@@ -158,6 +166,10 @@ boats.fx = {
   splash: (x, y, z, power, opts) => splashes.spawn(x, y, z, power, opts),
 };
 const interaction = new Interaction({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs, boats });
+interaction.coconuts = coconuts;
+interaction.clock = gameHours;
+fallen.coconuts = coconuts;
+fallen.clock = gameHours;
 interaction.boardBoat = (b) => boats.board(b);
 const combat = new Combat({ camera, player, inventory, viewmodel, interaction, mobs, debris, bursts });
 mobs.combat = combat;
@@ -374,6 +386,8 @@ function clearWorldState(seed) {
   ruins.clear();
   drops.clear();
   fallen.clear();
+  vines.clear();
+  coconuts.clear();
   debris.clear();
   tumbleweeds.clear();
   ambient.clear();
@@ -463,6 +477,7 @@ async function startWorld(meta) {
   boats.load(data ? data.boats : null);
   drops.load(data ? data.drops : []);
   fallen.load(data ? data.fallen : []);
+  coconuts.load(data ? data.coconuts : []);
   ruins.load(data ? data.ruins : []);
   explored.load(data ? data.map : null);
   mobs.prepare();
@@ -485,6 +500,7 @@ function persist() {
     boats: boats.serialize(),
     drops: drops.serialize(),
     fallen: fallen.serialize(),
+    coconuts: coconuts.serialize(),
     ruins: ruins.serialize(),
     map: explored.serialize(),
   });
@@ -716,7 +732,7 @@ function updateSfx(game, rainAmt, realDt) {
       thunder,
       // Aavikon tuuli: aina kuuluvissa (sessio 26: ennen 0,1, käyttäjälle
       // aavikko kuulosti äänettömältä), hiekkamyrskyssä kovaa.
-      desertWind: Math.max((0.38 + 0.25 * Math.min(1, env.w.wind)) * _sm(0.3, 0.7, (_s.desert || 0) + (_s.dunes || 0)), sand),
+      desertWind: Math.max((0.24 + 0.16 * Math.min(1, env.w.wind)) * _sm(0.3, 0.7, (_s.desert || 0) + (_s.dunes || 0)), sand),
       // Raju tuuli: merellä ukkosella ja hiekkamyrskyssä puuskittain.
       stormWind: Math.max(thunder * _sm(0.2, 0.7, _s.ocean || 0), sand * Math.max(0, Math.sin(elapsed * 0.21) * Math.sin(elapsed * 0.077 + 1)) * 1.6),
     });
@@ -948,6 +964,10 @@ function frame(now) {
   fire.update(simDt, materials.water.uniforms.uAmbient.value);
   blood.update(simDt, 0.35 + 0.65 * env.daylight);
   footprints.update(simDt, env.sun.position, env.hemi.intensity / Math.max(0.05, env.sun.intensity) * 0.9);
+  if (inGame) {
+    vines.update(simDt, player.position);
+    coconuts.update(simDt, player.position, gameHours());
+  }
   tumbleweeds.update(simDt, player.position, env.w.wind, env.windDir);
   if (state === 'playing' && !player.dead) {
     const wasRiding = boats.riding;
@@ -1128,5 +1148,5 @@ window.sahel = {
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
   ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, sfx, blood,
   startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
-  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient,
+  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient, vines,
 };

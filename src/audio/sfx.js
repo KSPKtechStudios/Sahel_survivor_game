@@ -152,6 +152,13 @@ class Bed {
       if (this.idle > IDLE_STOP) this.stop();
     }
     if (this.active < 0) return;
+    // Sessio 27: jos soiva elementti on jäänyt tauolle (selain esti toiston tai
+    // lataus oli kesken), yritetään uudelleen (ennen ääni palasi vasta viiveellä).
+    const act = this.els[this.active];
+    if (this.target > 0.002 && act && act.started && act.el.paused && !this.sfx.hidden) {
+      this.retryT = (this.retryT || 0) - dt;
+      if (this.retryT <= 0) { this.retryT = 1.5; act.el.play().catch(() => {}); }
+    }
     // Silmukka: kun soiva lähestyy loppua, toinen alkaa ja ne ristiinhäivytetään.
     const cur = this.els[this.active];
     const d = cur.el.duration;

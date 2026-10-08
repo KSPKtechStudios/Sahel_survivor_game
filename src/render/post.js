@@ -96,7 +96,9 @@ void main() {
       vec3 c = texture2D(tColor, uv).rgb;
       float l = min(dot(c, vec3(0.2126, 0.7152, 0.0722)), 4.0);
       float sky = step(0.99999, texture2D(tDepth, uv).r);
-      float w = (1.25 - length(uv - 0.5)) * mix(1.0, 0.15, sky);
+      // Sessio 27: taivas painaa enemmän (0,15 -> 0,4): ylös kirkkaaseen
+      // katsottaessa metsä tummuu ja alas katsottaessa silmä tottuu taas.
+      float w = (1.25 - length(uv - 0.5)) * mix(1.0, 0.4, sky);
       sl += w * log(l + 0.0005);
       sm += w * l;
       ws += w;
@@ -608,7 +610,9 @@ export class PostFX {
     this.frame = 0;
     // Sessio 25: silmän mukautuminen (1 x 1 -kirkkaus, kaksi vuorottelevaa).
     this.autoExposure = true;
-    this.ae = { ref: 0.3, strength: 0.6, min: 0.65, max: 2.8, darkTau: 1.1, brightTau: 0.4 };
+    // Sessio 27: voimakkaampi ja hitaampi pimeään tottuminen (käyttäjä ei huomannut
+    // efektiä); yön yläraja matalampi (selkeä yö hieman tummemmaksi).
+    this.ae = { ref: 0.3, strength: 0.82, min: 0.5, max: 2.8, nightMax: 1.9, darkTau: 1.7, brightTau: 0.5 };
     this.lumRT = [0, 1].map(() => makeRT(1, 1, { type: THREE.FloatType, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter }));
     this.lumIdx = 0;
     this.lumInit = true;
@@ -824,7 +828,7 @@ export class PostFX {
       this.lumIdx = 1 - this.lumIdx;
       this.lumInit = false;
       cu.tLum.value = next.texture;
-      cu.uAE.value.set(this.ae.ref, this.ae.strength, this.ae.min, this.ae.max);
+      cu.uAE.value.set(this.ae.ref, this.ae.strength, this.ae.min, THREE.MathUtils.lerp(this.ae.nightMax, this.ae.max, env.daylight));
     } else {
       cu.uAE.value.y = 0;
     }

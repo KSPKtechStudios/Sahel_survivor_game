@@ -10,7 +10,8 @@ import * as THREE from 'three';
 
 const MAX = 90;
 const LIFE = 50; // s
-const W = 0.24, L = 0.44; // jäljen alue (m)
+const W = 0.34, L = 0.64; // jäljen alue (m); sessio 27: isommat (käyttäjä)
+const FS = 1.45; // jäljen mittakaava (kuopat alla 1 = 0,3 m:n jalka)
 const TW = 64, TH = 128;
 
 // Korkeuskartta metreinä jalan omissa koordinaateissa: x sivulle (oikean
@@ -30,6 +31,7 @@ const WELLS = [
 function heightAt(x, y) {
   // Kuopat yhdistetään pehmeästi (ei harjanteita niiden väliin).
   let e = 0, sum = 0;
+  x /= FS; y /= FS;
   for (const [cx, cy, rx, ry, dep] of WELLS) {
     const d = Math.hypot((x - cx) / rx, (y - cy) / ry);
     sum += Math.exp(-d / 0.12);
@@ -41,7 +43,7 @@ function heightAt(x, y) {
   // (askeleen ponnistus työntää hiekkaa eteen).
   const front = 1 + 1.4 * Math.max(0, Math.min(1, (y - 0.05) / 0.1));
   h += 0.0055 * front * Math.exp(-(((D - 1.2) / 0.32) ** 2));
-  return h;
+  return h * FS; // syvyys samassa suhteessa (muuten rinteet loivenisivat)
 }
 
 function footTexture() {
@@ -154,7 +156,7 @@ export class Footprints {
   // x, z = jalan kohta, yaw = kulkusuunta, side = -1 vasen / 1 oikea,
   // heightAt(x, z) = maan korkeus, depth = painauman voimakkuus 0..1.
   add(x, z, yaw, side, heightAt, depth = 1) {
-    const ox = Math.cos(yaw) * 0.12 * side, oz = -Math.sin(yaw) * 0.12 * side;
+    const ox = Math.cos(yaw) * 0.15 * side, oz = -Math.sin(yaw) * 0.15 * side;
     const px = x + ox, pz = z + oz;
     const h = heightAt(px, pz);
     const hx = heightAt(px + 0.3, pz), hz = heightAt(px, pz + 0.3);

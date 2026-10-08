@@ -7,6 +7,7 @@ import { heightAt } from '../world/terrain.js';
 import { OBJECT_TYPES } from '../world/objectTypes.js';
 import { makeChoppable, addNotch, splitTree, trunkAxis } from './treeCut.js';
 import { events } from './events.js';
+import { kitMaterial } from '../render/kitMaterials.js';
 
 const UP = new THREE.Vector3(0, 1, 0);
 const _v = new THREE.Vector3();
@@ -37,7 +38,7 @@ export class FallenTrees {
     const inner = new THREE.Group();
     inner.rotation.y = rot;
     inner.scale.setScalar(scale);
-    const mesh = new THREE.Mesh(geo, this.material);
+    const mesh = new THREE.Mesh(geo, geo.userData.kit ? kitMaterial(geo.userData.kit[0]) : this.material);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     inner.add(mesh);
@@ -54,8 +55,59 @@ export class FallenTrees {
     };
     this._applyRotation(log);
     if (state !== 'falling') this._makeCollider(log);
+    else this._initSway(log);
     this.list.push(log);
     return log;
+  }
+
+  // Sessio 27: kaatuvan latvuksen lehdet laahaavat liikkeen perässä ja
+  // heilahtavat eteen, kun runko iskeytyy maahan (jousi + vaimennus).
+  // Lehdet tunnistetaan UV:sta (rungot ja oksat osoittavat atlaksen
+  // valkoiseen nurkkaan).
+  _initSway(log) {
+    const geo = log.mesh.geometry;
+    const uv = geo.attributes.uv;
+    if (!uv || geo.userData.kit) return; // kitin malleissa (lahopuu) ei lehtiä
+    const pos = geo.attributes.position;
+    const meta = geo.userData.tree;
+    const ax = new THREE.Vector3().fromArray(meta.top);
+    const len = Math.max(1, ax.length());
+    ax.divideScalar(len);
+    const idx = [];
+    for (let i = 0; i < pos.count; i++) if (uv.getX(i) < 0.98 || uv.getY(i) < 0.98) idx.push(i);
+    if (!idx.length) return;
+    const orig = new Float32Array(idx.length * 3);
+    const w = new Float32Array(idx.length);
+    const reach = Math.max(len, meta.fallLen || len);
+    idx.forEach((vi, k) => {
+      const x = pos.getX(vi), y = pos.getY(vi), z = pos.getZ(vi);
+      orig[k * 3] = x; orig[k * 3 + 1] = y; orig[k * 3 + 2] = z;
+      const h = Math.max(0, x * ax.x + y * ax.y + z * ax.z) / reach;
+      w[k] = Math.min(1.3, h) ** 1.5;
+    });
+    log.sway = { idx: Uint32Array.from(idx), orig, w, amt: 0, vel: 0, t: 0, done: false };
+  }
+
+  _updateSway(log, dt) {
+    const s = log.sway;
+    if (!s || s.done) return;
+    s.t += dt;
+    // Tavoite: lehdet jäävät jälkeen kulmanopeuden mukaan.
+    const target = log.state === 'falling' ? -log.omega * 0.55 : 0;
+    s.vel += ((target - s.amt) * 38 - s.vel * 5.5) * dt;
+    s.amt += s.vel * dt;
+    if (log.state === 'down' && Math.abs(s.amt) < 0.003 && Math.abs(s.vel) < 0.02) s.done = true;
+    // Liikesuunta mallin koordinaatistossa: puu kaatuu suuntaan dir, joten
+    // latvan liike on (mallin omassa kehyksessä) kohti dir-suuntaa.
+    _v.copy(log.dir).applyAxisAngle(UP, -log.rot).divideScalar(log.scale);
+    const pos = log.mesh.geometry.attributes.position;
+    const amt = s.done ? 0 : s.amt;
+    for (let k = 0; k < s.idx.length; k++) {
+      const vi = s.idx[k], o = k * 3, wk = s.w[k] * amt;
+      const fl = Math.sin(s.t * 19 + k * 0.37) * 0.04 * Math.min(1, Math.abs(amt));
+      pos.setXYZ(vi, s.orig[o] + _v.x * wk + fl, s.orig[o + 1] - Math.abs(wk) * 0.25, s.orig[o + 2] + _v.z * wk + fl);
+    }
+    pos.needsUpdate = true;
   }
 
   // Missä kulmassa runko lepää maassa (latvus kannattelee hieman).
@@ -128,7 +180,11 @@ export class FallenTrees {
     });
     log.src = obj;
     log.chainDepth = chainDepth;
-    const stump = new THREE.Mesh(split.stump, this.material);
+    // Sessio 27: liaanit seuraavat kaatuvaa latvaa (render/vines.js).
+    if (this.vines) this.vines.bindToLog(obj, log, split.cutLocal);
+    // Sessio 27: palmun kookokset putoavat.
+    if (this.coconuts && this.clock) this.coconuts.onFell(obj, this.clock());
+    const stump = new THREE.Mesh(split.stump, split.stump.userData.kit ? kitMaterial(split.stump.userData.kit[0]) : this.material);
     stump.position.set(obj.x, obj.y, obj.z);
     stump.rotation.y = obj.rot;
     stump.scale.setScalar(obj.scale);
@@ -149,6 +205,7 @@ export class FallenTrees {
 
   update(dt) {
     for (const log of this.list) {
+      if (log.sway) this._updateSway(log, dt);
       if (log.state === 'falling') {
         // Ala-askeleet: matalalla ruudunpäivityksellä latva ei hyppää
         // pelaajan tai olennon yli yhdessä askeleessa (murskaus, sessio 13).
@@ -172,6 +229,7 @@ export class FallenTrees {
           if (log.state === 'falling' || log.omega > 0.6) this._crush(log);
         }
         if (log.state === 'down') this._makeCollider(log);
+        if (log.impacted && log.sway && !log.swayKick) { log.swayKick = true; log.sway.vel += log.omega * 6 + 3; }
       } else if (log.shake > 0) {
         log.shake = Math.max(0, log.shake - dt * 3);
         this._applyRotation(log);
@@ -309,6 +367,7 @@ export class FallenTrees {
   }
 
   remove(log) {
+    if (this.vines) this.vines.releaseLog(log);
     const i = this.list.indexOf(log);
     if (i >= 0) this.list.splice(i, 1);
     this.scene.remove(log.pivot);

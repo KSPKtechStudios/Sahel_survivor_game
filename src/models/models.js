@@ -30,6 +30,37 @@ function kit(names, base, indexed = false) {
   return [(s, q) => kitModel(names[Math.round((s - base) / 101)], q, indexed), names.length, base];
 }
 
+// Sessio 27: kitin puumallille rungon akseli, säteet ja kaatokohta
+// (FallenTrees ja treeCut tarvitsevat ne). Lasketaan verteksien sijainneista.
+function withTreeMeta(geo) {
+  if (geo.userData.tree) return geo;
+  geo.computeBoundingBox();
+  const p = geo.attributes.position;
+  const h = geo.boundingBox.max.y;
+  const ring = (y0, y1) => {
+    let sx = 0, sz = 0, n = 0;
+    for (let i = 0; i < p.count; i++) {
+      const y = p.getY(i);
+      if (y >= y0 && y <= y1) { sx += p.getX(i); sz += p.getZ(i); n++; }
+    }
+    const cx = n ? sx / n : 0, cz = n ? sz / n : 0;
+    const d = [];
+    for (let i = 0; i < p.count; i++) {
+      const y = p.getY(i);
+      if (y >= y0 && y <= y1) d.push(Math.hypot(p.getX(i) - cx, p.getZ(i) - cz));
+    }
+    d.sort((a, b) => a - b);
+    return { cx, cz, r: d.length ? d[Math.floor(d.length * 0.7)] : 0.15 };
+  };
+  const b = ring(0.2, 0.9), t = ring(h * 0.42, h * 0.58);
+  const r0 = Math.min(0.5, Math.max(0.08, b.r));
+  geo.userData.tree = {
+    kind: 'deadTree', base: [b.cx, 0, b.cz], top: [t.cx, h * 0.5, t.cz], r0, r1: Math.min(r0, Math.max(0.05, t.r)),
+    cutY: 0.55, height: h, fallLen: Math.max(1, h - 0.55), logR: r0,
+  };
+  return geo;
+}
+
 const VARIANTS = {
   acacia: [makeAcacia, 4, 1],
   jungle: [makeJungleTree, 3, 11],
@@ -47,7 +78,8 @@ const VARIANTS = {
   grassGreen: [(s) => makeGrassTuft(s, 'green'), 3, 41],
   canopy: [makeCanopyTree, 4, 51],
   // Sessio 24: harmaantuneet kuolleet puut kitistä (ennen makeDeadTree).
-  deadTree: kit(['DeadTree_1', 'DeadTree_2', 'DeadTree_3'], 61),
+  // Sessio 27: lahopuu kaatuu kuten muut puut (rungon tiedot mallin muodosta).
+  deadTree: [(s, q) => withTreeMeta(kitModel(['DeadTree_1', 'DeadTree_2', 'DeadTree_3'][Math.round((s - 61) / 101)], q)), 3, 61],
   bamboo: [makeBamboo, 2, 71],
   thicket: [makeThicket, 3, 81],
   euphorbia: [makeEuphorbia, 2, 91],

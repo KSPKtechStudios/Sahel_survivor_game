@@ -87,7 +87,10 @@ export class World {
         far: far ? far.map((geo) => new InstancePool(scene, geo, matFor(geo), { capacity: 512, castShadow: false })) : null,
       };
       if (def.kind === 'tree') {
-        this.stumpPools[type] = near.map((_, v) => new InstancePool(scene, splitTree(models.hi(def.model, v)).stump, materials.solid_wood || materials.solid, { capacity: 64, castShadow: true }));
+        this.stumpPools[type] = near.map((_, v) => {
+          const st = splitTree(models.hi(def.model, v)).stump;
+          return new InstancePool(scene, st, st.userData.kit ? kitMaterials(st.userData.kit) : materials.solid_wood || materials.solid, { capacity: 64, castShadow: true });
+        });
       }
     }
     // Sessio 24: tiheä ruohokenttä (render/grassField.js)

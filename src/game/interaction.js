@@ -155,6 +155,12 @@ export class Interaction {
     }
     const t = OBJECT_TYPES[target.obj.type];
     if (t.pickup) return { name: t.name, action: '[E] Poimi' };
+    // Sessio 27: palmussa kookoksia: [E] ravistaa.
+    const nuts = !target.noNuts && this.coconuts && this.clock ? this.coconuts.count(target.obj, this.clock()) : 0;
+    if (nuts > 0) {
+      const p = this._promptFor({ ...target, noNuts: true }, def);
+      return { ...p, action: p.action ? `[E] Ravista · ${p.action}` : '[E] Ravista' };
+    }
     if (t.harvest) {
       const h = t.harvest;
       const ok = this._toolOk(h, def);
@@ -212,6 +218,10 @@ export class Interaction {
     }
     if (target.kind !== 'object') return false;
     const t = OBJECT_TYPES[target.obj.type];
+    if (this.coconuts && this.clock && this.coconuts.count(target.obj, this.clock()) > 0) {
+      this.coconuts.shake(target.obj, this.clock());
+      return true;
+    }
     if (!t.pickup) return false;
     // pickup: { item, count } tai { drops: [[esine, min, max], ...] } (satunnainen määrä)
     const list = t.pickup.drops
@@ -304,6 +314,7 @@ export class Interaction {
     // mitätön vahinko (käsin tai vaikka marjoilla se ei käytännössä kaadu).
     // Sessio 22: kirveen ja hakun teho tason mukaan (power).
     const dmg = !ok ? BAREHANDED_WOOD : def && def.tool && !h.tool ? 2 : h.tool ? (def.power || 1) : 1;
+    if (this.coconuts && this.clock) this.coconuts.onHit(obj, this.clock());
     this.breakables.hit(obj, _hit.clone(), playerPos, dmg);
     events.emit('hitFeedback', { strength: t.kind === 'bush' ? 0.3 : 0.6 });
   }

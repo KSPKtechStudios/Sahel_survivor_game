@@ -234,31 +234,19 @@ function sprigGeo(P, N, C, U) {
   return g;
 }
 
-// Riippuva liaani pisteestä top: roikkuu kaarena ja päättyy maahan tai
-// vapaana ilmaan. groundY = maan taso mallissa. Palauttaa osalistan.
-export function liana(top, rand, groundY = 0, q = 1) {
-  const parts = [];
+// Sessio 27: liaani on fysiikkaköysi (render/vines.js). Malli kertoo vain
+// kiinnityskohdan, alapään (maassa tai vapaana) ja pituuden.
+export function lianaSpec(top, rand) {
   const a = rand() * Math.PI * 2;
-  const drift = 0.6 + rand() * 1.6;
-  const toGround = rand() < 0.45;
-  const endY = toGround ? groundY - 0.1 : groundY + 1.2 + rand() * 2.5;
-  const end = V(top.x + Math.cos(a) * drift, endY, top.z + Math.sin(a) * drift);
-  const segs = q ? 8 : 4;
-  const pts = [];
-  const sag = 0.4 + rand() * 0.8;
-  for (let i = 0; i <= segs; i++) {
-    const t = i / segs;
-    const p = top.clone().lerp(end, t);
-    // Painuu keskeltä ulospäin (riippuva kaari), pieni kiemurtelu.
-    p.x += Math.sin(t * Math.PI) * sag * Math.cos(a + 1.3) + Math.sin(t * 9 + a) * 0.06;
-    p.z += Math.sin(t * Math.PI) * sag * Math.sin(a + 1.3) + Math.cos(t * 7 + a) * 0.06;
-    pts.push(p);
+  const toGround = rand() < 0.5;
+  const r = 0.032 + rand() * 0.024;
+  if (toGround) {
+    const drift = 0.8 + rand() * 2.2;
+    const end = [top.x + Math.cos(a) * drift, -0.05, top.z + Math.sin(a) * drift];
+    const d = Math.hypot(end[0] - top.x, end[1] - top.y, end[2] - top.z);
+    return { top: top.toArray(), end, len: d * (1.01 + rand() * 0.04), r };
   }
-  // Sessio 26: liaani on paksumpi eikä siinä ole irtolehtiä (kaukaa ohut
-  // varsi katosi ja lehtitupsut näyttivät leijuvilta pikseleiltä).
-  const r = 0.04 + rand() * 0.025;
-  for (let i = 0; i < segs; i++) parts.push(paint(limb(pts[i], pts[i + 1], r, r * 0.85, 5), 0x4a4626, { rand, jitter: 0.12 }));
-  return parts;
+  return { top: top.toArray(), end: null, len: Math.max(1.5, top.y - (1.0 + rand() * 2.8)), r };
 }
 
 // Runkoa kiertävä köynnös (base -> top -rungon akselia pitkin).

@@ -267,11 +267,11 @@ export function createSharedMaterials(groundDetail) {
   // Sessio 23: puiden latvuksissa lehtikortit (lehtiatlas, läpikuultavat
   // kohdat leikataan pois); rungot käyttävät atlaksen valkoista nurkkaa.
   const vegetation = addWind(
-    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0, map: leafTexture, alphaTest: 0.42, side: THREE.DoubleSide }),
+    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0, map: leafTexture, alphaTest: 0.42, side: THREE.DoubleSide , alphaToCoverage: true }),
     0.0045,
   );
   const bush = addWind(
-    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0, map: leafTexture, alphaTest: 0.42, side: THREE.DoubleSide }),
+    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0, map: leafTexture, alphaTest: 0.42, side: THREE.DoubleSide , alphaToCoverage: true }),
     0.06,
   );
   const grass = addWind(
