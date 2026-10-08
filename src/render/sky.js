@@ -21,6 +21,7 @@ uniform float uSunVisible;
 uniform vec3 uMoonDir;
 uniform float uMoonVisible;
 uniform float uMoonPhase;   // 0 uusikuu, 0,5 täysikuu (sessio 13)
+uniform sampler2D uMoonTex; // sessio 25: kuun pinta valokuvasta
 uniform float uStars;
 uniform float uCloudCover;
 uniform vec3 uCloudLit;
@@ -148,7 +149,10 @@ void main() {
     // rajaa vaiheen mukaan, jottei täysikuulle jää tumma eikä uudellekuulle
     // vaalea kehä.
     float lit = smoothstep(-0.05, 0.05, dot(vec3(qn, qz), vec3(-sin(th), 0.0, -cos(th))) - 0.08 * cos(th));
-    moon = mDisc * mix(0.022, 0.84 + 0.16 * qz, lit) * uMoonVisible;
+    // Sessio 25: pinnan kuviot valokuvasta (mare-alueet tummempia).
+    float alb = pow(texture2D(uMoonTex, clamp(q * 0.5 + 0.5, 0.0, 1.0)).r, 1.5) / 0.2;
+    alb = mix(1.0, alb, 0.85);
+    moon = mDisc * mix(0.022, 0.84 + 0.16 * qz, lit) * alb * uMoonVisible;
   }
   float moonIllum = 0.5 - 0.5 * cos(uMoonPhase * 6.2832);
   col += vec3(0.6, 0.65, 0.8) * pow(md, 200.0) * 0.12 * uMoonVisible * moonIllum;
@@ -212,6 +216,7 @@ export class Sky {
       uMoonDir: { value: new THREE.Vector3(0, -1, 0) },
       uMoonVisible: { value: 0 },
       uMoonPhase: { value: 0.5 },
+      uMoonTex: { value: null },
       uStars: { value: 0 },
       uCloudCover: { value: 0.2 },
       uCloudLit: { value: new THREE.Color(1, 1, 1) },
@@ -227,6 +232,15 @@ export class Sky {
       uMeteorB: { value: new THREE.Vector3(0, 1, 0) },
       uMeteor: { value: new THREE.Vector2(0, 0) },
     };
+    // Sessio 25: kuun valokuva (128 px, ilman mipmappeja: kiekko on pieni).
+    const moonPh = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
+    moonPh.needsUpdate = true;
+    this.uniforms.uMoonTex.value = moonPh;
+    new THREE.TextureLoader().load('assets/textures/moon.jpg', (t) => {
+      t.generateMipmaps = false;
+      t.minFilter = THREE.LinearFilter;
+      this.uniforms.uMoonTex.value = t;
+    });
     // Tähdenlennot: satunnaisesti kirkkaina öinä.
     this.meteorTimer = 6 + Math.random() * 10;
     this.meteorT = -1;

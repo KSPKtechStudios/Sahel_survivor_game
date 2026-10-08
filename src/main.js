@@ -4,13 +4,14 @@ import { loadSurfaces, addSurfaceDetail, leafTexture, surfaceUniforms } from './
 import { updateGlow } from './render/itemGlow.js';
 import { CONFIG } from './config.js';
 import { createGroundDetailTexture } from './render/textures.js';
-import { createSharedMaterials, wetUniforms, addWet } from './render/materials.js';
+import { createSharedMaterials, wetUniforms, addWet, addTranslucency, sunUniforms } from './render/materials.js';
 import { grassUniforms } from './render/grassField.js';
 import { Sky } from './render/sky.js';
 import { Environment, WEATHER_KEYS } from './render/environment.js';
 import { Dust, Bursts } from './render/particles.js';
 import { Ambient } from './render/ambient.js';
 import { Debris } from './render/debris.js';
+import { Footprints } from './render/footprints.js';
 import { createWaterMaterial, updateWaterMaterial } from './render/water.js';
 import { Ripples } from './render/ripples.js';
 import { Splashes } from './render/splash.js';
@@ -82,7 +83,7 @@ const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerH
 // --- Järjestelmät -------------------------------------------------------------
 const materials = createSharedMaterials(createGroundDetailTexture());
 // Hakattavat ja kaatuvat puut: sama kaarna kuin seisovissa (sessio 23).
-const activeMaterial = addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, map: leafTexture, alphaTest: 0.42, side: THREE.DoubleSide }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 1, 0.3);
+const activeMaterial = addTranslucency(addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, map: leafTexture, alphaTest: 0.42, side: THREE.DoubleSide }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 1, 0.3), 0.38);
 loadSurfaces(renderer);
 const models = createModelLibrary();
 const sky = new Sky(scene);
@@ -314,6 +315,8 @@ function applySettings(s) {
   post.motionBlur = s.motionBlur === 'high' ? 2 : s.motionBlur === 'low' ? 1 : 0;
   post.dof = !!s.dof;
   post.lensFlare = s.lensFlare !== false;
+  // Sessio 25: silmän mukautuminen on aina päällä (yön valotus riippuu siitä).
+  env.autoExposure = post.autoExposure;
   // Sessio 24: ruohon ja aluskasvien tiheys sekä ruohon näkyvyyssäde.
   const fol = { low: [0.35, 0.4, 34], normal: [0.65, 0.7, 40], high: [1, 1, 46] }[s.foliage] || [1, 1, 46];
   world.grass.setDensity(fol[0]);
@@ -378,6 +381,7 @@ function clearWorldState(seed) {
   splashes.clear();
   fire.clear();
   blood.clear();
+  footprints.clear();
   mobs.clear();
   boats.clear();
   combat.reset();
@@ -739,7 +743,20 @@ function stepMaterial() {
   if ((s.laterite || 0) > 0.5) return 'gravel';
   return 'grass';
 }
-player.onFootstep = (k) => sfx.step(stepMaterial(), k);
+// Sessio 25: jalanjäljet hiekkaan ja pieni roiske joka askeleella matalassa vedessä.
+const footprints = new Footprints(scene);
+player.onFootstep = (k) => {
+  const mat = stepMaterial();
+  sfx.step(mat, k);
+  const p = player.position;
+  if (player.inWater === 1) {
+    const w = waterAt(p.x, p.z, _fw);
+    waterFx('step', p.x, w.wl + 0.02, p.z, 0.6 + k * 0.5);
+  } else if (mat === 'sand' && player.onGround) {
+    footprints.add(p.x, p.z, player.yaw, (player.stepN & 1) ? 1 : -1, heightAt, Math.min(1, 0.6 + k * 0.35));
+  }
+};
+const _fw = {};
 events.on('swing', ({ heavy, quiet }) => sfx.whoosh(heavy, quiet));
 events.on('punch', ({ heavy }) => sfx.punch(heavy));
 events.on('crit', () => sfx.crit());
@@ -866,6 +883,9 @@ function frame(now) {
   // Sessio 24: ruohokenttä (näkyvät osaruudut, pelaaja taivuttaa heinää).
   grassUniforms.uGrassWet.value = wetUniforms.uWet.value;
   surfaceUniforms.uMoss.value = 0.3 + 0.7 * env.humid;
+  // Sessio 25: lehtien läpikuultavuus (auringon suunta ja voimakkuus).
+  sunUniforms.uTrSunDir.value.copy(env.sunDir);
+  sunUniforms.uTrSunCol.value.copy(env.sun.color).multiplyScalar(Math.min(1.3, env.sun.intensity / 2.6) * env.daylight);
   // Sessio 24: maata myötäilevä korkeussumu: sademetsä, sade ja aamu-usva
   // (laaksoissa ja kosteikoilla tiheämpi; ei aavikolla).
   {
@@ -920,6 +940,7 @@ function frame(now) {
   splashes.update(simDt, env.lightColor, materials.water.uniforms.uAmbient.value);
   fire.update(simDt, materials.water.uniforms.uAmbient.value);
   blood.update(simDt, 0.35 + 0.65 * env.daylight);
+  footprints.update(simDt);
   tumbleweeds.update(simDt, player.position, env.w.wind, env.windDir);
   if (state === 'playing' && !player.dead) {
     const wasRiding = boats.riding;

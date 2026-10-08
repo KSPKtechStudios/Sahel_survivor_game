@@ -33,13 +33,15 @@ function blob(center, scale, detail, hex, jr, shadeCut = null, rotY = 0, kind = 
   const r = jr();
   let g = new THREE.IcosahedronGeometry(1, detail);
   displace(g, () => [(r() - 0.5) * 0.35, (r() - 0.5) * 0.4, (r() - 0.5) * 0.35]);
-  g.scale(scale.x * 0.84, scale.y * 0.84, scale.z * 0.84);
+  // Sessio 25: ydin pienempi ja tummempi (latvuksen sisäinen varjo), ettei
+  // kulmikas muoto paljastu lehtien välistä lähietäisyydeltä; kortteja tiheämmin.
+  g.scale(scale.x * 0.74, scale.y * 0.72, scale.z * 0.74);
   g.rotateY(rotY);
   g.translate(center.x, center.y, center.z);
   g = flatNormals(g);
-  const shade = shadeCut !== null ? (x, y) => (y < shadeCut ? 0.42 : 0.7) : () => 0.7;
+  const shade = shadeCut !== null ? (x, y) => (y < shadeCut ? 0.26 : 0.42) : () => 0.42;
   const core = paint(g, hex, { rand: r, jitter: 0.12, shade });
-  const cards = leafCards(center, scale, rotY, hex, r, kind, detail ? 1 : 0.2, detail ? 1 : 2.0);
+  const cards = leafCards(center, scale, rotY, hex, r, kind, detail ? 1.3 : 0.2, detail ? 1 : 2.0);
   return merge([core, cards]);
 }
 

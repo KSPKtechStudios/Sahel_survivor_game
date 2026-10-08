@@ -181,13 +181,15 @@ export function makeThicket(seed) {
       pos.setXYZ(v, x * kk, y * kk * 0.85, z * kk);
     }
     const cy = 0.45 + rand() * 0.5;
-    g.scale(0.78, 0.78, 0.78);
+    // Sessio 25: ydin pienempi ja tummempi, ettei kulmikas möhkäle näy
+    // lehtien välistä; lehtikortteja enemmän ja laajemmalle.
+    g.scale(0.56, 0.52, 0.56);
     g.translate(Math.cos(a) * r, cy, Math.sin(a) * r);
     g = flatNormals(g);
     const col = cols[Math.floor(rand() * 3)];
-    parts.push(paint(g, col, { rand: jr, jitter: 0.14, shade: (x, y) => 0.4 + Math.min(0.3, y * 0.3) }));
+    parts.push(paint(g, col, { rand: jr, jitter: 0.14, shade: (x, y) => 0.24 + Math.min(0.16, y * 0.16) }));
     // Sessio 23: lehtikortit möhkäleen pinnalle.
-    parts.push(leafCards(V(Math.cos(a) * r, cy, Math.sin(a) * r), V(0.62, 0.52, 0.62), rand() * 3, col, jr, 'broad', 1.3, 0.6));
+    parts.push(leafCards(V(Math.cos(a) * r, cy, Math.sin(a) * r), V(0.7, 0.58, 0.7), rand() * 3, col, jr, 'broad', 1.9, 0.62));
   }
   for (let i = 0; i < 8; i++) {
     const a = rand() * Math.PI * 2;

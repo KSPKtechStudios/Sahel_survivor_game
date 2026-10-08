@@ -1,6 +1,8 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 25: silmän mukautuminen (ilta, yö, soihtu päälle/pois), hämärän hajavalo, sateen ja sumun yö, lehtien läpikuultavuus sademetsässä, DOF ja liike-epäterävyys (Asetukset), merenpohja ja rannat, jalanjäljet hiekassa, roiskeet vedessä, iskujen muunnelmat, kello kädessä, kuu
+- [ ] Vastaus: onko yö nyt sopivan pimeä? (säätö: post.js `ae.max`, environment.js hämärän `hemiI`)
 - [ ] Käyttäjä testaa session 24 (stilisoitu realismi): pehmeä maasto (mäet, harjanteet, dyynit, vuoret), tiheä ruoho (savanni, kausilampi, keidas), sademetsän pohja (saniaiset, lehväkasvit, sienet, sammal), liaanit ja köynnökset, muinaiset pylväät, ruostuneet kilvet, juuret, rauniot, kuolleet puut, korkeussumu ja aamu-usva, itiöt, sade ja roiskeet
 - [ ] Suorituskyky omalla koneella: ruoho ja aluskasvit lisäävät piirtotyötä. Jos FPS laskee, kokeile Asetukset → Kasvillisuus: Normaali / Harva, ja kerro tulos
 - [ ] Sketchfabin mallit: lataukset vaativat käyttäjän API-avaimen (sketchfab.com → asetukset → Password & API). Jos haluat niitä, anna avain ympäristön salaisuudeksi, ja kerro mitä malleja toivot

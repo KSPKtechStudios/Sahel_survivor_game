@@ -2,7 +2,7 @@
 // Lehdet ja kukat ovat alfaleikattuja kortteja, jotka huojuvat tuulessa;
 // kivet ja kuollut puu saavat märkyyden. aAO = mallin oma varjostus.
 import * as THREE from 'three';
-import { addWind, addWet } from './materials.js';
+import { addWind, addWet, addTranslucency } from './materials.js';
 
 const DIR = 'assets/models/nature';
 const loader = new THREE.TextureLoader();
@@ -49,9 +49,9 @@ diffuseColor.rgb *= vKitAO;`);
 }
 
 const BUILD = {
-  leaves: () => addWet(addAO(addWind(new THREE.MeshStandardMaterial({
+  leaves: () => addTranslucency(addWet(addAO(addWind(new THREE.MeshStandardMaterial({
     map: tex('leaves.png'), alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.8, metalness: 0,
-  }), 0.35, 0.6), true), 1, 0.3),
+  }), 0.35, 0.6), true), 1, 0.3), 0.3, false),
   flowers: () => addAO(addWind(new THREE.MeshStandardMaterial({
     map: tex('flowers.png'), alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.7, metalness: 0,
   }), 0.35, 0.6), true),

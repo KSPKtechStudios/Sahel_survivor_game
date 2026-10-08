@@ -9,6 +9,7 @@ import { makeGroundStick, makeStone, makeTermiteMound, makeOutcrop, makeSpire } 
 import { scannedBoulder, SCANNED_BOULDER_COUNT } from './scanned/build.js';
 import { kitModel } from './kit/build.js';
 import { makeAncientPillar, makeRustyShield, makeAncientRoots, makeTwigs } from './ancient.js';
+import { makeKelp, makeSeabedRocks, makeShoreRocks, makeBeachStones } from './shore.js';
 import { ensureUv } from './util.js';
 import { makeCampfireBase, createItemModels } from './items.js';
 import { createBuildModels } from './building.js';
@@ -97,6 +98,11 @@ const VARIANTS = {
   rustyShield: [makeRustyShield, 3, 771],
   ancientRoots: [makeAncientRoots, 3, 781],
   twigs: [makeTwigs, 3, 791],
+  // Sessio 25: rannat ja merenpohja
+  kelp: [makeKelp, 3, 801],
+  seabedRocks: [makeSeabedRocks, 3, 811],
+  shoreRocks: [makeShoreRocks, 3, 821],
+  beachStones: [makeBeachStones, 4, 831],
 };
 // Mallit, joilla on kevyt kaukoversio (ilman varjoa).
 const HAS_FAR = new Set(['acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);

@@ -2,6 +2,17 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-08 (sessio 25)
+- **Silmän mukautuminen mitataan kuvasta näytönohjaimella** (16 × 9 näytettä, ajallinen sopeutuminen 1 × 1 -tekstuurissa, ei lukua takaisin prosessorille). Syy: toimii kaikissa paikoissa (latvuston alla, soihdun valossa, nuotiolla) ilman erikoistapauksia eikä pysäytä ruudunpäivitystä. Keskiarvo painottuu kirkkaisiin kohtiin, jotta soihtu sokaisee; taivas painaa vähän, jotta maasto erottuu iltataivasta vasten.
+- **Sopeutumisaika: pimeään τ ≈ 1,1 s (noin 3 s lähes valmis), kirkkaaseen τ ≈ 0,4 s.** Syy: käyttäjän toive 2–4 s; kirkkaaseen silmä tottuu nopeammin.
+- **Silmän mukautuminen on aina päällä** (jälkikäsittely ajetaan aina). Syy: yön valotus perustuu siihen; ilman sitä yö olisi joko liian kirkas tai liian pimeä.
+- **Huono sää yöllä: sääsävy säilyttää värin kirkkauden ja pilvisyys pimentää.** Syy: ennen harmaa sävy sekoitettiin yön tummiin väreihin, mikä kirkasti yötä.
+- **Lehtien läpikuultavuus on yksinkertainen lisävalo (vastavalo + varjopuolen läpäisy), ei oikea pinnanalainen sironta.** Syy: halpa kaikille lehtikorteille; antaa vihreän sävyn latvusten alapuolelle.
+- **Puun sirpaleet säilyttävät UV:n ja käyttävät lehtimateriaalia; hakattava puu käyttää samaa latvusta kuin metsässä seisova.** Syy: ennen sirpaleet piirrettiin pelkillä vertex-väreillä (lehtikortit umpinaisina) ja hakattavan puun tarkempi latvus paljasti ytimen.
+- **Jalanjäljet kertovalla sekoituksella.** Syy: tummentaa maata sen omassa valaistuksessa (toimii myös yöllä ja varjossa) eikä tarvitse maan väriä.
+- **Iskujen muunnelmat valitaan viewmodelissa** (vuorotellen, välillä yksi yli). Syy: taistelun ajoitukset ja vahingot pysyvät ennallaan; osumahetki on kaikissa muunnelmissa sama.
+- **Kuun kuva 128 px ilman mipmappeja.** Syy: kiekko on ruudulla vain ~30–50 px; pieni kuva on kevyt.
+
 ## 2026-10-08 (sessio 24)
 - **Maaston pehmennys: terävät taitteet (abs) korvattiin pehmeillä (sabs = √(v² + k²) − k), jokiuomien leikkaus pehmeällä minimillä (smin), ja verkkoa tihennettiin (48 segmenttiä / chunk, 1,33 m).** Syy: käyttäjän tärkein toive; harjanteiden ja dyynien V-taitteet ja uomien reunat näkyivät kulmikkaina. Generointi pysyi säikeessä (~20–30 ms / chunk).
 - **Tiheä ruoho omana järjestelmänään (kortit + instanssit), ei valmiina 3D-ruohomalleina.** Syy: Quaterniuksen ruohomallit ovat 155–622 kolmiota tupsua kohti; kymmeniätuhansia tupsuja tarvitaan, joten tupsu on kolme ristikkäistä korttia (12 kolmiota). Tupsut lasketaan generointisäikeessä chunkin verkosta (korkeus tarkalleen piirretyltä pinnalta) ja piirretään osaruuduittain (32 m), vain ~46 m säteellä; kaukana tupsut painuvat maahan.

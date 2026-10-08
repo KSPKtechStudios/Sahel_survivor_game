@@ -217,6 +217,22 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 25 (käyttäjän kertoma, 2026-10-08)
+- **Meren pohjaan** levää, kiviä ja muuta materiaalia (mallit saa tehdä itse, ne eivät näy kovin tarkasti). **Rantakivikoita ja kaislikoita**, hiekkarannoille **kiviä ja ajautuneita simpukoita**.
+- **Jalanjäljet:** pelaajan jaloista jää aavikolla ja rannalla **painaumat hiekkaan**; **veteen astuessa pientä roisketta**.
+- **Puita kaadettaessa vanhat tekstuurit paljastuvat** alta, etenkin kun puu tuhoutuu (korjattava).
+- **Dynaaminen valaistus:**
+  - **Hajavalo:** maaston ja varjojen hajavaloa (ambient / sky light) hieman ylös, jotta varjot eivät ole pikimustia, kun taivas hehkuu ilta-auringossa. Maaston muodot ja siluetit erottuvat iltataivasta vasten ilman omaa valoa.
+  - **Silmän mukautuminen (auto-exposure):** kirkkaasta pimeään siirryttäessä valotus mukautuu noin **2–4 sekunnissa**.
+  - **Soihdun sokaisu:** kun soihtu on päällä tai ollaan lähellä kirkasta valoa, valotus mukautuu lähivaloon, jolloin kaukaiset pimeät alueet tummuvat. Kun soihtu sammutetaan, silmä sopeutuu muutamassa sekunnissa takaisin ja siluetit alkavat erottua.
+- **Sumu, sade ja ukkonen tekevät yöstä nyt valoisamman kuin selkeä sää**; niiden pitäisi pimentää yötä entisestään.
+- **DOF sumentaa usein liikaa.** **Motion blur** saisi olla runsaampaa.
+- **Lehdistä on jäänyt pieniä pikseleitä leijumaan ilmaan** (käyttäjän kuva).
+- **Viidakon latvustosta puuttuu valon läpäisy:** varjon puolelta latvus on litteä musta massa. Lehtiin **subsurface scattering**: auringonvalo kuultaa lehtien läpi ja antaa vihreää sävyä alapuolellekin.
+- **Lyöntianimaatiot** sulavammiksi, tyylikkäämmiksi ja monipuolisemmiksi: **useita variaatioita**.
+- **Kello täytyy varustaa käteen**, jotta se näyttää ajan.
+- **Kuun tekstuuriksi valokuva** (käyttäjän liittämä täysikuu), optimoituna.
+
 ## Sessio 24 (käyttäjän kertoma, 2026-10-08)
 - **Tavoite:** maailman visuaalinen uudistus nykyisestä tekoäly-3D-pohjasta syvään, elävään **"stilisoituun realismiin"** (tyyli: **Valheim / Stylized Realism**). Käytetään saatavilla olevia 3D-malleja ja korkean resoluution tekstuurikirjastoja.
 - **Huonot 3D-mallit korvataan valmiilla, hyvillä** (esim. Sketchfab tai jokin muu mallipankki). **Jo tarpeeksi hyvät mallit voi vain teksturoida uudelleen.**

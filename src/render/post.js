@@ -75,6 +75,40 @@ void main() {
 }
 `;
 
+// Sessio 25: silmän mukautuminen (auto-exposure). Mitataan kuvan kirkkaus
+// 16 x 9 näytteestä (keskusta painottuu, taivas vähemmän, jotta maasto
+// erottuu iltataivasta vasten). Kirkkaat kohdat (soihdun valaisema lähimaa)
+// painavat, joten soihtu "sokaisee" kaukonäön. Tulos sopeutuu ajassa:
+// pimeään hitaasti (~3 s), kirkkaaseen nopeammin.
+const lumFS = /* glsl */ `
+uniform sampler2D tColor;
+uniform sampler2D tDepth;
+uniform sampler2D tPrev;
+uniform float uUp;
+uniform float uDown;
+uniform float uInit;
+varying vec2 vUv;
+void main() {
+  float sl = 0.0, sm = 0.0, ws = 0.0;
+  for (int y = 0; y < 9; y++) {
+    for (int x = 0; x < 16; x++) {
+      vec2 uv = (vec2(float(x), float(y)) + 0.5) / vec2(16.0, 9.0);
+      vec3 c = texture2D(tColor, uv).rgb;
+      float l = min(dot(c, vec3(0.2126, 0.7152, 0.0722)), 4.0);
+      float sky = step(0.99999, texture2D(tDepth, uv).r);
+      float w = (1.25 - length(uv - 0.5)) * mix(1.0, 0.15, sky);
+      sl += w * log(l + 0.0005);
+      sm += w * l;
+      ws += w;
+    }
+  }
+  float cur = log(mix(exp(sl / ws), sm / ws, 0.7) + 0.0005);
+  float prev = texture2D(tPrev, vec2(0.5)).r;
+  float k = cur > prev ? uUp : uDown;
+  gl_FragColor = vec4(uInit > 0.5 ? cur : mix(prev, cur, k), 0.0, 0.0, 1.0);
+}
+`;
+
 // Syväterävyys: sumennus epätarkkuusympyrän (CoC) koon mukaan (puolikas tarkkuus).
 const dofFS = /* glsl */ `
 #include <packing>
@@ -90,10 +124,11 @@ float coc(vec2 uv, float focus) {
   float z = -perspectiveDepthToViewZ(texture2D(tDepth, uv).r, uNear, uFar);
   // Hienovarainen syväterävyys: tarkennettu alue on leveä, ja vain selvästi
   // tarkennusta kauempana oleva tausta (tai hyvin lähellä oleva) sumenee.
-  float farStart = focus * 2.5 + 6.0;
-  float farC = smoothstep(farStart, farStart * 4.0 + 60.0, z) * 0.55;
-  float nearEnd = focus * 0.45;
-  float nearC = nearEnd > 0.3 ? (1.0 - smoothstep(nearEnd * 0.4, nearEnd, z)) * 0.6 : 0.0;
+  // Sessio 25: selvästi hillitympi (käyttäjä: sumensi liikaa). Tausta
+  // sumenee vasta kaukana ja vain vähän; etuala vain aivan kameran edessä.
+  float farStart = max(focus * 3.0 + 15.0, 32.0);
+  float farC = smoothstep(farStart, farStart * 4.0 + 80.0, z) * 0.4;
+  float nearC = focus > 8.0 ? (1.0 - smoothstep(0.5, 1.3, z)) * 0.45 : 0.0;
   return max(farC, nearC);
 }
 void main() {
@@ -148,6 +183,8 @@ uniform float uAspect;
 uniform float uFlare;
 uniform vec2 uSunUV;
 uniform vec3 uFlareColor;
+uniform sampler2D tLum;  // sessio 25: sopeutunut kirkkaus (log)
+uniform vec4 uAE;        // x = viitekirkkaus, y = voimakkuus (0 = pois), z = min, w = max
 uniform vec4 uHFog;      // sessio 24: korkeussumu x = tiheys, y = pohja (m), z = vaimeneminen, w = aika
 uniform vec3 uHFogColor;
 varying vec2 vUv;
@@ -353,10 +390,10 @@ void main() {
     vec2 prevUv = pp.xy / pp.w * 0.5 + 0.5;
     vec2 vel = (vUv - prevUv) * uMBScale;
     float len = length(vel);
-    if (len > 0.045) vel *= 0.045 / len;
+    if (len > 0.08) vel *= 0.08 / len;
     if (len > 0.0006) {
       col = vec3(0.0);
-      const int M = 9;
+      const int M = 13;
       for (int i = 0; i < M; i++) {
         float t = float(i) / float(M - 1) - 0.5;
         col += sceneAt(clamp(uv + vel * t, vec2(0.001), vec2(0.999)));
@@ -412,6 +449,11 @@ void main() {
   if (uFlare > 0.01) col += lensFlare(vUv);
   if (uLens > 0.01) col = lensDrops(vUv, col);
   if (uSplashOn > 0.5) col = lensSplash(vUv, col);
+  // Silmän mukautuminen: valotus sopeutuneen kirkkauden mukaan.
+  if (uAE.y > 0.0) {
+    float aL = exp(texture2D(tLum, vec2(0.5)).r);
+    col *= clamp(pow(uAE.x / max(aL, 0.0001), uAE.y), uAE.z, uAE.w);
+  }
 
   gl_FragColor = vec4(col, 1.0);
   #include <tonemapping_fragment>
@@ -473,7 +515,7 @@ export class PostFX {
     }, { toneMapped: false });
     this.dofMat = mat(dofFS, {
       tColor: { value: null }, tDepth: { value: depthTexture }, tFocus: { value: null }, uTexel: { value: new THREE.Vector2() },
-      uNear: { value: 0.1 }, uFar: { value: 1500 }, uMaxR: { value: 4 },
+      uNear: { value: 0.1 }, uFar: { value: 1500 }, uMaxR: { value: 3 },
     }, { toneMapped: false });
     this.compMat = mat(compositeFS, {
       tColor: { value: null }, tDepth: { value: depthTexture }, tRays: { value: null }, tDof: { value: null },
@@ -487,7 +529,18 @@ export class PostFX {
       uFogNear: { value: 50 }, uFogFar: { value: 330 },
       uHeat: { value: 0 }, uTime: { value: 0 }, uViewProj: { value: new THREE.Matrix4() },
       uHFog: { value: new THREE.Vector4(0, 0, 0.12, 0) }, uHFogColor: { value: new THREE.Color(0.7, 0.72, 0.74) },
+      tLum: { value: null }, uAE: { value: new THREE.Vector4(0.3, 0, 0.6, 3) },
     });
+    // Sessio 25: silmän mukautuminen (1 x 1 -kirkkaus, kaksi vuorottelevaa).
+    this.autoExposure = true;
+    this.ae = { ref: 0.3, strength: 0.6, min: 0.65, max: 2.8, darkTau: 1.1, brightTau: 0.4 };
+    this.lumRT = [0, 1].map(() => makeRT(1, 1, { type: THREE.FloatType, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter }));
+    this.lumIdx = 0;
+    this.lumInit = true;
+    this.lumMat = mat(lumFS, {
+      tColor: { value: null }, tDepth: { value: depthTexture }, tPrev: { value: null },
+      uUp: { value: 0.1 }, uDown: { value: 0.05 }, uInit: { value: 1 },
+    }, { toneMapped: false });
     // Sessio 24: korkeussumu (main.js asettaa tiheyden ja pohjan).
     this.hfog = { density: 0, base: 0, falloff: 0.12, color: new THREE.Color(0.7, 0.72, 0.74) };
     this.time = 0;
@@ -514,7 +567,7 @@ export class PostFX {
   }
 
   get active() {
-    return this.godRays || this.motionBlur > 0 || this.dof || this.lens > 0.01 || this.splashOn || (this.lensFlare && this.flare > 0.01) || this.hfog.density > 0.0005;
+    return this.autoExposure || this.godRays || this.motionBlur > 0 || this.dof || this.lens > 0.01 || this.splashOn || (this.lensFlare && this.flare > 0.01) || this.hfog.density > 0.0005;
   }
 
   _resize() {
@@ -624,8 +677,9 @@ export class PostFX {
 
     // --- Liike-epäterävyys: nopeus edellisen ruudun kamerasta.
     if (this.motionBlur > 0 && this.hasPrev && dt > 0) {
-      const strength = this.motionBlur === 2 ? 0.9 : 0.45;
-      cu.uMBScale.value = Math.min(2.5, strength * (1 / 60) / Math.max(dt, 1 / 240));
+      // Sessio 25: runsaampi (käyttäjän toive).
+      const strength = this.motionBlur === 2 ? 1.7 : 0.9;
+      cu.uMBScale.value = Math.min(4, strength * (1 / 60) / Math.max(dt, 1 / 240));
       cu.uPrevViewProj.value.copy(this.prevViewProj);
     } else {
       cu.uMBScale.value = 0;
@@ -653,6 +707,25 @@ export class PostFX {
     const hf = this.hfog;
     cu.uHFog.value.set(hf.density, hf.base, hf.falloff, this.time);
     cu.uHFogColor.value.copy(hf.color);
+
+    // --- Silmän mukautuminen
+    if (this.autoExposure) {
+      const lu = this.lumMat.uniforms;
+      const prev = this.lumRT[this.lumIdx], next = this.lumRT[1 - this.lumIdx];
+      const ddt = Math.min(Math.max(dt, 0), 0.25);
+      lu.tColor.value = this.sceneRT.texture;
+      lu.tPrev.value = prev.texture;
+      lu.uUp.value = 1 - Math.exp(-ddt / this.ae.brightTau);
+      lu.uDown.value = 1 - Math.exp(-ddt / this.ae.darkTau);
+      lu.uInit.value = this.lumInit ? 1 : 0;
+      this._pass(this.lumMat, next);
+      this.lumIdx = 1 - this.lumIdx;
+      this.lumInit = false;
+      cu.tLum.value = next.texture;
+      cu.uAE.value.set(this.ae.ref, this.ae.strength, this.ae.min, this.ae.max);
+    } else {
+      cu.uAE.value.y = 0;
+    }
 
     this._pass(this.compMat, null);
   }

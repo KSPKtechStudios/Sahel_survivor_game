@@ -396,8 +396,10 @@ export class Hud {
       if (armor > 0) this.armorNum.textContent = armor;
     }
 
-    // Kello (sessio 20): kellotaulu näkyy vain, kun Kello on repussa.
-    const hasClock = this.inventory.count('clock') > 0;
+    // Kello (sessio 20): kellotaulu näkyy. Sessio 25: vain, kun Kello on
+    // varustettuna käteen (valittuna pikapalkista), ei pelkästään repussa.
+    const held = this.inventory.slots[this.inventory.selected];
+    const hasClock = !!held && held.id === 'clock';
     if (hasClock !== this.hasClock) { this.hasClock = hasClock; this.clockEl.classList.toggle('none', !hasClock); }
     if (hasClock && env) {
       const t = env.time;

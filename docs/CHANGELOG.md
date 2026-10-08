@@ -2,6 +2,21 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-08 (sessio 25): valaistus, silmän mukautuminen, rannat ja iskut
+
+- **Silmän mukautuminen:** valotus mukautuu kuvan kirkkauteen: pimeään noin 3 sekunnissa, kirkkaaseen nopeammin. Soihdun valaisema lähiympäristö "sokaisee": kaukaiset pimeät alueet tummuvat, ja kun soihdun laskee, silmä tottuu pimeään ja siluetit alkavat erottua.
+- **Hämärä ja yö:** varjoissa ja hämärässä enemmän hajavaloa, joten maaston muodot ja siluetit erottuvat iltataivasta vasten.
+- **Korjattu:** sumu, sade ja ukkonen kirkastivat yötä. Nyt ne pimentävät sitä.
+- **Lehdet kuultavat valoa:** vastavaloon lehdet hehkuvat, ja latvusten varjopuoli on vihertävä eikä musta.
+- **Syväterävyys hillitympi** (tausta sumenee vasta kaukana ja vähän), **liike-epäterävyys runsaampi**.
+- **Korjattu:** sateessa ylös katsottaessa ilmassa leijui tummia "pikseleitä" (päästä nähtyjä sadepisaroita).
+- **Korjattu:** puuta kaadettaessa ja sen hajotessa lehdet muuttuivat umpinaisiksi neliöiksi, ja latvuksen kulmikas ydin paljastui. Myös tiheiköiden ydin on nyt piilossa lehtien alla.
+- **Rannat ja merenpohja:** levää ja pohjakiviä järvien ja meren pohjassa, rantakivikoita vesirajassa, tiheämmät kaislikot, hiekkarannoilla pieniä kiviä ja ajautuneita simpukoita.
+- **Jalanjäljet** jäävät hiekkaan (aavikko, dyynit, rannat) ja haalistuvat hiljalleen. **Matalassa vedessä** jokainen askel roiskaisee.
+- **Iskut sulavammat ja monipuolisemmat:** liike kulkee pehmeästi asentojen läpi, ja jokaisella iskutyypillä on useita muunnelmia (vino hakkuu, alakoukku, vaakaviilto, nouseva viilto, kiertävä pisto, olan yli murskaus), jotka vuorottelevat.
+- **Kello näyttää ajan vain, kun se on kädessä** (valittuna pikapalkista).
+- **Kuu** on nyt oikean kuun valokuva (käyttäjän kuvasta, 128 px).
+
 ## 2026-10-08 (sessio 24): stilisoitu realismi – pehmeä maasto, tiheä kasvillisuus ja tunnelma
 
 - **Pehmeämpi maasto:** mäet, harjanteet, dyynit, vuoret ja jokiuomat eivät enää taitu teräviksi särmiksi, vaan kaartuvat pehmeästi. Maaston verkko on tiheämpi (1,33 m, ennen 2 m).

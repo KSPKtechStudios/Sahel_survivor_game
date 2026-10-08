@@ -55,6 +55,47 @@ uniform float uFlutter;`,
   return material;
 }
 
+// Sessio 25: lehtien läpikuultavuus (subsurface-tyyppinen). Auringonvalo
+// kuultaa lehtien läpi: vastavaloon katsottaessa lehdet hehkuvat, ja
+// latvuksen varjon puoli saa vihreää läpäisevää valoa (ei mustaa massaa).
+// main.js päivittää auringon suunnan ja värin (sunUniforms).
+export const sunUniforms = {
+  uTrSunDir: { value: new THREE.Vector3(0, 1, 0) },
+  uTrSunCol: { value: new THREE.Color(1, 1, 1) },
+};
+// leafOnly: vain lehtiatlasta käyttävät kohdat (rungot = atlaksen valkoinen nurkka).
+export function addTranslucency(material, k = 0.35, leafOnly = true) {
+  const prev = material.onBeforeCompile;
+  material.onBeforeCompile = (shader, renderer) => {
+    if (prev) prev(shader, renderer);
+    shader.uniforms.uTrSunDir = sunUniforms.uTrSunDir;
+    shader.uniforms.uTrSunCol = sunUniforms.uTrSunCol;
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>
+uniform vec3 uTrSunDir;
+uniform vec3 uTrSunCol;`)
+      .replace('#include <opaque_fragment>', `{
+  float trM = 1.0;
+#if defined(USE_MAP)
+  ${leafOnly ? 'trM = 1.0 - step(0.985, vMapUv.x) * step(0.97, vMapUv.y);' : ''}
+#endif
+  if (trM > 0.0) {
+    vec3 trL = normalize((viewMatrix * vec4(uTrSunDir, 0.0)).xyz);
+    vec3 trV = normalize(vViewPosition);
+    float trBack = pow(clamp(dot(-trV, trL), 0.0, 1.0), 4.0);
+    float trDiff = clamp(-dot(normal, trL), 0.0, 1.0);
+    // Läpäisevä valo on vihertävää (lehtivihreä suodattaa).
+    vec3 trCol = diffuseColor.rgb * vec3(0.9, 1.15, 0.7);
+    outgoingLight += trCol * uTrSunCol * (trBack * 0.7 + trDiff * 0.45 + 0.1) * ${k.toFixed(3)} * trM;
+  }
+}
+#include <opaque_fragment>`);
+  };
+  const prevKey = material.customProgramCacheKey;
+  material.customProgramCacheKey = () => `${prevKey ? prevKey.call(material) : ''}-tr${k}${leafOnly ? 'L' : ''}`;
+  return material;
+}
+
 // Märkyys (sademetsä, sade): pinnat tummuvat, siloittuvat (terävämmät
 // auringon heijastukset) ja heijastavat taivasta viistossa kulmassa.
 // Märkyys vaihtelee laikuittain, ettei pinta näytä tasaisen sumuiselta.
@@ -262,6 +303,8 @@ export function createSharedMaterials(groundDetail) {
   addWet(solidEarth, 0.8, 0.4);
   addWet(terrain);
   for (const m of [vegetation, bush, tall]) addWet(m, 1, 0.3);
+  addTranslucency(vegetation, 0.38);
+  addTranslucency(bush, 0.3);
   addWet(grass, 1, 0.5);
   addWet(solid, 0.8, 0.6);
   const puddle = createPuddleMaterial();

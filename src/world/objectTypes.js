@@ -227,9 +227,9 @@ export const OBJECT_TYPES = {
   },
   reeds: {
     name: 'Ruoko', model: 'reeds', kind: 'decor', material: 'grass', castShadow: false, decorative: true,
-    density: { mare: 140, oasis: 150, rainforest: 60, savanna: 30, woodland: 30, mountains: 25 },
-    scale: [0.8, 1.3], maxSlope: 0.9, collider: 0, hit: null,
-    nearWater: true, // vain vesirajassa (myös jokien ja järvien rannoilla)
+    density: { mare: 230, oasis: 240, rainforest: 100, savanna: 60, woodland: 60, mountains: 40, beach: 20 },
+    scale: [0.8, 1.5], maxSlope: 0.9, collider: 0, hit: null,
+    nearWater: true, // vain vesirajassa (myös jokien ja järvien rannoilla); sessio 25: tiheämmin
   },
   // --- Sessio 9: poimittavat [E]. Uudet tyypit lisätään loppuun, jotta
   // vanhojen esineiden sijainnit (siemenet) eivät muutu.
@@ -383,6 +383,27 @@ export const OBJECT_TYPES = {
     name: 'Ruostunut kilpi', model: 'rustyShield', kind: 'static', material: 'solid', surface: 'earth', castShadow: false,
     density: { savanna: 0.18, woodland: 0.18, laterite: 0.25, desert: 0.14, mountains: 0.14, rainforest: 0.12, mare: 0.1 },
     scale: [0.9, 1.1], maxSlope: 0.4, collider: 0, hit: { y: 0.1, r: 0.55 }, drawDist: 2,
+  },
+  // --- Sessio 25: rannat ja merenpohja (koristeita).
+  kelp: {
+    name: 'Levä', model: 'kelp', kind: 'decor', material: 'grass', castShadow: false, decorative: true,
+    density: { ocean: 160, beach: 90, mare: 50, oasis: 50, rainforest: 50, savanna: 25, woodland: 25, mountains: 20, laterite: 15 },
+    scale: [0.7, 1.4], maxSlope: 1, collider: 0, hit: null, seabed: [0.6, 9], decorDist: 44,
+  },
+  seabedRocks: {
+    name: 'Pohjakiviä', model: 'seabedRocks', kind: 'decor', material: 'solid', surface: 'rock', castShadow: false, decorative: true,
+    density: { ocean: 60, beach: 45, mare: 20, oasis: 20, rainforest: 20, savanna: 15, woodland: 15, mountains: 30, laterite: 15 },
+    scale: [0.8, 1.6], maxSlope: 1, collider: 0, hit: null, seabed: [0.3, 12], decorDist: 44,
+  },
+  shoreRocks: {
+    name: 'Rantakivikko', model: 'shoreRocks', kind: 'decor', material: 'solid', surface: 'rock', castShadow: false, decorative: true,
+    density: { beach: 30, ocean: 20, mountains: 30, savanna: 10, woodland: 10, rainforest: 12, laterite: 14, oasis: 8, mare: 6 },
+    scale: [0.8, 1.5], maxSlope: 1, collider: 0, hit: null, nearWater: true,
+  },
+  beachStones: {
+    name: 'Rantakiviä', model: 'beachStones', kind: 'decor', material: 'solid', castShadow: false, decorative: true,
+    density: { beach: 110, ocean: 50, oasis: 15, mare: 12, savanna: 8, woodland: 8, mountains: 10 },
+    scale: [0.8, 1.3], maxSlope: 1, collider: 0, hit: null, nearWater: true, decorDist: 44,
   },
   ancientRoots: {
     name: 'Ikivanhat juuret', model: 'ancientRoots', kind: 'static', material: 'solid', surface: 'wood', castShadow: true,

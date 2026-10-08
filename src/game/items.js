@@ -148,7 +148,7 @@ export const ITEMS = {
   gold_nugget: { name: 'Kultahippu', stack: 50, valuable: true, cat: 'valuable', desc: 'Arvokas kultahippu. Sahelin kulta on ollut haluttua vuosisatoja.' },
   cowrie: { name: 'Kaurikotilo', stack: 50, valuable: true, cat: 'valuable', desc: 'Kaurikotiloita käytettiin Länsi-Afrikassa rahana.' },
   // Sessio 20: kello löytyy vain arkuista; repussa se näyttää kellonajan.
-  clock: { name: 'Kello', stack: 1, cat: 'valuable', desc: 'Vanha messinkinen taskukello. Kun se on repussa, kellotaulu näkyy kartan reunassa.' },
+  clock: { name: 'Kello', stack: 1, cat: 'valuable', desc: 'Vanha messinkinen taskukello. Kun pidät sitä kädessä (valitse pikapalkista), kellotaulu näkyy kartan reunassa.' },
   bronze_bracelet: { name: 'Pronssirannerengas', stack: 50, valuable: true, cat: 'valuable', desc: 'Vanha, koristeellinen pronssikoru.' },
 };
 

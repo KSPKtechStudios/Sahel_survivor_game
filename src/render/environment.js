@@ -13,18 +13,18 @@ import { smoothstep, lerp } from '../noise.js';
 
 // Värien avainkohdat tunnin mukaan (sRGB-heksat).
 const KEYS = [
-  { h: 0.0, zen: 0x04060d, hor: 0x0b1222, sun: 0x000000, sunI: 0, hemiS: 0x24304f, hemiG: 0x14110e, hemiI: 0.42, fog: 0x0a0f1a },
-  { h: 4.8, zen: 0x070b18, hor: 0x161d30, sun: 0x000000, sunI: 0, hemiS: 0x283452, hemiG: 0x16120f, hemiI: 0.42, fog: 0x121827 },
-  { h: 5.7, zen: 0x22345a, hor: 0x8a6a6a, sun: 0xff8a50, sunI: 0.3, hemiS: 0x5a6688, hemiG: 0x3a2c22, hemiI: 0.5, fog: 0x6a5a62 },
+  { h: 0.0, zen: 0x04060d, hor: 0x0b1222, sun: 0x000000, sunI: 0, hemiS: 0x26345a, hemiG: 0x16130f, hemiI: 0.5, fog: 0x0a0f1a },
+  { h: 4.8, zen: 0x070b18, hor: 0x161d30, sun: 0x000000, sunI: 0, hemiS: 0x2c3a5e, hemiG: 0x18140f, hemiI: 0.52, fog: 0x121827 },
+  { h: 5.7, zen: 0x22345a, hor: 0x8a6a6a, sun: 0xff8a50, sunI: 0.3, hemiS: 0x7a84ac, hemiG: 0x4a382e, hemiI: 0.9, fog: 0x6a5a62 },
   { h: 6.4, zen: 0x3d6094, hor: 0xeea36a, sun: 0xffa060, sunI: 1.4, hemiS: 0x95a0bc, hemiG: 0x6a4a34, hemiI: 0.75, fog: 0xd2a27e },
   { h: 8.0, zen: 0x3a72c0, hor: 0xe6cfae, sun: 0xffdcb0, sunI: 2.6, hemiS: 0xaabbd4, hemiG: 0x8a6646, hemiI: 0.95, fog: 0xdccab0 },
   { h: 12.0, zen: 0x2f6cc8, hor: 0xd2dade, sun: 0xfff3e2, sunI: 3.3, hemiS: 0xb8cbe2, hemiG: 0x957250, hemiI: 1.05, fog: 0xd8d6cc },
   { h: 16.2, zen: 0x386fbc, hor: 0xe2cfb0, sun: 0xffe2bc, sunI: 2.7, hemiS: 0xacbcd6, hemiG: 0x8e6a4a, hemiI: 0.95, fog: 0xdcc8ae },
   { h: 17.6, zen: 0x3a5a8e, hor: 0xf2a060, sun: 0xffa055, sunI: 1.5, hemiS: 0x98a0bc, hemiG: 0x6e4a34, hemiI: 0.75, fog: 0xd49870 },
-  { h: 18.3, zen: 0x24345e, hor: 0xd06a48, sun: 0xff6a3a, sunI: 0.35, hemiS: 0x5a5e80, hemiG: 0x3e2c22, hemiI: 0.55, fog: 0x8a5a50 },
-  { h: 19.2, zen: 0x0c1430, hor: 0x3a2a3e, sun: 0x000000, sunI: 0, hemiS: 0x303a5c, hemiG: 0x1a1512, hemiI: 0.45, fog: 0x1e1c2a },
-  { h: 20.5, zen: 0x05080f, hor: 0x0e1424, sun: 0x000000, sunI: 0, hemiS: 0x24304f, hemiG: 0x14110e, hemiI: 0.42, fog: 0x0b101c },
-  { h: 24.0, zen: 0x04060d, hor: 0x0b1222, sun: 0x000000, sunI: 0, hemiS: 0x24304f, hemiG: 0x14110e, hemiI: 0.42, fog: 0x0a0f1a },
+  { h: 18.3, zen: 0x24345e, hor: 0xd06a48, sun: 0xff6a3a, sunI: 0.35, hemiS: 0x8a84b0, hemiG: 0x5a4030, hemiI: 1.05, fog: 0x8a5a50 },
+  { h: 19.2, zen: 0x0c1430, hor: 0x3a2a3e, sun: 0x000000, sunI: 0, hemiS: 0x4a5480, hemiG: 0x28201a, hemiI: 0.8, fog: 0x1e1c2a },
+  { h: 20.5, zen: 0x05080f, hor: 0x0e1424, sun: 0x000000, sunI: 0, hemiS: 0x28365a, hemiG: 0x16130f, hemiI: 0.5, fog: 0x0b101c },
+  { h: 24.0, zen: 0x04060d, hor: 0x0b1222, sun: 0x000000, sunI: 0, hemiS: 0x26345a, hemiG: 0x16130f, hemiI: 0.5, fog: 0x0a0f1a },
 ].map((k) => ({
   ...k,
   zen: new THREE.Color(k.zen),
@@ -417,10 +417,25 @@ export class Environment {
     const tintAmt = w.tintAmt;
     // Sävy skaalautuu päivänvalon mukaan, ettei yö muutu keltaiseksi.
     const dayLum = 0.12 + 0.88 * this.daylight;
+    // Sessio 25: yöllä sääsävy ei saa kirkastaa (ennen harmaa sekoittui
+    // yön tummiin väreihin ja vaalensi niitä): sävy säilyttää värin
+    // kirkkauden, ja pilvet, sade ja sumu pimentävät yötä.
+    const nightK = 1 - this.daylight;
+    const nightDark = 1 - nightK * Math.min(0.6, w.cloud * 0.35 + w.rain * 0.2 + w.haze * 0.15 + w.thunder * 0.1);
+    this.nightDark = nightDark;
     const tinted = (col) => {
-      if (greyAmt > 0.001) col.lerp(_c2.copy(_grey).multiplyScalar(dayLum), greyAmt);
-      if (tintAmt > 0.001) col.lerp(_c2.copy(w.tint).multiplyScalar(dayLum), tintAmt);
-      return col;
+      const L = Math.max(0.0001, col.r * 0.299 + col.g * 0.587 + col.b * 0.114);
+      if (greyAmt > 0.001) {
+        _c2.copy(_grey).multiplyScalar(dayLum);
+        if (nightK > 0) _c2.multiplyScalar(lerp(1, L / 0.6, nightK));
+        col.lerp(_c2, greyAmt);
+      }
+      if (tintAmt > 0.001) {
+        _c2.copy(w.tint).multiplyScalar(dayLum);
+        if (nightK > 0) _c2.multiplyScalar(lerp(1, L / Math.max(0.05, w.tint.r * 0.299 + w.tint.g * 0.587 + w.tint.b * 0.114), nightK));
+        col.lerp(_c2, tintAmt);
+      }
+      return col.multiplyScalar(nightDark);
     };
 
     const u = this.sky.uniforms;
@@ -489,7 +504,8 @@ export class Environment {
     tinted(lerpC('hemiG', this.hemi.groundColor));
     const hemiI = lerp(A.hemiI, B.hemiI, f);
     // Pilvisellä säällä hajavaloa on suhteessa enemmän.
-    this.hemi.intensity = hemiI * (1 + greyAmt * 0.25 + w.haze * 0.15) * (1 - 0.2 * this.humid) + this.flash * 1.6;
+    // Pilvisyyden lisähajavalo vain päivällä (sessio 25: yö ei kirkastu).
+    this.hemi.intensity = hemiI * (1 + (greyAmt * 0.25 + w.haze * 0.15) * this.daylight) * (1 - 0.2 * this.humid) * nightDark + this.flash * 1.6;
     if (this.humid > 0.001) this.hemi.color.lerp(_c2.copy(CANOPY_GREEN).multiplyScalar(dayLum), 0.35 * this.humid);
 
     // Valon suunta (SunLight valaisee sijainnistaan origoa kohti).
@@ -500,7 +516,10 @@ export class Environment {
 
     // Valotus: yöllä hieman enemmän, jotta peli on pelattava.
     // Ukkosmyrsky päivällä hämärtää maailman (sessio 12c).
-    this.renderer.toneMappingExposure = lerp(1.35, 0.95, this.daylight) * (1 - 0.42 * this.w.thunder * this.daylight);
+    // Sessio 25: silmän mukautuminen (post.js) hoitaa yön valotuksen; tässä
+    // perusvalotus. Ilman jälkikäsittelyä yö pidetään entisellään.
+    const ae = this.autoExposure ? 1 : 1.35;
+    this.renderer.toneMappingExposure = lerp(ae, 0.95, this.daylight) * (1 - 0.42 * this.w.thunder * this.daylight);
   }
 
   serialize() {

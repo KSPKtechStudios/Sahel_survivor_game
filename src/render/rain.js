@@ -62,7 +62,10 @@ void main() {
   gl_Position = c;
   float vis = step(h1(s * 9.1), uAmount);
   float fade = smoothstep(0.4, 1.6, c0.w) * (1.0 - smoothstep(${(R * 0.55).toFixed(1)}, ${R.toFixed(1)}, c0.w));
-  vAlpha = vis * fade * (0.3 + 0.7 * h1(s * 2.3));
+  // Sessio 25: ylös katsottaessa pisara näkyy päästä (lyhyt viiru = tumma
+  // neliö taivasta vasten). Lyhyet viirut häivytetään pois.
+  float endOn = smoothstep(4.0, 12.0, dl);
+  vAlpha = vis * fade * endOn * (0.3 + 0.7 * h1(s * 2.3));
 }
 `;
 const dropFS = /* glsl */ `

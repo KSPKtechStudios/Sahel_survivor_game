@@ -3,6 +3,9 @@
 // Lisäksi pienet lastut/kivensirut jokaisesta osumasta.
 import * as THREE from 'three';
 import { heightAt } from '../world/terrain.js';
+import { leafTexture } from './surfaces.js';
+import { kitMaterial } from './kitMaterials.js';
+import { WHITE_UV } from '../models/util.js';
 
 const _q = new THREE.Quaternion();
 const _axis = new THREE.Vector3();
@@ -16,6 +19,9 @@ export function fractureGeometry(geo, k, innerHex = 0x8a6a48, seed = 1, closed =
   const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
   const pos = geo.attributes.position;
   const col = geo.attributes.color;
+  // Sessio 25: UV ja varjostus mukaan (lehtikortit pysyvät lehtinä).
+  const uvA = geo.attributes.uv;
+  const aoA = geo.attributes.aAO;
   const triCount = Math.floor(pos.count / 3);
   if (triCount === 0) return [];
   const cents = new Float32Array(triCount * 3);
@@ -49,23 +55,29 @@ export function fractureGeometry(geo, k, innerHex = 0x8a6a48, seed = 1, closed =
     const c = new THREE.Vector3();
     for (const t of g) c.x += cents[t * 3], c.y += cents[t * 3 + 1], c.z += cents[t * 3 + 2];
     c.divideScalar(g.length);
-    const P = [], C = [];
+    const P = [], C = [], U = [], A = [];
     for (const t of g) {
       const v = [0, 1, 2].map((i) => new THREE.Vector3().fromArray(pos.array, t * 9 + i * 3).sub(c));
       for (let i = 0; i < 3; i++) {
         P.push(v[i].x, v[i].y, v[i].z);
         C.push(col.array[t * 9 + i * 3], col.array[t * 9 + i * 3 + 1], col.array[t * 9 + i * 3 + 2]);
+        if (uvA) U.push(uvA.array[t * 6 + i * 2], uvA.array[t * 6 + i * 2 + 1]);
+        if (aoA) A.push(aoA.array[t * 3 + i]);
       }
       // Sisäpinnat (sulkevat palan)
       for (let i = 0; closed && i < 3; i++) {
         const a = v[i], b = v[(i + 1) % 3];
         P.push(b.x, b.y, b.z, a.x, a.y, a.z, 0, 0, 0);
         C.push(inner.r, inner.g, inner.b, inner.r, inner.g, inner.b, inner.r * 0.8, inner.g * 0.8, inner.b * 0.8);
+        if (uvA) U.push(WHITE_UV[0], WHITE_UV[1], WHITE_UV[0], WHITE_UV[1], WHITE_UV[0], WHITE_UV[1]);
+        if (aoA) A.push(1, 1, 1);
       }
     }
     const fg = new THREE.BufferGeometry();
     fg.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
     fg.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
+    if (uvA) fg.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2));
+    if (aoA) fg.setAttribute('aAO', new THREE.Float32BufferAttribute(A, 1));
     fg.computeVertexNormals();
     fg.computeBoundingSphere();
     out.push({ geometry: fg, center: c });
@@ -78,6 +90,8 @@ export class Debris {
     this.scene = scene;
     this.list = [];
     this.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide });
+    // Sessio 25: lehtiatlasta käyttävien mallien (puut, pensaat) sirpaleet.
+    this.leafMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide, map: leafTexture, alphaTest: 0.42 });
     this.chipGeo = new THREE.TetrahedronGeometry(0.06, 0);
     this.chipMats = new Map();
   }
@@ -86,6 +100,10 @@ export class Debris {
   // maailmamatriisi. power = lentonopeus.
   shatter(geometry, matrix, { pieces = 8, inner = 0x8a6a48, power = 2.5, life = 2.6, seed = 1, up = 1, closed = true } = {}) {
     const frags = fractureGeometry(geometry, pieces, inner, seed, closed);
+    // Materiaali mallin mukaan: kitin mallit omallaan, lehtiatlasta käyttävät
+    // (UV, ei skannattu tekstuuri) lehtimateriaalilla, muut vertex-väreillä.
+    const ud = geometry.userData || {};
+    const material = ud.kit ? kitMaterial(ud.kit[0]) : geometry.attributes.uv && !ud.tex ? this.leafMaterial : this.material;
     const objPos = new THREE.Vector3();
     const objQuat = new THREE.Quaternion();
     const objScale = new THREE.Vector3();
@@ -94,7 +112,7 @@ export class Debris {
     for (const f of frags) center.add(f.center);
     center.divideScalar(Math.max(1, frags.length));
     for (const f of frags) {
-      const mesh = new THREE.Mesh(f.geometry, this.material);
+      const mesh = new THREE.Mesh(f.geometry, material);
       mesh.castShadow = true;
       mesh.position.copy(f.center).applyMatrix4(matrix);
       mesh.quaternion.copy(objQuat);

@@ -261,7 +261,12 @@ export class Player {
     const prevFeet = p.y - this.velocity.y * dt;
     // Vedessä ollaan vasta, kun jalat ovat pinnan alla (ei ilmassa veden yllä).
     const feetUnder = p.y < surface + 0.05;
+    const wasIn = this.inWater;
     this.inWater = !feetUnder || depth <= 0.1 ? 0 : depth > 1.25 ? 2 : 1;
+    // Sessio 25: veteen kävellessä ensimmäinen askel roiskaisee.
+    if (!wasIn && this.inWater && this.onGround && Math.hypot(this.velocity.x, this.velocity.z) > 1) {
+      this.onWater?.('step', p.x, surface, p.z, 1.4);
+    }
     this.surface = depth > 0 ? surface : -Infinity;
     this.waterDepth = Math.max(0, depth);
     // Veteen hyppääminen tai putoaminen: roiske kokoa vastaavasti.

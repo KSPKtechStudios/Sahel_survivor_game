@@ -170,6 +170,11 @@ export function generateChunk(cx, cz, variantCounts) {
         y = sv.wl + 0.005;
       } else if (def.nearWater) {
         if (h < sv.wl - 0.35 || h > sv.wl + 0.9) continue;
+      } else if (def.seabed) {
+        // Sessio 25: veden alla pohjassa (levät, pohjakivet).
+        const depth = sv.wl - h;
+        if (depth < def.seabed[0] || depth > def.seabed[1]) continue;
+        y = h - 0.02;
       } else if (h < sv.wl + 0.05) continue;
       if (insideStructure(x, z, -1)) continue;
       const sc = def.scale[0] + r3 * (def.scale[1] - def.scale[0]);

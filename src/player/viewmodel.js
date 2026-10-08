@@ -420,7 +420,17 @@ export class ViewModel {
     if (this.action && this.action.t < 0.999) {
       if (this.action.t < this.action.hitAt || !this.action.hitDone) return false;
     }
-    this.action = { type: anim, t: 0, dur, hitAt, onHit, hitDone: false, from: this.pose.slice() };
+    // Sessio 25: iskuilla on useita muunnelmia, jotka vuorottelevat
+    // (välillä yksi hypätään yli, ettei rytmi ole ennustettava).
+    let type = anim;
+    const vars = VARIANTS[anim];
+    if (vars) {
+      if (!this.varIdx) this.varIdx = {};
+      const i = ((this.varIdx[anim] ?? -1) + 1 + (Math.random() < 0.3 ? 1 : 0)) % vars.length;
+      this.varIdx[anim] = i;
+      type = vars[i];
+    }
+    this.action = { type, t: 0, dur, hitAt, onHit, hitDone: false, from: this.pose.slice() };
     return true;
   }
 
@@ -804,6 +814,69 @@ const ANIMS = {
     [0.62, [-0.08, 0.07, -0.28, 0.14, -1.52, -0.2, 0], 'out'],
     [1, ZERO, 'inOut'],
   ],
+  // --- Sessio 25: muunnelmat (sama osumahetki kuin perusiskussa).
+  // Kirves / hakku: vino hakkuu oikealta ja vasemmalta.
+  swingB: [
+    [0, ZERO],
+    [0.3, [0.05, 0.09, 0.06, -0.38, 0.82, -0.36, 0], 'inOut'],
+    [0.5, [-0.075, -0.085, -0.15, 0.32, -1.15, 0.36, 0], 'strike'],
+    [0.62, [-0.07, -0.075, -0.13, 0.3, -1.04, 0.33, 0], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  swingC: [
+    [0, ZERO],
+    [0.3, [-0.055, 0.085, 0.06, 0.42, 0.76, 0.22, 0], 'inOut'],
+    [0.5, [-0.02, -0.105, -0.155, -0.24, -1.2, -0.06, 0], 'strike'],
+    [0.62, [-0.02, -0.09, -0.13, -0.22, -1.08, -0.05, 0], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  // Nyrkit: korkeampi suora ja alakoukku.
+  punchB: [
+    [0, ZERO],
+    [0.18, [0.03, 0.01, 0.05, 0.08, 0.12, -0.08, 0], 'inOut'],
+    [0.42, [-0.085, 0.065, -0.26, 0.18, -0.42, -0.25, 0], 'strike'],
+    [0.54, [-0.077, 0.06, -0.23, 0.16, -0.38, -0.22, 0], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  uppercut: [
+    [0, ZERO],
+    [0.2, [0.03, -0.085, 0.05, 0.12, 0.4, -0.12, 0], 'inOut'],
+    [0.42, [-0.085, 0.085, -0.2, 0.18, -0.85, -0.12, 0], 'strike'],
+    [0.55, [-0.08, 0.09, -0.18, 0.17, -0.8, -0.11, 0], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  // Terät: vaakaviilto ja nouseva viilto.
+  slashR2: [
+    [0, ZERO],
+    [0.3, [0.15, 0.06, 0.03, -1.55, -0.55, -0.25, Q], 'inOut'],
+    [0.5, [-0.02, 0.04, -0.13, 0.25, -0.6, 0.15, Q], 'strike'],
+    [0.64, [-0.19, 0.02, -0.06, 1.2, -0.55, 0.25, Q], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  slashL2: [
+    [0, ZERO],
+    [0.3, [-0.13, -0.04, 0.03, 1.3, -0.45, 0.65, -Q], 'inOut'],
+    [0.5, [0.0, 0.1, -0.12, -0.3, -1.2, -0.25, -Q], 'strike'],
+    [0.64, [0.14, 0.15, -0.05, -1.1, -1.35, -0.45, -Q], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  // Pisto alempaa kiertäen.
+  thrust2: [
+    [0, ZERO],
+    [0.3, [0.06, -0.02, 0.1, -0.2, -1.35, 0.25, 0], 'inOut'],
+    [0.48, [-0.09, 0.03, -0.31, 0.1, -1.48, -0.35, 0], 'strike'],
+    [0.62, [-0.09, 0.03, -0.29, 0.1, -1.48, -0.35, 0], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  // Moukari vinosti olan yli.
+  smash2: [
+    [0, ZERO],
+    [0.36, [0.08, 0.2, 0.08, -0.5, 0.95, -0.45, 0], 'inOut'],
+    [0.46, [0.09, 0.22, 0.1, -0.55, 1.08, -0.5, 0], 'out'],
+    [0.6, [-0.08, 0.1, -0.2, 0.35, -1.65, 0.35, 0], 'strike'],
+    [0.72, [-0.08, 0.09, -0.19, 0.33, -1.6, 0.33, 0], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
   pickup: [
     [0, ZERO],
     [0.5, [-0.05, -0.12, -0.1, 0, 0.5, 0.2, 0], 'inOut'],
@@ -833,15 +906,42 @@ const EASE = {
   inOut: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
 };
 
+// Sessio 25: iskujen muunnelmat (play valitsee vuorotellen).
+const VARIANTS = {
+  swing: ['swing', 'swingB', 'swingC'],
+  punch: ['punch', 'punchB', 'uppercut'],
+  slashR: ['slashR', 'slashR2'],
+  slashL: ['slashL', 'slashL2'],
+  thrust: ['thrust', 'thrust2'],
+  smash: ['smash', 'smash2'],
+};
+
 // Laskee asennon hetkellä t (out). Ensimmäinen kehys korvataan from-asennolla.
+// Sessio 25: avainasentojen välillä kuutiollinen (Hermite) käyrä, jonka
+// tangentit lasketaan naapurikehyksistä: liike virtaa kehysten läpi ilman
+// nykäyksiä. Osuman kehyksessä tangentti on pieni (napakka isku), ja
+// segmentin pehmennys (EASE) muokkaa ajan kulkua (kiihtyvä isku).
+const _kp = [ZERO, ZERO, ZERO];
 function keyframes(keys, t, from, out) {
   let i = 1;
   while (i < keys.length - 1 && t > keys[i][0]) i++;
-  const [t0, a0] = keys[i - 1];
-  const [t1, b, ease] = keys[i];
-  const a = i === 1 && from ? from : a0;
-  const k = Math.min(1, Math.max(0, EASE[ease]((t - t0) / (t1 - t0))));
-  for (let j = 0; j < 7; j++) out[j] = a[j] + (b[j] - a[j]) * k;
+  const t0 = keys[i - 1][0], t1 = keys[i][0];
+  const ease = keys[i][2];
+  const P = (k) => (k === 0 && from ? from : keys[k][1]);
+  const a = P(i - 1), b = P(i);
+  const h = Math.max(1e-4, t1 - t0);
+  const u = Math.min(1, Math.max(0, EASE[ease]((t - t0) / h)));
+  // Tangentit (yksikkö: asento / aika). Päät levossa, osumassa pieni.
+  const tan = (k, j) => {
+    if (k <= 0 || k >= keys.length - 1) return 0;
+    const dt = keys[k + 1][0] - keys[k - 1][0];
+    const m = (P(k + 1)[j] - P(k - 1)[j]) / Math.max(1e-4, dt);
+    return keys[k][2] === 'strike' ? m * 0.25 : m * 0.6;
+  };
+  const u2 = u * u, u3 = u2 * u;
+  const h00 = 2 * u3 - 3 * u2 + 1, h10 = u3 - 2 * u2 + u, h01 = -2 * u3 + 3 * u2, h11 = u3 - u2;
+  for (let j = 0; j < 7; j++) out[j] = h00 * a[j] + h10 * h * tan(i - 1, j) + h01 * b[j] + h11 * h * tan(i, j);
+  void _kp;
   return out;
 }
 

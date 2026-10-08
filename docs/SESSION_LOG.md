@@ -2,6 +2,23 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-08 (sessio 25)
+**Tehtiin**
+- Session 24 viimeistely: paketti ja kuvat toimitettiin (testiajoja lyhennettiin, ettei hidas ohjelmistorenderöinti jumita).
+- Silmän mukautuminen (`render/post.js`: `lumFS`, `lumRT`, `uAE`), perusvalotus (`render/environment.js`), hämärän ja yön hajavalo (KEYS), huonon sään yö (`tinted`, `nightDark`).
+- DOF ja liike-epäterävyys (`render/post.js`), lehtien läpikuultavuus (`render/materials.js`: `addTranslucency`, `sunUniforms`; `render/kitMaterials.js`; `main.js`).
+- Sadepisarat päästä katsottuna (`render/rain.js`).
+- Puun sirpaleet ja latvuksen ydin (`render/debris.js`: UV ja materiaali; `models/trees.js`, `models/flora.js`, `models/plants.js`).
+- Rannat ja merenpohja (`models/shore.js` uusi; `world/objectTypes.js`: kelp, seabedRocks, shoreRocks, beachStones, kaislat tiheämmin; `world/chunkGen.js`: `seabed`).
+- Jalanjäljet (`render/footprints.js` uusi; `main.js`), askelroiskeet (`main.js`, `player/player.js`).
+- Iskujen muunnelmat ja Hermite-käyrä (`player/viewmodel.js`: `VARIANTS`, `keyframes`).
+- Kello vain kädessä (`ui/hud.js`, `game/items.js`), kuun valokuva (`render/sky.js`, `assets/textures/moon.jpg`).
+- Testattiin: valotuksen kalibrointi (päivä L ≈ 0,31 → kerroin 0,98; hämärä 1,09; yö), kuvat hämärästä, yöstä ja soihdusta; ESLint puhdas; savutesti.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute valotuksesta (yön kirkkaus) ja uusista iskuista.
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-08 (sessio 24)
 **Tehtiin**
 - Maaston pehmennys (`world/terrain.js`: `sabs`, `smin`, harjanteet, dyynit, vuoret, laterittitasanko, uomat; `config.js`: `chunkSegments` 48).
