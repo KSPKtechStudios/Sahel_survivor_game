@@ -2,6 +2,20 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-08 (sessio 29)
+**Tehtiin**
+- Käyttäjän käsimalli peliin: FBX → GLB muunnos selaimessa (FBXLoader + GLTFExporter; luiden lepokierrot nollattu, metrit, valmiit asennot GLB:n userDataan), tekstuurit 1024 px WebP (`assets/models/arms/`).
+- Uusi `player/arms.js`: kädet, IK (olkapään jousto, käden siirto, otteen kierto kahvan ympäri, ranteen rajat ja korjattu ote takaisin esineelle), sormien otteet (FIST, GRIP, CUP, RELAX, HOOK, OPEN), mattapintainen ihomateriaali (MeshPhysical + sirontajäljitelmä).
+- `player/viewmodel.js`: oikea käsi animaation otteesta, vasen kilpi / soihtu / jousi / sama varsi / lepo; jousipehmennys (`_soften`), aikavenytys (`warpTime`), jatkoliike iskun jälkeen, pehmeämmät torjunta- ja vaihtoajat; terä-aseiden ja nuijan otekohdat; pistojen ja murskauksen lyöntiasento matalammaksi.
+- `game/combat.js`: iskut 35 % pidempiä, osuma 12 % myöhemmin, kierto ennallaan (palautus vähennetään jäähdytyksestä); `game/building.js`: vasaran isku pidempi.
+- Juuret yhtenäiseksi putkeksi (`models/ancient.js`), tähdenlennot useammin ja pehmeä häivytys (`render/sky.js`).
+- Testattiin: testisivut `shots/s29/` (muunnos, otteen kalibrointi kolmesta kulmasta, iskujen kuvasarjat, ranteen kulmien läpikäynti kaikista animaatioista), ESLint, savutesti.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute käsistä ja animaatioista; pistot ja nuijan murskaus mahdollisesti uusiksi käsivarren ehdoilla.
+- Ihonsävy (vaalea vs. tumma), ks. TODO.
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-08 (sessio 28)
 **Tehtiin**
 - Haamun viitta joka olennolle (`game/mobs.js`: `instantiate`).

@@ -294,7 +294,7 @@ export class BuildSystem {
       } else {
         for (const [id, n] of cost) this.inventory.remove(id, n);
         this.boats.repair(b);
-        this.viewmodel.play('swing', { dur: 0.42, hitAt: 0.5 });
+        this.viewmodel.play('swing', { dur: 0.56, hitAt: 0.44 });
         events.emit('hitFeedback', { strength: 0.25 });
         events.emit('message', { text: `${def.name} korjattu (kunto ${Math.round((b.hp / def.hp) * 100)} %)` });
       }
@@ -358,7 +358,7 @@ export class BuildSystem {
       const left = this.inventory.add(id, m);
       if (left > 0) this.drops.spawn(id, left, _p.set(this.player.position.x, this.player.position.y + 0.8, this.player.position.z));
     }
-    this.viewmodel.play('swing', { dur: 0.42, hitAt: 0.5 });
+    this.viewmodel.play('swing', { dur: 0.56, hitAt: 0.44 });
     events.emit('message', { text: `${def.name} purettu` });
   }
 
@@ -367,14 +367,14 @@ export class BuildSystem {
     for (const [id, n] of Object.entries(def.cost)) this.inventory.remove(id, n);
     if (def.boat) {
       this.boats.add(def.boat, plan.x, plan.z, plan.rot);
-      this.viewmodel.play('swing', { dur: 0.42, hitAt: 0.5 });
+      this.viewmodel.play('swing', { dur: 0.56, hitAt: 0.44 });
       events.emit('build', { type: plan.type });
       events.emit('hitFeedback', { strength: 0.3 });
       events.emit('message', { text: `${def.name} valmis: [E] nouse kyytiin` });
       return;
     }
     this.structures.add(plan.type, plan.x, plan.y, plan.z, plan.rot, plan.key);
-    this.viewmodel.play('swing', { dur: 0.42, hitAt: 0.5 });
+    this.viewmodel.play('swing', { dur: 0.56, hitAt: 0.44 });
     events.emit('build', { type: plan.type });
     events.emit('place', { item: plan.type });
     events.emit('hitFeedback', { strength: 0.25 });
@@ -390,7 +390,7 @@ export class BuildSystem {
       const left = this.inventory.add(item, n);
       if (left > 0) this.drops.spawn(item, left, _p.set(st.x, st.y + 0.5, st.z));
     }
-    this.viewmodel.play('swing', { dur: 0.42, hitAt: 0.5 });
+    this.viewmodel.play('swing', { dur: 0.56, hitAt: 0.44 });
     events.emit('message', { text: `${def.name} purettu` });
   }
 }

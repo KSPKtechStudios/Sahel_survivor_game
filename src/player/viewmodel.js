@@ -6,6 +6,7 @@ import { itemBowBody, bowPoints, makeArrowGeometry, BOW_STYLES } from '../models
 import { attachGlow } from '../render/itemGlow.js';
 import { ITEMS } from '../game/items.js';
 import { createFlameTexture } from '../render/textures.js';
+import { Arms } from './arms.js';
 
 const _qi = new THREE.Quaternion();
 
@@ -23,6 +24,9 @@ const SLEEVE = 0x2c3c66;
 const SLEEVE_BAND = 0xc9a24a;
 
 // Miten kukin esine asettuu nyrkkiin (kahva paikallisella Y-akselilla).
+// Sessio 29: oikea käsi on n. 9 cm leveä, joten terä-aseiden kahvan keskikohta
+// on otteen keskellä (ennen käsi osui terän juureen) ja nuija pidetään
+// lähempää varren päätä.
 const HOLD = {
   none: null,
   stick: { pos: [0, -0.06, 0], rot: [0, 0, 0], s: 0.85 },
@@ -35,15 +39,15 @@ const HOLD = {
   gold_nugget: { pos: [0.0, 0.03, -0.035], rot: [0.4, 0.3, 0], s: 1.1 },
   cowrie: { pos: [0.0, 0.03, -0.035], rot: [0.4, 0.3, 0], s: 1.1 },
   bronze_bracelet: { pos: [0.0, 0.0, -0.04], rot: [0.6, 0, 0], s: 1.1 },
-  wooden_club: { pos: [0, -0.05, 0], rot: [0, 0, 0], s: 0.8 },
-  machete: { pos: [0, -0.02, 0], rot: [0, Math.PI / 2, 0], s: 0.85 },
+  wooden_club: { pos: [0, 0.06, 0], rot: [0, 0, 0], s: 0.8 },
+  machete: { pos: [0, 0.047, 0], rot: [0, Math.PI / 2, 0], s: 0.85 },
   raw_meat: { pos: [0.0, 0.0, -0.04], rot: [0.4, 0.3, 0], s: 0.85 },
   hide: { pos: [0.0, 0.0, -0.05], rot: [1.2, 0, 0.3], s: 0.75 },
   clay: { pos: [0.0, 0.0, -0.035], rot: [0.4, 0.3, 0], s: 0.85 },
   // Varustamaton kilpi kädessä (varustettuna se on vasemmassa kädessä).
   shield: { pos: [-0.02, 0.06, -0.05], rot: [0.15, Math.PI - 0.5, 0.25], s: 0.42 },
   // Sessio 9
-  stone_knife: { pos: [0, -0.03, 0], rot: [0, Math.PI / 2, 0], s: 0.85 },
+  stone_knife: { pos: [0, 0.032, 0], rot: [0, Math.PI / 2, 0], s: 0.85 },
   flint_axe: { pos: [0, -0.07, 0], rot: [0, Math.PI / 2, 0], s: 0.78 },
   flint_pick: { pos: [0, -0.07, 0], rot: [0, Math.PI / 2, 0], s: 0.78 },
   hammer: { pos: [0, -0.06, 0], rot: [0, Math.PI / 2, 0], s: 0.74 },
@@ -75,7 +79,7 @@ const DEFAULT_HOLD = { pos: [0.0, 0.03, -0.035], rot: [0.4, 0.3, 0], s: 0.9 };
 // Sessio 22: uusien esineiden otteet tyypin mukaan.
 const HOLD_BY_WEAPON = {
   axe: HOLD.stone_axe, pick: HOLD.stone_pick, knife: HOLD.stone_knife, dagger: HOLD.stone_knife,
-  sword: { pos: [0, -0.02, 0], rot: [0, Math.PI / 2, 0], s: 0.82 }, machete: HOLD.machete,
+  sword: { pos: [0, 0.055, 0], rot: [0, Math.PI / 2, 0], s: 0.82 }, machete: HOLD.machete,
   club: HOLD.wooden_club, sledge: { pos: [0, -0.26, 0], rot: [0, Math.PI / 2, 0], s: 0.6 }, spear: HOLD.spear,
 };
 const ARMOR_HOLD = { pos: [0.0, 0.02, -0.06], rot: [0.5, 0.4, 0], s: 0.55 };
@@ -337,6 +341,12 @@ export class ViewModel {
     this.torchPose = 0;   // 0 = kilven asento, 1 = soihdun asento
     this.shieldT = 0;     // 0 = piilossa, 1 = esillä
 
+    // Sessio 29: oikeat kädet (skinnattu malli). Proseduraaliset kädet
+    // näkyvät vain, kunnes malli on ladattu (tai jos lataus epäonnistuu).
+    this.arms = new Arms();
+    this.rig.add(this.arms.group);
+    this.fistT = 0;       // nyrkki pysyy puristettuna hetken lyönnin jälkeen
+
     this.basePos = new THREE.Vector3(0.17, -0.155, -0.5);
     this.baseRot = new THREE.Euler(-0.25, 0.15, 0.22);
     this.current = null;
@@ -344,6 +354,10 @@ export class ViewModel {
     this.equipT = 1;
     this.action = null; // { type, t, dur, hitAt, onHit, hitDone, from }
     this.pose = ZERO.slice(); // viimeisin animaation asento (iskujen ketjutus)
+    // Sessio 29: pehmennetty asento (jousi) ja sen nopeus.
+    this.sp = ZERO.slice();
+    this.sv = ZERO.slice();
+    this.strikeK = 0;
     this.time = 0;
     this.stop = 0;      // osumapysäys (s)
     // Torjunta: 'shield' | 'weapon' | 'fist' | null
@@ -437,18 +451,18 @@ export class ViewModel {
   // Lyönti / hakkuu. onHit kutsutaan iskun hetkellä.
   swing(kind, onHit) {
     if (this.action) return false;
-    return this.play(kind, kind === 'punch' ? { dur: 0.38, hitAt: 0.42, onHit } : { dur: 0.5, hitAt: 0.5, onHit });
+    return this.play(kind, kind === 'punch' ? { dur: 0.5, hitAt: 0.36, onHit } : { dur: 0.66, hitAt: 0.42, onHit });
   }
 
   pickup() {
     if (this.action) return;
-    this.action = { type: 'pickup', t: 0, dur: 0.3, hitAt: 2, onHit: null, hitDone: true, from: this.pose.slice() };
+    this.action = { type: 'pickup', t: 0, dur: 0.5, hitAt: 2, onHit: null, hitDone: true, from: this.pose.slice() };
   }
 
   // Syöminen: käsi suun eteen.
   eat() {
     if (this.action) return;
-    this.action = { type: 'eat', t: 0, dur: 0.75, hitAt: 2, onHit: null, hitDone: true, from: this.pose.slice() };
+    this.action = { type: 'eat', t: 0, dur: 1.0, hitAt: 2, onHit: null, hitDone: true, from: this.pose.slice() };
   }
 
   // Jousi laukesi: jänne värähtää.
@@ -480,7 +494,7 @@ export class ViewModel {
 
     // Esineen vaihto: käsi laskee alas, esine vaihtuu, käsi nousee.
     if (this.pending !== undefined) {
-      this.equipT += dt / 0.16;
+      this.equipT += dt / 0.2;
       if (this.equipT >= 1) {
         if (this.current && this.items[this.current]) this.items[this.current].visible = false;
         this.current = this.pending;
@@ -489,9 +503,9 @@ export class ViewModel {
         this.equipT = 0;
       }
     } else if (this.equipT < 1) {
-      this.equipT = Math.min(1, this.equipT + dt / 0.24);
+      this.equipT = Math.min(1, this.equipT + dt / 0.36);
     }
-    const lowered = smooth(this.pending !== undefined ? this.equipT : 1 - this.equipT);
+    const lowered = smoother(this.pending !== undefined ? this.equipT : 1 - this.equipT);
 
     // Hiiren liikkeen viive: nopeus (ei ruutukohtainen siirtymä) suodatetaan,
     // ja käsi seuraa sitä vaimennetulla jousella.
@@ -542,7 +556,7 @@ export class ViewModel {
     let adt = dt;
     if (this.stop > 0) {
       this.stop -= dt;
-      adt = dt * 0.08;
+      adt = dt * 0.25;
     }
     const a = this.action;
     const pose = this.pose;
@@ -550,7 +564,8 @@ export class ViewModel {
       a.t += adt / a.dur;
       const t = Math.min(1, a.t);
       const keys = ANIMS[a.type] || ANIMS.punch;
-      keyframes(keys, t, a.from, pose);
+      // Jousen viive kompensoidaan katsomalla hieman eteenpäin.
+      keyframes(keys, warpTime(keys, Math.min(1, t + SOFT_LEAD / a.dur), a.hitAt), a.from, pose);
       if (!a.hitDone && t >= a.hitAt) {
         a.hitDone = true;
         if (a.onHit) a.onHit();
@@ -558,15 +573,15 @@ export class ViewModel {
       if (a.t >= 1 && this.action === a) this.action = null;
     } else {
       // Keskeytetty isku (esim. torjunta) palaa pehmeästi lepoon.
-      const k = Math.exp(-dt * 14);
+      const k = Math.exp(-dt * 7);
       for (let i = 0; i < 7; i++) pose[i] *= k;
     }
 
     // Torjunta-asento liukuu iskujen päälle.
     const bt = this.blockMode ? 1 : 0;
-    this.blockBlend += (bt - this.blockBlend) * (1 - Math.exp(-dt * (bt ? 16 : 9)));
+    this.blockBlend += (bt - this.blockBlend) * (1 - Math.exp(-dt * (bt ? 10 : 6)));
     const bb = smooth(this.blockBlend);
-    this.impact *= Math.exp(-dt * 10);
+    this.impact *= Math.exp(-dt * 7);
     this.parryT = Math.max(0, this.parryT - dt * 4);
     const parryK = Math.sin(this.parryT * Math.PI) * (this.parryT > 0 ? 1 : 0);
     const rightBlock = BLOCK_POSE[this.blockKind] || BLOCK_POSE.fist;
@@ -577,7 +592,8 @@ export class ViewModel {
       _pose[4] += this.impact * 0.12;
       _pose[3] += parryK * 0.25;
     }
-    applyPose(this.anim, _pose);
+    this._soften(_pose, dt, a);
+    applyPose(this.anim, this.sp);
     // Kyynärvarsi ranteesta kohti kyynärpäätä
     this.anim.updateMatrix();
     _w.copy(WRIST).applyMatrix4(this.anim.matrix);
@@ -663,8 +679,33 @@ export class ViewModel {
         0.12 - 0.22 * tp - 0.1 * sb,
       );
     }
+    this._updateArms(dt, player);
   }
 }
+
+// Sessio 29: pehmeät ja sulavat liikkeet (käyttäjä: ennen liian nopeita ja
+// teräviä). Animaation asento kulkee jousen läpi: liike käynnistyy ja
+// pysähtyy pehmeästi, ranne laahaa hieman käsivarren perässä (kiertojen jousi
+// on hitaampi), ja iskun ympärillä jousi kiristyy, jotta osuma tuntuu.
+const SOFT_POS_HZ = 5.2;
+const SOFT_ROT_HZ = 4.2;
+const SOFT_LEAD = 0.045;
+ViewModel.prototype._soften = function (target, dt, a) {
+  const strike = !!(a && a.t > a.hitAt - 0.3 && a.t < a.hitAt + 0.12);
+  this.strikeK += ((strike ? 1 : 0) - this.strikeK) * (1 - Math.exp(-dt * 10));
+  const boost = 1 + 0.55 * this.strikeK;
+  let rem = Math.min(dt, 0.1);
+  while (rem > 1e-6) {
+    const h = Math.min(rem, 1 / 120);
+    rem -= h;
+    for (let i = 0; i < 7; i++) {
+      const w = 2 * Math.PI * (i < 3 ? SOFT_POS_HZ : SOFT_ROT_HZ) * boost;
+      const z = i < 3 ? 0.85 : 0.8;
+      this.sv[i] += (w * w * (target[i] - this.sp[i]) - 2 * z * w * this.sv[i]) * h;
+      this.sp[i] += this.sv[i] * h;
+    }
+  }
+};
 
 ViewModel.prototype._updateBow = function (dt, player, bob, sinP, cosP, step, amp, breathe, sp) {
   const d = smooth(this.bowDraw);
@@ -731,6 +772,127 @@ ViewModel.prototype._updateBow = function (dt, player, bob, sinP, cosP, step, am
   }
 };
 
+// Sessio 29: skinnattujen käsien ohjaus. Oikea käsi seuraa animaatioiden
+// otetta (this.anim: kahva origossa, Y-akselilla), vasen käsi kilpeä / soihtua,
+// jousta tai (hyppyiskussa) samaa vartta; muuten se lepää näkymän alapuolella.
+const CHEST = new THREE.Vector3(0, -0.27, 0.06);
+const POLE_R = new THREE.Vector3(0.55, -1, 0.3).normalize();
+const POLE_L = new THREE.Vector3(-0.55, -1, 0.3).normalize();
+const HANG_POS = new THREE.Vector3(-0.3, -0.78, 0.02);
+const HANG_Q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(
+  new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, -1), new THREE.Vector3(0, 1, 0)));
+// Kilven kahva on vaakasuorassa (X), soihtu pystyssä (Y).
+const SHIELD_GRIP_Q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2);
+const SHIELD_GRIP_P = new THREE.Vector3(0, 0, 0.03);
+const TORCH_GRIP_Q = new THREE.Quaternion();
+const TORCH_GRIP_P = new THREE.Vector3(0, 0, 0);
+const PUNCHES = new Set(['punch', 'punchB', 'punchC', 'punchD', 'uppercut', 'hook']);
+const _am = new THREE.Matrix4();
+const _ap = new THREE.Vector3();
+const _aq = new THREE.Quaternion();
+const _as = new THREE.Vector3();
+const _lp = new THREE.Vector3();
+const _lq = new THREE.Quaternion();
+const _gq = new THREE.Quaternion();
+const _gp = new THREE.Vector3();
+const _am2 = new THREE.Matrix4();
+const _offQ = new THREE.Quaternion();
+const _offP = new THREE.Vector3();
+const ONE = new THREE.Vector3(1, 1, 1);
+
+// Esine kahvasta (varsi otteen läpi) vai kämmenellä (pienet esineet, ruoat)?
+function cupHold(id) {
+  const h = holdFor(id);
+  return !!h && Math.abs(h.pos[2]) > 0.01;
+}
+
+ViewModel.prototype._updateArms = function (dt, player) {
+  const A = this.arms;
+  const on = A.ready;
+  // Proseduraaliset kädet vain varalla.
+  this.hand.visible = this.forearm.visible = !on;
+  this.leftArm.visible = this.bowArm.visible = !on;
+  if (on) this.gripHand.visible = this.gripForearm.visible = false;
+  A.group.visible = on && !player.dead;
+  if (!on || !A.group.visible) return;
+  A.setChest(CHEST.x, CHEST.y - this.crouchBlend * 0.006, CHEST.z);
+
+  // Oikea käsi: animaation ote. Ranteen rajat voivat kääntää kättä, jolloin
+  // esine (this.anim) seuraa korjattua otetta.
+  this.root.updateMatrix();
+  this.anim.updateMatrix();
+  _am.multiplyMatrices(this.root.matrix, this.anim.matrix).decompose(_ap, _aq, _as);
+  const a = this.action;
+  const punching = !!(a && PUNCHES.has(a.type));
+  const fistBlock = this.blockKind === 'fist' && this.blockBlend > 0.3;
+  if (punching || fistBlock) this.fistT = 1.2;
+  else this.fistT = Math.max(0, this.fistT - dt);
+  let fr = 'RELAX';
+  if (this.bowMode) fr = this.bowDraw > 0.04 ? 'HOOK' : 'RELAX';
+  else if (a && a.type === 'pickup') fr = a.t < 0.5 ? 'OPEN' : this.current ? (cupHold(this.current) ? 'CUP' : 'GRIP') : 'RELAX';
+  else if (a && a.type === 'eat') fr = 'CUP';
+  else if (this.current) fr = cupHold(this.current) ? 'CUP' : 'GRIP';
+  else if (this.fistT > 0) fr = 'FIST';
+  A.setFingers('R', fr);
+  const R = A.solve('R', _ap, _aq, POLE_R, dt);
+  if (R) {
+    _am.compose(R.outPos, R.outQuat, ONE);
+    _am2.copy(this.root.matrix).invert().multiply(_am).decompose(this.anim.position, this.anim.quaternion, _as);
+    this.anim.updateMatrix();
+  }
+
+  // Vasen käsi: lepo alhaalla → kilpi / soihtu → jousi → sama varsi.
+  _lp.copy(HANG_POS);
+  _lq.copy(HANG_Q);
+  let fl = 'RELAX';
+  let kOff = 0;
+  this.leftAnim.position.set(0, 0, 0);
+  this.leftAnim.quaternion.identity();
+  if (this.left.visible) {
+    this.left.updateMatrix();
+    _gq.copy(this.left.quaternion);
+    _gp.copy(this.left.position);
+    const tp = smooth(this.torchPose);
+    _offQ.slerpQuaternions(SHIELD_GRIP_Q, TORCH_GRIP_Q, tp);
+    _offP.lerpVectors(SHIELD_GRIP_P, TORCH_GRIP_P, tp);
+    _gp.add(_w.copy(_offP).applyQuaternion(_gq));
+    _gq.multiply(_offQ);
+    kOff = smooth(this.shieldT);
+    _lp.lerp(_gp, kOff);
+    _lq.slerp(_gq, kOff);
+    if (kOff > 0.3) fl = 'GRIP';
+  }
+  let kBow = 0;
+  if (this.bowMode && this.bowGroup.visible) {
+    this.bowGroup.updateMatrix();
+    this.bowGroup.matrix.decompose(_gp, _gq, _as);
+    kBow = smooth(this.bowT);
+    _lp.lerp(_gp, kBow);
+    _lq.slerp(_gq, kBow);
+    if (kBow > 0.3) fl = 'GRIP';
+  }
+  let kGrip = 0;
+  if (this.gripK > 0.01) {
+    _am.multiplyMatrices(this.root.matrix, this.anim.matrix).decompose(_gp, _gq, _as);
+    _gp.copy(GRIP).applyMatrix4(_am);
+    kGrip = smooth(this.gripK);
+    _lp.lerp(_gp, kGrip);
+    _lq.slerp(_gq, kGrip);
+    if (kGrip > 0.3) fl = 'GRIP';
+  }
+  A.setFingers('L', fl);
+  const L = A.solve('L', _lp, _lq, POLE_L, dt, kBow > 0.01 || kGrip > 0.01);
+  // Kilpi / soihtu seuraa ranteen rajoilla korjattua otetta.
+  if (L && kOff > 0.01 && kBow < 0.01 && kGrip < 0.01) {
+    _gq.copy(L.outQuat).multiply(_qa.copy(_offQ).invert());
+    _gp.copy(_offP).applyQuaternion(_gq).negate().add(L.outPos);
+    _am.compose(_gp, _gq, ONE);
+    _am2.copy(this.left.matrix).invert().multiply(_am).decompose(_gp, _gq, _as);
+    this.leftAnim.position.lerp(_gp, kOff);
+    this.leftAnim.quaternion.slerp(_gq, kOff);
+  }
+};
+
 const _bt = new THREE.Vector3();
 const _bb = new THREE.Vector3();
 const _bn = new THREE.Vector3();
@@ -792,7 +954,7 @@ const ANIMS = {
     [0, ZERO],
     [0.36, [0.0, 0.2, 0.08, -0.12, 1.0, -0.18, 0], 'inOut'],
     [0.46, [0.0, 0.22, 0.1, -0.12, 1.15, -0.18, 0], 'out'],
-    [0.6, [-0.05, 0.12, -0.2, 0.0, -1.75, 0.05, 0], 'strike'],
+    [0.6, [-0.03, 0.02, -0.15, 0.0, -1.6, 0.05, 0], 'strike'],
     [0.72, [-0.05, 0.11, -0.19, 0.0, -1.7, 0.05, 0], 'out'],
     [1, ZERO, 'inOut'],
   ],
@@ -810,7 +972,7 @@ const ANIMS = {
   thrust: [
     [0, ZERO],
     [0.3, [0.04, 0.03, 0.1, -0.08, -1.45, 0.0, 0], 'inOut'],
-    [0.48, [-0.08, 0.07, -0.3, 0.14, -1.52, -0.2, 0], 'strike'],
+    [0.48, [-0.05, -0.02, -0.22, 0.14, -1.42, -0.2, 0], 'strike'],
     [0.62, [-0.08, 0.07, -0.28, 0.14, -1.52, -0.2, 0], 'out'],
     [1, ZERO, 'inOut'],
   ],
@@ -864,7 +1026,7 @@ const ANIMS = {
   thrust2: [
     [0, ZERO],
     [0.3, [0.06, -0.02, 0.1, -0.2, -1.35, 0.25, 0], 'inOut'],
-    [0.48, [-0.09, 0.03, -0.31, 0.1, -1.48, -0.35, 0], 'strike'],
+    [0.48, [-0.06, -0.05, -0.23, 0.1, -1.38, -0.35, 0], 'strike'],
     [0.62, [-0.09, 0.03, -0.29, 0.1, -1.48, -0.35, 0], 'out'],
     [1, ZERO, 'inOut'],
   ],
@@ -873,7 +1035,7 @@ const ANIMS = {
     [0, ZERO],
     [0.36, [0.08, 0.2, 0.08, -0.5, 0.95, -0.45, 0], 'inOut'],
     [0.46, [0.09, 0.22, 0.1, -0.55, 1.08, -0.5, 0], 'out'],
-    [0.6, [-0.08, 0.1, -0.2, 0.35, -1.65, 0.35, 0], 'strike'],
+    [0.6, [-0.05, 0.0, -0.15, 0.35, -1.5, 0.35, 0], 'strike'],
     [0.72, [-0.08, 0.09, -0.19, 0.33, -1.6, 0.33, 0], 'out'],
     [1, ZERO, 'inOut'],
   ],
@@ -933,7 +1095,7 @@ const ANIMS = {
   thrust3: [
     [0, ZERO],
     [0.3, [0.05, 0.07, 0.12, -0.12, -1.5, 0.15, 0.6], 'inOut'],
-    [0.48, [-0.07, 0.11, -0.33, 0.12, -1.58, -0.1, 0], 'strike'],
+    [0.48, [-0.05, 0.0, -0.24, 0.12, -1.45, -0.1, 0], 'strike'],
     [0.62, [-0.07, 0.1, -0.31, 0.12, -1.58, -0.1, 0], 'out'],
     [1, ZERO, 'inOut'],
   ],
@@ -963,7 +1125,7 @@ const ANIMS = {
 
 // Torjunta-asennot oikealle kädelle.
 const BLOCK_POSE = {
-  weapon: [-0.1, 0.2, 0.0, 0.1, -0.15, 1.42, 0],     // ase vaakasuoraan eteen
+  weapon: [-0.08, 0.17, 0.02, 0.25, -0.1, 1.15, 0],   // ase vinosti eteen (sessio 29: luontevampi ranne)
   fist: [-0.09, 0.09, 0.05, 0.35, 0.35, 0.3, 0],      // nyrkki kasvojen eteen
   shield: [0.03, -0.07, 0.04, 0, 0.15, 0, 0],         // kilpi torjuu, käsi alempana
 };
@@ -985,6 +1147,25 @@ const VARIANTS = {
   smash: ['smash', 'smash2', 'smash3'],
 };
 
+// Sessio 29: iskun jälkeinen asento jatkaa hieman iskun suuntaan
+// (jatkoliike), ja palautus alkaa vasta sen jälkeen: liike ei pysähdy
+// osumaan kuin seinään. strikeT = lyöntikehyksen aika.
+for (const keys of Object.values(ANIMS)) {
+  const si = keys.findIndex((k) => k[2] === 'strike');
+  keys.strikeT = si > 0 ? keys[si][0] : null;
+  if (si < 1 || si + 2 > keys.length - 1 || keys[si + 1][2] !== 'out') continue;
+  const sp = keys[si][1], wp = keys[si - 1][1];
+  keys[si + 1] = [Math.min(keys[si + 2][0] - 0.12, keys[si][0] + 0.16), sp.map((v, j) => v + (v - wp[j]) * 0.1), 'out'];
+}
+
+// Iskun osumahetki (hitAt) voi poiketa lyöntikehyksen ajasta (sessio 29:
+// pidempi palautus): aika venytetään niin, että lyöntikehys osuu osumaan.
+function warpTime(keys, t, hitAt) {
+  const hk = keys.strikeT;
+  if (!hk || hitAt >= 1 || hitAt <= 0) return t;
+  return t < hitAt ? (t * hk) / hitAt : hk + ((t - hitAt) * (1 - hk)) / (1 - hitAt);
+}
+
 // Laskee asennon hetkellä t (out). Ensimmäinen kehys korvataan from-asennolla.
 // Sessio 25: avainasentojen välillä kuutiollinen (Hermite) käyrä, jonka
 // tangentit lasketaan naapurikehyksistä: liike virtaa kehysten läpi ilman
@@ -1005,13 +1186,18 @@ function keyframes(keys, t, from, out) {
     if (k <= 0 || k >= keys.length - 1) return 0;
     const dt = keys[k + 1][0] - keys[k - 1][0];
     const m = (P(k + 1)[j] - P(k - 1)[j]) / Math.max(1e-4, dt);
-    return keys[k][2] === 'strike' ? m * 0.25 : m * 0.6;
+    return keys[k][2] === 'strike' ? m * 0.42 : m * 0.75;
   };
   const u2 = u * u, u3 = u2 * u;
   const h00 = 2 * u3 - 3 * u2 + 1, h10 = u3 - 2 * u2 + u, h01 = -2 * u3 + 3 * u2, h11 = u3 - u2;
   for (let j = 0; j < 7; j++) out[j] = h00 * a[j] + h10 * h * tan(i - 1, j) + h01 * b[j] + h11 * h * tan(i, j);
   void _kp;
   return out;
+}
+
+function smoother(t) {
+  t = Math.min(1, Math.max(0, t));
+  return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
 function smooth(t) {

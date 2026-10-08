@@ -26,4 +26,9 @@ Stylized Nature MegaKit, ilmainen versio (https://quaternius.com), CC0 (sessio 2
   Sessio 28: lahopuun kuori (deadbark.jpg, deadbark_nrm.jpg) vaihdettu: Poly Haven
   bark_willow_02 (CC0, 1k), haalistettu harmaaksi.
 
+Kädet (assets/models/arms/), sessio 29: käyttäjän antama malli
+  FPS_Female_Arms.fbx ja sen tekstuurit (väri, karheus, normaali). Muunnettu
+  GLB:ksi (metrit, luiden lepokierrot nollattu), tekstuurit pienennetty
+  1024 px WebP-kuviksi ja karheus skaalattu mattapintaisemmaksi.
+
 Fontit: ks. assets/fonts (OFL).

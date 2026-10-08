@@ -10,6 +10,7 @@ import { mulberry32 } from '../noise.js';
 import { V, paint, limb, merge, displace, partRand } from './util.js';
 
 const _c = new THREE.Color();
+const _p = new THREE.Vector3();
 
 // Lohkeillut kivi: säteittäinen ja pystysuuntainen kohina (saumat pysyvät kiinni).
 function chip(geo, rand, amt) {
@@ -187,10 +188,21 @@ export function makeAncientRoots(seed, q = 1) {
       pts.push(V(ca * d - sa * side, y, sa * d + ca * side));
     }
     const r0 = 0.2 + rand() * 0.08;
-    for (let j = 0; j < segs; j++) {
-      const ra = r0 * (1 - (j / segs) * 0.7), rb = r0 * (1 - ((j + 1) / segs) * 0.7);
-      parts.push(limb(pts[j], pts[j + 1], ra, rb, q ? 7 : 5, false));
+    // Sessio 29: yksi yhtenäinen, kapeneva putki sileää käyrää pitkin
+    // (ennen erilliset lieriöt, joiden saumoista näki läpi).
+    const curve = new THREE.CatmullRomCurve3(pts);
+    const ts = q ? 16 : 7, rs = q ? 8 : 5;
+    const tube = new THREE.TubeGeometry(curve, ts, 1, rs, false);
+    const tp = tube.attributes.position, tn = tube.attributes.normal;
+    for (let j = 0; j <= ts; j++) {
+      curve.getPointAt(j / ts, _p);
+      const r = r0 * (1 - (j / ts) * 0.7);
+      for (let k = 0; k <= rs; k++) {
+        const vi = j * (rs + 1) + k;
+        tp.setXYZ(vi, _p.x + tn.getX(vi) * r, _p.y + tn.getY(vi) * r, _p.z + tn.getZ(vi) * r);
+      }
     }
+    parts.push(tube);
   }
   const g = merge(parts.map((p) => paint(p, bark, { rand: jr(), jitter: 0.1 })));
   // Sammal juurten yläpinnoilla.

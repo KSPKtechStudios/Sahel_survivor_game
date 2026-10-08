@@ -35,7 +35,7 @@ uniform vec3 uGalaxyC;   // galaksin keskustan suunta (tasossa)
 uniform float uFlash;    // salaman välähdys 0..1
 uniform vec3 uMeteorA;   // tähdenlennon alku- ja loppusuunta
 uniform vec3 uMeteorB;
-uniform vec2 uMeteor;    // x = eteneminen 0..1, y = kirkkaus
+uniform vec4 uMeteor;    // x = eteneminen 0..1, y = vanan kirkkaus, z = kärjen kirkkaus, w = vanan pituus
 varying vec3 vDir;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
@@ -179,16 +179,16 @@ void main() {
   // Kuunvalo peittää himmeän linnunradan.
   col += milky * uStars * (1.0 - cloud) * (1.0 - 0.3 * moonIllum * uMoonVisible * smoothstep(0.0, 0.4, uMoonDir.y));
   // Tähdenlento: ohut, nopeasti häipyvä viiva, kirkkain kärjestä.
-  if (uMeteor.y > 0.001) {
+  if (uMeteor.y + uMeteor.z > 0.001) {
     vec3 mh = normalize(mix(uMeteorA, uMeteorB, uMeteor.x));
-    vec3 mt = normalize(mix(uMeteorA, uMeteorB, max(0.0, uMeteor.x - 0.35)));
+    vec3 mt = normalize(mix(uMeteorA, uMeteorB, max(0.0, uMeteor.x - uMeteor.w)));
     vec3 seg = mh - mt;
     float sl = max(dot(seg, seg), 1e-8);
     float k = clamp(dot(dir - mt, seg) / sl, 0.0, 1.0);
     float md2 = length(dir - (mt + seg * k));
     float trail = smoothstep(0.0016, 0.0, md2) * k * k;
     float head = smoothstep(0.003, 0.0, length(dir - mh));
-    col += vec3(0.85, 0.9, 1.0) * (trail * 0.9 + head * 0.6) * uMeteor.y * (1.0 - cloud);
+    col += vec3(0.85, 0.9, 1.0) * (trail * 0.9 * uMeteor.y + head * 0.6 * uMeteor.z) * (1.0 - cloud);
   }
   // Salama valaisee pilvet ja taivaan.
   col += vec3(0.75, 0.8, 1.0) * uFlash * (0.25 + cloud * 0.9);
@@ -230,7 +230,7 @@ export class Sky {
       uFlash: { value: 0 },
       uMeteorA: { value: new THREE.Vector3(0, 1, 0) },
       uMeteorB: { value: new THREE.Vector3(0, 1, 0) },
-      uMeteor: { value: new THREE.Vector2(0, 0) },
+      uMeteor: { value: new THREE.Vector4(0, 0, 0, 0.35) },
     };
     // Sessio 25: kuun valokuva (128 px, ilman mipmappeja: kiekko on pieni).
     const moonPh = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
@@ -245,6 +245,7 @@ export class Sky {
     this.meteorTimer = 6 + Math.random() * 10;
     this.meteorT = -1;
     this.meteorDur = 0.6;
+    this.meteorFade = 1;
     const mat = new THREE.ShaderMaterial({
       uniforms: this.uniforms,
       vertexShader,
@@ -266,17 +267,25 @@ export class Sky {
   // dt = todellinen aika, clear = tähtien näkyvyys × selkeys (0..1).
   updateMeteors(dt, clear) {
     const u = this.uniforms;
+    // Sessio 29: kärki syttyy, hidastuu ja hiipuu loppumatkalla; vana jää
+    // hehkumaan ja häipyy pehmeästi (lyhenee hännästä), ei katoa kerralla.
     if (this.meteorT >= 0) {
-      this.meteorT += dt / this.meteorDur;
-      const t = this.meteorT;
-      u.uMeteor.value.set(Math.min(1, t), t >= 1 ? 0 : Math.sin(Math.PI * Math.min(1, t)) ** 0.6 * this.meteorB);
-      if (t >= 1) { this.meteorT = -1; u.uMeteor.value.set(0, 0); }
+      this.meteorT += dt;
+      const t = this.meteorT, dur = this.meteorDur, fade = this.meteorFade;
+      const n = Math.min(1, t / dur);
+      const rise = Math.min(1, n / 0.12);
+      const x = 1 - (1 - n) ** 1.5;
+      const f = Math.max(0, (t - dur) / fade);
+      const tail = 1 - f * f * (3 - 2 * Math.min(1, f));
+      const head = rise * (1 - smoothstep(0.55, 1, n)) * (1 + 0.25 * Math.sin(t * 40) * n);
+      u.uMeteor.value.set(x, rise * tail * this.meteorB, head * this.meteorB, 0.35 * (1 - 0.65 * Math.min(1, f)));
+      if (f >= 1) { this.meteorT = -1; u.uMeteor.value.set(0, 0, 0, 0.35); }
       return;
     }
     if (clear < 0.4) return;
     this.meteorTimer -= dt;
     if (this.meteorTimer > 0) return;
-    this.meteorTimer = 8 + Math.random() * 30;
+    this.meteorTimer = 5 + Math.random() * 17; // sessio 29: hieman useammin (ennen 8–38 s)
     // Alku 30-70° korkeudella, kulkee 8-22° enimmäkseen alaspäin.
     const az = Math.random() * Math.PI * 2, el = (30 + Math.random() * 40) * Math.PI / 180;
     u.uMeteorA.value.set(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az));
@@ -285,7 +294,13 @@ export class Sky {
     const el2 = Math.max(0.1, el + dEl * len), az2 = az + dAz * len / Math.max(0.3, Math.cos(el));
     u.uMeteorB.value.set(Math.cos(el2) * Math.cos(az2), Math.sin(el2), Math.cos(el2) * Math.sin(az2));
     this.meteorDur = 0.45 + Math.random() * 0.6;
+    this.meteorFade = 0.7 + Math.random() * 0.6;
     this.meteorB = (0.5 + Math.random() * 0.5) * clear;
     this.meteorT = 0;
   }
+}
+
+function smoothstep(a, b, x) {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
 }

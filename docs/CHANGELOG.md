@@ -2,6 +2,17 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-08 (sessio 29): uudet kädet, pehmeät animaatiot, juuret ja tähdenlennot
+
+- **Uudet kädet:** pelaajan käsi on nyt käyttäjän antama malli (FPS Female Arms) omilla tekstuureillaan. Molemmat kädet näkyvät: oikea pitää työkalua tai asetta, vasen kilpeä, soihtua tai jousta, ja hyppyiskussa molemmat tarttuvat varteen. Muuten vasen käsi lepää näkymän alapuolella.
+- **Luonteva ote:** kyynärpää ja olkapää lasketaan käänteiskinematiikalla (IK), ja ranne pysyy anatomisissa rajoissa (koukistus, sivutaivutus, kierto). Käsi saa kiertyä kahvan ympäri luontevimpaan asentoon, ja isku tehdään olkapäällä ja kyynärpäällä, ei ranteella. Varsi kulkee kämmenen poikki vinosti kuten oikeassa nyrkkiotteessa.
+- **Sormet:** otteet mallin omista asennoista (nyrkki, kivääriote). Varsi: sormet kahvan ympäri. Pienet esineet ja ruoka kämmenellä. Tyhjä käsi on rento, ja lyödessä se puristuu nyrkkiin. Jousen jänne vedetään koukussa olevilla sormilla, ja poimiessa käsi avautuu. Sormet liukuvat asennosta toiseen.
+- **Iho mattapintaiseksi:** karheutta lisätty, heijastusta heikennetty, ihonalainen sironta (valon ja varjon raja punertaa pehmeästi) ja hento nukkahohde. Ei muovista kiiltoa.
+- **Kahvat kämmenen keskelle:** veitset, tikarit, viidakkoveitsi ja miekat pidetään kahvasta (ennen käsi osui terän juureen); nuija pidetään lähempää varren päätä.
+- **Todella pehmeät animaatiot:** iskut kestävät noin 35 % pidempään, mutta taistelun tahti on ennallaan, koska palautus käyttää osan jäähdytysajasta. Lyöntihetki tulee noin 12 % myöhemmin. Käden liike kulkee jousen läpi: liike käynnistyy ja pysähtyy pehmeästi, ja ranne laahaa hieman käsivarren perässä. Isku jatkuu osuman läpi (jatkoliike) ja palautuu rauhallisesti. Myös torjunta nousee ja laskee pehmeämmin, osuman pysäys on lempeämpi, ja esineen vaihto, poiminta ja syöminen ovat hitaampia ja pehmeämpiä.
+- **Ikivanhat juuret** ovat nyt yksi yhtenäinen, kapeneva putki (ennen erillisistä lieriöistä, joiden saumoista näki läpi).
+- **Tähdenlennot** tulevat hieman useammin (5–22 s välein, ennen 8–38 s). Kärki hiipuu loppumatkalla, ja vana jää hehkumaan ja häipyy pehmeästi.
+
 ## 2026-10-08 (sessio 28): haamun vartalo, lahopuu, bambu ja hakatut puut
 
 - **Korjattu: haamun vartalo (viitta) ei näkynyt.** Jokainen haamu saa nyt oman kangasviittansa.

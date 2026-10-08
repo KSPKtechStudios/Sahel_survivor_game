@@ -92,6 +92,24 @@ export const WEAPONS = {
     ],
   },
 };
+// Sessio 29: käyttäjä toivoi todella pehmeitä ja sulavia isku- ja
+// torjunta-animaatioita. Animaatio kestää n. 35 % pidempään ja osuma tulee
+// hieman myöhemmin (n. 12 %), mutta yhden iskun kierto (kesto + jäähdytys)
+// pysyy ennallaan: pidempi palautus syö jäähdytystä (soft = siirretty aika).
+// Sarjan seuraava isku voi alkaa palautuksen aikana entiseen tahtiin.
+const SOFT_DUR = 1.35;
+const SOFT_HIT = 1.12;
+for (const w of Object.values(WEAPONS)) {
+  for (const st of [...w.combo, ...(w.leap ? [w.leap] : [])]) {
+    const dur = st.dur * SOFT_DUR;
+    const hitT = st.dur * st.hitAt * SOFT_HIT;
+    if (st.chain < 1) st.chain = Math.min(1, Math.max(hitT / dur + 0.05, (st.dur * st.chain * 1.06) / dur));
+    st.soft = dur - st.dur;
+    st.hitAt = hitT / dur;
+    st.dur = dur;
+  }
+}
+
 // leap = hyppyisku (sessio 21): ilmasta aloitettu isku kahdella kädellä
 // ylhäältä alas; osuessaan olentoon kriittinen (enemmän vahinkoa). Vain
 // raskailla aseilla (kirves, nuija).
@@ -178,7 +196,8 @@ export class Combat {
     if (this.attacking && vm.action !== this.attacking.action) {
       // Isku päättyi (tai keskeytettiin) ilman sarjan jatkoa: jäähdytys alkaa
       // (lyhyempi, jos isku ei osunut olentoon).
-      const cd = (this.attacking.step.cd || 0) * (this.attacking.hitMob ? 1 : GATHER_CD);
+      const st = this.attacking.step;
+      const cd = Math.max(0.03, (st.cd || 0) * (this.attacking.hitMob ? 1 : GATHER_CD) - (st.soft || 0));
       this.cooldown = this.cooldownMax = cd;
       this.attacking = null;
     }

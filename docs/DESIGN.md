@@ -217,6 +217,15 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 29 (käyttäjän kertoma, 2026-10-08)
+- **Pelaajan käsi vaihdetaan** käyttäjän antamaan malliin (FPS_Female_Arms.fbx ja kolme tekstuuria: väri, karheus, normaali), ja **animaatiot tehdään siihen sopiviksi**. Nykyinen käsi on huononäköinen.
+- **Iho ei saa kiiltää eikä näyttää muoviselta**, vaan kädeltä.
+- **Ote pitää näyttää oikealta:** käsi ei saa taipua luonnottomasti. Käyttäjän referenssit: käsi pitelee keppiä, lieriötä ja kirvestä (ranne suora, kyynärvarsi ja nyrkki samassa linjassa, sormet kahvan ympäri, peukalo sormien päällä).
+- **Veistä pidetään kahvasta**, ei terästä.
+- **Todella pehmeät ja sulavat animaatiot:** isku- ja puolustusanimaatiot ym. ovat ok, mutta liian nopeita ja "teräviä". Animaatiot pitää uudistaa kunnolla.
+- **Juuret** (ikivanhat juuret): niiden väleistä näkyy ärsyttävästi läpi (käyttäjän kuva).
+- **Tähdenlentoja hieman useammin**, ja ne **häipyvät pehmeästi** (fade out) eivätkä katoa yhtäkkiä.
+
 ## Sessio 28 (käyttäjän kertoma, 2026-10-08)
 - Session 27 muutokset hyviä ("hienoa työtä", "muuten ei valittamista").
 - **Lahopuun tekstuurit** eivät ole hyvät; **bambun** tekstuurit eivät myöskään (käyttäjän kuvat).
@@ -468,7 +477,7 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Rakennusosat ja hinnat (sessio 9):** työstöpenkki (6 puuta, 4 kiveä, 4 kuitua), nuotio (5 kiveä, 3 puuta, 3 risua), puulattia (4 puuta), puuseinä (4 puuta, 2 risua), saviseinä (6 savea, 4 risua), oviaukko (4 puuta), olkikatto (4 risua, 6 ruokoa), aita (6 risua, 2 kuitua), pylväs (2 puuta), soihtuteline (3 risua, 2 kuitua, kumi), makuualusta (8 kuitua, talja), soutuvene (10 puuta, 2 köyttä, 2 kumia), purjevene (24 puuta, 8 köyttä, 6 kumia, 4 nahkaa), purjelaiva (160 puuta, 40 köyttä, 24 kumia, 24 nahkaa, 30 kiveä). Työstöpenkki vaaditaan 20 m:n säteelle.
 - **Oppaan vaiheet (sessio 9):** kerää tarvikkeita (risuja, kiviä, kuitua) → valmista työkalut ja vasara → hanki puuta → rakenna työstöpenkki → rakenna nuotio → valmista ja syö ateria → valmista jousi ja ammu → "Hyvä alku".
 - **Kestävyys (stamina):** kuluu juostessa, hypätessä ja lyödessä.
-- **Hahmo:** tummaihoinen käsi ja indigonsininen hiha (koska peli sijoittuu Burkina Fasoon).
+- **Hahmo:** tummaihoinen käsi ja indigonsininen hiha (koska peli sijoittuu Burkina Fasoon). Sessio 29: käsi vaihdettiin käyttäjän antamaan malliin ja tekstuuriin (vaalea iho); ihonsävyä voi tummentaa, jos käyttäjä haluaa.
 - **Valikon fontit:** Eagle Lake (otsikko), Permanent Marker (napit), Alegreya (teksti).
 - **Ohjaimet:** WASD, Shift, välilyönti, Ctrl/C (kyykky päälle/pois), hiiri 1 (lyö, sarjat), hiiri 2 (torju / aseta / varusta kilpi), E, Q (heitä esine), 1–8, Tab/I, M, F3 (kehittäjätyökalut), Esc.
 - **Iskut (sessio 11):** yhden iskun kierto (animaatio + jäähdytys) olentoon osuessa: nyrkit 0,64 s (6 vahinkoa, kestävyys 5), risu 0,72 s (6, 5), kivipuukko 0,54 s (7, 5), kirves 0,78 s (12, 7), hakku 0,83 s (11, 8), keihäs 0,95 s (15, 10, ulottuu 3,4 m), puunuija 1,45 s (21, 18, iso tönäisy). Kun isku ei osu olentoon (hakkuu, louhinta, ohi), jäähdytys on 55 % (nyrkit n. 0,5 s, kirves n. 0,65 s). Viidakkoveitsi: sarja 10 + 10 + 19 (kestävyys 9 + 14 + 22, jatkuu vain yli 50 %:n kestävyydellä), sarjan jälkeen 1,1 s jäähdytys.

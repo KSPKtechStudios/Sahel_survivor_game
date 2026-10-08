@@ -2,6 +2,15 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-08 (sessio 29)
+- **Käsimalli muunnettiin FBX:stä GLB:ksi** (`assets/models/arms/arms.glb`, 1,4 Mt; kolmiot ennallaan, kaksoisverteksit yhdistetty). Luiden lepokierrot nollattiin ja yksiköt muutettiin metreiksi, ja mallin valmiit asennot (nyrkki, kivääriote ym.) tallennettiin GLB:hen. Syy: pelissä on valmiina GLTF-lataaja, eikä FBX-lataajaa tarvita pelissä. Nollatut lepokierrot yksinkertaistavat IK:n.
+- **Tekstuurit 1024 px WebP-kuvina** (yhteensä n. 160 kt). Karheuskartta skaalattiin välille 0,6–0,8 (alkuperäinen n. 0,4 näytti muovilta). Syy: pieni lataus ja vähän muistia, iho mattapintaiseksi käyttäjän toiveen mukaan.
+- **Käyttäjän tekstuuri sellaisenaan (vaalea iho)**, vaikka aiempi paikkamerkki oli tumma iho. Syy: käyttäjä antoi mallin ja tekstuurit itse; sävyn voi muuttaa myöhemmin.
+- **Kädet ohjataan käänteiskinematiikalla nykyisistä animaatioista:** animaatio antaa otteen (kahvan paikan ja suunnan). Ratkaisija sijoittaa kyynärpään, joustaa olkapäästä (enintään n. 22 cm, ei koskaan kameran eteen) ja siirtää kättä vähän (enintään n. 14 cm, ei kameraa kohti). Lisäksi se kiertää kättä kahvan ympäri (enintään n. 40°) ja rajaa ranteen. Jos animaatio vaatisi liikaa, esine kääntyy käden mukana. Syy: vanhat avainkehykset oli tehty irralliselle nyrkille (ranne taipuisi jopa 180°). Näin iskut pysyvät näkyvissä ja käsi luontevana.
+- **Pehmeys jousella, ei pelkillä avainkehyksillä:** asento kulkee jousen läpi (sijainti 5,2 Hz, kierto 4,2 Hz, iskun ympärillä 1,55× kireämpi), ja avainkehyksiä katsotaan 45 ms eteenpäin, jotta osuma osuu kohdalleen. Syy: kaikki siirtymät (isku, ketjutus, torjunta, keskeytys) pehmenevät samalla tavalla.
+- **Iskujen kesto +35 % ja osuma +12 % myöhemmin, kierto ennallaan** (`combat.js`: palautus vähennetään jäähdytyksestä, myös hakkuussa). Aika venytetään niin, että animaation lyöntikehys osuu uuteen osumahetkeen. Syy: käyttäjä halusi hitaammat ja pehmeämmät animaatiot, mutta taistelun tasapaino haluttiin pitää ennallaan.
+- **Vanha proseduraalinen käsi jää varalle**, kunnes malli on ladattu (tai jos lataus epäonnistuu).
+
 ## 2026-10-08 (sessio 28)
 - **Haamun viitta luodaan joka olennolle erikseen (mobs.js: instantiate).** Syy: mallipohjan kopio jakoi viitan geometrian, jota kukaan ei päivittänyt (vartalo näkymätön).
 - **Kitin jpg-tekstuurit toistuvat (RepeatWrapping); lahopuun kuori 1 toisto / ~1 m.** Syy: lahopuun UV kiertää rungon pituudella 11–13 kertaa; ilman toistoa reunan pikselit venyivät raidoiksi.

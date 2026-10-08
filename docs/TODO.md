@@ -1,6 +1,10 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 29: uudet kädet (ote kirveestä, viidakkoveitsestä, nuijasta, nyrkeistä; kilpi ja soihtu vasemmassa; jousi; hyppyisku kahdella kädellä; syöminen ja poiminta), iskujen ja torjunnan pehmeys (tuntuuko taistelun tahti samalta?), ihon mattapinta, juuret, tähdenlennot
+- [ ] Vastaus: pidetäänkö vaalea iho (käyttäjän tekstuuri) vai tummennetaanko sävyä (aiempi paikkamerkki: tumma iho, peli sijoittuu Burkina Fasoon)?
+- [ ] Animaatiot uudelle kädelle, jatko: pistot (thrust), nuijan murskaus ja osa viilloista vaativat yhä ranteen korjausta (esine kääntyy käden mukana). Jos ne näyttävät oudoilta, avainasennot kannattaa tehdä uudelleen käsivarren ehdoilla (käsi kaaressa olkapään ympäri)
+- [ ] Kädessä pidettävien pienten esineiden (kivi, ruoka, nahat) asento kämmenellä: nyt kupitettu käsi ja vanhat sijainnit; hienosäätö esine kerrallaan
 - [ ] Käyttäjä testaa session 28: haamun vartalo ja viitta, lahopuun kuori, bambu, kaatuneen puun pilkkominen (pysyykö siistinä), rungon latva, selkeän sään sumu
 - [ ] Käyttäjä testaa session 27: liaanit (kävele niihin, tuuli, kaada puu jossa on liaaneja), kaatuvan puun lehdet, kookokset ([E] ravista, lyö, kaada; kasvavat takaisin), haamun viitta (yöllä sademetsässä), baobab, sademetsän puut, pönkkäjuuret ja kannot, banaanit, lahopuun kaato, lammikot sademetsän notkoissa, kaislat jokien ja järvien rannoilla, leijuvat pisteet, silmän tottuminen (katso ylös latvuston aukkoon ja takaisin alas), yön kirkkaus, aavikon tuuli, jalanjäljet
 - [ ] Käyttäjä testaa session 26: latvukset alta (ei ytimiä), valokeilat sademetsässä aamulla aurinkoa kohti ja sivulta, sademetsän usva selkeällä, lehtien kiilto yöllä, leijuvat pikselit, palmut, kookospalmut, doumpalmut ja banaanit, simpukat rannalla ([E] poimii), jalanjäljet hiekassa, iskujen muunnelmat, musiikki ja äänet aavikolla ja savannilla
