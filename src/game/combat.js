@@ -63,6 +63,27 @@ export const WEAPONS = {
     ],
     leap: { anim: 'leap', dur: 0.7, hitAt: 0.6, chain: 1, cd: 0.8, dmg: 36, kb: 14, up: 4, stam: 18, arc: 0.85, reach: 0.3, multi: true, stagger: 1, heavy: true, crit: true },
   },
+  // Sessio 22: uudet asetyypit. Tikari: kaksi nopeaa viiltoa. Miekka: kolmen
+  // iskun sarja. Moukari: yksi hyvin hidas murskaava isku ja hyppyisku.
+  dagger: {
+    name: 'Tikari', block: 'tool', reach: 2.0, combo: [
+      { anim: 'slashR', dur: 0.3, hitAt: 0.5, chain: 0.85, cd: 0.25, dmg: 7, kb: 4, up: 1, stam: 5, arc: 0.8 },
+      { anim: 'slashL', dur: 0.3, hitAt: 0.5, chain: 1, cd: 0.4, dmg: 8, kb: 4.5, up: 1, stam: 7, arc: 0.8 },
+    ],
+  },
+  sword: {
+    name: 'Miekka', block: 'weapon', reach: 2.5, combo: [
+      { anim: 'slashR', dur: 0.5, hitAt: 0.5, chain: 0.9, cd: 0.5, dmg: 12, kb: 6, up: 1.4, stam: 9, arc: 0.85, multi: true },
+      { anim: 'slashL', dur: 0.5, hitAt: 0.5, chain: 0.9, cd: 0.5, dmg: 12, kb: 6, up: 1.4, stam: 13, arc: 0.85, multi: true },
+      { anim: 'thrust', dur: 0.55, hitAt: 0.48, chain: 1, cd: 1.0, dmg: 18, kb: 9, up: 2.5, stam: 20, arc: 0.35, reach: 0.4, stagger: 0.5 },
+    ],
+  },
+  sledge: {
+    name: 'Moukari', block: 'weapon', reach: 2.7, combo: [
+      { anim: 'smash', dur: 1.0, hitAt: 0.6, chain: 1, cd: 0.9, dmg: 32, kb: 17, up: 5, stam: 24, arc: 0.9, multi: true, stagger: 1.0, heavy: true },
+    ],
+    leap: { anim: 'leap', dur: 0.8, hitAt: 0.6, chain: 1, cd: 0.9, dmg: 52, kb: 20, up: 5.5, stam: 26, arc: 0.95, reach: 0.3, multi: true, stagger: 1.3, heavy: true, crit: true },
+  },
   machete: {
     name: 'Viidakkoveitsi', block: 'weapon', reach: 2.4, combo: [
       { anim: 'slashR', dur: 0.5, hitAt: 0.5, chain: 0.9, cd: 0.5, dmg: 10, kb: 5.5, up: 1.3, stam: 9, arc: 0.9, multi: true },
@@ -86,6 +107,9 @@ export const BLOCKS = {
   fist: { name: 'kädet', reduce: 0.3, cost: 1.25, parry: 0.18 },
 };
 
+const ARMOR_K = 30;       // panssarin vähennyksen puolikasarvo
+const LIFESTEAL = 0.12;   // rubiiniaseen osuma palauttaa osuuden vahingosta
+const MYSTIC_REGEN = 0.35; // rubiiniotsaripa: terveyttä / s
 const COMBO_RESET = 0.55; // näin pitkän tauon jälkeen sarja alkaa alusta
 export const COMBO_MIN = 0.5; // sarjan jatkaminen vaatii yli puolet kestävyydestä
 const BUFFER = 0.35;      // ennakkoon painettu isku muistetaan näin kauan
@@ -241,6 +265,11 @@ export class Combat {
     }
     if (this.attacking) this.sinceAttack = 0;
 
+    // Rubiinipanssari (sessio 22): haavat sulkeutuvat hitaasti itsestään.
+    if (!player.dead && player.health < player.maxHealth && this.inventory.slots.some((s) => s && s.eq && ITEMS[s.id].armor && ITEMS[s.id].mystic)) {
+      player.health = Math.min(player.maxHealth, player.health + MYSTIC_REGEN * dt);
+    }
+
     // Torjuessa ja lyödessä liikutaan hitaammin; torjuessa kestävyys palautuu hitaasti.
     player.moveMul = this.blocking ? 0.5 : this.attacking ? (this.attacking.step.heavy ? 0.55 : 0.8) : 1;
     player.staminaRegenMul = this.blocking ? 0.35 : 1;
@@ -250,6 +279,18 @@ export class Combat {
   _comboDenied(weapon) {
     if (weapon.combo.length < 2) return;
     events.emit('staminaOut');
+  }
+
+  // Rubiini (sessio 22): osuma palauttaa hiukan terveyttä, ja olennosta
+  // virtaa punaisia kipinöitä pelaajaa kohti.
+  _lifesteal(m, dealt) {
+    const pl = this.player;
+    if (dealt <= 0 || pl.dead) return;
+    pl.health = Math.min(pl.maxHealth, pl.health + dealt * LIFESTEAL);
+    if (this.bursts) {
+      _v.set(m.pos.x, m.pos.y + m.def.height * 0.6, m.pos.z);
+      this.bursts.spawn(_v, 0xff2a3c, 10, 1.6, { size: 0.06, life: 0.5, gravity: -1.5, lit: true });
+    }
   }
 
   // Iskun osumahetki: ensin olennot kaaressa, muuten maailma (hakkuu).
@@ -263,16 +304,20 @@ export class Combat {
     if (hits.length) {
       const n = step.multi ? Math.min(3, hits.length) : 1;
       let killed = false;
+      // Sessio 22: tason vahinkokerroin (wmul) ja rubiinin voima.
+      const dmg = step.dmg * ((def && def.wmul) || 1);
       for (let i = 0; i < n; i++) {
         const m = hits[i];
-        this.mobs.damage(m, step.dmg, { fromX: p.x, fromZ: p.z, knock: step.kb, up: step.up || 0, stagger: step.stagger || 0 });
+        const hp0 = m.hp;
+        this.mobs.damage(m, dmg, { fromX: p.x, fromZ: p.z, knock: step.kb, up: step.up || 0, stagger: step.stagger || 0 });
+        if (def && def.mystic) this._lifesteal(m, Math.max(0, hp0 - m.hp));
         if (m.state === 'dead' || !this.mobs.list.includes(m)) killed = true;
         // Osumakohta olennon pinnalla pelaajan puolella
         const dx = p.x - m.pos.x, dz = p.z - m.pos.z;
         const d = Math.hypot(dx, dz) || 1;
         _v.set(m.pos.x + (dx / d) * m.def.radius, m.pos.y + m.def.height * 0.55, m.pos.z + (dz / d) * m.def.radius);
         if (m.type === 'clay') this.debris.chips(_v, 0x9c4a2a, 5, null, 0.9);
-        this.mobs.bleed(m, _v, -dx, -dz, step.dmg);
+        this.mobs.bleed(m, _v, -dx, -dz, dmg);
         // Soihtu sytyttää lyödyn olennon palamaan (sessio 12e).
         const sel = this.inventory.selectedItem;
         if (sel && sel.id === 'torch' && !sel.unlit) this.mobs.setOnFire(m);
@@ -295,7 +340,7 @@ export class Combat {
         return;
       }
       this.viewmodel.hitStop(step.heavy || killed ? 0.11 : 0.06);
-      events.emit('hitFeedback', { strength: 0.3 + step.dmg / 35 });
+      events.emit('hitFeedback', { strength: 0.3 + Math.min(dmg, 40) / 35 });
       return;
     }
     this.interaction._onHit(def);
@@ -314,7 +359,7 @@ export class Combat {
     const facing = (dx * fx + dz * fz) / len > 0.34;
     const vm = this.viewmodel;
     if (this.blocking && facing) {
-      const b = BLOCKS[this.blockType];
+      const b = this._blockStats();
       if (this.elapsed - this.blockStart <= b.parry) {
         // Täydellinen torjunta: ei vahinkoa, hyökkääjä lentää taaksepäin ja
         // taintuu hetkeksi (sessio 21: tähdet pään ympärillä, ei tekstiä).
@@ -336,7 +381,7 @@ export class Combat {
       if (player.stamina >= cost) {
         player.stamina -= cost;
         player.staminaDelay = CONFIG.staminaRegenDelay;
-        const taken = dmg * (1 - b.reduce);
+        const taken = dmg * (1 - b.reduce) * this._armorMul();
         if (taken >= 0.5) player.hurt(taken, { cause, fromX: ax, fromZ: az, knock: knock * 0.35 });
         else player.push(-dx, -dz, knock * 0.35);
         vm.blockImpact(0.6 + dmg / 25);
@@ -351,11 +396,28 @@ export class Combat {
       vm.setBlock(null);
       this.stun = 0.7;
       vm.blockImpact(1.2);
-      player.hurt(dmg * 0.6, { cause, fromX: ax, fromZ: az, knock: knock * 0.8 });
+      player.hurt(dmg * 0.6 * this._armorMul(), { cause, fromX: ax, fromZ: az, knock: knock * 0.8 });
       events.emit('blocked', { broken: true });
       return 'broken';
     }
-    player.hurt(dmg, { cause, fromX: ax, fromZ: az, knock, up });
+    player.hurt(dmg * this._armorMul(), { cause, fromX: ax, fromZ: az, knock, up });
     return 'hit';
+  }
+
+  // Sessio 22: kilven omat torjunta-arvot (esineen shield-kenttä).
+  _blockStats() {
+    if (this.blockType === 'shield') {
+      const i = this.inventory.equippedShield();
+      const d = i >= 0 ? ITEMS[this.inventory.slots[i].id] : null;
+      if (d && typeof d.shield === 'object') return d.shield;
+    }
+    return BLOCKS[this.blockType];
+  }
+
+  // Panssari vähentää olentojen iskujen vahinkoa: osuus = a / (a + 30)
+  // (esim. 10 → 25 %, 23 → 43 %).
+  _armorMul() {
+    const a = this.inventory.armor();
+    return a > 0 ? 1 - a / (a + ARMOR_K) : 1;
   }
 }

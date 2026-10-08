@@ -7,6 +7,9 @@
 // kind:  tree = kaatuu ja pilkotaan, rock = säröilee ja murskautuu,
 //        bush = rytisee ja hajoaa, pickup = poimitaan [E], static = ei hakattava
 // drawDist: kuinka monen chunkin päähän esine piirretään.
+// Sessio 22: harvest.minTier = kirveen / hakun vähimmäistaso (1 kivi, 2 piikivi,
+// 3 kupari, 4 rauta), peel = baobabin kuorinta ennen kaatamista, noChain = ei
+// kaadu toisen puun ketjureaktiossa, stumpR = kannon törmäyssäde.
 // HUOM: tiheydet, saaliit ja kestävyydet ovat prototyypin paikkamerkkejä.
 
 export const OBJECT_TYPES = {
@@ -21,15 +24,15 @@ export const OBJECT_TYPES = {
     name: 'Kapokkipuu', model: 'jungle', kind: 'tree', material: 'vegetation', castShadow: true,
     density: { rainforest: 5, mare: 0.15 },
     scale: [1.0, 1.55], maxSlope: 0.55, collider: 0.6, hit: { y: 1.5, r: 0.85 }, drawDist: 99,
-    harvest: { tool: 'axe', hp: 8, needMsg: 'Tarvitset kirveen' },
-    log: { name: 'Kaatunut kapokkipuu', hp: 6, drops: [['wood', 5], ['stick', 3]] },
+    harvest: { tool: 'axe', hp: 10, minTier: 3, needMsg: 'Tarvitset kirveen' }, noChain: true,
+    log: { name: 'Kaatunut kapokkipuu', hp: 7, drops: [['heartwood', 3], ['wood', 3], ['stick', 2]] },
   },
   canopy: {
     name: 'Sademetsäpuu', model: 'canopy', kind: 'tree', material: 'vegetation', castShadow: true,
     density: { rainforest: 32, oasis: 0.5 },
     scale: [0.85, 1.3], maxSlope: 0.6, collider: 0.38, hit: { y: 1.3, r: 0.6 }, drawDist: 99,
-    harvest: { tool: 'axe', hp: 6, needMsg: 'Tarvitset kirveen' },
-    log: { name: 'Kaatunut sademetsäpuu', hp: 4, drops: [['wood', 4], ['stick', 2]] },
+    harvest: { tool: 'axe', hp: 6, minTier: 2, needMsg: 'Tarvitset kirveen' },
+    log: { name: 'Kaatunut sademetsäpuu', hp: 4, drops: [['hardwood', 3], ['wood', 1], ['stick', 2]] },
   },
   palm: {
     name: 'Palmu', model: 'palm', kind: 'tree', material: 'vegetation', castShadow: true,
@@ -59,11 +62,15 @@ export const OBJECT_TYPES = {
     harvest: { tool: 'axe', hp: 4, needMsg: 'Tarvitset kirveen' },
     log: { name: 'Kaatunut kookospalmu', hp: 3, drops: [['wood', 2], ['palm_leaf', 2], ['coconut', 2]] },
   },
+  // Sessio 22: baobab kuoritaan ensin (ulkopuusta tavallista puuta), ja vasta
+  // sitten rungon ytimen voi kaataa rautakirveellä (ydinpuuta).
   baobab: {
-    name: 'Baobab', model: 'baobab', kind: 'static', material: 'vegetation', castShadow: true,
+    name: 'Baobab', model: 'baobab', kind: 'tree', material: 'vegetation', castShadow: true,
     density: { savanna: 0.14, woodland: 0.25, mare: 0.4, laterite: 0.05 },
     scale: [0.85, 1.15], maxSlope: 0.35, collider: 1.75, hit: { y: 2.0, r: 2.0 }, drawDist: 99,
-    harvest: { tool: 'never', needMsg: 'Liian suuri kaadettavaksi' },
+    harvest: { tool: 'axe', hp: 16, minTier: 4, peel: { hp: 12, item: 'wood' }, needMsg: 'Tarvitset kirveen' },
+    noChain: true, stumpR: 1.3,
+    log: { name: 'Kaadettu baobab', hp: 12, drops: [['heartwood', 6], ['wood', 3], ['baobab_fruit', 2]] },
   },
   deadTree: {
     name: 'Kuollut puu', model: 'deadTree', kind: 'bush', material: 'solid', castShadow: true,
@@ -75,7 +82,7 @@ export const OBJECT_TYPES = {
     name: 'Kuivunut pensas', model: 'bush', kind: 'bush', material: 'bush', castShadow: false,
     density: { savanna: 6, woodland: 7, mare: 4, laterite: 3, dunes: 1.6, desert: 0.7, mountains: 2.5 },
     scale: [0.8, 1.3], maxSlope: 0.6, collider: 0, hit: { y: 0.5, r: 0.75 }, drawDist: 3,
-    harvest: { tool: null, hp: 3, drops: [['stick', 2], ['fiber', 1]] },
+    harvest: { tool: null, hp: 3, drops: [['stick', 2], ['fiber', 1], ['wood', 1]] },
   },
   thicket: {
     name: 'Tiheikkö', model: 'thicket', kind: 'bush', material: 'bush', castShadow: false,
@@ -184,12 +191,12 @@ export const OBJECT_TYPES = {
     density: { savanna: 35, woodland: 45, mare: 40, laterite: 10 },
     scale: [0.8, 1.3], maxSlope: 0.6, collider: 0, hit: null,
   },
-  // Sessio 9: kukat ovat poimittavia (terälehdet rohtoihin).
+  // Sessio 22: terälehdet poistettiin, joten kukat ovat pelkkää koristetta
+  // (kind pysyy ennallaan, jotta sijainnit eivät muutu).
   flowers: {
     name: 'Villikukkia', model: 'flowers', kind: 'pickup', material: 'grass', castShadow: false,
     density: { rainforest: 6, oasis: 8, mare: 5, savanna: 1.5, woodland: 1.2, mountains: 1.5 },
-    scale: [0.8, 1.3], maxSlope: 0.6, collider: 0, hit: { y: 0.15, r: 0.4 }, drawDist: 2,
-    pickup: { drops: [['petals', 2, 4]] },
+    scale: [0.8, 1.3], maxSlope: 0.6, collider: 0, hit: null, drawDist: 2,
   },
   lilies: {
     name: 'Lumpeet', model: 'lilies', kind: 'decor', material: 'solid', castShadow: false, decorative: true,
@@ -228,11 +235,11 @@ export const OBJECT_TYPES = {
     scale: [0.9, 1.15], maxSlope: 0.8, collider: 0, hit: { y: 0.06, r: 0.3 }, drawDist: 2,
     pickup: { drops: [['flint', 1, 2]] },
   },
+  // Sessio 22: simpukankuoret ovat koristetta (esine poistettiin).
   seashellPick: {
     name: 'Simpukankuoria', model: 'shell', kind: 'pickup', material: 'solid', castShadow: false,
     density: { beach: 4 },
-    scale: [0.9, 1.2], maxSlope: 0.8, collider: 0, hit: { y: 0.04, r: 0.28 }, drawDist: 2,
-    pickup: { drops: [['seashell', 1, 2]] },
+    scale: [0.9, 1.2], maxSlope: 0.8, collider: 0, hit: null, drawDist: 2,
   },
   featherPick: {
     name: 'Sulka', model: 'feather', kind: 'pickup', material: 'solid', castShadow: false,
@@ -274,7 +281,7 @@ export const OBJECT_TYPES = {
     name: 'Hibiskus', model: 'hibiscus', kind: 'pickup', material: 'bush', castShadow: false,
     density: { mare: 1.2, oasis: 2, rainforest: 1, savanna: 0.3, woodland: 0.4 },
     scale: [0.85, 1.2], maxSlope: 0.6, collider: 0, hit: { y: 0.4, r: 0.5 }, drawDist: 3,
-    pickup: { drops: [['hibiscus', 2, 4], ['petals', 0, 1]] },
+    pickup: { drops: [['hibiscus', 2, 4]] },
   },
   reedClump: {
     name: 'Ruokotupas', model: 'reedClump', kind: 'pickup', material: 'grass', castShadow: false,

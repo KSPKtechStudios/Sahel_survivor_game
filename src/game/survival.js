@@ -8,7 +8,7 @@
 // perustasolla. Sienet ja raaka liha voivat aiheuttaa myrkytyksen.
 //
 // HUOM: arvot ovat prototyypin paikkamerkkejä (ks. docs/DESIGN.md).
-import { ITEMS } from './items.js';
+import { ITEMS, TIERS } from './items.js';
 import { events } from './events.js';
 
 export const BASE_HEALTH = 25;
@@ -58,6 +58,8 @@ export function foodValues(id) {
   return { id, name: d.name, hp: Math.round(f.hunger * 0.7), st: Math.round(f.hunger * 0.5), min: Math.min(20, Math.max(5, 5 + f.hunger * 0.25)) };
 }
 
+const ARMOR_SLOT = { head: 'pää', body: 'keho', legs: 'jalat' };
+
 export const EFFECTS = {
   poison: { name: 'Myrkytys', bad: true },
   energized: { name: 'Virkeä' },
@@ -79,9 +81,15 @@ export function itemStats(d, id) {
     else if (f.cure) parts.push('Lievittää myrkytystä');
     if (f.poison) parts.push(`Myrkytysriski ${Math.round(f.poison * 100)} %`);
   }
+  // Sessio 22: taso, teho, vahinkokerroin, kilven ja panssarin arvot.
+  if (d.tier !== undefined && (d.tool || d.weapon || d.bow || d.shield || d.armor)) parts.push(`Taso: ${TIERS[d.tier]}`);
   if (d.ammo) parts.push(`Vahinko ${d.ammo.dmg}`);
   if (d.bow) parts.push(`Voima ×${d.bow.power}`);
-  if (d.tool === 'axe' || d.tool === 'pickaxe') parts.push(`Teho ×${d.damage || 1}`);
+  if (d.tool === 'axe' || d.tool === 'pickaxe') parts.push(`Teho ×${d.power || 1}`);
+  if (d.weapon && d.wmul && d.wmul !== 1) parts.push(`Vahinko ×${d.wmul}`);
+  if (d.shield && typeof d.shield === 'object') parts.push(`Torjuu ${Math.round(d.shield.reduce * 100)} %`);
+  if (d.armor) parts.push(`Panssari +${d.armor.value} (${ARMOR_SLOT[d.armor.slot]})`);
+  if (d.mystic) parts.push('Rubiinin voima');
   return parts.join(' · ');
 }
 

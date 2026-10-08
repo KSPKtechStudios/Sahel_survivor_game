@@ -4,6 +4,7 @@
 // maasta. Heitettyä esinettä ei poimita automaattisesti heti takaisin:
 // pelaaja heitti sen tarkoituksella (ks. throwItem).
 import * as THREE from 'three';
+import { attachGlow } from '../render/itemGlow.js';
 import { heightAt, waterAt, WATER } from '../world/terrain.js';
 import { waveHeight, openFactor } from '../world/waves.js';
 import { ITEMS } from './items.js';
@@ -114,6 +115,7 @@ export class Drops {
     glow.userData.base = gs;
     glow.userData.phase = Math.random() * 100;
     mesh.add(glow);
+    attachGlow(mesh); // rubiini hehkuu (sessio 22)
     const d = {
       item, count, mesh, vel, rest,
       spin: resting ? new THREE.Vector3() : new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(10),

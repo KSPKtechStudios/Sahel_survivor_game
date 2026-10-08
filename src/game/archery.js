@@ -11,7 +11,7 @@ import { makeArrowGeometry } from '../models/items2.js';
 
 const GRAVITY = 9.8;
 const MAX_ARROWS = 24;
-export const AMMO_ORDER = ['arrow_flint', 'arrow_bone', 'arrow_wood'];
+export const AMMO_ORDER = ['arrow_iron', 'arrow_copper', 'arrow_flint', 'arrow_bone', 'arrow_wood'];
 const _dir = new THREE.Vector3();
 const _p = new THREE.Vector3();
 const _q = new THREE.Vector3();

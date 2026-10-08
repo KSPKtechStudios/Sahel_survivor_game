@@ -1,7 +1,7 @@
 // Kehittäjätyökalut [F3]: tiedot, siirtyminen, olentojen ja esineiden
 // kutsuminen, lentäminen, nopeus, kuolemattomuus, kartan paljastus, sää ja aika.
 // Paneeli on ruudun oikeassa reunassa; maailma jatkaa kulkuaan sen takana.
-import { ITEMS } from '../game/items.js';
+import { ITEMS, TIERS } from '../game/items.js';
 import { STRUCT_NAMES } from '../game/ruins.js';
 import { BOATS } from '../game/boats.js';
 import { WEATHER, WEATHER_KEYS } from '../render/environment.js';
@@ -196,6 +196,20 @@ export class DevTools {
     this._button(row, 'Materiaalit', () => {
       for (const id of ['stick', 'stone', 'fiber', 'wood', 'flint', 'rope', 'clay', 'reed', 'gum']) inventory.add(id, 20);
       return '+20 kutakin perusmateriaalia';
+    });
+    // Sessio 22: metallit ja rubiini (hankintatapa vielä avoin) sekä tasot.
+    this._button(row, 'Metallit', () => {
+      for (const [id, n] of [['copper_ingot', 30], ['iron_ingot', 40], ['ruby', 10], ['hardwood', 20], ['heartwood', 20], ['leather', 20], ['sinew', 12]]) inventory.add(id, n);
+      return 'Kupari, rauta, rubiini, jalo- ja ydinpuu, nahka, jänne';
+    });
+    this._button(row, 'Taso…', () => {
+      const tier = (this._tierPick = ((this._tierPick ?? -1) + 1) % TIERS.length);
+      let n = 0;
+      for (const [id, d] of Object.entries(ITEMS)) {
+        if (d.tier !== tier || !(d.tool || d.weapon || d.bow || d.shield || d.armor)) continue;
+        if (inventory.count(id) === 0 && inventory.add(id, 1) === 0) n++;
+      }
+      return `${TIERS[tier]}: ${n} esinettä (paina uudelleen: seuraava taso)`;
     });
     this._button(row, 'Rakentaminen', () => {
       if (inventory.count('hammer') === 0) inventory.add('hammer', 1);

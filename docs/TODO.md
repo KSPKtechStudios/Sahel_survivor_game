@@ -1,11 +1,15 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 22: tasot ([F3] → Esineet → Taso… / Metallit), puulajit (jalopuu, ydinpuu), baobabin kuorinta ja kaato, panssarit ja kilvet, rubiinin hehku ja voimat, jouset ja nuolet
+- [ ] Päätös: miten kupari, rauta ja rubiini hankitaan (malmit? sulatus? paja?) ja tarvitaanko metalliesineille oma valmistuspaikka
+- [ ] Päätös: jousien valmistus (nyt työstöpenkillä puulajeista ja jänteestä)
+- [ ] Panssarit näkyviin muille (esim. kuolleen pelaajan / tulevien hahmojen malleissa), jos tarpeen
 - [ ] Käyttäjä testaa session 21: nimen esiintulo, hyppyisku kirveellä ja nuijalla (tuntuma, vahinko), haamun äänet, parryn taintuminen ja tähdet, kuun reuna ja vaihtuva kuu, savipeikon nousu, esineiden katoaminen, kellon paikka ja digitaaliaika, keularoiskeet myrskyssä
 - [ ] Vastaus: pitäisikö hyppyiskun toimia myös hakulla tai keihäällä? Onko kriittinen isku sopivan vahva?
 - [ ] Käyttäjä testaa session 20: nopea siirtyminen (ei valkoista maailmaa), kuumuusväreily, linnunrata, termiittikeon nimi, yön hiljaisuus, Kello arkuista ja kellotaulu, toinen käsi ([F], soihtu vasemmassa), reppu (klikkaus, Ctrl+oikea jako, sykintä, vihreä tausta), pinot, valmistuksen latausaika
 - [ ] Käyttäjä testaa session 19: vihollisten kiertäminen ja perääntyminen, savipeikon vahvuus, linnun ääni, kirves, kasvien murskaus, uusi reppu (raahaus, Shift+klikkaus, jako, varustus, pudotus), valmistusikkuna, 6 pikapaikkaa, panssarin näyttö, minikartan kehys, opas [T]
-- [ ] Panssarit (esineet, joilla `armor: { slot, value }`), jotta panssarin näyttö tulee käyttöön
+- [x] Panssarit (esineet, joilla `armor: { slot, value }`), jotta panssarin näyttö tulee käyttöön (sessio 22)
 - [ ] Käyttäjä testaa session 18: soihtu sateessa, kestävyyden kulutus, paraneminen, kirveen/nuijan sarja ja viidakkoveitsen tahti, puut ilman kirvestä ja kivet ("Liian kovaa!"), punainen hehku, kuumuusväreily, jousen jännitys, nimilappujen tarkkuus
 - [ ] Käyttäjä testaa session 17: nimilaput vain katsottaessa (etäisyys 14 m sopiva?), jousen plus-tähtäin ja jännityspalkki, nuolilaskuri, puuton paneeli
 - [ ] Käyttäjä testaa session 16: Philosopher-fontti, naulat, animaatioiden tuntuma (nopeus vs. pehmeys), loppuvan ruoan välke ja hehku

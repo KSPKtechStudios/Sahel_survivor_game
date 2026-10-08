@@ -111,7 +111,7 @@ export class Interaction {
     if (t.kind === 'object') {
       const d = OBJECT_TYPES[o.type];
       const sc = o.scale || 1;
-      const h = d.kind === 'tree' ? 2.3 : d.kind === 'rock' || d.kind === 'static' ? Math.min(3.2, 0.6 + 1.1 * sc) : d.kind === 'bush' ? 0.5 + 0.9 * sc : 0.55;
+      const h = d.kind === 'tree' ? (d.collider > 1 ? 3.4 : 2.3) : d.kind === 'rock' || d.kind === 'static' ? Math.min(3.2, 0.6 + 1.1 * sc) : d.kind === 'bush' ? 0.5 + 0.9 * sc : 0.55;
       return a.set(o.x, (o.y ?? 0) + h, o.z);
     }
     // Muut (arkut, riimukivet, rakennelmat, tumbleweedit): osumakohdan yläpuolella.
@@ -149,8 +149,9 @@ export class Interaction {
     if (target.kind === 'log') {
       const log = target.obj;
       const t = OBJECT_TYPES[log.type];
-      const ok = def && def.tool === 'axe';
-      return { name: t.log.name, action: ok ? '[Hiiri 1] Pilko' : '' };
+      const axe = def && def.tool === 'axe';
+      if (axe && !this._tierOk(t.harvest, def)) return { name: t.log.name, action: 'Tarvitset paremman kirveen', warn: true };
+      return { name: t.log.name, action: axe ? '[Hiiri 1] Pilko' : '' };
     }
     const t = OBJECT_TYPES[target.obj.type];
     if (t.pickup) return { name: t.name, action: '[E] Poimi' };
@@ -161,6 +162,8 @@ export class Interaction {
       // Sessio 18: puihin ja kasveihin ei tekstiä ilman kirvestä (niitä voi
       // lyödä millä vain, mutta vahinko on mitätön); kiveen "Liian kovaa!".
       if (!ok && h.tool === 'axe') return { name: t.name, action: '' };
+      if (ok && this._peeling(target.obj, h)) return { name: t.name, action: '[Hiiri 1] Kuori' };
+      if (ok && !this._tierOk(h, def)) return { name: t.name, action: h.tool === 'pickaxe' ? 'Tarvitset paremman hakun' : 'Tarvitset paremman kirveen', warn: true };
       return { name: t.name, action: ok ? '[Hiiri 1] Hakkaa' : h.needMsg, warn: !ok };
     }
     return { name: t.name, action: '' };
@@ -170,6 +173,17 @@ export class Interaction {
     if (h.tool === 'never') return false;
     if (!h.tool) return true;
     return def && def.tool === h.tool;
+  }
+
+  // Sessio 22: työkalun taso riittää (minTier; oletus kivi).
+  _tierOk(h, def) {
+    if (!h || !h.tool) return true;
+    return !!def && (def.tier ?? 1) >= (h.minTier ?? 1);
+  }
+
+  // Baobabin kuorinta kesken (ulkopuuta jäljellä).
+  _peeling(obj, h) {
+    return !!h.peel && (obj.peel === undefined || obj.peel > 0);
   }
 
   _tryPickup(target) {
@@ -234,6 +248,7 @@ export class Interaction {
       this.debris.shatter(tw.mesh.geometry, tw.mesh.matrixWorld, { pieces: 6, inner: 0xb49c6c, power: 1.5, life: 1.6, closed: false });
       this.drops.spawn('fiber', 2, tw.mesh.position);
       this.drops.spawn('stick', 1, tw.mesh.position);
+      this.drops.spawn('wood', 1, tw.mesh.position);
       this.tumbleweeds.remove(tw);
       events.emit('harvest', { type: 'tumbleweed' });
       events.emit('hitFeedback', { strength: 0.3 });
@@ -242,7 +257,14 @@ export class Interaction {
     if (target.kind === 'log') {
       // Ilman kirvestä runkoon tulee vain mitätön vahinko (sessio 18).
       const axe = def && def.tool === 'axe';
-      this.fallen.hit(target.obj, _hit.clone(), playerPos, axe ? 1 : BAREHANDED_WOOD);
+      const lt = OBJECT_TYPES[target.obj.type];
+      if (axe && !this._tierOk(lt.harvest, def)) {
+        // Liian heikko kirves (esim. ydinpuu): kopsahtaa, ei vahinkoa.
+        this.debris.chips(_hit, 0x8a6a4a, 3, null, 0.6);
+        events.emit('hitFeedback', { strength: 0.2 });
+        return;
+      }
+      this.fallen.hit(target.obj, _hit.clone(), playerPos, axe ? (def.power || 1) : BAREHANDED_WOOD);
       events.emit('hitFeedback', { strength: axe ? 0.6 : 0.2 });
       return;
     }
@@ -259,6 +281,19 @@ export class Interaction {
     }
     const h = t.harvest;
     const ok = this._toolOk(h, def);
+    // Baobab: ensin kuoritaan ulkopuu millä tahansa kirveellä.
+    if (ok && this._peeling(obj, h)) {
+      this.breakables.peel(obj, _hit.clone(), playerPos, def.power || 1);
+      events.emit('hitFeedback', { strength: 0.5 });
+      return;
+    }
+    if (ok && !this._tierOk(h, def)) {
+      // Liian heikko työkalu: kopsahtaa, ei vahinkoa.
+      this.world.shake(obj, 0.25);
+      this.debris.chips(_hit, t.kind === 'rock' ? 0x8a7a6a : 0x8a6a4a, 3, null, 0.6);
+      events.emit('hitFeedback', { strength: 0.25 });
+      return;
+    }
     if (!ok && h.tool !== 'axe') {
       // Kivi ilman hakkua (tai liian suuri puu): kopsahtaa, ei vahinkoa.
       this.world.shake(obj, 0.3);
@@ -267,7 +302,8 @@ export class Interaction {
     }
     // Työkalu tehoaa kaksinkertaisesti pensaisiin. Puu ilman kirvestä:
     // mitätön vahinko (käsin tai vaikka marjoilla se ei käytännössä kaadu).
-    const dmg = !ok ? BAREHANDED_WOOD : def && def.tool && !h.tool ? 2 : 1;
+    // Sessio 22: kirveen ja hakun teho tason mukaan (power).
+    const dmg = !ok ? BAREHANDED_WOOD : def && def.tool && !h.tool ? 2 : h.tool ? (def.power || 1) : 1;
     this.breakables.hit(obj, _hit.clone(), playerPos, dmg);
     events.emit('hitFeedback', { strength: t.kind === 'bush' ? 0.3 : 0.6 });
   }

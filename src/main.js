@@ -1,5 +1,6 @@
 // Sahel: käynnistys, tilat (päävalikko / lataus / peli / tauko / reppu) ja pääsilmukka.
 import * as THREE from 'three';
+import { updateGlow } from './render/itemGlow.js';
 import { CONFIG } from './config.js';
 import { createGroundDetailTexture } from './render/textures.js';
 import { createSharedMaterials, wetUniforms, addWet } from './render/materials.js';
@@ -920,7 +921,7 @@ function frame(now) {
   const mainTorch = inventory.selectedItem && inventory.selectedItem.id === 'torch' ? inventory.selectedItem : null;
   const torchSlot = inGame && !player.dead ? mainTorch || offTorch : null;
   const torchLeft = !!torchSlot && torchSlot === offTorch && !mainTorch;
-  viewmodel.setOffhand(offItem ? (offItem.id === 'torch' ? 'torch' : 'shield') : null);
+  viewmodel.setOffhand(offItem ? (offItem.id === 'torch' ? 'torch' : 'shield') : null, offItem && offItem.id);
   // Soihtu (sessio 13): sammuu veden alla, syttyy uudelleen nuotion vieressä;
   // sateessa palaa heikosti ja "yskien".
   if (torchSlot && simDt > 0) {
@@ -983,6 +984,7 @@ function frame(now) {
   structures.update(simDt, elapsed, player.position);
   ruins.update(running || state === 'menu' ? dt : 0, player.position);
   drops.update(running ? dt : 0, elapsed, player, inventory);
+  updateGlow(elapsed);
   fallen.update(running || state === 'menu' ? dt : 0);
   debris.update(running ? dt : 0);
   bursts.update(simDt);

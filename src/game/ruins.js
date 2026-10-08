@@ -15,7 +15,7 @@ const COMMON = [
   ['arrow_flint', 3, 8], ['gum', 1, 3], ['torch', 1, 2], ['shea_nuts', 2, 5], ['herbal_remedy', 1, 1],
 ];
 // Laivanhylyn arkussa merellisempää tavaraa.
-const WRECK = [['rope', 2, 5], ['seashell', 2, 6], ['wood', 2, 5], ['coconut', 1, 3], ['arrow_bone', 4, 8], ['leather', 1, 3]];
+const WRECK = [['rope', 2, 5], ['hardwood', 1, 3], ['wood', 2, 5], ['coconut', 1, 3], ['arrow_bone', 4, 8], ['leather', 1, 3]];
 const VALUABLE = [['gold_nugget', 1, 3], ['cowrie', 3, 8], ['bronze_bracelet', 1, 1]];
 
 export const STRUCT_NAMES = {

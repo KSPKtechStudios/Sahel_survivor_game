@@ -393,7 +393,7 @@ export class World {
     this.removed.add(obj.id);
     this.stumps.add(obj.id);
     const c = obj.chunk.colliders.find((cc) => cc.obj === obj);
-    if (c) c.r = 0.25 * obj.scale;
+    if (c) c.r = (OBJECT_TYPES[obj.type].stumpR ?? 0.25) * obj.scale;
     this._assignPool(obj, this._chunkDist(obj.chunk));
   }
 

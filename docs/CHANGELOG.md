@@ -2,6 +2,18 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-08 (sessio 22): tasot, puulajit, panssarit ja baobabin kaato
+
+- **Työkalujen ja aseiden tasot:** puu, kivi, piikivi, kupari, rauta ja rubiini. Kirveet ja hakut kaikilla metallitasoilla, ja paremmat työkalut hakkaavat nopeammin. Uusia aseita: piikivitikari, kupari- ja rautamiekka, rubiiniterä, Verikide, kivinuija, kuparimoukari, piikkinuija, seiväs ja rautakeihäs. Kaikilla tasoilla ei ole kaikkea.
+- **Rubiini on mystinen:** rubiiniesineet hehkuvat punaisena, rubiiniaseen osuma palauttaa hiukan terveyttä, ja rubiiniotsaripa parantaa haavoja hitaasti.
+- **Uudet jouset:** jalopuujousi, ydinpuujousi ja rubiinijousi. Uudet nuolet: kupari ja rauta.
+- **Kilvet:** nahka-, kupari- ja rautakilpi (eri torjunta-arvot). Varustettu kilpi näkyy kädessä omana mallinaan.
+- **Panssarit:** riepu-, nahka-, luu-, kupari-, rengas- ja rautapanssareita sekä rubiiniotsaripa (pää, keho, jalat). Panssari vähentää olentojen iskujen vahinkoa.
+- **Puulajit:** peruspuuta pensaista, tumbleweedeistä ja akasioista, jalopuuta sademetsäpuista (vaatii piikivikirveen) ja ydinpuuta kapokkipuista (kuparikirves) ja baobabeista.
+- **Baobabin voi kaataa:** ensin kuoritaan ulkopuu (runko kapenee ja vaalenee, irtoaa puuta), sitten ytimen voi kaataa rautakirveellä. Kaatunut baobab antaa ydinpuuta.
+- **Poistettu:** simpukankuori ja terälehdet (kukat ja simpukat jäivät maailmaan koristeiksi).
+- Kupari, rauta ja rubiini saa toistaiseksi vain kehittäjätyökaluista ([F3] → Esineet → Metallit / Taso…).
+
 ## 2026-10-08 (sessio 21): hyppyisku, taintuminen, satunnainen kuu ja keularoiskeet
 
 - **Hyppyisku:** hyppää ja iske kirveellä tai nuijalla ilmasta: pelaaja tarttuu aseeseen kahdella kädellä ja iskee ylhäältä. Osuma on kriittinen (noin kaksinkertainen vahinko), siitä lähtee kipinöitä ja pölyä, kuuluu matala jysähdys ja tähtäimestä laajenee rengas.

@@ -2,7 +2,9 @@
 // näkymänään maailman päälle, jottei käsi leikkaudu seinien/puiden sisään.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { itemBowBody, bowPoints, makeArrowGeometry } from '../models/items2.js';
+import { itemBowBody, bowPoints, makeArrowGeometry, BOW_STYLES } from '../models/items2.js';
+import { attachGlow } from '../render/itemGlow.js';
+import { ITEMS } from '../game/items.js';
 import { createFlameTexture } from '../render/textures.js';
 
 const _qi = new THREE.Quaternion();
@@ -70,7 +72,25 @@ const HOLD = {
 };
 // Pienet esineet, joille ei ole omaa otetta: kämmenellä kuin kivi.
 const DEFAULT_HOLD = { pos: [0.0, 0.03, -0.035], rot: [0.4, 0.3, 0], s: 0.9 };
-const BOWS = { bow: false, sinew_bow: true };
+// Sessio 22: uusien esineiden otteet tyypin mukaan.
+const HOLD_BY_WEAPON = {
+  axe: HOLD.stone_axe, pick: HOLD.stone_pick, knife: HOLD.stone_knife, dagger: HOLD.stone_knife,
+  sword: { pos: [0, -0.02, 0], rot: [0, Math.PI / 2, 0], s: 0.82 }, machete: HOLD.machete,
+  club: HOLD.wooden_club, sledge: { pos: [0, -0.26, 0], rot: [0, Math.PI / 2, 0], s: 0.6 }, spear: HOLD.spear,
+};
+const ARMOR_HOLD = { pos: [0.0, 0.02, -0.06], rot: [0.5, 0.4, 0], s: 0.55 };
+function holdFor(id) {
+  if (HOLD[id]) return HOLD[id];
+  const d = ITEMS[id];
+  if (!d) return DEFAULT_HOLD;
+  if (d.shield) return HOLD.shield;
+  if (d.weapon && HOLD_BY_WEAPON[d.weapon]) return HOLD_BY_WEAPON[d.weapon];
+  if (d.armor) return ARMOR_HOLD;
+  if (d.ammo) return HOLD.arrow_flint;
+  return DEFAULT_HOLD;
+}
+const BOWS = BOW_STYLES;
+const ARROWS = ['arrow_wood', 'arrow_bone', 'arrow_flint', 'arrow_copper', 'arrow_iron'];
 const BOW_SCALE = 0.7;
 
 function colorize(geo, hex) {
@@ -199,6 +219,8 @@ function applyPose(obj, v) {
 
 export class ViewModel {
   constructor(itemGeometries) {
+    this.geos = itemGeometries;
+    this.shieldId = 'shield';
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(55, 1, 0.01, 20);
     this.hemi = new THREE.HemisphereLight(0xffffff, 0x886644, 1);
@@ -234,11 +256,12 @@ export class ViewModel {
     this.items = {};
     for (const [id, geo] of Object.entries(itemGeometries)) {
       const m = new THREE.Mesh(geo, itemMat);
-      const h = HOLD[id] || DEFAULT_HOLD;
+      const h = holdFor(id);
       m.position.set(...h.pos);
       m.rotation.set(...h.rot);
       m.scale.setScalar(h.s);
       m.visible = false;
+      attachGlow(m);
       this.anim.add(m);
       this.items[id] = m;
     }
@@ -258,13 +281,14 @@ export class ViewModel {
     this.bowArm = new THREE.Mesh(buildBowArmGeometry(), this.material);
     this.bowGroup.add(this.bowArm);
     this.bowBodies = {};
-    for (const [id, recurve] of Object.entries(BOWS)) {
-      const body = new THREE.Mesh(itemBowBody(recurve), itemMat);
+    for (const [id, style] of Object.entries(BOWS)) {
+      const body = new THREE.Mesh(itemBowBody(style), itemMat);
+      attachGlow(body);
       body.rotation.y = Math.PI / 2; // kaari eteenpäin (-Z), jänne pelaajaa kohti
       body.scale.setScalar(BOW_SCALE);
       body.visible = false;
       this.bowGroup.add(body);
-      this.bowBodies[id] = { body, pts: bowPoints(recurve) };
+      this.bowBodies[id] = { body, pts: bowPoints(style.recurve, 10, style.long || 1) };
     }
     const strGeo = new THREE.CylinderGeometry(0.0022, 0.0022, 1, 4);
     strGeo.translate(0, 0.5, 0);
@@ -272,7 +296,7 @@ export class ViewModel {
     this.strings = [new THREE.Mesh(strGeo, strMat), new THREE.Mesh(strGeo, strMat)];
     this.bowGroup.add(...this.strings);
     this.nocked = {};
-    for (const kind of ['arrow_wood', 'arrow_bone', 'arrow_flint']) {
+    for (const kind of ARROWS) {
       const a = new THREE.Mesh(makeArrowGeometry(kind), itemMat);
       a.visible = false;
       this.bowGroup.add(a);
@@ -361,8 +385,13 @@ export class ViewModel {
   }
 
   // Toisen käden esine (sessio 20): 'shield', 'torch' tai null.
-  setOffhand(kind) {
+  setOffhand(kind, id = null) {
     this.offhand = kind;
+    // Sessio 22: varustetun kilven oma malli vasemmassa kädessä.
+    if (kind === 'shield' && id && id !== this.shieldId && this.geos[id]) {
+      this.shieldId = id;
+      this.shieldMesh.geometry = this.geos[id];
+    }
   }
 
   // Torjunta-asento (mode null = ei torjuntaa).

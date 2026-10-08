@@ -1,6 +1,8 @@
 // Esineiden kuvakkeet piirretään samoista 3D-malleista kuin kädessä näkyvät
 // esineet, joten kun malleja parannetaan, kuvakkeet päivittyvät itsestään.
 import * as THREE from 'three';
+import { attachGlow } from '../render/itemGlow.js';
+import { ITEMS } from '../game/items.js';
 
 const ICON_POSE = {
   rowboat: [0.45, 0.85, 0],
@@ -42,6 +44,21 @@ const ICON_POSE = {
   bone: [0.2, 0, -0.75],
 };
 
+// Sessio 22: pitkät työkalut ja aseet vinottain, panssarit hieman ylhäältä.
+const LONG_TOOL = [0.2, -0.5, -0.75];
+function iconPose(id) {
+  const d = ITEMS[id];
+  if (!d) return [0.3, 0.3, 0];
+  if (d.shield) return ICON_POSE.shield;
+  if (d.bow) return ICON_POSE.bow;
+  if (d.ammo) return ICON_POSE.arrow_flint;
+  if (d.weapon === 'sword' || d.weapon === 'machete') return [0.1, 0.3, -0.75];
+  if (d.weapon) return LONG_TOOL;
+  if (d.armor) return d.armor.slot === 'head' ? [0.45, 0.6, 0] : [0.2, 0.5, 0];
+  if (id === 'hardwood' || id === 'heartwood') return ICON_POSE.wood;
+  return [0.3, 0.3, 0];
+}
+
 export function renderItemIcons(itemGeometries, size = 96) {
   const icons = {};
   let renderer;
@@ -70,7 +87,8 @@ export function renderItemIcons(itemGeometries, size = 96) {
 
   for (const [id, geo] of Object.entries(itemGeometries)) {
     const mesh = new THREE.Mesh(geo, mat);
-    const pose = ICON_POSE[id] || [0.3, 0.3, 0];
+    attachGlow(mesh);
+    const pose = ICON_POSE[id] || iconPose(id);
     mesh.rotation.set(pose[0], pose[1], pose[2]);
     scene.add(mesh);
     mesh.updateMatrixWorld(true);

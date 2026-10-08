@@ -94,14 +94,26 @@ export function makeBaobab(seed, q = 1) {
     [1.75, -0.4], [1.85, 0.3], [1.7, 1.2], [1.55, 2.4], [1.4, 3.6], [1.18, H - 1.0], [0.9, H - 0.3], [0.55, H],
   ].map(([r, y]) => new THREE.Vector2(r, y));
   const jt = jr();
-  let trunk = new THREE.LatheGeometry(prof, q ? 12 : 6);
-  displace(trunk, (x, y, z) => {
-    const a = Math.atan2(z, x);
-    const kk = 1 + Math.sin(a * 5 + y * 0.6) * 0.06 + (jt() - 0.5) * 0.06;
-    return [x * (kk - 1), 0, z * (kk - 1)];
-  });
-  trunk.computeVertexNormals();
-  parts.push(paint(trunk, bark, { rand: jt, jitter: 0.06, shade: (x, y) => 0.85 + Math.min(0.15, y * 0.03) }));
+  if (q === 2) {
+    // Sessio 22: hakattava baobab. Runko lieriöpaloina (profiilin mukaan) ja
+    // kaatokohdassa rengas, jotta lovet ja halkaisu toimivat kuten muilla puilla.
+    const cutY = 0.9;
+    const pts = [prof[0], prof[1], new THREE.Vector2(1.78, cutY), ...prof.slice(2)];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      const segs = b.y <= cutY + 0.01 || a.y < cutY + 0.5 ? 6 : 2;
+      parts.push(tag(paint(limb(V(0, a.y, 0), V(0, b.y, 0), a.x, b.x, 16, false, segs), bark, { rand: jt, jitter: 0.06, shade: (x, y) => 0.85 + Math.min(0.15, y * 0.03) }), 'trunk'));
+    }
+  } else {
+    let trunk = new THREE.LatheGeometry(prof, q ? 12 : 6);
+    displace(trunk, (x, y, z) => {
+      const a = Math.atan2(z, x);
+      const kk = 1 + Math.sin(a * 5 + y * 0.6) * 0.06 + (jt() - 0.5) * 0.06;
+      return [x * (kk - 1), 0, z * (kk - 1)];
+    });
+    trunk.computeVertexNormals();
+    parts.push(paint(trunk, bark, { rand: jt, jitter: 0.06, shade: (x, y) => 0.85 + Math.min(0.15, y * 0.03) }));
+  }
 
   const nb = 6 + Math.floor(rand() * 3);
   for (let i = 0; i < nb; i++) {
@@ -128,7 +140,10 @@ export function makeBaobab(seed, q = 1) {
       parts.push(paint(flatNormals(f), 0x9a9772, { rand: j }));
     }
   }
-  return merge(parts);
+  return treeMeta(merge(parts), {
+    kind: 'baobab', base: [0, -0.4, 0], top: [0, H, 0], r0: 1.8, r1: 0.55, cutY: 0.9,
+    height: H + 3, fallLen: H + 2.2, logR: 1.25,
+  });
 }
 
 // --- Kapokkipuu (sademetsä) --------------------------------------------------------

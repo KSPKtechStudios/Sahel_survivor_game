@@ -2,6 +2,20 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-08 (sessio 22)
+**Tehtiin**
+- Kysyttiin 4 kysymystä (metallien hankinta, baobab, asetyypit, poistot).
+- Esineet ja reseptit (`game/items.js`: `TIERS`, uudet materiaalit, työkalut, aseet, kilvet, jouset, nuolet, panssarit, 67 reseptiä; simpukka ja terälehdet pois).
+- Mallit (`models/items3.js` uusi: kirveet, hakut, miekat, tikarit, nuijat, moukari, keihäät, kilvet, panssarit, materiaalit; `models/items2.js`: jousityylit `BOW_STYLES`, kupari- ja rautanuolet; `render/itemGlow.js` uusi: rubiinin hehku; `ui/icons.js`, `game/drops.js`, `player/viewmodel.js`: otteet tyypin mukaan, hehku, kilven malli kädessä).
+- Taistelu (`game/combat.js`: tikari, miekka, moukari + hyppyisku, `wmul`, kilpien arvot, panssarin vähennys, rubiinin elinvoima ja paraneminen).
+- Puut ja tasot (`world/objectTypes.js`, `game/interaction.js`: `_tierOk`, kuorinta; `game/breakables.js`: `peel`, `_applyPeel`, ketjukaadon esto; `models/trees.js`: hakattava baobab; `world/world.js`: kannon koko).
+- Työkaluvihje (`game/survival.js`), kehittäjätyökalut (`ui/devtools.js`: Metallit, Taso…), nuolijärjestys (`game/archery.js`).
+- Testattiin headless-Chromiumilla: kaikille 107 esineelle malli ja kuvake, rubiiniosien hehku, panssari 20 → ×0,6, rautakilven arvot, tasovaatimukset (kivi ei sademetsäpuuhun, piikivi kyllä, kupari kapokkiin, rauta baobabiin), baobabin kuorinta (12 puuta) ja kaato, kaadetun rungon pilkonta (ydinpuu, puu, apinanleipä); kuvat kuvakkeista, esineistä kädessä (myös yöllä hehkuva rubiinikirves) ja baobabista. ESLint ja savutesti puhtaat.
+
+**Kesken / seuraavaksi**
+- Metallien hankinta ja jousien valmistus (käyttäjän päätös), tarina.
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-08 (sessio 21)
 **Tehtiin**
 - Nimen esiintulo (`ui/hud.js`: `_revealTarget`; `game/interaction.js`: `prompt.key`).

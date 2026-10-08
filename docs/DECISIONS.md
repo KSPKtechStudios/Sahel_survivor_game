@@ -2,6 +2,16 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-08 (sessio 22)
+- **Metallit ja rubiini vain kehittäjätyökaluista** (käyttäjän valinta), reseptit valmiina työstöpenkillä. Syy: hankintatapaa (malmit, sulatus, paja) ei ole päätetty.
+- **Baobab: kuorinta + ytimen kaato** (käyttäjän kuvaus). Toteutus: baobab on nyt puu (kind tree), jonka hakattava malli on rakennettu lieriöpaloista kaatokohdan renkaineen; kuorinta muuttaa rungon muotoa ja väriä samoista lähtötiedoista kuin lovet.
+- **Taso ja teho erikseen:** `tier` ratkaisee, mitä voi hakata (minTier), `power` kuinka nopeasti, `wmul` aseen vahingon. Syy: sama kenttä ei sovi sekä vaatimukseksi että nopeudeksi.
+- **Tasojen variaatiot** (ei kuparitikaria, moukari vain kuparista, ei rubiininuijaa jne.). Syy: käyttäjä toivoi epäennustettavuutta.
+- **Panssarin vähennys a / (a + 30).** Syy: kasvaa tasaisesti mutta ei koskaan 100 %:iin.
+- **Rubiinin voima: elinvoiman imu (12 %) ja otsarivan paraneminen.** Syy: "yliluonnollinen" tuntuu, mutta ei riko tasapainoa; helppo muuttaa (paikkamerkki).
+- **Vanhat tunnisteet säilytettiin** (esim. `spear` = Piikivikeihäs, `machete` = rautataso), jotta tallennukset toimivat. Poistetut esineet putoavat tallennuksesta pois latauksessa.
+- **Kukat ja simpukat jäivät koristeiksi** (tyyppi ennallaan). Syy: maailman sijainnit eivät muutu.
+
 ## 2026-10-08 (sessio 21)
 - **Hyppyisku on erillinen isku (`leap`), ei kerroin.** Syy: sille tarvitaan oma animaatio (kaksi kättä, ylhäältä) ja oma vahinko aseittain; vain aseilla, joilla on `leap` (kirves, nuija). Alkaa, kun isku aloitetaan ilmassa, joten pelkkä alastulo ei riitä.
 - **Kriittisyys kerrotaan efekteillä, ei tekstillä** (rengas, kipinät, jysähdys, pysäys). Syy: käyttäjä on poistanut taistelutekstit (sessio 18) ja toivoi parryyn samaa.

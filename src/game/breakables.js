@@ -3,8 +3,10 @@
 // aina maahan fyysisinä esineinä.
 import * as THREE from 'three';
 import { OBJECT_TYPES } from '../world/objectTypes.js';
-import { makeChoppable, addNotch, trunkAxis } from './treeCut.js';
+import { makeChoppable, addNotch, trunkAxis, applyNotches } from './treeCut.js';
 import { events } from './events.js';
+
+const PEELED = new THREE.Color(0xb48c5c); // kuorittu baobabin ulkopuu
 
 const CHIP = {
   acacia: [0xd2ad78, 0x5b4838],
@@ -133,23 +135,68 @@ export class Breakables {
   // Toinen puu kaatui tämän päälle (ketjureaktio, sessio 13): kaatuu suuntaan dir.
   fellTree(obj, dir, chainDepth = 1) {
     const def = OBJECT_TYPES[obj.type];
-    if (!def || def.kind !== 'tree' || obj.stump || obj.removed) return false;
-    if (!obj.active) {
-      const geo = makeChoppable(this.models.hi(def.model, obj.variant));
-      this.world.activate(obj, this._activeMesh(obj, geo, this.material));
-    }
+    if (!def || def.kind !== 'tree' || def.noChain || obj.stump || obj.removed) return false;
+    this._choppable(obj);
     obj.hp = 0;
     this.fallen.fell(obj, obj.active.geometry, null, dir, chainDepth);
     return true;
   }
 
-  _hitTree(obj, from, hitPoint, c1, c2, dmg = 1) {
+  // Hakattava puu omana Meshinään (lovet). Kuorittu baobab näyttää kuoritulta.
+  _choppable(obj) {
     const def = OBJECT_TYPES[obj.type];
     if (!obj.active) {
       const geo = makeChoppable(this.models.hi(def.model, obj.variant));
       this.world.activate(obj, this._activeMesh(obj, geo, this.material));
+      if (obj.peel !== undefined) this._applyPeel(obj);
     }
-    const mesh = obj.active;
+    return obj.active;
+  }
+
+  // Baobabin kuorinta (sessio 22): ulkopuu irtoaa paloina (tavallista puuta),
+  // runko kapenee ja vaalenee. Kun kuori on poissa, ytimen voi kaataa.
+  peel(obj, hitPoint, playerPos, power = 1) {
+    const def = OBJECT_TYPES[obj.type];
+    const P = def.harvest.peel;
+    if (obj.peel === undefined) obj.peel = P.hp;
+    obj.peel = Math.max(0, obj.peel - power);
+    const from = new THREE.Vector3().subVectors(playerPos, hitPoint).setY(0).normalize();
+    this._choppable(obj);
+    this._applyPeel(obj);
+    const [c1] = CHIP[obj.type] || [0x8a7a6a];
+    this.debris.chips(hitPoint, 0xc9a679, 6, from, 1.0);
+    this.debris.chips(hitPoint, c1, 4, from, 0.8);
+    this.world.shake(obj, 0.12);
+    events.emit('woodHit', { x: hitPoint.x, z: hitPoint.z });
+    this.drops.spawn(P.item, power >= 2.8 ? 2 : 1, hitPoint.clone().addScaledVector(from, 0.7));
+  }
+
+  _applyPeel(obj) {
+    const def = OBJECT_TYPES[obj.type];
+    const P = def.harvest.peel;
+    const geo = obj.active && obj.active.geometry;
+    const range = geo && geo.userData.ranges && geo.userData.ranges.trunk;
+    if (!range || !P) return;
+    const ud = geo.userData;
+    if (!ud.peelPos) { ud.peelPos = ud.origPos.slice(); ud.peelCol = ud.origCol.slice(); }
+    const frac = 1 - Math.max(0, obj.peel) / P.hp;
+    const top = ud.tree.top[1];
+    for (let i = range[0]; i < range[1]; i++) {
+      const x = ud.peelPos[i * 3], y = ud.peelPos[i * 3 + 1], z = ud.peelPos[i * 3 + 2];
+      const w = y < top - 1.4 ? 1 : Math.max(0, (top - y) / 1.4);
+      const k = 1 - 0.22 * frac * w;
+      ud.origPos[i * 3] = x * k;
+      ud.origPos[i * 3 + 2] = z * k;
+      const t = frac * 0.8 * w;
+      ud.origCol[i * 3] = ud.peelCol[i * 3] + (PEELED.r - ud.peelCol[i * 3]) * t;
+      ud.origCol[i * 3 + 1] = ud.peelCol[i * 3 + 1] + (PEELED.g - ud.peelCol[i * 3 + 1]) * t;
+      ud.origCol[i * 3 + 2] = ud.peelCol[i * 3 + 2] + (PEELED.b - ud.peelCol[i * 3 + 2]) * t;
+    }
+    applyNotches(geo);
+  }
+
+  _hitTree(obj, from, hitPoint, c1, c2, dmg = 1) {
+    const mesh = this._choppable(obj);
     const geo = mesh.geometry;
     const ax = trunkAxis(geo.userData.tree);
     // Lovi tulee aina kaatokohtaan, sille puolelle josta lyödään.
