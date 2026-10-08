@@ -58,7 +58,8 @@ const TREE_TAIL = 1.5;
 const CLAP_LEVEL = 0.65;
 // Haamu kuuluu kauempaa (se ilmestyy 32–52 m:n päähän): vaimennus alkaa vasta
 // 22 m:stä (sessio 12c; ennen 8 m, jolloin ilmestymisääni jäi lähes kuulumattomiin).
-const GHOST_LEVEL = { ghostSpawn: 0.45, ghostIdle: 0.4, ghostIdle2: 0.38, ghostAttack: 0.4 };
+// Sessio 21: käyttäjä: liian kovalla -> n. 45 % hiljempaa (−5 dB).
+const GHOST_LEVEL = { ghostSpawn: 0.25, ghostIdle: 0.21, ghostIdle2: 0.2, ghostAttack: 0.23 };
 const GHOST_REF = 22, GHOST_RANGE = 95;
 const CLICK_LEVEL = 0.45;  // tiedosto on hiljainen (n. −31 LUFS); sessio 12e hiljemmaksi
 const CHOP_LEVEL = 0.1;    // puun lyönti: hiljaa (väistö auttaa erottumaan)
@@ -313,7 +314,7 @@ export class Sfx {
   ghost(kind, x, z, listener) {
     const name = kind === 'spawn' ? 'ghostSpawn' : kind === 'attack' ? 'ghostAttack' : Math.random() < 0.5 ? 'ghostIdle' : 'ghostIdle2';
     this._oneShot(name, GHOST_LEVEL[name], x, z, listener, GHOST_REF, 0, GHOST_RANGE);
-    if (Math.hypot(x - listener.x, z - listener.z) < 60) this.duck(0.6, 1.2);
+    if (Math.hypot(x - listener.x, z - listener.z) < 60) this.duck(0.75, 1.0);
   }
 
   // Esineen heitto (napsahdus, ei suuntaa).
@@ -365,6 +366,25 @@ export class Sfx {
     src.connect(lp).connect(g).connect(this.bus);
     src.start();
     this.duck(0.6, 0.35);
+  }
+
+  // Kriittinen hyppyisku (sessio 21): iskuääni matalana ja pehmeämpänä
+  // tavallisen iskun alle, jolloin osuma kuulostaa raskaammalta.
+  crit() {
+    const buf = this.bufs.punch1;
+    if (!this.ctx || !buf || this.ctx.state !== 'running') return;
+    const ctx = this.ctx;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = 0.52 + Math.random() * 0.06;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 1400;
+    const g = ctx.createGain();
+    g.gain.value = PUNCH_LEVEL.punch1 * 1.1;
+    src.connect(lp).connect(g).connect(this.bus);
+    src.start(ctx.currentTime + 0.012);
+    this.duck(0.5, 0.45);
   }
 
   // Huitaisu työkalulla tai aseella: satunnainen tiedosto ja sävelkorkeus.

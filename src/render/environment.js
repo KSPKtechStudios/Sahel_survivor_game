@@ -78,8 +78,14 @@ const _c = new THREE.Color();
 const _c2 = new THREE.Color();
 const _grey = new THREE.Color(0x9a9ca0);
 const _moonCol = new THREE.Color(0x8ea6d8);
-const MOON_CYCLE_DAYS = 8;
-const MOON_START = 2.6; // ensimmäisenä yönä kasvava kuu
+// Sessio 21: kuun vaihe arvotaan joka yölle erikseen (ei säännöllistä kiertoa).
+// Yö vaihtuu keskipäivällä, jolloin kuu on horisontin alla.
+function moonHash(n) {
+  let h = (n * 0x9e3779b1) >>> 0;
+  h = Math.imul(h ^ (h >>> 16), 0x85ebca6b) >>> 0;
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35) >>> 0;
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
 
 export class Environment {
   constructor(scene, renderer, sky) {
@@ -88,6 +94,7 @@ export class Environment {
     this.sky = sky;
     this.time = CONFIG.startHour; // tunteina 0..24
     this.day = 1;
+    this.moonSeed = 0; // main.js: maailman siemen
     this.timeScale = 24 / CONFIG.dayLengthSec;
 
     // Aurinko: kaksi varjokaskadia (tarkat varjot lähellä, karkeammat kauempana),
@@ -200,11 +207,12 @@ export class Environment {
     return 'clear';
   }
 
-  // Kuun vaiheet (sessio 13): kierto 8 pelivuorokautta. phase 0 = uusikuu,
-  // 0,25 = kasvava puolikuu, 0,5 = täysikuu, 0,75 = vähenevä puolikuu.
+  // Kuun vaiheet: phase 0 = uusikuu, 0,25 = kasvava puolikuu, 0,5 = täysikuu,
+  // 0,75 = vähenevä puolikuu. Sessio 21: joka yö oma, satunnainen vaihe
+  // (maailman siemenestä, joten sama yö näyttää aina samalta).
   get moonPhase() {
-    const t = (this.day - 1) + this.time / 24 + MOON_START;
-    return ((t / MOON_CYCLE_DAYS) % 1 + 1) % 1;
+    const night = Math.floor(this.day - 1 + (this.time + 12) / 24);
+    return moonHash((night + 1) * 7919 + (this.moonSeed | 0));
   }
 
   // Valaistu osuus 0..1.

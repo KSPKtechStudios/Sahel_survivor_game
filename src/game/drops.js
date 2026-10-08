@@ -44,6 +44,9 @@ const REST_Y = {
   wooden_club: 0.06, machete: 0.016, shield: 0.06, raw_meat: 0.03, hide: 0.01, clay: 0.03,
 };
 const MAX_DROPS = 250;
+// Sessio 21: maassa oleva esine katoaa 10 minuutissa (kutistuu pois).
+const DESPAWN = 600;
+const DESPAWN_FADE = 0.5;
 const LIE = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 const _q = new THREE.Quaternion();
 const _axis = new THREE.Vector3();
@@ -114,7 +117,7 @@ export class Drops {
     const d = {
       item, count, mesh, vel, rest,
       spin: resting ? new THREE.Vector3() : new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(10),
-      resting, age: resting ? 10 : 0, magnet: null, blockedUntil: 0, thrown: false, leftZone: true, glow,
+      resting, age: resting ? 10 : 0, left: DESPAWN, magnet: null, blockedUntil: 0, thrown: false, leftZone: true, glow,
       // Vesi: w = viimeisin näyte, floating = kelluu pinnalla, wet = osui veteen
       w: null, wTimer: 0, floating: false, wet: false, flowX: 0, flowZ: 0, bob: Math.random() * 6,
     };
@@ -144,6 +147,14 @@ export class Drops {
     for (let i = this.list.length - 1; i >= 0; i--) {
       const d = this.list[i];
       d.age += dt;
+      if (!d.magnet) {
+        d.left -= dt;
+        if (d.left <= 0) {
+          const k = Math.min(1, -d.left / DESPAWN_FADE);
+          d.mesh.scale.setScalar(Math.max(0.001, 1 - k * k));
+          if (k >= 1) { this._remove(d); continue; }
+        }
+      }
       const p = d.mesh.position;
       // Kiilto välähtää silloin tällöin pikkuisen isompana (oma tahti).
       if (d.glow) {
@@ -338,7 +349,8 @@ export class Drops {
   serialize() {
     return this.list
       .filter((d) => !d.magnet)
-      .map((d) => ({ item: d.item, count: d.count, x: +d.mesh.position.x.toFixed(2), y: +d.mesh.position.y.toFixed(2), z: +d.mesh.position.z.toFixed(2) }));
+      .filter((d) => d.left > 0)
+      .map((d) => ({ item: d.item, count: d.count, x: +d.mesh.position.x.toFixed(2), y: +d.mesh.position.y.toFixed(2), z: +d.mesh.position.z.toFixed(2), t: Math.round(d.left) }));
   }
 
   load(list) {
@@ -346,7 +358,8 @@ export class Drops {
     if (!Array.isArray(list)) return;
     for (const s of list) {
       if (s && ITEMS[s.item] && s.count > 0 && Number.isFinite(s.x) && Number.isFinite(s.z)) {
-        this._add(s.item, s.count, new THREE.Vector3(s.x, s.y, s.z), new THREE.Vector3(), true);
+        const d = this._add(s.item, s.count, new THREE.Vector3(s.x, s.y, s.z), new THREE.Vector3(), true);
+        if (Number.isFinite(s.t)) d.left = Math.max(1, Math.min(DESPAWN, s.t));
       }
     }
   }

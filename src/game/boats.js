@@ -546,6 +546,8 @@ export class Boats {
           spread: big ? 1.0 : 0.5, dx, dz, push: 1.2 + sprayI * (big ? 2.2 : 1.3), upMul: 0.8 + sprayI * 0.5,
         });
       }
+      // Sessio 21: ajetun veneen tyrskyt voivat lentää linssille (main.js).
+      if (this.riding === b) events.emit('bowSpray', { boat: b, k: sprayI });
     }
     if (this.fx && near && v > 0.6 && b.wakeT <= 0) {
       b.wakeT = def.wake;

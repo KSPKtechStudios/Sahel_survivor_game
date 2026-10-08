@@ -83,6 +83,7 @@ export class Interaction {
     if (this.prompt && this.target) {
       const a = this._anchor(this.target);
       this.prompt.anchor = { x: a.x, y: a.y, z: a.z };
+      this.prompt.key = this.target.obj; // nimilapun esiintuloanimaatio (hud.js)
       if (this.target.kind === 'mob') this.prompt.mob = this.target.obj;
     }
     if (input.pressed.has('KeyE') && input.enabled && this.target && !this.player.dead) this._tryPickup(this.target);
@@ -124,7 +125,7 @@ export class Interaction {
     if (target.kind === 'mob') {
       const m = target.obj;
       const t = MOB_TYPES[m.type];
-      return { name: t.name, action: m.state === 'dead' ? '' : m.state === 'stagger' && m.vulnerable ? 'Horjuu, lyö nyt!' : '', hp: Math.max(0, m.hp) / t.hp };
+      return { name: t.name, action: '', hp: Math.max(0, m.hp) / t.hp };
     }
     if (target.kind === 'tumbleweed') return { name: 'Tumbleweed', action: '[Hiiri 1] Hakkaa' };
     if (target.kind === 'chest') {

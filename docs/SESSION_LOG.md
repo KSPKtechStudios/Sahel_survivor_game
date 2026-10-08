@@ -2,6 +2,20 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-08 (sessio 21)
+**Tehtiin**
+- Nimen esiintulo (`ui/hud.js`: `_revealTarget`; `game/interaction.js`: `prompt.key`).
+- Hyppyisku (`game/combat.js`: `leap` kirveelle ja nuijalle, kriittinen osuma; `player/viewmodel.js`: `leap`-animaatio, toinen käsi varressa; `audio/sfx.js`: `crit`; `ui/hud.js` + `styles.css`: `#crit-ring`).
+- Haamun äänet hiljemmiksi (`audio/sfx.js`). Parry: teksti pois (`game/interaction.js`), taintuminen ja tähdet (`game/mobs.js`: `_fxDaze`, retkahdus), kipinät (`game/combat.js`).
+- Kuu: reunan korjaus (`render/sky.js`), satunnainen vaihe joka yö (`render/environment.js`: `moonHash`, `moonSeed`; `main.js`), kuuteksti pois (`main.js`), kuu kehittäjätyökaluihin (`ui/devtools.js`).
+- Savipeikon nousu (`game/mobs.js`: `_emergeStart`, `_fxEmerge`). Esineiden katoaminen (`game/drops.js`). Kello kartan viereen + digitaaliaika (`index.html`, `styles.css`, `ui/hud.js`).
+- Keularoiskeet linssille (`render/post.js`: `lensSplash`, `addSplash`; `game/boats.js`: `bowSpray`; `main.js`).
+- Testattiin headless-Chromiumilla: 12 yön kuut (eri vaiheet, sama koko yön, vaihtuu keskipäivällä), esine katoaa ja aika tallentuu, ilmassa aloitettu isku = `leap` ja maassa tavallinen, kriittinen osuma 36 ja `crit`-tapahtuma, taintumisen tähdet tulevat ja poistuvat, nousun hehku poistuu; kuvat kuusta (täysi, puoli), kellosta, hyppyiskun vaiheista, taintumisesta, noususta ja linssiroiskeesta. ESLint ja savutesti puhtaat.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute (hyppyiskun tuntuma, roiskeet oikeassa myrskyssä: testiselain ei pysty purjehtimaan reaaliajassa).
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-08 (sessio 20)
 **Tehtiin**
 - Kysyttiin 4 kysymystä (käyttö repussa, pinot, kellon näyttö, linnunrata).

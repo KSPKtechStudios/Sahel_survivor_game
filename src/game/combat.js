@@ -49,6 +49,7 @@ export const WEAPONS = {
       // Sessio 19: kirves on raskas eikä puuta voi kombottaa: yksi hidas isku.
       { anim: 'swing', dur: 0.55, hitAt: 0.5, chain: 1, cd: 0.38, dmg: 13, kb: 7.5, up: 1.7, stam: 8, arc: 0.5 },
     ],
+    leap: { anim: 'leap', dur: 0.62, hitAt: 0.6, chain: 1, cd: 0.6, dmg: 26, kb: 9, up: 2.4, stam: 12, arc: 0.7, reach: 0.35, stagger: 0.8, heavy: true, crit: true },
   },
   pick: {
     name: 'Hakku', block: 'tool', reach: 2.4, combo: [
@@ -60,6 +61,7 @@ export const WEAPONS = {
       { anim: 'slashR', dur: 0.62, hitAt: 0.52, chain: 0.85, cd: 0.6, dmg: 19, kb: 11, up: 3.8, stam: 15, arc: 0.85, multi: true, stagger: 0.5, heavy: true },
       { anim: 'slashL', dur: 0.7, hitAt: 0.52, chain: 1, cd: 0.9, dmg: 23, kb: 13, up: 4.5, stam: 20, arc: 0.85, multi: true, stagger: 0.65, heavy: true },
     ],
+    leap: { anim: 'leap', dur: 0.7, hitAt: 0.6, chain: 1, cd: 0.8, dmg: 36, kb: 14, up: 4, stam: 18, arc: 0.85, reach: 0.3, multi: true, stagger: 1, heavy: true, crit: true },
   },
   machete: {
     name: 'Viidakkoveitsi', block: 'weapon', reach: 2.4, combo: [
@@ -69,6 +71,9 @@ export const WEAPONS = {
     ],
   },
 };
+// leap = hyppyisku (sessio 21): ilmasta aloitettu isku kahdella kädellä
+// ylhäältä alas; osuessaan olentoon kriittinen (enemmän vahinkoa). Vain
+// raskailla aseilla (kirves, nuija).
 // Jäähdytyksen kerroin, kun isku ei osunut olentoon (hakkuu, louhinta, ohi).
 const GATHER_CD = 0.55;
 
@@ -205,7 +210,10 @@ export class Combat {
       if (start) {
         if (!cur && this.sinceAttack > COMBO_RESET) this.comboIdx = 0;
         if (this.comboIdx > 0 && !comboOk) { this._comboDenied(weapon); this.comboIdx = 0; }
-        const step = weapon.combo[this.comboIdx % weapon.combo.length];
+        // Hyppyisku: isku aloitetaan ilmassa (hypyn aikana).
+        const airborne = !player.onGround && !player.inWater && !player.riding && !player.flying;
+        const leap = weapon.leap && airborne && this.comboIdx === 0 ? weapon.leap : null;
+        const step = leap || weapon.combo[this.comboIdx % weapon.combo.length];
         if (!player.useStamina(step.stam)) {
           // Ei tekstiä (sessio 18): kestävyyspalkki hehkuu punaisena.
           events.emit('staminaOut');
@@ -224,7 +232,7 @@ export class Combat {
             }
             this.attacking = { action: vm.action, step, idx };
             this.cooldown = 0;
-            this.comboIdx = (idx + 1) % weapon.combo.length;
+            this.comboIdx = leap ? 0 : (idx + 1) % weapon.combo.length;
             this.sinceAttack = 0;
             this.buffer = 0;
           }
@@ -271,6 +279,21 @@ export class Combat {
       }
       // Iskuääni elävään olentoon osuessa (sessio 12e).
       events.emit('punch', { heavy: !!step.heavy, n });
+      if (step.crit) {
+        // Kriittinen hyppyisku: pidempi pysäys, kova tärähdys, pöllähdys ja
+        // pelaaja painuu iskun mukana alas.
+        const m = hits[0];
+        _v.set(m.pos.x, m.pos.y + m.def.height * 0.8, m.pos.z);
+        if (this.bursts) {
+          this.bursts.spawn(_v, 0xfff0c8, 18, 4, { size: 0.06, life: 0.32, gravity: 4, lit: true });
+          this.bursts.spawn(_v.set(m.pos.x, m.pos.y + 0.1, m.pos.z), 0xa88a68, 16, 2.6, { size: 0.15, life: 0.8, gravity: 5 });
+        }
+        if (!this.player.onGround) this.player.velocity.y = Math.min(this.player.velocity.y, -5);
+        this.viewmodel.hitStop(0.16);
+        events.emit('crit', { x: m.pos.x, z: m.pos.z });
+        events.emit('hitFeedback', { strength: 1.2 });
+        return;
+      }
       this.viewmodel.hitStop(step.heavy || killed ? 0.11 : 0.06);
       events.emit('hitFeedback', { strength: 0.3 + step.dmg / 35 });
       return;
@@ -293,9 +316,16 @@ export class Combat {
     if (this.blocking && facing) {
       const b = BLOCKS[this.blockType];
       if (this.elapsed - this.blockStart <= b.parry) {
-        // Täydellinen torjunta: ei vahinkoa, hyökkääjä horjuu ja lentää taaksepäin.
+        // Täydellinen torjunta: ei vahinkoa, hyökkääjä lentää taaksepäin ja
+        // taintuu hetkeksi (sessio 21: tähdet pään ympärillä, ei tekstiä).
         this.mobs.stagger(attacker, 1.8, true);
-        this.mobs.push(attacker, dx, dz, 6, 1.5);
+        this.mobs.push(attacker, dx, dz, 7.5, 2);
+        // Pieni kipinäpurske iskun kohdassa.
+        if (this.bursts) {
+          _v.set(p.x + (dx / len) * 0.85, p.y + 1.25, p.z + (dz / len) * 0.85);
+          this.bursts.spawn(_v, 0xfff1c8, 16, 3.4, { size: 0.05, life: 0.3, gravity: 3, lit: true });
+          this.bursts.spawn(_v, 0xffb04a, 8, 2.2, { size: 0.08, life: 0.22, gravity: 1, lit: true });
+        }
         vm.parry();
         vm.hitStop(0.1);
         events.emit('parry', {});

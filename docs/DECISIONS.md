@@ -2,6 +2,16 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-08 (sessio 21)
+- **Hyppyisku on erillinen isku (`leap`), ei kerroin.** Syy: sille tarvitaan oma animaatio (kaksi kättä, ylhäältä) ja oma vahinko aseittain; vain aseilla, joilla on `leap` (kirves, nuija). Alkaa, kun isku aloitetaan ilmassa, joten pelkkä alastulo ei riitä.
+- **Kriittisyys kerrotaan efekteillä, ei tekstillä** (rengas, kipinät, jysähdys, pysäys). Syy: käyttäjä on poistanut taistelutekstit (sessio 18) ja toivoi parryyn samaa.
+- **Taintuminen = tähdet pään ympärillä + huojunta.** Syy: tunnistettava merkki ilman tekstiä; tähdet vain parryn jälkeen (`vulnerable`), tavallinen horjahdus ei.
+- **Kuun vaihe hajautusfunktiosta (yö + maailman siemen), ei tallenneta.** Syy: satunnainen mutta pysyy samana koko yön ja latauksen jälkeen; ei uutta tallennuskenttää. Yö vaihtuu keskipäivällä, jolloin kuu on horisontin alla.
+- **Kuun reunan korjaus: kiekko ja valaistus samasta säteestä, ja valon rajaa siirretään vaiheen mukaan.** Syy: kiekon pehmeä reuna ulottui valaistun pallon ulkopuolelle (harmaa kehä), ja täysikuun reuna oli tarkalleen valon rajalla.
+- **Kello minikartan vasemmalle puolelle (ei kartan kehyksen sisään).** Syy: käyttäjä ei halunnut sen menevän kartan päälle.
+- **Keularoiskeet tapahtumina (`bowSpray`) jälkikäsittelyssä, enintään 4 yhtä aikaa.** Syy: roiskeen pitää syntyä juuri keulan iskusta ja vain eteenpäin katsottaessa; varjostin piirtää pisarat ilman tekstuureja.
+- **Esineiden katoamisaika tallennetaan.** Syy: muuten tallennus ja lataus nollaisi ajan, eikä mikään katoaisi.
+
 ## 2026-10-08 (sessio 20)
 - **Valkoisen maailman syy: rinnakkaiset lataukset.** Jokainen siirto käynnisti oman latauksensa, ja ne siirsivät maailman keskipistettä vuorotellen eri paikkoihin (lohkoja ladattiin ja poistettiin ristiin, eikä mikään lataus valmistunut). Nyt vain uusin lataus on voimassa (`buildGen`), vanhemmat lopettavat.
 - **Pinon jako Ctrl + hiiren oikealla ikkunassa, hiiren oikea = syö / varusta** (käyttäjän valinta).

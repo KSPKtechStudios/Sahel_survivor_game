@@ -355,6 +355,7 @@ function fmtTime(h) {
 
 function clearWorldState(seed) {
   setWorldSeed(seed);
+  env.moonSeed = seed;
   world.reset(seed);
   structures.clear();
   ruins.clear();
@@ -731,6 +732,22 @@ function stepMaterial() {
 player.onFootstep = (k) => sfx.step(stepMaterial(), k);
 events.on('swing', ({ heavy, quiet }) => sfx.whoosh(heavy, quiet));
 events.on('punch', ({ heavy }) => sfx.punch(heavy));
+events.on('crit', () => sfx.crit());
+// Keularoiskeet linssille (sessio 21): myrskyssä, kun keula iskeytyy aaltoon
+// ja pelaaja katsoo eteenpäin, vettä lentää ruutuun.
+let splashCd = 0;
+events.on('bowSpray', ({ boat, k }) => {
+  if (splashCd > 0 || state !== 'playing') return;
+  if (env.w.thunder < 0.3 && k < 1.6) return;
+  camera.getWorldDirection(_camDir);
+  const hl = Math.hypot(_camDir.x, _camDir.z) || 1;
+  const fwd = (_camDir.x * Math.sin(boat.yaw) + _camDir.z * Math.cos(boat.yaw)) / hl;
+  if (fwd < 0.35 || _camDir.y > 0.75) return;
+  if (Math.random() > Math.min(1, (k - 0.35) / 1.1)) return;
+  splashCd = 0.45 + Math.random() * 0.7;
+  const side = Math.random() < 0.5 ? -1 : 1;
+  post.addSplash(0.5 + side * (0.08 + Math.random() * 0.32), 0.12 + Math.random() * 0.42, (0.4 + Math.min(0.6, k * 0.3)) * (0.55 + 0.45 * fwd));
+});
 // Tärkeät tehosteet painavat myös musiikkia hetkeksi hiljemmaksi (väistö).
 sfx.onDuck = (to, hold) => music.duck(Math.max(0.45, to), hold);
 events.on('woodHit', ({ x, z }) => sfx.chop(x, z, { x: player.position.x, z: player.position.z, yaw: player.yaw }));
@@ -753,7 +770,6 @@ let menuShadowTimer = 0;
 // liekki (structures.js: torch).
 const torchFire = { x: 0, y: 0, z: 0, seed: 7, light: 1.7, fireY: 0, torch: true };
 let torchFlameK = 1, torchCough = 0;
-let wasNight = false;
 const fps = { frames: 0, t: 0, value: 0 };
 const _s = {};
 
@@ -841,7 +857,8 @@ function frame(now) {
   // Vesipisarat linssillä (sessio 12e): vain purjehdittaessa myrskyssä
   // (tyrskyt ja sade), ja hyvin hillitysti.
   const sailingStorm = inGame && state !== 'menu' && player.riding && env.w.thunder > 0.4;
-  const lensT = sailingStorm ? 0.35 * _sm(0.4, 0.8, env.w.thunder) : 0;
+  const lensT = sailingStorm ? 0.25 * _sm(0.4, 0.8, env.w.thunder) : 0;
+  splashCd = Math.max(0, splashCd - rawDt);
   post.lens += (lensT - post.lens) * Math.min(1, Math.min(0.25, rawDt) * 1.5);
   // Linssiheijastus: auringon paikka kuvassa; heikkenee pilvisellä, auringon
   // laskiessa ja kuvan reunoilla.
@@ -943,12 +960,6 @@ function frame(now) {
     torchFire.z = camera.position.z + _camDir.z * 0.45 + (rz / rl) * side;
   }
   structures.held = torchHeld ? torchFire : null;
-  // Illan tullen ilmoitetaan kuun vaihe (täysikuulla viholliset liikkuvat).
-  const nightNow = env.daylight < 0.25;
-  if (inGame && state !== 'menu' && nightNow && !wasNight && simDt > 0) {
-    events.emit('message', { text: env.moonIllum > 0.85 ? `${env.moonName}: yössä liikkuu tavallista enemmän vihollisia` : env.moonName });
-  }
-  wasNight = nightNow;
   // Nukkuminen: ruutu pimenee, aika siirtyy aamuun.
   if (sleepT > 0) {
     const was = sleepT;

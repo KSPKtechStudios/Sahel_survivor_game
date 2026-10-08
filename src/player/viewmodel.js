@@ -13,6 +13,10 @@ const SKIN = 0x6a4330;
 const WRIST = new THREE.Vector3(0.04, -0.035, 0.03);
 const ELBOW = new THREE.Vector3(0.126, -0.373, 0.518);
 const SKIN_DARK = 0x573625;
+// Hyppyisku (sessio 21): vasen käsi tarttuu samaan varteen oikean alapuolelta.
+const GRIP = new THREE.Vector3(0, -0.12, 0.004);
+const LEFT_ELBOW = new THREE.Vector3(-0.55, -0.42, 0.2);
+const GRIP_REST = new THREE.Vector3(-0.3, -0.55, 0.1);
 const SLEEVE = 0x2c3c66;
 const SLEEVE_BAND = 0xc9a24a;
 
@@ -219,6 +223,13 @@ export class ViewModel {
     this.anim.add(this.hand);
     this.forearm = new THREE.Mesh(buildForearmGeometry(), this.material);
     this.root.add(this.forearm);
+    // Toinen käsi samassa varressa (hyppyisku): peilattu nyrkki + kyynärvarsi.
+    this.gripHand = new THREE.Mesh(this.hand.geometry, this.material);
+    this.gripHand.scale.set(-1, 1, 1);
+    this.gripForearm = new THREE.Mesh(this.forearm.geometry, this.material);
+    this.gripHand.visible = this.gripForearm.visible = false;
+    this.root.add(this.gripHand, this.gripForearm);
+    this.gripK = 0;
 
     this.items = {};
     for (const [id, geo] of Object.entries(itemGeometries)) {
@@ -535,6 +546,23 @@ export class ViewModel {
     this.forearm.position.copy(_w);
     this.forearm.quaternion.setFromUnitVectors(_down, _d);
 
+    // Hyppyisku: vasen käsi nousee tarttumaan varteen kahdella kädellä.
+    const twoHand = !!(a && a.type === 'leap' && a.t < 0.86);
+    this.gripK += ((twoHand ? 1 : 0) - this.gripK) * (1 - Math.exp(-dt * (twoHand ? 22 : 12)));
+    const gv = this.gripK > 0.01;
+    this.gripHand.visible = this.gripForearm.visible = gv;
+    if (gv) {
+      const gk = smooth(this.gripK);
+      _w.copy(GRIP).applyMatrix4(this.anim.matrix);
+      this.gripHand.position.lerpVectors(GRIP_REST, _w, gk);
+      this.gripHand.quaternion.copy(this.anim.quaternion);
+      this.gripHand.updateMatrix();
+      _w.copy(WRIST).applyMatrix4(this.gripHand.matrix);
+      _d.subVectors(LEFT_ELBOW, _w).normalize();
+      this.gripForearm.position.copy(_w);
+      this.gripForearm.quaternion.setFromUnitVectors(_down, _d);
+    }
+
     // Soihdun liekki lepattaa kärjessä.
     // torchFlame (main.js, sessio 13): 1 = palaa, < 1 = yskii sateessa, 0 = sammunut.
     const fk = this.torchFlame ?? 1;
@@ -562,7 +590,8 @@ export class ViewModel {
 
     // Toinen käsi: kilpi tai soihtu (ei jousen kanssa).
     const off = this.offhand || (this.hasShield ? 'shield' : null);
-    this.shieldT += ((off && !player.dead && !this.bowMode ? 1 : 0) - this.shieldT) * (1 - Math.exp(-dt * 8));
+    // Hyppyiskussa toinen käsi on varressa: kilpi / soihtu laskee hetkeksi.
+    this.shieldT += ((off && !player.dead && !this.bowMode && this.gripK < 0.5 ? 1 : 0) - this.shieldT) * (1 - Math.exp(-dt * (this.gripK > 0.5 ? 18 : 8)));
     this.left.visible = this.shieldT > 0.01;
     this.torchPose += ((off === 'torch' ? 1 : 0) - this.torchPose) * (1 - Math.exp(-dt * 10));
     if (off) {
@@ -726,6 +755,16 @@ const ANIMS = {
     [0.46, [0.0, 0.22, 0.1, -0.12, 1.15, -0.18, 0], 'out'],
     [0.6, [-0.05, 0.12, -0.2, 0.0, -1.75, 0.05, 0], 'strike'],
     [0.72, [-0.05, 0.11, -0.19, 0.0, -1.7, 0.05, 0], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  // Hyppyisku (sessio 21): kahden käden ote, ase kohoaa pään yli ja iskee
+  // ylhäältä suoraan alas; osuma 0.6.
+  leap: [
+    [0, ZERO],
+    [0.36, [-0.09, 0.3, 0.2, 0, 1.2, 0.04, 0], 'inOut'],
+    [0.47, [-0.09, 0.33, 0.22, 0, 1.3, 0.04, 0], 'out'],
+    [0.6, [-0.11, -0.07, -0.24, 0, -1.62, 0.04, 0], 'strike'],
+    [0.74, [-0.11, -0.05, -0.22, 0, -1.52, 0.04, 0], 'out'],
     [1, ZERO, 'inOut'],
   ],
   // Pisto eteenpäin (viidakkoveitsen sarjan loppu); osuma 0.48.

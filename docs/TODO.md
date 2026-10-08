@@ -1,6 +1,8 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 21: nimen esiintulo, hyppyisku kirveellä ja nuijalla (tuntuma, vahinko), haamun äänet, parryn taintuminen ja tähdet, kuun reuna ja vaihtuva kuu, savipeikon nousu, esineiden katoaminen, kellon paikka ja digitaaliaika, keularoiskeet myrskyssä
+- [ ] Vastaus: pitäisikö hyppyiskun toimia myös hakulla tai keihäällä? Onko kriittinen isku sopivan vahva?
 - [ ] Käyttäjä testaa session 20: nopea siirtyminen (ei valkoista maailmaa), kuumuusväreily, linnunrata, termiittikeon nimi, yön hiljaisuus, Kello arkuista ja kellotaulu, toinen käsi ([F], soihtu vasemmassa), reppu (klikkaus, Ctrl+oikea jako, sykintä, vihreä tausta), pinot, valmistuksen latausaika
 - [ ] Käyttäjä testaa session 19: vihollisten kiertäminen ja perääntyminen, savipeikon vahvuus, linnun ääni, kirves, kasvien murskaus, uusi reppu (raahaus, Shift+klikkaus, jako, varustus, pudotus), valmistusikkuna, 6 pikapaikkaa, panssarin näyttö, minikartan kehys, opas [T]
 - [ ] Panssarit (esineet, joilla `armor: { slot, value }`), jotta panssarin näyttö tulee käyttöön
@@ -12,7 +14,7 @@
 - [ ] Savulasityyli muuhun käyttöliittymään (pikapalkki, minikartta, nimilaput, viestit, reppu), jos käyttäjä haluaa
 - [ ] Käyttäjä testaa session 13: fontti kaikkialla, nimilaput (olennot lähellä, puut ja pensaat katsottaessa), huomattu-merkki (silmä), pystypalkit vasemmassa alakulmassa, kaatuvan puun vahinko ja ketjukaato, soihtu vedessä ja sateessa, kuun vaiheet ja täysikuun viholliset, lammikot
 - [ ] Vastaus: silmä vai huutomerkki huomattu-merkiksi? Pitäisikö puiden ja pensaiden nimen näkyä aina (nyt vain katsottaessa)?
-- [ ] Vastaus: miten sammunut soihtu sytytetään (nyt nuotion vieressä)? Sopiiko kuun kierto 8 vuorokautta?
+- [ ] Vastaus: miten sammunut soihtu sytytetään (nyt nuotion vieressä)? (Kuun kierto: sessio 21 satunnainen vaihe joka yö.)
 - [ ] Käyttäjä testaa session 12e: linssiheijastukset (asetus), DOF oletuksena, äänten erottuvuus (väistö), iskuääni, [Shift]+[Q], soihdun valo ja sytytys, haamujen määrä
 - [ ] Vastaus: tarkoittiko [Shift]+[Q] koko pinoa (nyt) vai koko reppua?
 - [ ] Käyttäjä testaa session 12d: puun kaatumisääni, tyrskyt veneillä (myrskyssä), linssipisarat sateella aurinkoa kohti, veneiden nopeus, kaadetun palmun hakkaaminen, linnunrata, linnut ja huitaisut

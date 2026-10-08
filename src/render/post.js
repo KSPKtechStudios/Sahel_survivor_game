@@ -142,6 +142,8 @@ uniform float uHeat;
 uniform float uTime;
 uniform mat4 uViewProj;
 uniform float uLens;
+uniform vec4 uSplash[4];
+uniform float uSplashOn; // keularoiskeet: x, y (kuvassa 0..1), alkuaika, voimakkuus
 uniform float uAspect;
 uniform float uFlare;
 uniform vec2 uSunUV;
@@ -225,6 +227,84 @@ vec3 lensDrops(vec2 uv, vec3 col) {
   return outc;
 }
 
+// Keularoiskeet linssillä (sessio 21): kun keula iskeytyy aaltoon myrskyssä
+// ja katsotaan eteenpäin, vettä lentää linssille ryöppynä. Iskun hetkellä
+// kuva vääristyy hetken (vesikalvo), sitten pisarat valuvat alas ja haihtuvat.
+vec3 lensSplash(vec2 uv, vec3 col) {
+  vec3 outc = col;
+  vec2 asp = vec2(uAspect, 1.0);
+  vec2 p = uv * asp;
+  for (int s = 0; s < 4; s++) {
+    vec4 sp = uSplash[s];
+    float age = uTime - sp.z;
+    if (sp.w <= 0.0 || age < 0.0 || age > 4.2) continue;
+    vec2 cp = sp.xy * asp;
+    // Vesikalvo: iskun hetkellä voimakas vääristymä, joka laantuu märäksi
+    // väreilyksi hieman hitaammin.
+    float near = (1.0 - smoothstep(0.0, 0.85, length(p - cp)));
+    float sheet = sp.w * near * (0.8 * exp(-age * 9.0) + 0.25 * exp(-age * 2.2));
+    if (sheet > 0.004) {
+      vec2 w = vec2(sin(uv.y * 34.0 + sp.z * 7.0 + age * 6.0 + sin(uv.x * 17.0) * 2.0),
+                    cos(uv.x * 29.0 - sp.z * 5.0 + age * 4.0 + sin(uv.y * 13.0) * 2.0)) * 0.02 * sheet;
+      vec3 sc = texture2D(tColor, clamp(uv + w, vec2(0.001), vec2(0.999))).rgb;
+      outc = mix(outc, sc * 1.03 + vec3(0.03, 0.04, 0.05) * sheet, min(1.0, sheet * 1.4));
+    }
+    float seed = mod(sp.z * 7.31, 61.0);
+    // Isot pisarat (valuvat alas ja jättävät märän jäljen).
+    for (int i = 0; i < 24; i++) {
+      float fi = float(i) * 1.618 + seed;
+      float h1 = lh(vec2(fi, 1.3)), h2 = lh(vec2(fi, 2.7)), h3 = lh(vec2(fi, 4.1)), h4 = lh(vec2(fi, 5.9));
+      if (h4 > 0.4 + 0.6 * sp.w) continue;
+      float a = age - h3 * 0.08; // pisarat osuvat hieman eri aikaan
+      float life = 1.5 + 2.5 * h1;
+      if (a < 0.0 || a > life) continue;
+      vec2 off = (vec2(h1, h2) - 0.5) * vec2(0.7, 0.46);
+      float big = 1.0 - smoothstep(0.0, 0.38, length(off));
+      vec2 c0 = cp + off;
+      float slide = (0.008 + 0.06 * big * h2) * a * a;
+      vec2 c = c0 - vec2(0.0, slide);
+      float fade = 1.0 - smoothstep(life * 0.5, life, a);
+      float r = (0.012 + 0.045 * h3 * (0.35 + 0.65 * big)) * smoothstep(0.0, 0.025, a) * (0.4 + 0.6 * fade);
+      vec2 d = p - c;
+      // Märkä jälki valuneen pisaran yläpuolella.
+      if (slide > 0.004 && abs(d.x) < r * 0.45 && d.y > 0.0 && d.y < slide) {
+        float tr = (1.0 - abs(d.x) / (r * 0.45)) * (1.0 - d.y / slide) * 0.5 * fade;
+        vec3 tc = texture2D(tColor, clamp(uv + vec2(d.x / asp.x * 0.6, 0.004), vec2(0.001), vec2(0.999))).rgb;
+        outc = mix(outc, tc * 1.05, tr);
+      }
+      d.y *= 0.82;
+      float dd = length(d) / max(r, 1e-4);
+      if (dd >= 1.0) continue;
+      float mask = (1.0 - smoothstep(0.82, 1.0, dd)) * min(1.0, fade * 1.6);
+      // Pisara toimii linssinä: näyttää laajemman, ylösalaisin käännetyn kuvan.
+      float z = sqrt(max(0.0, 1.0 - dd * dd));
+      vec2 suv = clamp(uv - d / asp * (2.6 + 2.4 * (1.0 - z)), vec2(0.001), vec2(0.999));
+      vec3 rc = texture2D(tColor, suv).rgb;
+      float rim = smoothstep(0.6, 1.0, dd);
+      float spec = (1.0 - smoothstep(0.0, 0.32, length(d / r - vec2(-0.32, 0.38))));
+      float caus = smoothstep(0.55, 0.95, dd) * (1.0 - smoothstep(-0.6, 0.0, d.y / r));
+      rc = rc * (1.0 - 0.45 * rim) + vec3(1.0) * (spec * 0.6 + caus * 0.12);
+      outc = mix(outc, rc, mask * 0.92);
+    }
+    // Hieno suihku: pieniä pisaroita laajemmalle alueelle.
+    for (int i = 0; i < 28; i++) {
+      float fi = float(i) * 2.39 + seed + 31.0;
+      float h1 = lh(vec2(fi, 7.1)), h2 = lh(vec2(fi, 8.3)), h3 = lh(vec2(fi, 9.7));
+      float life = 0.8 + 1.6 * h3;
+      if (h3 > 0.3 + 0.7 * sp.w || age > life) continue;
+      vec2 c = cp + (vec2(h1, h2) - 0.5) * vec2(1.1, 0.7);
+      float r = (0.004 + 0.006 * h3) * (1.0 - smoothstep(life * 0.4, life, age));
+      vec2 d = p - c;
+      float dd = length(d) / max(r, 1e-4);
+      if (dd >= 1.0) continue;
+      vec3 rc = texture2D(tColor, clamp(uv - d / asp * 3.0, vec2(0.001), vec2(0.999))).rgb;
+      rc = rc * (1.0 - 0.4 * smoothstep(0.5, 1.0, dd)) + vec3(0.5) * (1.0 - smoothstep(0.0, 0.5, length(d / r - vec2(-0.3, 0.35))));
+      outc = mix(outc, rc, (1.0 - smoothstep(0.7, 1.0, dd)) * 0.85);
+    }
+  }
+  return outc;
+}
+
 // Kuumuusväreily: nousevia, aaltoilevia vääristymiä (uv-siirtymä).
 vec2 heatWarp(vec2 uv, float t) {
   float a = sin(uv.y * 240.0 - t * 8.0 + sin(uv.x * 31.0 + t * 1.1) * 2.5);
@@ -303,6 +383,7 @@ void main() {
   if (uUseRays > 0.5) col += texture2D(tRays, vUv).rgb * uRayColor * uRayStrength;
   if (uFlare > 0.01) col += lensFlare(vUv);
   if (uLens > 0.01) col = lensDrops(vUv, col);
+  if (uSplashOn > 0.5) col = lensSplash(vUv, col);
 
   gl_FragColor = vec4(col, 1.0);
   #include <tonemapping_fragment>
@@ -335,6 +416,7 @@ export class PostFX {
     this.motionBlur = 0; // 0 = pois, 1 = kevyt, 2 = vahva
     this.dof = false;
     this.lens = 0; // vesipisarat linssillä 0..1 (main.js)
+    this.splashOn = false; // keularoiskeita linssillä (addSplash)
     this.lensFlare = true; // asetus
     this.flare = 0;        // linssiheijastuksen voimakkuus 0..1 (main.js)
     this.sunUV = new THREE.Vector2(0.5, 0.5);
@@ -372,6 +454,7 @@ export class PostFX {
       uNear: { value: 0.1 }, uFar: { value: 1500 }, uCamPos: { value: new THREE.Vector3() },
       uSunDir: { value: new THREE.Vector3() }, uSunColor: { value: new THREE.Color() }, uInscatter: { value: 0 },
       uLens: { value: 0 }, uAspect: { value: 1 },
+      uSplash: { value: [new THREE.Vector4(), new THREE.Vector4(), new THREE.Vector4(), new THREE.Vector4()] }, uSplashOn: { value: 0 },
       uFlare: { value: 0 }, uSunUV: { value: new THREE.Vector2(0.5, 0.5) }, uFlareColor: { value: new THREE.Color(1, 0.92, 0.8) },
       uFogNear: { value: 50 }, uFogFar: { value: 330 },
       uHeat: { value: 0 }, uTime: { value: 0 }, uViewProj: { value: new THREE.Matrix4() },
@@ -389,8 +472,18 @@ export class PostFX {
     this.h = 0;
   }
 
+  // Keularoiske linssille (sessio 21): x, y = paikka kuvassa (0..1),
+  // k = voimakkuus 0..1. Enintään neljä yhtä aikaa (vanhin korvataan).
+  addSplash(x, y, k) {
+    const list = this.compMat.uniforms.uSplash.value;
+    let slot = list.find((v) => v.w <= 0);
+    if (!slot) { slot = list[0]; for (const v of list) if (v.z < slot.z) slot = v; }
+    slot.set(x, y, this.time, Math.max(0.05, Math.min(1, k)));
+    this.splashOn = true;
+  }
+
   get active() {
-    return this.godRays || this.motionBlur > 0 || this.dof || this.lens > 0.01 || (this.lensFlare && this.flare > 0.01);
+    return this.godRays || this.motionBlur > 0 || this.dof || this.lens > 0.01 || this.splashOn || (this.lensFlare && this.flare > 0.01);
   }
 
   _resize() {
@@ -512,6 +605,14 @@ export class PostFX {
     // --- Ilmakehän hehku
     cu.uSunDir.value.copy(env.sunDir);
     cu.uLens.value = this.lens;
+    // Keularoiskeet: ajan kierrettyä alkuun vanhat roiskeet poistetaan.
+    let on = false;
+    for (const v of cu.uSplash.value) {
+      if (v.w > 0 && (this.time < v.z || this.time - v.z > 4.2)) v.w = 0;
+      if (v.w > 0) on = true;
+    }
+    this.splashOn = on;
+    cu.uSplashOn.value = on ? 1 : 0;
     cu.uFlare.value = this.lensFlare ? this.flare : 0;
     cu.uSunUV.value.copy(this.sunUV);
     cu.uSunColor.value.copy(env.sky.uniforms.uSunColor.value).multiplyScalar(env.sky.uniforms.uSunVisible.value);

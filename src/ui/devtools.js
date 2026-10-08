@@ -349,7 +349,7 @@ export class DevTools {
     const s = sampleTerrain(p.x, p.z, this._s);
     const lines = [
       `X ${p.x.toFixed(1)}   Z ${p.z.toFixed(1)}   Y ${p.y.toFixed(1)} m   (maa ${s.h.toFixed(1)}, vesi ${s.wl.toFixed(1)})`,
-      `${placeName(s)} · päivä ${env.day}, klo ${this.ctx.fmtTime(env.time)} · ${env.weatherName}`,
+      `${placeName(s)} · päivä ${env.day}, klo ${this.ctx.fmtTime(env.time)} · ${env.weatherName} · ${env.moonName}`,
       `${Math.round(fps ? fps.value : 0)} FPS · chunkit ${world.chunks.size} · olennot ${mobs.list.length} · maassa ${drops.list.length} esinettä`,
       `Terveys ${Math.ceil(player.health)} · kestävyys ${Math.round(player.stamina)}${player.flying ? ' · lentää' : ''}${player.god ? ' · kuolematon' : ''}`,
     ];

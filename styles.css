@@ -43,6 +43,13 @@ html, body {
   transition: transform 0.12s, background 0.12s;
 }
 #crosshair.active { transform: scale(1.5); background: var(--accent-2); }
+/* Kriittinen hyppyisku (sessio 21). */
+#crit-ring {
+  position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px;
+  border-radius: 50%; border: 2px solid rgba(255, 196, 110, 0.95);
+  box-shadow: 0 0 8px rgba(255, 170, 70, 0.6), inset 0 0 6px rgba(255, 170, 70, 0.4);
+  opacity: 0; pointer-events: none;
+}
 /* Jousi (sessio 17): plus-tähtäin keskiaukolla; sakarat kiristyvät jännitettäessä. */
 #crosshair.bow {
   width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 0; box-shadow: none;
@@ -117,13 +124,21 @@ html, body {
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.3);
 }
-/* Kello (sessio 20): kellotaulu kartan reunassa, kun Kello on repussa. */
+/* Kello (sessio 20, siirretty sessiossa 21): kellotaulu ja digitaaliaika
+   kartan vasemmalla puolella (ei kartan päällä), kun Kello on repussa. */
 #clock {
-  position: absolute; left: -14px; bottom: -6px; width: 54px; height: 54px; border-radius: 50%;
+  position: absolute; right: calc(100% + 8px); top: 118px;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
   transition: opacity 240ms ease-out, transform 320ms var(--spring);
 }
+#clock .dial { width: 52px; height: 52px; border-radius: 50%; }
+#clock svg { width: 100%; height: 100%; display: block; }
+#clock .digital {
+  padding: 2px 8px 3px; border-radius: 9px;
+  font: 700 13px var(--font); letter-spacing: 0.04em; font-variant-numeric: tabular-nums;
+  color: #efe2c6; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
 #clock.none { opacity: 0; transform: scale(0.6); }
-#clock svg { width: 100%; height: 100%; }
 #clock .ticks line { stroke: rgba(239, 226, 198, 0.55); stroke-width: 1.2; stroke-linecap: round; }
 #clock .h { stroke: #efe2c6; stroke-width: 2.4; stroke-linecap: round; }
 #clock .m { stroke: #e6c98a; stroke-width: 1.5; stroke-linecap: round; }

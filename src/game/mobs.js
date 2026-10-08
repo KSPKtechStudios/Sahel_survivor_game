@@ -19,7 +19,7 @@
 import * as THREE from 'three';
 import { waterAt, sampleTerrain, insideStructure } from '../world/terrain.js';
 import { makeWarthog, makeClayGolem, makeGazelle, makeFennec, makeMonkey, makeGuineafowl, makeBird, makeHaamu } from '../models/creatures.js';
-import { createFlameTexture } from '../render/textures.js';
+import { createFlameTexture, createSoftDotTexture } from '../render/textures.js';
 import { events } from './events.js';
 
 export const MOB_TYPES = {
@@ -155,6 +155,30 @@ function smooth(t) {
   return t * t * (3 - 2 * t);
 }
 
+// Sessio 21: pieni nelisakarainen tähti taintumisen merkiksi (parry).
+function createStarTexture(size = 64) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const g = c.getContext('2d');
+  const h = size / 2;
+  const grd = g.createRadialGradient(h, h, 0, h, h, h);
+  grd.addColorStop(0, 'rgba(255,255,255,1)');
+  grd.addColorStop(0.3, 'rgba(255,238,190,0.75)');
+  grd.addColorStop(1, 'rgba(255,214,140,0)');
+  g.fillStyle = grd;
+  g.beginPath();
+  for (let i = 0; i < 8; i++) {
+    const a = (i * Math.PI) / 4 - Math.PI / 2;
+    const r = i % 2 ? size * 0.11 : h * 0.96;
+    g.lineTo(h + Math.cos(a) * r, h + Math.sin(a) * r);
+  }
+  g.closePath();
+  g.fill();
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
 export class Mobs {
   constructor({ scene, world, drops, debris, bursts, player, env, structures, fire, blood }) {
     Object.assign(this, { scene, world, drops, debris, bursts, player, env, structures, fire, blood });
@@ -163,6 +187,12 @@ export class Mobs {
     this.flameMat = new THREE.SpriteMaterial({
       map: createFlameTexture(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: true,
     });
+    // Sessio 21: taintumisen tähdet ja savipeikon nousun hehku.
+    this.starMat = new THREE.SpriteMaterial({
+      map: createStarTexture(), color: 0xffe6a0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: true,
+    });
+    this.dotTex = createSoftDotTexture(64);
+    this.glowGeo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
     this.fires = []; // palavat olennot nuotioiden valoille (structures.extraFires)
     this.spawnTimer = 3;
     this.clayTimer = 6;
@@ -247,7 +277,82 @@ export class Mobs {
     model.group.position.copy(m.pos);
     this.scene.add(model.group);
     this.list.push(m);
+    if (emerge) this._emergeStart(m);
     return m;
+  }
+
+  // Savipeikon nousu maasta (sessio 21): maa pöllähtää, kokkareita lentää ja
+  // maa hehkuu hetken oranssina kuin peikon silmät; kipinöitä nousee.
+  _emergeStart(m) {
+    const y = m.pos.y + 0.05;
+    _v.set(m.pos.x, y, m.pos.z);
+    if (this.debris) this.debris.chips(_v, 0x8a4a2c, 12, null, 1.1);
+    if (this.bursts) this.bursts.spawn(_v, 0xa27148, 22, 2.4, { size: 0.16, life: 0.9, gravity: 4 });
+    if (this.fire) {
+      for (let i = 0; i < 6; i++) this.fire.smokePuff(m.pos.x + (Math.random() - 0.5) * 1.2, y, m.pos.z + (Math.random() - 0.5) * 1.2, 0.5, 1.3);
+    }
+    const mat = new THREE.MeshBasicMaterial({
+      map: this.dotTex, color: 0xff6a1e, transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false, fog: true,
+    });
+    const g = new THREE.Mesh(this.glowGeo, mat);
+    g.position.set(m.pos.x, m.pos.y + 0.05, m.pos.z);
+    g.renderOrder = 2;
+    this.scene.add(g);
+    m.emergeGlow = g;
+    m.emergeT = 0;
+  }
+
+  _fxEmerge(m, dt) {
+    m.emergeT += dt;
+    const g = m.emergeGlow;
+    const k = m.emergeT / 2.2;
+    if (k >= 1) {
+      this.scene.remove(g);
+      g.material.dispose();
+      m.emergeGlow = null;
+      return;
+    }
+    const a = k < 0.12 ? k / 0.12 : Math.pow(1 - (k - 0.12) / 0.88, 1.4);
+    g.material.opacity = a * 0.85 * (0.85 + 0.15 * Math.sin(m.emergeT * 31));
+    g.scale.setScalar(1.6 + 1.3 * smooth(k * 1.5));
+    if (this.fire && k < 0.7 && Math.random() < dt * 12) {
+      this.fire.ember(m.pos.x + (Math.random() - 0.5) * 0.9, m.pos.y + 0.1, m.pos.z + (Math.random() - 0.5) * 0.9);
+    }
+  }
+
+  // Taintuminen parryn jälkeen (sessio 21): olento huojuu ja sen pään
+  // ympärillä kiertää pieniä tähtiä. Ei tekstiä.
+  _fxDaze(m, md, dt, elapsed) {
+    const dazed = m.state === 'stagger' && m.vulnerable;
+    const k0 = m.dazeK || 0;
+    m.dazeK = k0 + ((dazed ? 1 : 0) - k0) * Math.min(1, dt * (dazed ? 10 : 6));
+    if (k0 > 0.001 && m.state !== 'dead') md.group.rotation.z = Math.sin(m.stateT * 5.5) * 0.12 * m.dazeK;
+    if (m.dazeK > 0.01 && m.state !== 'dead') {
+      if (!m.dazeStars) {
+        m.dazeStars = [];
+        for (let i = 0; i < 3; i++) {
+          const st = new THREE.Sprite(this.starMat.clone());
+          st.renderOrder = 3;
+          this.scene.add(st);
+          m.dazeStars.push(st);
+        }
+      }
+      const top = m.pos.y + (m.yOff || 0) + m.def.height + 0.18;
+      const r = Math.max(0.28, m.def.radius * 0.8);
+      for (let i = 0; i < 3; i++) {
+        const st = m.dazeStars[i];
+        const a = elapsed * 4.2 + i * 2.094;
+        st.position.set(m.pos.x + Math.cos(a) * r, top + Math.sin(a * 2 + i) * 0.06, m.pos.z + Math.sin(a) * r);
+        st.scale.setScalar((0.17 + 0.05 * Math.sin(elapsed * 9 + i * 2)) * (0.6 + 0.4 * m.dazeK));
+        st.material.opacity = m.dazeK;
+      }
+    } else if (m.dazeStars) this._clearDaze(m);
+  }
+
+  _clearDaze(m) {
+    for (const st of m.dazeStars) { this.scene.remove(st); st.material.dispose(); }
+    m.dazeStars = null;
   }
 
   remove(m) {
@@ -260,6 +365,8 @@ export class Mobs {
     if (m.model.glow) m.model.glow.material.dispose();
     if (m.model.core) m.model.core.material.dispose();
     if (m.trail) for (const t of m.trail) { this.scene.remove(t); t.material.dispose(); }
+    if (m.dazeStars) this._clearDaze(m);
+    if (m.emergeGlow) { this.scene.remove(m.emergeGlow); m.emergeGlow.material.dispose(); m.emergeGlow = null; }
   }
 
   clear() {
@@ -1011,8 +1118,8 @@ export class Mobs {
       case 'emerge':
         // Nousee maasta.
         m.yOff = -1.4 * (1 - smooth(m.stateT / 1.5));
-        if (Math.random() < dt * 8) {
-          _v.set(m.pos.x + (Math.random() - 0.5) * 0.6, m.pos.y + 0.05, m.pos.z + (Math.random() - 0.5) * 0.6);
+        if (Math.random() < dt * 14) {
+          _v.set(m.pos.x + (Math.random() - 0.5) * 0.7, m.pos.y + 0.05, m.pos.z + (Math.random() - 0.5) * 0.7);
           this.debris.chips(_v, 0x8a4a2c, 1, null, 0.8);
         }
         this._steer(m, dx, dz, 0, dt, true);
@@ -1474,6 +1581,8 @@ export class Mobs {
     else if (kind === 'haamu') this._animHaamu(m, md, speed, dt, elapsed);
     else if (m.def.skittish) this._animQuad(m, md, speed, dt, elapsed);
     else this._animClay(m, md, speed, dt, elapsed);
+    this._fxDaze(m, md, dt, elapsed);
+    if (m.emergeGlow) this._fxEmerge(m, dt);
   }
 
   // Nelijalkaiset arat eläimet: käynti ristikkäin, juostessa loikka (etu- ja
@@ -1553,6 +1662,10 @@ export class Mobs {
       bodyRX = 0.08;
     } else if (s === 'attack') {
       headX = 0.4 - Math.sin(Math.min(1, m.stateT / m.def.attack) * Math.PI) * 0.7;
+    } else if (s === 'stagger' && m.vulnerable) {
+      // Taintunut: pää painuu ja heiluu, takapää notkahtaa.
+      headX = 0.35 + Math.sin(m.stateT * 3.6) * 0.18;
+      bodyRX = -0.14;
     } else if (s === 'stagger') {
       headX = -0.3 + Math.sin(m.stateT * 20) * 0.1;
       bodyRX = -0.1;
@@ -1656,6 +1769,12 @@ export class Mobs {
       const k = smooth(m.stateT / m.def.recover);
       armL = armR = 0.7 * (1 - k);
       lean = 0.65 - 0.3 * k;
+    } else if (s === 'stagger' && m.vulnerable) {
+      // Taintunut (parry): retkahtaa taaksepäin, kädet roikkuvat, pää heiluu.
+      const k = Math.min(1, m.stateT / 0.15);
+      lean = -0.42 * k + Math.min(0.3, m.stateT * 0.25) + Math.sin(m.stateT * 4.2) * 0.06;
+      armL = 0.35 + Math.sin(m.stateT * 3.1) * 0.15; armR = 0.25 + Math.sin(m.stateT * 3.4 + 1) * 0.15;
+      armZ = 0.18;
     } else if (s === 'stagger') {
       armL = 0.6; armR = 0.4;
       lean = -0.15 + Math.sin(m.stateT * 18) * 0.06;
@@ -1680,7 +1799,7 @@ export class Mobs {
     md.torso.rotation.x += (lean - md.torso.rotation.x) * Math.min(1, dt * 10);
     md.torso.position.y = 0.5 + Math.abs(Math.sin(ph)) * 0.03 * Math.min(1, speed);
     md.head.rotation.x = -0.25 + Math.sin(elapsed * 2.1 + m.phase) * 0.05;
-    md.head.rotation.y = s === 'panic' ? Math.sin(elapsed * 14 + m.phase) * 0.6 : 0;
+    md.head.rotation.y = s === 'panic' ? Math.sin(elapsed * 14 + m.phase) * 0.6 : (m.dazeK || 0) * Math.sin(elapsed * 3.3) * 0.35;
     // Silmien hehku sykkii hiukan
     const glow = 1 + Math.sin(elapsed * 5 + m.phase) * 0.12 + (s === 'windup' ? 0.35 : 0);
     for (const e of md.eyes) e.scale.setScalar(glow);

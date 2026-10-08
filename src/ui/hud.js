@@ -50,6 +50,7 @@ export class Hud {
     this.clockEl = $('clock');
     this.clockH = this.clockEl.querySelector('.h');
     this.clockM = this.clockEl.querySelector('.m');
+    this.clockDigital = this.clockEl.querySelector('.digital');
     this.hasClock = null;
     this.numShown = -1;   // näytetty terveysarvo
     this.numT = 0;
@@ -112,13 +113,36 @@ export class Hud {
       this.hpFill.animate([{ filter: 'brightness(1.9)' }, { filter: 'brightness(1)' }], { duration: 340, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
     });
     // Sessio 18: ei tekstejä torjunnasta (välähdys riittää).
-    events.on('parry', () => { this.flash = 1; });
+    // Sessio 21: taintuminen näkyy olennossa, joten ruudun välähdys on pienempi.
+    events.on('parry', () => { this.flash = 0.55; });
+    // Kriittinen hyppyisku: tähtäimestä laajenee nopea rengas.
+    this.critRing = document.createElement('div');
+    this.critRing.id = 'crit-ring';
+    this.crosshair.parentNode.appendChild(this.critRing);
+    events.on('crit', () => {
+      this.critRing.animate([
+        { transform: 'scale(0.3)', opacity: 1 },
+        { transform: 'scale(1)', opacity: 0 },
+      ], { duration: 320, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+    });
     this.tiredT = 0;
     events.on('staminaOut', () => { this.tiredT = 0.9; });
     events.on('blocked', ({ broken }) => {
       this.flash = Math.max(this.flash, broken ? 0 : 0.35);
     });
     this.renderHotbar();
+  }
+
+  _revealTarget() {
+    const ease = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+    const kf = [
+      { opacity: 0, transform: 'translateY(6px) scale(0.92)', filter: 'blur(2px)', letterSpacing: '0.09em' },
+      { opacity: 1, transform: 'none', filter: 'blur(0)', letterSpacing: '0.02em' },
+    ];
+    this.targetName.animate(kf, { duration: 190, easing: ease });
+    this.targetAction.animate([
+      { opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' },
+    ], { duration: 200, delay: 50, easing: ease, fill: 'backwards' });
   }
 
   // Ruokaympyrät: uudet ponnahtavat esiin, loppuneet kutistuvat pois ja muut
@@ -297,6 +321,13 @@ export class Hud {
     // Olennon nimilappu on olennon päällä (nameplates.js), ei tähtäimen alla.
     if (prompt && visible && !prompt.mob) {
       this.targetBox.classList.add('show');
+      // Sessio 21: uuden kohteen nimi tulee esiin pienellä, nopealla
+      // nousulla ja terävöitymisellä (ei enää yhtäkkiä).
+      const key = prompt.key ?? prompt.name;
+      // Saman kohteen hetkellinen katkos (säteen reuna) ei toista animaatiota.
+      if (key !== this.targetKey || (!this.targetShown && performance.now() - (this.targetHidAt || 0) > 220)) this._revealTarget();
+      this.targetKey = key;
+      this.targetShown = true;
       this.targetName.textContent = prompt.name;
       this.targetAction.textContent = prompt.action || '';
       this.targetAction.classList.toggle('warn', !!prompt.warn);
@@ -309,6 +340,8 @@ export class Hud {
       this.crosshair.classList.add('active');
     } else {
       this.targetBox.classList.remove('show');
+      if (this.targetShown) this.targetHidAt = performance.now();
+      this.targetShown = false;
       this.crosshair.classList.toggle('active', !!(prompt && visible));
     }
 
@@ -370,6 +403,9 @@ export class Hud {
       const t = env.time;
       this.clockH.setAttribute('transform', `rotate(${(((t % 12) / 12) * 360).toFixed(1)} 24 24)`);
       this.clockM.setAttribute('transform', `rotate(${((t % 1) * 360).toFixed(1)} 24 24)`);
+      const hh = Math.floor(t) % 24, mm = Math.floor((t % 1) * 60);
+      const txt = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+      if (txt !== this.clockText) { this.clockText = txt; this.clockDigital.textContent = txt; }
     }
 
     // Kestävyys (keskellä): näkyy vain kun sitä kuluu.

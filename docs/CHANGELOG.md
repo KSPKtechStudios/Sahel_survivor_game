@@ -2,6 +2,19 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-08 (sessio 21): hyppyisku, taintuminen, satunnainen kuu ja keularoiskeet
+
+- **Hyppyisku:** hyppää ja iske kirveellä tai nuijalla ilmasta: pelaaja tarttuu aseeseen kahdella kädellä ja iskee ylhäältä. Osuma on kriittinen (noin kaksinkertainen vahinko), siitä lähtee kipinöitä ja pölyä, kuuluu matala jysähdys ja tähtäimestä laajenee rengas.
+- **Parry ilman tekstiä:** torjuttu vihollinen lentää taaksepäin ja taintuu: se retkahtaa, huojuu ja sen pään ympärillä kiertää pieniä tähtiä. Iskun kohdassa välähtää pieni kipinäpurske.
+- **Kohteen nimi tulee esiin pehmeästi:** pieni, nopea nousu ja terävöityminen.
+- **Haamun äänet hiljemmiksi.**
+- **Korjattu:** kuun reunassa näkyi outo harmaa kehä.
+- **Kuu on joka yö erilainen** (satunnainen vaihe). Täysikuulla vihollisia on yhä enemmän, mutta siitä ei enää ilmoiteta tekstillä.
+- **Savipeikon nousu maasta:** maa pöllähtää, kokkareita lentää ja maa hehkuu hetken oranssina kipinöiden noustessa.
+- **Maahan pudotetut esineet katoavat 10 minuutissa.**
+- **Kello** on nyt kartan vieressä (ei päällä), ja sen alla näkyy kellonaika numeroina.
+- **Keularoiskeet linssillä:** myrskyssä purjehtiessa, kun katsoo eteenpäin ja keula iskeytyy aaltoon, vettä lentää ruutuun: kuva vääristyy hetken, ja pisarat valuvat alas ja haihtuvat.
+
 ## 2026-10-08 (sessio 20): yön hiljaisuus, Kello, toinen käsi, reppu kuten Minecraftissa
 
 - **Korjattu:** nopea siirtyminen biomista toiseen kehittäjätyökaluilla jätti maailman tyhjäksi ja valkoiseksi (kaksi latausta veti maailmaa eri suuntiin); nyt uusi siirto peruu edellisen.

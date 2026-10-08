@@ -128,20 +128,27 @@ void main() {
     }
   }
 
-  // Kuu
+  // Kuu. Sessio 21: kiekon reuna ja vaihe lasketaan samasta säteestä, eikä
+  // täysikuun reuna jää himmeäksi (ennen kiekon ympärille jäi harmaa kehä).
   float md = max(dot(dir, uMoonDir), 0.0);
-  float moon = smoothstep(0.99935, 0.9996, md) * uMoonVisible;
-  // Kuun vaihe: kiekon valaistu osa (pallon pinta, valo vaiheen suunnasta);
-  // varjopuoli hohtaa hyvin himmeästi (maanvalo).
-  if (moon > 0.0) {
+  float moon = 0.0;
+  if (md > 0.999 && uMoonVisible > 0.0) {
     vec3 mr = normalize(cross(uMoonDir, vec3(0.0, 1.0, 0.0)));
     vec3 mu = cross(mr, uMoonDir);
     vec3 off = dir - uMoonDir * md;
     vec2 q = vec2(dot(off, mr), dot(off, mu)) / 0.0285;
-    float qz = sqrt(max(0.0, 1.0 - dot(q, q)));
+    float r = length(q);
+    float mDisc = 1.0 - smoothstep(0.92, 1.0, r);
+    vec2 qn = q / max(r, 1.0);
+    float qz = sqrt(max(0.0, 1.0 - dot(qn, qn)));
+    // Valaistu osa: pallon pinta, valo vaiheen suunnasta; varjopuoli hohtaa
+    // hyvin himmeästi (maanvalo), reuna hieman tummempi.
     float th = uMoonPhase * 6.2832;
-    float lit = smoothstep(-0.06, 0.1, dot(vec3(q, qz), vec3(-sin(th), 0.0, -cos(th))));
-    moon *= mix(0.05, 1.0, lit);
+    // Reunalla (qz = 0) valon raja on tarkalleen kiekon reunassa: siirretään
+    // rajaa vaiheen mukaan, jottei täysikuulle jää tumma eikä uudellekuulle
+    // vaalea kehä.
+    float lit = smoothstep(-0.05, 0.05, dot(vec3(qn, qz), vec3(-sin(th), 0.0, -cos(th))) - 0.08 * cos(th));
+    moon = mDisc * mix(0.022, 0.84 + 0.16 * qz, lit) * uMoonVisible;
   }
   float moonIllum = 0.5 - 0.5 * cos(uMoonPhase * 6.2832);
   col += vec3(0.6, 0.65, 0.8) * pow(md, 200.0) * 0.12 * uMoonVisible * moonIllum;
