@@ -2,6 +2,22 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-08 (sessio 23)
+**Tehtiin**
+- Verkko oli aluksi estetty (403); käyttäjä avasi ympäristön verkkoasetukset. Poly Haven estää Pythonin oletus-User-Agentin, joten haut tehtiin curlilla.
+- Tekstuurit (assets/textures/: hiekka, maa, metsänpohja, kallio, kaarna, laudat, lehtiatlas), lähteet assets/CREDITS.txt.
+- Maasto (`world/terrain.js`: `groundWeights`; `world/chunkGen.js`, `world/genWorker.js`, `world/world.js`: `groundW`-attribuutti; `render/surfaces.js` uusi: `applyTerrainSurfaces`).
+- Mallien pinnat (`render/surfaces.js`: `addSurfaceDetail`, värimaskit; `render/materials.js`: solid_rock / solid_wood / solid_earth; `world/objectTypes.js`: `surface`; `game/ruins.js`, `game/structures.js`, `models/boats.js`, `main.js`, `game/breakables.js`).
+- Skannatut lohkareet (`models/scanned/boulders.js` + `build.js`, `render/scannedMaterials.js`, assets/models/rocks/; `models/models.js`, `world/world.js`, `game/breakables.js`).
+- Lehvästöt (`models/util.js`: `leafCards`, `ensureUv`, UV:n säilytys; `models/trees.js`, `models/flora.js`, `models/plants.js`; `game/treeCut.js`: UV halkaisussa; materiaalit: lehtiatlas + alphaTest).
+- Korjattu: baobab puuttui hakattavien mallien listalta (`models/models.js`: HAS_HI).
+- three.js glTF-lataaja vendoroitu (ei vielä käytössä).
+- Testattiin headless-Chromiumilla: kuvat biomeista, lohkareista, baobabista, kaarnasta ja lehvästöistä; kolmiomäärä sademetsässä 1,05 M → 1,63 M (kaukomallien kortteja harvennettu); baobabin kuorinta ja kaato, logiikkatesti, ESLint ja savutesti puhtaat.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute ja osa 2 (palmut, ruoho, olennot, esineet, rakennelmat, lisää Poly Havenin malleja).
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-08 (sessio 22)
 **Tehtiin**
 - Kysyttiin 4 kysymystä (metallien hankinta, baobab, asetyypit, poistot).

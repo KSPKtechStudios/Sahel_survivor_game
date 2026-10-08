@@ -26,6 +26,16 @@ for (const n of NAMES) {
   surfaceUniforms[`uAvg_${n}`] = { value: new THREE.Vector3(...AVG[n]) };
 }
 
+// Sessio 23: lehtiatlas (lehtikortit). Paikkamerkkinä valkoinen pikseli, jotta
+// rungot (atlaksen valkoinen nurkka) näkyvät jo ennen latautumista.
+const _ph = document.createElement('canvas');
+_ph.width = _ph.height = 1;
+_ph.getContext('2d').fillStyle = '#fff';
+_ph.getContext('2d').fillRect(0, 0, 1, 1);
+export const leafTexture = new THREE.Texture(_ph);
+leafTexture.colorSpace = THREE.SRGBColorSpace;
+leafTexture.needsUpdate = true;
+
 let started = false;
 // Lataa tekstuurit (taustalla). Kunnes kaikki ovat ladattu, pinnat näkyvät
 // kuten ennen (uSurfOn = 0).
@@ -39,6 +49,11 @@ export function loadSurfaces(renderer, onDone = null) {
   };
   const loader = new THREE.TextureLoader(manager);
   const aniso = renderer ? Math.min(8, renderer.capabilities.getMaxAnisotropy()) : 4;
+  new THREE.ImageLoader(manager).load('assets/textures/leaves.png', (img) => {
+    leafTexture.image = img;
+    leafTexture.anisotropy = aniso;
+    leafTexture.needsUpdate = true;
+  });
   for (const n of NAMES) {
     const c = loader.load(`assets/textures/${n}_col.jpg`);
     c.colorSpace = THREE.SRGBColorSpace;
@@ -246,6 +261,13 @@ float surfK;`)
     float sNotGreen = 1.0 - smoothstep(-0.004, 0.03, vc.g - max(vc.r, vc.b * 1.1));
     float sDark = (1.0 - smoothstep(0.1, 0.16, sLum)) * smoothstep(1.4, 2.2, sRB) * sNotGreen;
     float sFar = smoothstep(25.0, 120.0, length(vViewPosition));
+#ifdef USE_MAP
+    // Lehtikortit (oma tekstuuri atlaksessa) jäävät ennalleen: vain atlaksen
+    // valkoista nurkkaa käyttävät osat (rungot, oksat) saavat pintatekstuurin.
+    float sUntex = step(0.985, vMapUv.x) * step(0.97, vMapUv.y);
+    sNotGreen *= sUntex;
+    sDark *= sUntex;
+#endif
     vec3 n0 = surfNl;
     vec3 bw = pow(abs(n0), vec3(4.0));
     bw /= bw.x + bw.y + bw.z;

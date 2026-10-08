@@ -2,6 +2,14 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-08 (sessio 23)
+- **Lähteet: ambientCG (tekstuurit) ja Poly Haven (mallit), molemmat CC0.** Syy: korkea laatu, ei mainintavelvoitetta; lähteet silti assets/CREDITS.txt:ssä.
+- **Tekstuuri antaa yksityiskohdat, vertex-väri sävyn** (tekstuuri / sen keskiväri). Syy: biomien taiteellinen väritys säilyy, ja yksi tekstuuri kelpaa monelle biomille (esim. kuiva maa savannilla ja punaisella lateriitilla).
+- **Kolmitasoprojektio mallin omissa koordinaateissa** (ei UV:ta). Syy: proseduraalisilla malleilla ei ole UV-koordinaatteja; mallin koordinaateissa tekstuuri ei liu'u kaatuvassa puussa.
+- **Skannatut mallit kevennetään (gltf-transform + meshoptimizer) ja upotetaan JS-moduuliksi.** Syy: Poly Havenin mallit ovat 60 000–4,7 milj. kolmiota; mallikirjasto rakennetaan synkronisesti, joten geometria upotetaan (tekstuurit ladataan erikseen).
+- **Lehvästö = lehtikortit + pienempi ydin, yksi lehtiatlas.** Syy: koko puun korvaaminen valmiilla mallilla ei sovi (akasiaa ja baobabia ei ole CC0-malleina, ja hakkaus, kaato ja tuuli toimivat omilla malleilla). Rungot käyttävät atlaksen valkoista nurkkaa, joten yksi materiaali riittää; alphaTest pitää varjot oikean muotoisina.
+- **Puiden lehtikortit ennen valmiita Poly Havenin puita.** Syy: Poly Havenin puut (1,7–4,7 milj. kolmiota) ovat liian raskaita sadoiksi instansseiksi.
+
 ## 2026-10-08 (sessio 22)
 - **Metallit ja rubiini vain kehittäjätyökaluista** (käyttäjän valinta), reseptit valmiina työstöpenkillä. Syy: hankintatapaa (malmit, sulatus, paja) ei ole päätetty.
 - **Baobab: kuorinta + ytimen kaato** (käyttäjän kuvaus). Toteutus: baobab on nyt puu (kind tree), jonka hakattava malli on rakennettu lieriöpaloista kaatokohdan renkaineen; kuorinta muuttaa rungon muotoa ja väriä samoista lähtötiedoista kuin lovet.

@@ -7,6 +7,7 @@ import { makeAcacia, makeBaobab, makeJungleTree, makePalm, makeCanopyTree, makeD
 import { makeBush, makeFern, makeTumbleweed, makeGrassTuft, makeBamboo, makeThicket, makeEuphorbia, makeReeds, makeUndergrowth } from './plants.js';
 import { makeGroundStick, makeStone, makeTermiteMound, makeOutcrop, makeSpire } from './rocks.js';
 import { scannedBoulder, SCANNED_BOULDER_COUNT } from './scanned/build.js';
+import { ensureUv } from './util.js';
 import { makeCampfireBase, createItemModels } from './items.js';
 import { createBuildModels } from './building.js';
 import {
@@ -90,8 +91,9 @@ export function createModelLibrary() {
   const far = {};
   for (const [model, [fn]] of Object.entries(VARIANTS)) {
     const seeds = seedsFor(model);
-    near[model] = seeds.map((s) => fn(s, 1));
-    far[model] = HAS_FAR.has(model) ? seeds.map((s) => fn(s, 0)) : null;
+    // Sessio 23: kaikille UV (lehtiatlasta käyttävä kasvillisuusmateriaali).
+    near[model] = seeds.map((s) => ensureUv(fn(s, 1)));
+    far[model] = HAS_FAR.has(model) ? seeds.map((s) => ensureUv(fn(s, 0))) : null;
   }
   const hiCache = {};
   return {
@@ -101,7 +103,7 @@ export function createModelLibrary() {
     hi(model, variant) {
       if (!HAS_HI.has(model)) return near[model][variant];
       const key = `${model}:${variant}`;
-      if (!hiCache[key]) hiCache[key] = VARIANTS[model][0](seedsFor(model)[variant], 2);
+      if (!hiCache[key]) hiCache[key] = ensureUv(VARIANTS[model][0](seedsFor(model)[variant], 2));
       return hiCache[key];
     },
     tumbleweed: makeTumbleweed(42),

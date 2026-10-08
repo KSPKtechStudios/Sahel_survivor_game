@@ -4,7 +4,7 @@
 // kivikko (vuoristo), lumpeet (järvet), korkea heinä, kukat ja merilevä.
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
-import { V, partRand, displace, paint, limb, flatNormals, strip, merge, tag } from './util.js';
+import { V, partRand, displace, paint, limb, flatNormals, strip, merge, tag, leafCards } from './util.js';
 
 function treeMeta(geo, meta) {
   geo.userData.tree = meta;
@@ -27,16 +27,20 @@ function trunk(base, top, r0, r1, cutY, q, hex, jr, radial) {
   return parts;
 }
 
-function blob(center, scale, detail, hex, jr, shadeCut = null, rotY = 0) {
+// Sessio 23: latvus = pienempi, tummempi ydin + lehtikortit (leafCards).
+// kind: 'acacia' (pariliuskaiset lehdet) tai 'broad' (leveät lehdet).
+function blob(center, scale, detail, hex, jr, shadeCut = null, rotY = 0, kind = 'broad') {
   const r = jr();
   let g = new THREE.IcosahedronGeometry(1, detail);
-  displace(g, () => [(r() - 0.5) * 0.3, (r() - 0.5) * 0.35, (r() - 0.5) * 0.3]);
-  g.scale(scale.x, scale.y, scale.z);
+  displace(g, () => [(r() - 0.5) * 0.35, (r() - 0.5) * 0.4, (r() - 0.5) * 0.35]);
+  g.scale(scale.x * 0.84, scale.y * 0.84, scale.z * 0.84);
   g.rotateY(rotY);
   g.translate(center.x, center.y, center.z);
   g = flatNormals(g);
-  const shade = shadeCut !== null ? (x, y) => (y < shadeCut ? 0.55 : 1.0) : null;
-  return paint(g, hex, { rand: r, jitter: 0.12, shade });
+  const shade = shadeCut !== null ? (x, y) => (y < shadeCut ? 0.42 : 0.7) : () => 0.7;
+  const core = paint(g, hex, { rand: r, jitter: 0.12, shade });
+  const cards = leafCards(center, scale, rotY, hex, r, kind, detail ? 1 : 0.2, detail ? 1 : 2.0);
+  return merge([core, cards]);
 }
 
 // Viuhkalehti (doumpalmu): säteittäisiä suikaleita yhdestä pisteestä.

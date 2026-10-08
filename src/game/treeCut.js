@@ -2,6 +2,7 @@
 // osaksi. Kaikki laskenta tehdään mallin omassa koordinaatistossa
 // (geometry.userData.tree kertoo rungon akselin).
 import * as THREE from 'three';
+import { WHITE_UV } from '../models/util.js';
 
 const INNER = new THREE.Color(0xd2ad78); // tuore puu loven kohdalla
 const RING = new THREE.Color(0xb88f5c);
@@ -114,8 +115,9 @@ export function splitTree(geo) {
   const pos = geo.attributes.position;
   const nrm = geo.attributes.normal;
   const col = geo.attributes.color;
-  const stump = { p: [], n: [], c: [] };
-  const top = { p: [], n: [], c: [] };
+  const uvA = geo.attributes.uv; // sessio 23: lehtikorttien UV mukaan
+  const stump = { p: [], n: [], c: [], u: [] };
+  const top = { p: [], n: [], c: [], u: [] };
   const eps = 1e-3;
   const below = (i) => {
     _v.fromBufferAttribute(pos, i);
@@ -130,6 +132,7 @@ export function splitTree(geo) {
       tgt.p.push(pos.getX(i + k), pos.getY(i + k), pos.getZ(i + k));
       tgt.n.push(nrm.getX(i + k), nrm.getY(i + k), nrm.getZ(i + k));
       tgt.c.push(col.getX(i + k), col.getY(i + k), col.getZ(i + k));
+      if (uvA) tgt.u.push(uvA.getX(i + k), uvA.getY(i + k));
     }
   }
 
@@ -166,6 +169,7 @@ export function splitTree(geo) {
           tgt.n.push(_n.x, _n.y, _n.z);
           const c = k === 0 ? RING : INNER;
           tgt.c.push(c.r, c.g, c.b);
+          if (uvA) tgt.u.push(WHITE_UV[0], WHITE_UV[1]);
         });
       }
     };
@@ -185,6 +189,7 @@ export function splitTree(geo) {
     g.setAttribute('position', new THREE.BufferAttribute(p, 3));
     g.setAttribute('normal', new THREE.Float32BufferAttribute(d.n, 3));
     g.setAttribute('color', new THREE.Float32BufferAttribute(d.c, 3));
+    if (uvA) g.setAttribute('uv', new THREE.Float32BufferAttribute(d.u, 2));
     g.computeBoundingSphere();
     return g;
   };

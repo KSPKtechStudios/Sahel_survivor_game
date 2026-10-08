@@ -1,7 +1,7 @@
 // Pensaat, saniaiset, tumbleweed ja ruohotupsut.
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
-import { V, paint, limb, flatNormals, strip, merge } from './util.js';
+import { leafCards, V, paint, limb, flatNormals, strip, merge } from './util.js';
 
 // Kuivunut pensas: ohuita oksia ja muutama kuiva lehtitupsu.
 export function makeBush(seed) {
@@ -23,11 +23,9 @@ export function makeBush(seed) {
       parts.push(paint(limb(mid.clone().lerp(tip, 0.5), side, 0.012, 0.005, 3), col, { rand }));
     }
     if (rand() < 0.45) {
-      let leaf = new THREE.IcosahedronGeometry(0.12 + rand() * 0.08, 0);
-      leaf.scale(1, 0.6, 1);
-      leaf.translate(tip.x, tip.y, tip.z);
-      leaf = flatNormals(leaf);
-      parts.push(paint(leaf, rand() < 0.5 ? 0xa48e58 : 0xb09a62, { rand, jitter: 0.15 }));
+      // Sessio 23: kuivat lehtiryppäät lehtikortteina.
+      const r = 0.12 + rand() * 0.08;
+      parts.push(leafCards(tip, V(r * 1.4, r, r * 1.4), 0, rand() < 0.5 ? 0xa48e58 : 0xb09a62, rand, 'acacia', 1.6, 0.32));
     }
   }
   return merge(parts);
@@ -182,9 +180,14 @@ export function makeThicket(seed) {
       const kk = 0.85 + Math.abs(Math.sin(x * 9.1 + y * 7.3 + z * 5.7 + i)) * 0.3;
       pos.setXYZ(v, x * kk, y * kk * 0.85, z * kk);
     }
-    g.translate(Math.cos(a) * r, 0.45 + rand() * 0.5, Math.sin(a) * r);
+    const cy = 0.45 + rand() * 0.5;
+    g.scale(0.78, 0.78, 0.78);
+    g.translate(Math.cos(a) * r, cy, Math.sin(a) * r);
     g = flatNormals(g);
-    parts.push(paint(g, cols[Math.floor(rand() * 3)], { rand: jr, jitter: 0.14, shade: (x, y) => 0.55 + Math.min(0.45, y * 0.4) }));
+    const col = cols[Math.floor(rand() * 3)];
+    parts.push(paint(g, col, { rand: jr, jitter: 0.14, shade: (x, y) => 0.4 + Math.min(0.3, y * 0.3) }));
+    // Sessio 23: lehtikortit möhkäleen pinnalle.
+    parts.push(leafCards(V(Math.cos(a) * r, cy, Math.sin(a) * r), V(0.62, 0.52, 0.62), rand() * 3, col, jr, 'broad', 1.3, 0.6));
   }
   for (let i = 0; i < 8; i++) {
     const a = rand() * Math.PI * 2;

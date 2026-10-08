@@ -2,6 +2,15 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-08 (sessio 23): realistisempi ulkoasu, osa 1
+
+- **Maasto** saa oikeat valokuvatekstuurit ja pinnanmuodot (normaalikartat): hiekka, kuiva savannimaa, sademetsän karike ja kallio sekoittuvat biomien mukaan. Biomien värisävyt säilyivät.
+- **Puiden latvukset** ovat nyt lehtiä (akasioissa pariliuskaiset lehdet, muissa leveät lehdet) eivätkä kulmikkaita möhkäleitä. Myös pensaat ja sademetsän tiheiköt.
+- **Rungoissa ja oksissa kaarna**, kivissä ja kallioissa kivipinta, termiittikeoissa maa, hylyissä, veneissä ja rakennelmissa lautapinta.
+- **Lohkareet** ovat oikeista kivistä skannattuja malleja (Poly Haven).
+- **Korjattu:** baobabin kuorinta ei näkynyt rungossa.
+- Kaikki ulkopuoliset tekstuurit ja mallit ovat CC0-lisensoituja (assets/CREDITS.txt).
+
 ## 2026-10-08 (sessio 22): tasot, puulajit, panssarit ja baobabin kaato
 
 - **Työkalujen ja aseiden tasot:** puu, kivi, piikivi, kupari, rauta ja rubiini. Kirveet ja hakut kaikilla metallitasoilla, ja paremmat työkalut hakkaavat nopeammin. Uusia aseita: piikivitikari, kupari- ja rautamiekka, rubiiniterä, Verikide, kivinuija, kuparimoukari, piikkinuija, seiväs ja rautakeihäs. Kaikilla tasoilla ei ole kaikkea.

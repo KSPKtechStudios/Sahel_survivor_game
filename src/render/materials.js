@@ -1,6 +1,6 @@
 // Jaetut materiaalit ja tuulen huojunta (vertex shader -lisäys).
 import * as THREE from 'three';
-import { applyTerrainSurfaces, addSurfaceDetail } from './surfaces.js';
+import { applyTerrainSurfaces, addSurfaceDetail, leafTexture } from './surfaces.js';
 
 // Kaikki tuulta käyttävät materiaalit jakavat nämä uniformit.
 export const windUniforms = {
@@ -223,12 +223,14 @@ export function createSharedMaterials(groundDetail) {
     metalness: 0,
   }));
 
+  // Sessio 23: puiden latvuksissa lehtikortit (lehtiatlas, läpikuultavat
+  // kohdat leikataan pois); rungot käyttävät atlaksen valkoista nurkkaa.
   const vegetation = addWind(
-    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 }),
+    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0, map: leafTexture, alphaTest: 0.42, side: THREE.DoubleSide }),
     0.0045,
   );
   const bush = addWind(
-    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 }),
+    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0, map: leafTexture, alphaTest: 0.42, side: THREE.DoubleSide }),
     0.06,
   );
   const grass = addWind(

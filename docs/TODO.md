@@ -1,6 +1,8 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 23 (ulkoasu, osa 1): maaston tekstuurit, lehvästöt, pensaat, kaarna, kivet, skannatut lohkareet; myös suorituskyky omalla koneella (lehtikortit lisäävät piirtotyötä)
+- [ ] Ulkoasu, osa 2 (käyttäjän palautteen mukaan): palmut ja doumpalmut, ruoho, aavikkopensaat, olennot, esineet kädessä, rakennelmat; Poly Havenin pensaat / viinipuut (quiver tree) / kuolleet rungot
 - [ ] Käyttäjä testaa session 22: tasot ([F3] → Esineet → Taso… / Metallit), puulajit (jalopuu, ydinpuu), baobabin kuorinta ja kaato, panssarit ja kilvet, rubiinin hehku ja voimat, jouset ja nuolet
 - [ ] Päätös: miten kupari, rauta ja rubiini hankitaan (malmit? sulatus? paja?) ja tarvitaanko metalliesineille oma valmistuspaikka
 - [ ] Päätös: jousien valmistus (nyt työstöpenkillä puulajeista ja jänteestä)

@@ -17,11 +17,74 @@ export function partRand(seed, k) {
 }
 
 export function prep(geo) {
+  const keepUv = !!(geo.userData && geo.userData.keepUv);
   if (geo.index) geo = geo.toNonIndexed();
   for (const name of Object.keys(geo.attributes)) {
-    if (name !== 'position' && name !== 'normal' && name !== 'color') geo.deleteAttribute(name);
+    if (name !== 'position' && name !== 'normal' && name !== 'color' && !(keepUv && name === 'uv')) geo.deleteAttribute(name);
   }
   return geo;
+}
+
+// Sessio 23: lehtiatlaksen (assets/textures/leaves.png) läpinäkymätön valkoinen
+// nurkka: rungot ja muut osat ilman omaa tekstuuria osoittavat tähän.
+export const WHITE_UV = [0.996, 0.993];
+
+// Lisää puuttuvat UV-koordinaatit (valkoinen nurkka), jotta geometria toimii
+// lehtiatlasta käyttävän materiaalin kanssa.
+export function ensureUv(geo) {
+  if (!geo || geo.attributes.uv) return geo;
+  const n = geo.attributes.position.count;
+  const uv = new Float32Array(n * 2);
+  for (let i = 0; i < n; i++) { uv[i * 2] = WHITE_UV[0]; uv[i * 2 + 1] = WHITE_UV[1]; }
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  return geo;
+}
+
+// Sessio 23: lehtikortit latvukseen. Ellipsoidin (center, scale, kierto rotY)
+// pinnalle asetetaan läpikuultavia kortteja, jotka näyttävät lehtiatlaksen
+// oksarypästä (kind 'acacia' = vasen puolisko, 'broad' = oikea). Normaalit
+// osoittavat ulos latvuksen keskeltä (pehmeä, pallomainen valaistus).
+export function leafCards(center, scale, rotY, hex, rand, kind = 'broad', density = 1, size = 1) {
+  const area = 4 * Math.PI * Math.pow((scale.x * scale.y + scale.x * scale.z + scale.y * scale.z) / 3, 1);
+  const n = Math.max(4, Math.round(area * 2.2 * density));
+  const u0 = kind === 'acacia' ? 0 : 0.5;
+  const P = [], N = [], C = [], U = [];
+  const col = new THREE.Color(hex);
+  const cr = Math.cos(rotY), sr = Math.sin(rotY);
+  const d = new THREE.Vector3(), t1 = new THREE.Vector3(), t2 = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+  for (let i = 0; i < n; i++) {
+    // Suunta: painottuu ylös ja sivuille (alapinta harvempi).
+    const yy = rand() * 1.5 - 0.5;
+    const th = rand() * Math.PI * 2;
+    const rr = Math.sqrt(Math.max(0, 1 - yy * yy));
+    d.set(Math.cos(th) * rr, yy, Math.sin(th) * rr).normalize();
+    const lx = d.x * scale.x, lz = d.z * scale.z;
+    const px = center.x + lx * cr - lz * sr, py = center.y + d.y * scale.y * 1.05, pz = center.z + lx * sr + lz * cr;
+    const nx = d.x * cr - d.z * sr, nz = d.x * sr + d.z * cr;
+    const nrm = new THREE.Vector3(nx, d.y * 1.4 + 0.4, nz).normalize();
+    // Kortin taso: kohti ulkoa, satunnainen kierto ja kallistus.
+    t1.copy(Math.abs(nrm.y) > 0.9 ? new THREE.Vector3(1, 0, 0) : up).cross(nrm).normalize();
+    t2.copy(nrm).cross(t1).normalize();
+    const a = rand() * Math.PI * 2, tilt = (rand() - 0.5) * 1.2;
+    const ax = t1.clone().multiplyScalar(Math.cos(a)).addScaledVector(t2, Math.sin(a));
+    const ay = nrm.clone().cross(ax).normalize().applyAxisAngle(ax, tilt);
+    const h = (0.55 + rand() * 0.35) * size * (kind === 'acacia' ? 1.25 : 1);
+    const corners = [[-1, -1], [1, -1], [1, 1], [-1, -1], [1, 1], [-1, 1]];
+    const j = 0.82 + rand() * 0.3;
+    for (const [cx, cy] of corners) {
+      P.push(px + (ax.x * cx + ay.x * cy) * h, py + (ax.y * cx + ay.y * cy) * h, pz + (ax.z * cx + ay.z * cy) * h);
+      N.push(nrm.x, nrm.y, nrm.z);
+      C.push(col.r * j, col.g * j, col.b * j);
+      U.push(u0 + (cx * 0.5 + 0.5) * 0.5, cy * 0.5 + 0.5);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2));
+  g.userData.keepUv = true;
+  return g;
 }
 
 // Siirtää verteksejä niin, että samassa pisteessä olevat verteksit siirtyvät
@@ -109,6 +172,8 @@ export function merge(geos) {
     out.userData.tag = tag;
     return out;
   });
+  // Sessio 23: jos jollain osalla on UV (lehtikortit), kaikille lisätään.
+  if (prepared.some((g) => g.attributes.uv)) prepared.forEach(ensureUv);
   const ranges = {};
   let offset = 0;
   for (const g of prepared) {
@@ -122,6 +187,7 @@ export function merge(geos) {
   }
   const out = mergeGeometries(prepared, false);
   out.userData.ranges = ranges;
+  if (out.attributes.uv) out.userData.keepUv = true; // lehtikorttien UV säilyy
   out.computeBoundingBox();
   out.computeBoundingSphere();
   return out;
