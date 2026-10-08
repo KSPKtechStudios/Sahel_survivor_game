@@ -217,6 +217,22 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 20 (käyttäjän kertoma, 2026-10-08)
+- **Aavikon kuumuusaaltoilu on yhä liian iso.**
+- **Bugi:** kun devtoolsilla teleporttaa nopeasti eri biomeihin, koko maailma menee valkoiseksi ja bugaa.
+- **Termiittikekoon** nimi näkyviin ("Termiittikeko").
+- **Yöllä biomien taustamusiikki loppuu:** täydellinen hiljaisuus, "vain luonto ja minä", vähän pelottavaa, jotta pelaaja ymmärtää yön saapuessa, ettei kaikki ole enää "sunshine & rainbows".
+- **Kellonaika näkyviin kartan lähelle, mutta vain jos on Kello.** Kello löytyy arkuista: ei super harvinainen, mutta ei aivan yleinenkään (sitä pitää vähän etsiä). Näyttö: **kellotaulu kartan reunassa**.
+- **Varustetun esineen tausta muuttuu vihreäksi.**
+- **Repun käyttö kuten Minecraftissa:** kerran painamalla ottaa, kerran painamalla laskee.
+- **Toinen käsi:** kilpi ja soihtu saa toiseen käteen repusta varustamalla tai painamalla **F**, kun se on kädessä.
+- **Repussa paljon napakoita animaatioita;** liikuteltava esine himmenee ja kirkastuu vuorotellen.
+- **Pinon jako:** vain **Ctrl + hiiren oikea**, joka avaa pienen ikkunan, jossa pinon voi jakaa haluamallaan tavalla (hiiren oikea on edelleen syö / varusta).
+- **Pinot:** materiaalit 50, ruoat 20.
+- **Linnunrata on yhä liian kirkas / voimakas.**
+- **Valmistuksessa pieni latausaika** (esim. 2 s), jonka ajan nappi on lukossa ja siinä lukee "Valmistetaan".
+- Reppu ei ole vielä "valmis", mutta hyvällä mallilla; lisätään myöhemmin.
+
 ## Sessio 19 (käyttäjän kertoma, 2026-10-08)
 - Taistelusta tykätään, mutta **savipeikkojen ja pahkasikojen tappaminen on liian helppoa, koska ne ovat liian staattisia**: hyökkäävät vain suoraan päin (tai pahkasiat juoksevat pois). Niiden pitäisi esim. **kiertää ympyrää** tai **iskun jälkeen perääntyä ja iskeä takaisin**. **Savipeikko on ehkä turhankin heikko.**
 - **Linnun äänitehoste** (useassa biomissa) alkaa liian yhtäkkiä: pehmennettävä.
@@ -312,6 +328,7 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - Sessio 11: tulikärpäsparvet, pienemmät aallot, ei vettä veneiden sisällä, realistinen sade ja sadeverhot, kuivuvat lammikot, säät biomeittain (kuiva laterittitasanko), rakennelmia n. 3 700 ja hylkyjä n. 120, hienovarainen linnunrata ja tähdenlennot, purjeen saumat ja vastavalo, hento kimallus, Haamu latvusten alla ja pako, jousi oikeassa kädessä ja nuolten jälki, sujuvampi iskujen tahti, tuulen nuolen suunta.
 
 ## Paikkamerkit (Clauden valitsemia, voi muuttaa vapaasti)
+- **Sessio 20:** kuumuusväreily 30 % alkuperäisestä ja kapeampi vyö horisontissa. Linnunradan hehku n. puolet edellisestä, vyön himmeitä tähtiä vähemmän. Yöhiljaisuus: musiikki hiljenee, kun päivänvalo < 0,2 (n. 10 s viive + 3,5 s häivytys), palaa kun > 0,35. Kello: n. 13 % arkuista, 12 tunnin kellotaulu minikartan vasemmassa alakulmassa. Toinen käsi: kilpi tai soihtu (yksi kerrallaan); toiseen käteen varustettu pino ei ole pääkädessä. Valmistus 2 s (sarja + 0,3 s / kpl, enintään 5 s). Pinot: materiaalit, nuolet ja arvoesineet 50, ruoat ja lääkkeet 20; soihtu ja nuotio 5, työkalut ja aseet 1. Nimilaput myös kandelaaberipuulle ja kalliomuodostelmille. Jakoikkuna: liukusäädin, "Ota" vie valitun määrän kursoriin.
 - **Sessio 19:** pahkasika: 60 % todennäköisyydellä kiertää ensin (säde 4,5 m, 1,1–2,5 s), iskun jälkeen perääntyy 0,8–1,6 s katse pelaajaan ja hyökkää uudelleen. Savipeikko: 42 terveyttä (ennen 28), 11 vahinkoa (8), juoksu 3,9 (3,5), kiertää välillä (säde 3,3 m), perääntyy iskun jälkeen (65 %), enintään 2 hyökkää kerralla (muut kiertävät). Linnun ääni alkaa 0,9 s häivytyksellä. Kirves: yksi isku 0,55 s + jäähdytys 0,38 s, 13 vahinkoa. Kasvien murskaus: pensaat ja pienet kasvit (kukat, marjapensaat, sienet, ruokotuppaat ym.) rungon ja latvuksen alla; todennäköisyys 25 % + 75 % × voima (nopeus ja puun pituus). Reppu: 30 paikkaa (5 × 6) + pikapalkki 6 (ennen 24 + 8); vanhojen tallennusten pikapaikat 7–8 siirtyvät reppuun. Panssari: esineille `armor: { slot, value }`, yksi kutakin paikkaa kohti, näyttö piilossa kun 0. Minikartta: kompassirengas (asteikko 10° välein, P I E L), kääntyy kartan mukana. Terveyspaneeli 282 × 52 px, pikapalkin paikat 66 px. Repun ollessa auki pikapalkki ja minikartta piilossa.
 - **Sessio 18:** soihtu sateessa: liekki 65–100 % (rankkasade), notkahdukset 0,15–0,45 s × 0,62, liekki näkyy vähintään 45 % koossa, valo vähintään 35 %. Kestävyys: juoksu 12/s (ennen 14), uinti 3,9/s (4,5), paikallaan uinti 1,3/s (1,5), kertakulutus (iskut, hypyt) × 0,88, jousen jännitys hieman halvempi. Paraneminen: 30 s syömisen jälkeen 1,5/s, muuten 0,375/s. Kirves: 2 iskua (toinen 0,36 s ensimmäisen jälkeen, 12 + 11 vahinkoa, 7 + 11 kestävyyttä). Nuija: 2 iskua (toinen 0,53 s jälkeen, 19 + 23 vahinkoa). Viidakkoveitsi: iskut 0,45 s välein. Puu ilman kirvestä: 1 % kirveen iskusta (n. 500 lyöntiä). Kuumuusväreily 60 % entisestä. Jousi 1,45 s (ennen 0,95), jännejousi 1,3 s (0,85). Olennon nimilappu: säde osuu olennon kapseliin (todellinen säde ja korkeus), eikä esine (puu, kivi) ole edessä.
 - **Sessio 17:** olennon nimilappu näkyy, kun olento on alle 14 m:n päässä ja tähtäimen kohdalla (näennäisen koon mukaan, vähintään 26 px); lappu viipyy 1,2 s; lyödyn olennon lappu näkyy 5 s (alle 32 m). Jousen tähtäin kiristyy jännitettäessä (115 % → 75 %), palkki hehkuu täysin jännitettynä. Nuolilaskuri näyttää kaikkien nuolityyppien yhteismäärän, punertava kun nuolet ovat loppu.

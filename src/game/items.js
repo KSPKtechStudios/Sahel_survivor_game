@@ -10,29 +10,30 @@
 //
 // HUOM: esineet, reseptit ja arvot ovat prototyypin paikkamerkkejä (ks. docs/DESIGN.md).
 
+// Sessio 20: pinot: materiaalit ym. 50, ruoat ja juomat 20.
 export const ITEMS = {
   // --- Materiaalit
   stick: { name: 'Risu', stack: 50, floats: true, cat: 'material', desc: 'Kuiva oksa. Perusmateriaali.' },
   stone: { name: 'Kivi', stack: 50, cat: 'material', desc: 'Käteen sopiva kivi.' },
   fiber: { name: 'Kuitu', stack: 50, floats: true, cat: 'material', desc: 'Kuivaa kortetta ja kuitua sitomiseen.' },
-  wood: { name: 'Puu', stack: 30, floats: true, cat: 'material', desc: 'Halkaistua puuta.' },
+  wood: { name: 'Puu', stack: 50, floats: true, cat: 'material', desc: 'Halkaistua puuta.' },
   flint: { name: 'Piikivi', stack: 50, cat: 'material', desc: 'Lasimaisesti lohkeava kivi. Siitä saa teräviä teriä ja nuolenkärkiä. Löytyy kivikkoisilta paikoilta.' },
-  bone: { name: 'Luu', stack: 30, cat: 'material', desc: 'Kuivunut luu. Kova ja kevyt: nuolenkärkiin ja jouseen.' },
+  bone: { name: 'Luu', stack: 50, cat: 'material', desc: 'Kuivunut luu. Kova ja kevyt: nuolenkärkiin ja jouseen.' },
   feather: { name: 'Sulka', stack: 50, floats: true, cat: 'material', desc: 'Linnun sulka nuolen ohjaimiksi.' },
   reed: { name: 'Ruoko', stack: 50, floats: true, cat: 'material', desc: 'Vesirajan ruokoa. Olkikattoihin.' },
-  bamboo: { name: 'Bambunvarsi', stack: 30, floats: true, cat: 'material', desc: 'Kevyt ja luja varsi.' },
-  palm_leaf: { name: 'Palmunlehti', stack: 30, floats: true, cat: 'material', desc: 'Iso palmunlehti katteeksi ja punontaan.' },
-  gum: { name: 'Akasiankumi', stack: 30, cat: 'material', desc: 'Akasian rungosta valunutta kumia (arabikumi). Sitkeää liimaa ja hyvää soihtuun.' },
-  rope: { name: 'Köysi', stack: 30, cat: 'material', desc: 'Kuidusta punottu köysi.' },
+  bamboo: { name: 'Bambunvarsi', stack: 50, floats: true, cat: 'material', desc: 'Kevyt ja luja varsi.' },
+  palm_leaf: { name: 'Palmunlehti', stack: 50, floats: true, cat: 'material', desc: 'Iso palmunlehti katteeksi ja punontaan.' },
+  gum: { name: 'Akasiankumi', stack: 50, cat: 'material', desc: 'Akasian rungosta valunutta kumia (arabikumi). Sitkeää liimaa ja hyvää soihtuun.' },
+  rope: { name: 'Köysi', stack: 50, cat: 'material', desc: 'Kuidusta punottu köysi.' },
   clay: { name: 'Savi', stack: 50, cat: 'material', desc: 'Punaista lateriittisavea. Saviseiniin.' },
-  seashell: { name: 'Simpukankuori', stack: 30, cat: 'material', desc: 'Rannalta löytynyt kuori.' },
-  sinew: { name: 'Jänne', stack: 30, cat: 'material', desc: 'Kuivattu eläimen jänne. Vahva jousenjänne.' },
-  hide: { name: 'Pahkasian talja', stack: 20, cat: 'material', tags: ['pelt'], desc: 'Karkea, harjaksinen talja.' },
-  gazelle_pelt: { name: 'Gasellintalja', stack: 20, cat: 'material', tags: ['pelt'], desc: 'Pehmeä, vaalea talja.' },
-  monkey_pelt: { name: 'Apinantalja', stack: 20, cat: 'material', tags: ['pelt'], desc: 'Harmaa, pitkäkarvainen talja.' },
-  fox_pelt: { name: 'Aavikkoketun talja', stack: 20, cat: 'material', tags: ['pelt'], desc: 'Hiekanvärinen, pehmeä talja.' },
-  leather: { name: 'Nahka', stack: 30, cat: 'material', desc: 'Parkittua nahkaa taljoista.' },
-  shea_butter: { name: 'Karitevoi', stack: 20, cat: 'material', desc: 'Karitepähkinöistä keitetty voi. Voiteisiin.' },
+  seashell: { name: 'Simpukankuori', stack: 50, cat: 'material', desc: 'Rannalta löytynyt kuori.' },
+  sinew: { name: 'Jänne', stack: 50, cat: 'material', desc: 'Kuivattu eläimen jänne. Vahva jousenjänne.' },
+  hide: { name: 'Pahkasian talja', stack: 50, cat: 'material', tags: ['pelt'], desc: 'Karkea, harjaksinen talja.' },
+  gazelle_pelt: { name: 'Gasellintalja', stack: 50, cat: 'material', tags: ['pelt'], desc: 'Pehmeä, vaalea talja.' },
+  monkey_pelt: { name: 'Apinantalja', stack: 50, cat: 'material', tags: ['pelt'], desc: 'Harmaa, pitkäkarvainen talja.' },
+  fox_pelt: { name: 'Aavikkoketun talja', stack: 50, cat: 'material', tags: ['pelt'], desc: 'Hiekanvärinen, pehmeä talja.' },
+  leather: { name: 'Nahka', stack: 50, cat: 'material', desc: 'Parkittua nahkaa taljoista.' },
+  shea_butter: { name: 'Karitevoi', stack: 50, cat: 'material', desc: 'Karitepähkinöistä keitetty voi. Voiteisiin.' },
   petals: { name: 'Terälehdet', stack: 50, floats: true, cat: 'material', desc: 'Villikukkien terälehtiä rohtoihin.' },
 
   // --- Ruoka (huono ruoka täyttää vähän; sienistä voi saada myrkytyksen)
@@ -43,22 +44,22 @@ export const ITEMS = {
   roasted_mushroom: { name: 'Paahdettu sieni', stack: 20, cat: 'food', food: { hunger: 11, heal: 2, poison: 0.06 }, desc: 'Nuotiolla paahdettu. Turvallisempi, mutta ei kovin täyttävä.' },
   raw_meat: { name: 'Raaka liha', stack: 20, cat: 'food', food: { hunger: 8, poison: 0.3 }, desc: 'Raakana syötynä vatsa voi kääntyä. Paista nuotiolla.' },
   cooked_meat: { name: 'Paistettu liha', stack: 20, cat: 'food', food: { hunger: 35, heal: 15 }, desc: 'Täyttävä ateria.' },
-  jujube: { name: 'Jujubanmarjat', stack: 30, cat: 'food', food: { hunger: 6 }, desc: 'Makeita, omenamaisia marjoja okaisesta pensaasta.' },
+  jujube: { name: 'Jujubanmarjat', stack: 20, cat: 'food', food: { hunger: 6 }, desc: 'Makeita, omenamaisia marjoja okaisesta pensaasta.' },
   banana: { name: 'Banaani', stack: 20, cat: 'food', food: { hunger: 14, heal: 2 }, desc: 'Villibanaani.' },
   coconut: { name: 'Kookospähkinä', stack: 20, cat: 'food', food: { hunger: 15, stamina: 30 }, desc: 'Kookosmaitoa ja hedelmälihaa. Virkistää.' },
   baobab_fruit: { name: 'Apinanleipä', stack: 20, cat: 'food', food: { hunger: 14, heal: 3 }, desc: 'Baobabin hedelmä. Hapan, jauhoinen ja ravitseva.' },
-  shea_nuts: { name: 'Karitepähkinät', stack: 30, cat: 'food', food: { hunger: 3 }, desc: 'Karvaita raakoina. Paahda tai keitä voiksi.' },
-  roasted_nuts: { name: 'Paahdetut pähkinät', stack: 30, cat: 'food', food: { hunger: 12 }, desc: 'Paahdettuja karitepähkinöitä.' },
-  moringa: { name: 'Moringanlehdet', stack: 30, cat: 'food', food: { hunger: 4, heal: 4, cure: 0.5 }, desc: 'Ravinteikkaat lehdet. Lievittävät myrkytystä.' },
-  hibiscus: { name: 'Bissap-kukat', stack: 30, cat: 'food', food: { hunger: 2 }, desc: 'Hibiskuksen punaiset verhiöt. Bissap-juoman aines.' },
-  fonio: { name: 'Fonio', stack: 50, cat: 'food', food: { hunger: 2 }, desc: 'Villiä fonio-viljaa. Keitä puuroksi.' },
-  fonio_porridge: { name: 'Fonio-puuro', stack: 10, cat: 'food', food: { hunger: 28, heal: 6 }, desc: 'Lämmin viljapuuro.' },
-  meat_stew: { name: 'Lihapata', stack: 10, cat: 'food', food: { hunger: 60, heal: 30 }, desc: 'Lihaa, sieniä ja moringaa. Paras ateria.' },
-  bissap: { name: 'Bissap-juoma', stack: 10, cat: 'food', food: { hunger: 6, effect: 'energized' }, desc: 'Hapan hibiskusjuoma. Virkistää: kestävyys palautuu nopeammin.' },
+  shea_nuts: { name: 'Karitepähkinät', stack: 20, cat: 'food', food: { hunger: 3 }, desc: 'Karvaita raakoina. Paahda tai keitä voiksi.' },
+  roasted_nuts: { name: 'Paahdetut pähkinät', stack: 20, cat: 'food', food: { hunger: 12 }, desc: 'Paahdettuja karitepähkinöitä.' },
+  moringa: { name: 'Moringanlehdet', stack: 20, cat: 'food', food: { hunger: 4, heal: 4, cure: 0.5 }, desc: 'Ravinteikkaat lehdet. Lievittävät myrkytystä.' },
+  hibiscus: { name: 'Bissap-kukat', stack: 20, cat: 'food', food: { hunger: 2 }, desc: 'Hibiskuksen punaiset verhiöt. Bissap-juoman aines.' },
+  fonio: { name: 'Fonio', stack: 20, cat: 'food', food: { hunger: 2 }, desc: 'Villiä fonio-viljaa. Keitä puuroksi.' },
+  fonio_porridge: { name: 'Fonio-puuro', stack: 20, cat: 'food', food: { hunger: 28, heal: 6 }, desc: 'Lämmin viljapuuro.' },
+  meat_stew: { name: 'Lihapata', stack: 20, cat: 'food', food: { hunger: 60, heal: 30 }, desc: 'Lihaa, sieniä ja moringaa. Paras ateria.' },
+  bissap: { name: 'Bissap-juoma', stack: 20, cat: 'food', food: { hunger: 6, effect: 'energized' }, desc: 'Hapan hibiskusjuoma. Virkistää: kestävyys palautuu nopeammin.' },
 
   // --- Lääkkeet
-  herbal_remedy: { name: 'Yrttirohto', stack: 10, cat: 'medicine', food: { hunger: 0, heal: 10, cure: 1 }, desc: 'Parantaa myrkytyksen heti.' },
-  shea_salve: { name: 'Karitevoide', stack: 10, cat: 'medicine', food: { hunger: 0, regen: 35 }, desc: 'Haavavoide: palauttaa terveyttä hetken aikaa.' },
+  herbal_remedy: { name: 'Yrttirohto', stack: 20, cat: 'medicine', food: { hunger: 0, heal: 10, cure: 1 }, desc: 'Parantaa myrkytyksen heti.' },
+  shea_salve: { name: 'Karitevoide', stack: 20, cat: 'medicine', food: { hunger: 0, regen: 35 }, desc: 'Haavavoide: palauttaa terveyttä hetken aikaa.' },
 
   // --- Työkalut
   stone_knife: { name: 'Kivipuukko', stack: 1, tool: 'blade', weapon: 'knife', cat: 'tool', desc: 'Nopea, kevyt terä. Raivaa pensaita ja kelpaa aseeksi.' },
@@ -67,13 +68,13 @@ export const ITEMS = {
   flint_axe: { name: 'Piikivikirves', stack: 1, tool: 'axe', damage: 2, weapon: 'axe', cat: 'tool', desc: 'Terävä piikiviterä kaataa puut kaksi kertaa nopeammin.' },
   flint_pick: { name: 'Piikivihakku', stack: 1, tool: 'pickaxe', damage: 2, weapon: 'pick', cat: 'tool', desc: 'Louhii lohkareet kaksi kertaa nopeammin.' },
   hammer: { name: 'Vasara', stack: 1, build: true, cat: 'tool', desc: 'Rakennustyökalu. [Hiiri 2] rakennusvalikko, [Hiiri 1] rakenna, [R] käännä, [X] pura. Rakennelmat (myös nuotio) vaativat lähelle työstöpenkin.' },
-  torch: { name: 'Soihtu', stack: 5, light: true, cat: 'tool', desc: 'Valaisee pimeässä, kun se on kädessä.' },
+  torch: { name: 'Soihtu', stack: 5, light: true, offhand: true, cat: 'tool', desc: 'Valaisee pimeässä, kun se on kädessä.' },
 
   // --- Aseet ja nuolet
   wooden_club: { name: 'Puunuija', stack: 1, weapon: 'club', cat: 'weapon', desc: 'Raskas nuija: hidas mutta voimakas isku, joka tönäisee kauas.' },
   spear: { name: 'Keihäs', stack: 1, weapon: 'spear', cat: 'weapon', desc: 'Pitkä ulottuvuus ja piikivikärki.' },
   machete: { name: 'Viidakkoveitsi', stack: 1, tool: 'blade', weapon: 'machete', cat: 'weapon', desc: 'Nopea terä. Kolmen iskun sarja päättyy pistoon. Raivaa myös pensaita.' },
-  shield: { name: 'Puukilpi', stack: 1, shield: true, cat: 'weapon', desc: 'Varusta kilpi vasempaan käteen (valitse se ja paina hiiren oikeaa, tai hiiren oikea repussa). Varustettuna [Hiiri 2] torjuu lähes kaiken.' },
+  shield: { name: 'Puukilpi', stack: 1, shield: true, offhand: true, cat: 'weapon', desc: 'Varusta kilpi vasempaan käteen (valitse se ja paina hiiren oikeaa, tai hiiren oikea repussa). Varustettuna [Hiiri 2] torjuu lähes kaiken.' },
   bow: { name: 'Jousi', stack: 1, bow: { power: 1, draw: 1.45 }, cat: 'weapon', desc: 'Pidä [Hiiri 1] pohjassa jännittääksesi ja päästä ampuaksesi. Tarvitsee nuolia repussa.' },
   sinew_bow: { name: 'Jännejousi', stack: 1, bow: { power: 1.35, draw: 1.3 }, cat: 'weapon', desc: 'Jänteellä jännitetty jousi. Ampuu kovempaa ja kauemmas.' },
   arrow_wood: { name: 'Puunuoli', stack: 50, floats: true, ammo: { dmg: 9, speed: 0.85 }, tags: ['arrow'], cat: 'weapon', desc: 'Teroitettu varsi ilman sulkia. Heikko ja epätarkka.' },
@@ -84,9 +85,11 @@ export const ITEMS = {
   campfire: { name: 'Nuotio', stack: 5, place: 'campfire', cat: 'build', desc: 'Aseta hiiren oikealla. Vaatii lähelle työstöpenkin.' },
 
   // --- Arvoesineet (arkuista). Käyttötarkoitus on vielä avoin (esim. kauppa).
-  gold_nugget: { name: 'Kultahippu', stack: 20, valuable: true, cat: 'valuable', desc: 'Arvokas kultahippu. Sahelin kulta on ollut haluttua vuosisatoja.' },
+  gold_nugget: { name: 'Kultahippu', stack: 50, valuable: true, cat: 'valuable', desc: 'Arvokas kultahippu. Sahelin kulta on ollut haluttua vuosisatoja.' },
   cowrie: { name: 'Kaurikotilo', stack: 50, valuable: true, cat: 'valuable', desc: 'Kaurikotiloita käytettiin Länsi-Afrikassa rahana.' },
-  bronze_bracelet: { name: 'Pronssirannerengas', stack: 5, valuable: true, cat: 'valuable', desc: 'Vanha, koristeellinen pronssikoru.' },
+  // Sessio 20: kello löytyy vain arkuista; repussa se näyttää kellonajan.
+  clock: { name: 'Kello', stack: 1, cat: 'valuable', desc: 'Vanha messinkinen taskukello. Kun se on repussa, kellotaulu näkyy kartan reunassa.' },
+  bronze_bracelet: { name: 'Pronssirannerengas', stack: 50, valuable: true, cat: 'valuable', desc: 'Vanha, koristeellinen pronssikoru.' },
 };
 
 // Tunnisteet: '#pelt' = mikä tahansa talja jne.

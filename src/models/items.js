@@ -156,6 +156,35 @@ function itemBracelet() {
   return merge(parts);
 }
 
+// Taskukello (sessio 20): messinkikuori, vaalea taulu, viisarit, nuppi ja rengas.
+function itemClock() {
+  const rand = mulberry32(53);
+  const parts = [];
+  const body = new THREE.CylinderGeometry(0.065, 0.065, 0.022, 20);
+  body.rotateX(Math.PI / 2);
+  body.translate(0, 0.07, 0);
+  parts.push(paint(body, 0xb48a3c, { rand, jitter: 0.06 }));
+  const face = new THREE.CylinderGeometry(0.054, 0.054, 0.004, 20);
+  face.rotateX(Math.PI / 2);
+  face.translate(0, 0.07, 0.0115);
+  parts.push(paint(face, 0xefe2c4, { rand, jitter: 0.02 }));
+  const hand = (len, w, a) => {
+    const g = new THREE.BoxGeometry(w, len, 0.003);
+    g.translate(0, len / 2, 0);
+    g.rotateZ(a);
+    g.translate(0, 0.07, 0.0145);
+    return paint(g, 0x2a1a0e, { rand });
+  };
+  parts.push(hand(0.03, 0.006, -0.9), hand(0.044, 0.004, 0.5));
+  const crown = new THREE.CylinderGeometry(0.008, 0.008, 0.014, 8);
+  crown.translate(0, 0.142, 0);
+  parts.push(paint(crown, 0xc89a48, { rand }));
+  const ring = new THREE.TorusGeometry(0.013, 0.0035, 6, 12);
+  ring.translate(0, 0.158, 0);
+  parts.push(paint(ring, 0xc89a48, { rand }));
+  return merge(parts);
+}
+
 // Puunuija: suora varsi ja raskas nuppi (kuin knobkerrie), kahvassa kuitusidos.
 function itemClub() {
   const rand = mulberry32(31);
@@ -314,6 +343,7 @@ export function createItemModels() {
     gold_nugget: itemNugget(),
     cowrie: itemCowrie(),
     bronze_bracelet: itemBracelet(),
+    clock: itemClock(),
     wooden_club: itemClub(),
     machete: itemMachete(),
     shield: itemShield(),

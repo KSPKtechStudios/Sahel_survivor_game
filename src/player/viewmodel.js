@@ -282,10 +282,24 @@ export class ViewModel {
     this.leftArm.position.set(0, 0, 0.036);
     this.shieldMesh = new THREE.Mesh(itemGeometries.shield || new THREE.CylinderGeometry(0.3, 0.3, 0.03, 16).rotateX(Math.PI / 2), itemMat);
     this.shieldMesh.scale.setScalar(0.8);
-    this.leftAnim.add(this.shieldMesh, this.leftArm);
+    // Soihtu toisessa kädessä (sessio 20) ja sen liekki.
+    this.leftTorch = new THREE.Mesh(itemGeometries.torch || new THREE.CylinderGeometry(0.02, 0.025, 0.5, 6), itemMat);
+    this.leftTorch.position.set(0, -0.04, 0);
+    this.leftTorch.scale.setScalar(0.6);
+    this.leftTorch.visible = false;
+    this.leftAnim.add(this.shieldMesh, this.leftTorch, this.leftArm);
+    this.leftFlames = [];
+    for (let i = 0; i < 2; i++) {
+      const f = new THREE.Sprite(this.flameMat);
+      f.visible = false;
+      this.leftAnim.add(f);
+      this.leftFlames.push(f);
+    }
     this.left.visible = false;
     this.rig.add(this.left);
     this.hasShield = false;
+    this.offhand = null;  // 'shield' | 'torch' | null (main.js)
+    this.torchPose = 0;   // 0 = kilven asento, 1 = soihdun asento
     this.shieldT = 0;     // 0 = piilossa, 1 = esillä
 
     this.basePos = new THREE.Vector3(0.17, -0.155, -0.5);
@@ -333,6 +347,11 @@ export class ViewModel {
 
   setShield(on) {
     this.hasShield = !!on;
+  }
+
+  // Toisen käden esine (sessio 20): 'shield', 'torch' tai null.
+  setOffhand(kind) {
+    this.offhand = kind;
   }
 
   // Torjunta-asento (mode null = ei torjuntaa).
@@ -541,21 +560,39 @@ export class ViewModel {
     this.bowGroup.visible = this.bowT > 0.01 && this.bowMode;
     if (this.bowGroup.visible) this._updateBow(dt, player, bob, sinP, cosP, step, amp, breathe, sp);
 
-    // Kilpi vasemmassa kädessä (ei jousen kanssa)
-    this.shieldT += ((this.hasShield && !player.dead && !this.bowMode ? 1 : 0) - this.shieldT) * (1 - Math.exp(-dt * 8));
+    // Toinen käsi: kilpi tai soihtu (ei jousen kanssa).
+    const off = this.offhand || (this.hasShield ? 'shield' : null);
+    this.shieldT += ((off && !player.dead && !this.bowMode ? 1 : 0) - this.shieldT) * (1 - Math.exp(-dt * 8));
     this.left.visible = this.shieldT > 0.01;
+    this.torchPose += ((off === 'torch' ? 1 : 0) - this.torchPose) * (1 - Math.exp(-dt * 10));
+    if (off) {
+      this.shieldMesh.visible = off === 'shield';
+      this.leftTorch.visible = off === 'torch';
+    }
+    const ft = this.left.visible && this.leftTorch.visible && (this.torchFlame ?? 1) > 0.02;
+    for (let i = 0; i < this.leftFlames.length; i++) {
+      const f = this.leftFlames[i];
+      f.visible = ft;
+      if (!ft) continue;
+      const m = this.leftTorch;
+      const k = (0.85 + Math.sin(this.time * (8 + i * 3.3) + i * 2) * 0.1 + Math.sin(this.time * 21 + i) * 0.05) * (0.45 + 0.55 * Math.min(1, this.torchFlame ?? 1));
+      f.position.set(m.position.x + (i - 0.5) * 0.012, m.position.y + 0.43 * m.scale.y + 0.03 * k, m.position.z);
+      f.scale.set(0.085 * k * (1 - i * 0.25), 0.15 * k * (1 - i * 0.2), 1);
+    }
     if (this.left.visible) {
-      const sb = shieldUp ? bb : 0;
+      const sb = shieldUp && off === 'shield' ? bb : 0;
       const hide = 1 - smooth(this.shieldT);
+      const tp = smooth(this.torchPose);
+      // Soihtu pidetään pystymmässä ja hieman edempänä kuin kilpi.
       this.left.position.set(
-        -0.36 + 0.22 * sb + this.sway.x * 0.8 - cosP * 0.008 * amp,
-        -0.34 + 0.12 * sb + this.sway.y * 0.8 - step * 0.014 * amp - hide * 0.35 - sp * 0.05 - this.crouchBlend * 0.01 + breathe,
-        -0.52 + 0.08 * sb + this.impact * 0.05 * sb - parryK * 0.1,
+        -0.36 + 0.07 * tp + 0.22 * sb + this.sway.x * 0.8 - cosP * 0.008 * amp,
+        -0.34 + 0.07 * tp + 0.12 * sb + this.sway.y * 0.8 - step * 0.014 * amp - hide * 0.35 - sp * 0.05 - this.crouchBlend * 0.01 + breathe,
+        -0.52 - 0.06 * tp + 0.08 * sb + this.impact * 0.05 * sb - parryK * 0.1,
       );
       this.left.rotation.set(
-        0.18 - 0.12 * sb + this.sway.y * 0.8 + this.impact * 0.1 * sb - sp * 0.2,
-        0.95 - 0.8 * sb - this.sway.x * 1.2 + parryK * 0.2,
-        0.12 - 0.1 * sb,
+        0.18 - 0.08 * tp - 0.12 * sb + this.sway.y * 0.8 + this.impact * 0.1 * sb - sp * 0.2,
+        0.95 - 0.7 * tp - 0.8 * sb - this.sway.x * 1.2 + parryK * 0.2,
+        0.12 - 0.22 * tp - 0.1 * sb,
       );
     }
   }

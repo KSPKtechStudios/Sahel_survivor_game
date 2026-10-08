@@ -2,6 +2,15 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-08 (sessio 20)
+- **Valkoisen maailman syy: rinnakkaiset lataukset.** Jokainen siirto käynnisti oman latauksensa, ja ne siirsivät maailman keskipistettä vuorotellen eri paikkoihin (lohkoja ladattiin ja poistettiin ristiin, eikä mikään lataus valmistunut). Nyt vain uusin lataus on voimassa (`buildGen`), vanhemmat lopettavat.
+- **Pinon jako Ctrl + hiiren oikealla ikkunassa, hiiren oikea = syö / varusta** (käyttäjän valinta).
+- **Klikkaus ottaa ja laskee, raahaus toimii myös.** Syy: käyttäjä halusi Minecraftin tavan; raahaus säilyy, koska se ei haittaa.
+- **Toiseen käteen varustettu pino ei ole pääkädessä** (pikapaikka näyttää tyhjää kättä). Syy: sama soihtu ei voi olla molemmissa käsissä; yksinkertainen sääntö.
+- **Kello vain repussa (ei tarvitse olla kädessä).** Syy: käyttäjän valinta "kellotaulu kartan reunassa".
+- **Soihtu ja nuotio pysyvät 5 kpl pinoina.** Syy: ne eivät ole materiaaleja.
+- **Yöhiljaisuus päivänvalon rajoilla (hystereesi).** Syy: musiikki ei saa vaihdella hämärässä edestakaisin.
+
 ## 2026-10-08 (sessio 19)
 - **Repun ja valmistuksen ratkaisut kysyttiin käyttäjältä** (raahaus, varusteet repussa, valmistus omana ikkunana, vain paikan reseptit, valitse + Valmista, 6 pikapaikkaa, panssari kilpi-ikonina, hienompi minikartan kehys).
 - **Reppu 30 paikkaa (ennen 24).** Syy: pikapalkki pieneni 8 → 6, ja vanhojen tallennusten kaikki esineet mahtuvat; 6 sarakkeen ruudukko on yhtenäinen pikapalkin kanssa.

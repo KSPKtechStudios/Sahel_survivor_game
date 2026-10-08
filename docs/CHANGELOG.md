@@ -2,6 +2,18 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-08 (sessio 20): yön hiljaisuus, Kello, toinen käsi, reppu kuten Minecraftissa
+
+- **Korjattu:** nopea siirtyminen biomista toiseen kehittäjätyökaluilla jätti maailman tyhjäksi ja valkoiseksi (kaksi latausta veti maailmaa eri suuntiin); nyt uusi siirto peruu edellisen.
+- **Kuumuusväreily** selvästi pienempi ja vain aivan horisontissa. **Linnunrata** himmeämpi.
+- **Termiittikeolla** (ja kandelaaberipuulla ja kalliomuodostelmilla) on nimi.
+- **Yöllä musiikki hiljenee:** vain luonnon äänet. Musiikki palaa aamulla.
+- **Uusi esine: Kello.** Löytyy arkuista (n. joka 8. arkku). Kun kello on repussa, kartan reunassa näkyy kellotaulu.
+- **Toinen käsi:** kilpi tai soihtu toiseen käteen hiiren oikealla repussa tai [F]:llä, kun se on kädessä. Soihtu palaa vasemmassa kädessä, ja oikealla voi pitää kirvestä tai asetta.
+- **Reppu:** klikkaus ottaa pinon ja seuraava klikkaus laskee sen (raahaus toimii yhä); kursorissa oleva esine sykkii hennosti. **Ctrl + hiiren oikea** avaa pinon jakoikkunan. Varustetut esineet vihreällä taustalla.
+- **Pinot:** materiaalit 50, ruoat 20.
+- **Valmistus kestää hetken** (n. 2 s): nappi täyttyy ja siinä lukee "Valmistetaan…".
+
 ## 2026-10-08 (sessio 19): eläväisemmät viholliset, uusi reppu ja valmistus
 
 - **Pahkasiat ja savipeikot liikkuvat ovelammin:** ne kiertävät pelaajaa ennen hyökkäystä ja perääntyvät iskun jälkeen ennen kuin tulevat uudelleen. Savipeikot vuorottelevat (enintään kaksi hyökkää kerralla, muut kiertävät).

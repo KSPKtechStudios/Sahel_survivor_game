@@ -192,16 +192,21 @@ export class World {
   }
 
   // Odota, että pisteen ympäristö on rakennettu (lataus, siirtyminen).
-  async ensureLoaded(x, z, onProgress, nextFrame) {
+  // cancelled(): uudempi lataus (esim. uusi siirto) on ohittanut tämän; silloin
+  // lopetetaan heti, ettei kaksi latausta vedä maailmaa eri suuntiin (sessio 20:
+  // nopeat siirrot jättivät pelaajan tyhjään, valkoiseen maailmaan).
+  async ensureLoaded(x, z, onProgress, nextFrame, cancelled = null) {
     this.centerKey = null;
     this.update(x, z, 0);
     for (;;) {
+      if (cancelled && cancelled()) return false;
       this.update(x, z, 0, 30);
       const p = this.loadProgress();
       onProgress?.(p);
       if (p >= 1) break;
       await nextFrame();
     }
+    return true;
   }
 
   isReady(px, pz) {

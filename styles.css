@@ -117,6 +117,17 @@ html, body {
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.3);
 }
+/* Kello (sessio 20): kellotaulu kartan reunassa, kun Kello on repussa. */
+#clock {
+  position: absolute; left: -14px; bottom: -6px; width: 54px; height: 54px; border-radius: 50%;
+  transition: opacity 240ms ease-out, transform 320ms var(--spring);
+}
+#clock.none { opacity: 0; transform: scale(0.6); }
+#clock svg { width: 100%; height: 100%; }
+#clock .ticks line { stroke: rgba(239, 226, 198, 0.55); stroke-width: 1.2; stroke-linecap: round; }
+#clock .h { stroke: #efe2c6; stroke-width: 2.4; stroke-linecap: round; }
+#clock .m { stroke: #e6c98a; stroke-width: 1.5; stroke-linecap: round; }
+#clock circle { fill: #e6c98a; }
 #minimap-ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 #minimap-ring .band { fill: none; stroke: rgba(16, 11, 7, 0.62); stroke-width: 12; }
 #minimap-ring .edge { fill: none; stroke: rgba(239, 226, 198, 0.55); stroke-width: 1; }
@@ -435,13 +446,7 @@ html, body {
 #hotbar .slot.selected img { transform: scale(1.06); }
 .slot .key { position: absolute; left: 5px; top: 2px; font-size: 11px; color: var(--muted); }
 .slot .count { position: absolute; right: 5px; bottom: 2px; font-size: 13px; font-weight: 700; text-shadow: 0 1px 2px #000; }
-/* Varustettu (kilpi vasemmassa kädessä): merkki kulmassa */
-.slot.equipped::after {
-  content: ''; position: absolute; right: 3px; top: 3px; width: 14px; height: 16px;
-  background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 22'%3E%3Cpath d='M10 1 2 4v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V4z' fill='%23f2c66b' stroke='%23462a10' stroke-width='1.6'/%3E%3C/svg%3E");
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7));
-}
-.slot.equipped { box-shadow: inset 0 0 0 1px rgba(242, 198, 107, 0.55); }
+.slot.equipped { background: rgba(132, 168, 84, 0.3); box-shadow: inset 0 0 0 1px rgba(190, 214, 140, 0.6), 0 3px 8px rgba(0, 0, 0, 0.3); }
 #hotbar .slot.selected { transform: translateY(-4px); box-shadow: inset 0 0 0 1.5px rgba(242, 198, 107, 0.9), 0 0 14px rgba(242, 198, 107, 0.28), 0 3px 8px rgba(0, 0, 0, 0.3); }
 
 /* ---------- Reppu ---------- */
@@ -483,14 +488,32 @@ html, body {
 .islot.selected { box-shadow: inset 0 0 0 1.5px rgba(242, 198, 107, 0.85); }
 .islot.dragging { opacity: 0.3; }
 .islot.drop { background: rgba(242, 198, 107, 0.16); box-shadow: inset 0 0 0 1.5px rgba(242, 198, 107, 0.9); }
-.islot .eq { display: none; position: absolute; right: 5px; top: 5px; width: 9px; height: 9px; border-radius: 50%; background: #c8d6a0; box-shadow: 0 0 0 2px rgba(18, 12, 8, 0.8), 0 0 6px rgba(200, 214, 160, 0.6); }
-.islot.equipped .eq { display: block; }
-.islot.equipped { box-shadow: inset 0 0 0 1px rgba(200, 214, 160, 0.55); }
+.islot .eq { display: none; }
+/* Sessio 20: varustettu esine: vihertävä tausta. */
+.islot.equipped { background: rgba(132, 168, 84, 0.24); box-shadow: inset 0 0 0 1px rgba(190, 214, 140, 0.6); }
+.islot.equipped:hover { background: rgba(132, 168, 84, 0.32); }
 #drag-ghost { position: fixed; left: 0; top: 0; pointer-events: none; z-index: 30; opacity: 0; transition: opacity 90ms ease-out; }
 #drag-ghost.on { opacity: 1; }
+/* Kursorissa oleva esine sykkii hennosti (himmenee ja kirkastuu). */
+#drag-ghost.on img { animation: heldPulse 1.1s ease-in-out infinite; }
+@keyframes heldPulse { 0%, 100% { opacity: 1; filter: brightness(1.12) drop-shadow(0 6px 8px rgba(0, 0, 0, 0.55)); } 50% { opacity: 0.55; filter: brightness(0.95) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45)); } }
 #drag-ghost img { width: 60px; height: 60px; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.55)); transform: scale(1.06); }
 #drag-ghost span { position: absolute; right: 0; bottom: 0; font-size: 14px; font-weight: 700; text-shadow: 0 1px 2px #000; }
 #drag-ghost.out img { opacity: 0.55; transform: scale(0.92) rotate(-8deg); transition: transform 140ms var(--snap), opacity 140ms; }
+/* Pinon jako (Ctrl + hiiren oikea). */
+#split-dialog {
+  position: fixed; width: 250px; padding: 12px 14px; border-radius: 10px; z-index: 28; background: rgba(14, 9, 6, 0.9);
+  opacity: 0; transform: translateY(-6px) scale(0.97); pointer-events: none; transition: opacity 120ms ease-out, transform 180ms var(--snap);
+}
+#split-dialog.on { opacity: 1; transform: none; pointer-events: auto; }
+#split-dialog b { font-size: 14px; color: #f3e6c9; }
+#split-dialog .sp-row { display: flex; align-items: center; gap: 8px; margin: 10px 0; }
+#split-dialog img { width: 30px; height: 30px; }
+#split-dialog input { flex: 1; accent-color: #e6c98a; }
+#split-dialog .sp-a, #split-dialog .sp-b { min-width: 22px; text-align: center; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+#split-dialog .sp-btns { display: flex; justify-content: flex-end; gap: 6px; }
+#split-dialog button { font: inherit; font-size: 13px; padding: 6px 12px; border: 0; border-radius: 7px; cursor: pointer; color: rgba(239, 226, 198, 0.8); background: rgba(255, 245, 225, 0.08); }
+#split-dialog .sp-ok { color: #1a1208; background: #e6c98a; font-weight: 700; }
 #inv-tooltip {
   position: fixed; left: 0; top: 0; max-width: 270px; padding: 10px 12px; border-radius: 9px; pointer-events: none; z-index: 25;
   background: rgba(14, 9, 6, 0.86); font-size: 12.5px; line-height: 1.4; opacity: 0; transition: opacity 110ms ease-out;
@@ -550,6 +573,11 @@ html, body {
 .dact .make:hover:not(:disabled) { background: #f0d79e; }
 .dact .make:active:not(:disabled) { transform: scale(0.97); }
 .dact .make:disabled { opacity: 0.35; cursor: default; }
+/* Valmistus käynnissä: nappi täyttyy vasemmalta oikealle. */
+.dact .make.busy {
+  opacity: 1; color: #1a1208;
+  background: linear-gradient(90deg, #e6c98a calc(var(--p, 0) * 100%), rgba(230, 201, 138, 0.35) calc(var(--p, 0) * 100%));
+}
 .inv-card {
   position: relative;
   display: flex; gap: 22px;

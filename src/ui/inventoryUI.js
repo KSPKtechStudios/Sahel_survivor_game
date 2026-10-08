@@ -1,17 +1,21 @@
 // Reppu ja valmistus [Tab] (sessio 19: täydellinen uudistus).
-// - Reppu (vasemmalla): 5 × 6 ruudukko ja pikapalkin rivi. Esineitä vedetään
-//   hiirellä; Shift+klikkaus siirtää pikapalkin ja repun välillä; hiiren
-//   oikealla raahaaminen jakaa pinon puoliksi; hiiren oikea klikkaus syö tai
-//   varustaa (kilpi, panssarit); repusta ulos raahattu pino pudotetaan maahan.
+// - Reppu (vasemmalla): 5 × 6 ruudukko ja pikapalkin rivi. Sessio 20: kuten
+//   Minecraftissa klikkaus ottaa pinon kursoriin ja seuraava klikkaus laskee sen
+//   (myös raahaus toimii); Shift+klikkaus siirtää pikapalkin ja repun välillä;
+//   Ctrl+hiiren oikea avaa pinon jakoikkunan; hiiren oikea syö tai varustaa
+//   (kilpi / soihtu toiseen käteen, panssarit); repun ulkopuolelle laskettu
+//   pino pudotetaan maahan.
 // - Valmistus (oikealla, oma ikkuna): vain tässä paikassa tehtävät reseptit
 //   (käsin + lähellä olevat työstöpenkki / nuotio). Reseptin valinta näyttää
-//   tiedot ja tarvikkeet; Valmista-nappi ja määrä ×1 / ×5 / kaikki.
+//   tiedot ja tarvikkeet; Valmista-nappi ja määrä ×1 / ×5 / kaikki. Valmistus
+//   kestää hetken (sessio 20: n. 2 s), nappi on sillä välin lukossa.
 import { CONFIG } from '../config.js';
 import { ITEMS, RECIPES, STATIONS, CATEGORIES, TAG_NAMES, tagged } from '../game/items.js';
 import { events } from '../game/events.js';
 import { itemStats } from '../game/survival.js';
 
-const DRAG_START = 5; // px, ennen kuin painallus muuttuu raahaukseksi
+const DRAG_START = 6; // px, ennen kuin painallus muuttuu raahaukseksi
+const CRAFT_TIME = 2;  // s, yhden valmistuksen kesto (sarja hieman pidempi)
 
 export class InventoryUI {
   // stations() palauttaa lähellä olevat valmistuspaikat (Set), use(i) käyttää
@@ -38,9 +42,10 @@ export class InventoryUI {
     this.near = new Set();
     this.sel = null;     // valittu resepti (id)
     this.qty = 1;
-    this.press = null;   // { i, button, x, y, shift }
-    this.drag = null;    // { from, count }
+    this.held = null;    // kursorissa oleva pino { from, count, x, y, moved }
     this.hover = -1;
+    this.crafting = null; // { r, qty, t0, dur }
+    this.splitEl = document.getElementById('split-dialog');
 
     this.slotEls = [];
     for (let i = 0; i < inventory.size; i++) {
@@ -56,6 +61,7 @@ export class InventoryUI {
       this.slotEls.push(el);
     }
     this.root.addEventListener('contextmenu', (e) => e.preventDefault());
+    this.root.addEventListener('pointerdown', (e) => this._rootDown(e));
     window.addEventListener('pointermove', (e) => this._move(e));
     window.addEventListener('pointerup', (e) => this._up(e));
 
@@ -82,88 +88,125 @@ export class InventoryUI {
 
   hide() {
     this.open = false;
+    this._closeSplit();
+    this.crafting = null;
     this._cancelDrag();
     this._hideTip();
     this.root.classList.remove('on');
     this.root.classList.add('hidden');
   }
 
-  // --- Raahaus ---------------------------------------------------------------
+  // --- Ottaminen ja laskeminen (sessio 20) ---------------------------------------
   _down(e, i) {
     if (e.button !== 0 && e.button !== 2) return;
     e.preventDefault();
-    this.press = { i, button: e.button, x: e.clientX, y: e.clientY, shift: e.shiftKey };
+    e.stopPropagation();
+    this._closeSplit();
+    const s = this.inventory.slots[i];
+    if (e.button === 2) {
+      if (this.held) return;
+      if (!s) return;
+      if (e.ctrlKey && s.count > 1) { this._openSplit(i, e.clientX, e.clientY); return; }
+      // Hiiren oikea: syö tai varustaa.
+      const d = ITEMS[s.id];
+      if (this.inventory.canEquip(s.id)) this.inventory.toggleEquip(i);
+      else if (d.food) this.use(i);
+      this._pop(i);
+      this._tipFor(i);
+      return;
+    }
+    if (this.held) { this._place(i); return; }
+    if (!s) {
+      // Tyhjä pikapaikka: valitaan käteen.
+      if (i < CONFIG.hotbarSize) { this.inventory.selected = i; events.emit('inventory'); }
+      return;
+    }
+    if (e.shiftKey) { this.inventory.quickMove(i); this._pop(i); return; }
+    this._pick(i, s.count, e.clientX, e.clientY);
+  }
+
+  _pick(i, count, x, y) {
+    const s = this.inventory.slots[i];
+    if (!s) return;
+    this.held = { from: i, count, x, y, moved: false };
+    this.ghost.querySelector('img').src = this.icons[s.id] || '';
+    this.ghost.querySelector('span').textContent = count > 1 ? count : '';
+    this.ghost.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+    this.ghost.classList.add('on');
+    this.slotEls[i].classList.add('dragging');
+    this._hideTip();
+  }
+
+  // Lasketaan kursorin pino paikkaan i (vaihto, yhdistys tai osa pinosta).
+  _place(i) {
+    const h = this.held;
+    if (!h) return;
+    const s = this.inventory.slots[h.from];
+    if (!s) { this._release(); return; }
+    if (i === h.from) { this._release(); this._pop(i); return; }
+    let ok = true;
+    if (h.count >= s.count) this.inventory.moveSlot(h.from, i);
+    else ok = this.inventory.splitTo(h.from, i, h.count) > 0;
+    if (!ok) {
+      // Ei mahdu (eri esine): pieni tärähdys.
+      this.slotEls[i].animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-3px)' }, { transform: 'translateX(3px)' }, { transform: 'translateX(0)' }], { duration: 180 });
+      return;
+    }
+    this._release();
+    this._pop(i);
+    this.render();
+  }
+
+  _release() {
+    if (this.held && this.slotEls[this.held.from]) this.slotEls[this.held.from].classList.remove('dragging');
+    this.held = null;
+    this.ghost.classList.remove('on', 'out');
+    for (const el of this.slotEls) el.classList.remove('drop');
+  }
+
+  _cancelDrag() {
+    this._release();
   }
 
   _move(e) {
     if (!this.open) return;
-    if (this.press && !this.drag) {
-      if (Math.hypot(e.clientX - this.press.x, e.clientY - this.press.y) > DRAG_START) {
-        const s = this.inventory.slots[this.press.i];
-        if (s) {
-          const count = this.press.button === 2 && s.count > 1 ? Math.ceil(s.count / 2) : s.count;
-          this.drag = { from: this.press.i, count };
-          this.ghost.querySelector('img').src = this.icons[s.id] || '';
-          this.ghost.querySelector('span').textContent = count > 1 ? count : '';
-          this.ghost.classList.add('on');
-          this.slotEls[this.press.i].classList.add('dragging');
-          this._hideTip();
-        }
-        this.press = null;
-      }
-    }
-    if (this.drag) {
+    const h = this.held;
+    if (h) {
+      if (!h.moved && Math.hypot(e.clientX - h.x, e.clientY - h.y) > DRAG_START) h.moved = true;
       this.ghost.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
       const over = this._slotAt(e.clientX, e.clientY);
-      for (const el of this.slotEls) el.classList.toggle('drop', el === over);
-      const out = !this._inWindows(e.clientX, e.clientY);
-      this.ghost.classList.toggle('out', out);
+      for (const el of this.slotEls) el.classList.toggle('drop', el === over && +el.dataset.i !== h.from);
+      this.ghost.classList.toggle('out', !this._inWindows(e.clientX, e.clientY));
     } else if (this.hover >= 0) {
       this._placeTip(e.clientX, e.clientY);
     }
   }
 
   _up(e) {
-    if (!this.open) { this.press = null; return; }
-    if (this.drag) {
-      const { from, count } = this.drag;
-      const s = this.inventory.slots[from];
+    if (!this.open || e.button !== 0) return;
+    const h = this.held;
+    // Raahaus: vapautus toisen paikan päällä laskee pinon. Pelkkä klikkaus
+    // jättää pinon kursoriin (seuraava klikkaus laskee).
+    if (h && h.moved) {
       const over = this._slotAt(e.clientX, e.clientY);
-      if (s && over) {
-        const to = +over.dataset.i;
-        if (count >= s.count) this.inventory.moveSlot(from, to);
-        else this.inventory.splitTo(from, to, count);
-        this._pop(to);
-      } else if (s && !this._inWindows(e.clientX, e.clientY)) {
-        this.drop(from, count);
-      }
-      this._cancelDrag();
-      this.render();
-      return;
-    }
-    const p = this.press;
-    this.press = null;
-    if (!p) return;
-    const s = this.inventory.slots[p.i];
-    if (p.button === 0) {
-      if (p.shift && s) { this.inventory.quickMove(p.i); return; }
-      // Pikapalkin paikan klikkaus valitsee sen käteen.
-      if (p.i < CONFIG.hotbarSize) { this.inventory.selected = p.i; events.emit('inventory'); }
-    } else if (p.button === 2 && s) {
-      const d = ITEMS[s.id];
-      if (this.inventory.canEquip(s.id)) this.inventory.toggleEquip(p.i);
-      else if (d.food) this.use(p.i);
-      this._pop(p.i);
-      this._tipFor(p.i);
+      if (over && +over.dataset.i !== h.from) this._place(+over.dataset.i);
+      else if (!over && !this._inWindows(e.clientX, e.clientY)) this._dropHeld();
     }
   }
 
-  _cancelDrag() {
-    if (this.drag) this.slotEls[this.drag.from].classList.remove('dragging');
-    this.drag = null;
-    this.press = null;
-    this.ghost.classList.remove('on', 'out');
-    for (const el of this.slotEls) el.classList.remove('drop');
+  // Klikkaus ikkunoiden ulkopuolella kursorin pinon kanssa: pudotetaan maahan.
+  _rootDown(e) {
+    if (!this.held || e.button !== 0) return;
+    if (!this._inWindows(e.clientX, e.clientY)) this._dropHeld();
+  }
+
+  _dropHeld() {
+    const h = this.held;
+    if (!h) return;
+    const s = this.inventory.slots[h.from];
+    if (s) this.drop(h.from, Math.min(h.count, s.count));
+    this._release();
+    this.render();
   }
 
   _slotAt(x, y) {
@@ -179,6 +222,46 @@ export class InventoryUI {
     return false;
   }
 
+  // --- Pinon jako (Ctrl + hiiren oikea) -----------------------------------------
+  _openSplit(i, x, y) {
+    const s = this.inventory.slots[i];
+    if (!s || s.count < 2) return;
+    const el = this.splitEl;
+    const half = Math.floor(s.count / 2);
+    el.innerHTML = `<b>Jaa pino</b><div class="sp-row"><img alt=""><span class="sp-a"></span><input type="range" min="1" max="${s.count - 1}" value="${half}"><span class="sp-b"></span></div><div class="sp-btns"><button type="button" class="sp-cancel">Peruuta</button><button type="button" class="sp-ok">Ota</button></div>`;
+    el.querySelector('img').src = this.icons[s.id] || '';
+    const range = el.querySelector('input');
+    const upd = () => { el.querySelector('.sp-a').textContent = s.count - +range.value; el.querySelector('.sp-b').textContent = range.value; };
+    range.addEventListener('input', upd);
+    upd();
+    const ok = () => {
+      const n = +range.value;
+      this._closeSplit();
+      const r = this.slotEls[i].getBoundingClientRect();
+      this._pick(i, n, r.left + r.width / 2, r.top + r.height / 2);
+    };
+    el.querySelector('.sp-ok').addEventListener('click', ok);
+    el.querySelector('.sp-cancel').addEventListener('click', () => this._closeSplit());
+    el.addEventListener('pointerdown', (ev) => ev.stopPropagation());
+    this._splitKey = (ev) => {
+      if (ev.code === 'Enter') { ev.preventDefault(); ok(); }
+      else if (ev.code === 'Escape') { ev.preventDefault(); ev.stopPropagation(); this._closeSplit(); }
+    };
+    window.addEventListener('keydown', this._splitKey, true);
+    const w = 250, h = 120;
+    el.style.left = `${Math.min(window.innerWidth - w - 8, Math.max(8, x - w / 2))}px`;
+    el.style.top = `${Math.min(window.innerHeight - h - 8, y + 16)}px`;
+    el.classList.add('on');
+    range.focus();
+  }
+
+  _closeSplit() {
+    if (!this.splitEl || !this.splitEl.classList.contains('on')) return;
+    this.splitEl.classList.remove('on');
+    if (this._splitKey) window.removeEventListener('keydown', this._splitKey, true);
+    this._splitKey = null;
+  }
+
   // Pieni hypähdys paikassa (siirto, varustus).
   _pop(i) {
     const el = this.slotEls[i];
@@ -188,14 +271,14 @@ export class InventoryUI {
   // --- Työkaluvihje ------------------------------------------------------------
   _tipFor(i) {
     const s = this.inventory.slots[i];
-    if (!s || this.drag) { this._hideTip(); return; }
+    if (!s || this.held) { this._hideTip(); return; }
     const d = ITEMS[s.id];
     const stats = itemStats(d, s.id);
     const hints = [];
-    if (this.inventory.canEquip(s.id)) hints.push(s.eq ? 'Hiiren oikea: riisu' : 'Hiiren oikea: varusta');
+    if (this.inventory.canEquip(s.id)) hints.push(s.eq ? 'Hiiren oikea: riisu' : d.offhand ? 'Hiiren oikea: toiseen käteen' : 'Hiiren oikea: varusta');
     else if (d.food) hints.push('Hiiren oikea: syö');
     hints.push(i < CONFIG.hotbarSize ? 'Shift+klikkaus: reppuun' : 'Shift+klikkaus: pikapalkkiin');
-    if (s.count > 1) hints.push('Raahaa oikealla: jaa pino');
+    if (s.count > 1) hints.push('Ctrl+hiiren oikea: jaa pino');
     this.tip.innerHTML = `<b></b>${s.eq ? '<span class="tag">Varustettu</span>' : ''}<p></p>${stats ? '<em></em>' : ''}<small></small>`;
     this.tip.querySelector('b').textContent = d.name + (s.count > 1 ? ` ×${s.count}` : '');
     this.tip.querySelector('p').textContent = d.desc || '';
@@ -322,10 +405,35 @@ export class InventoryUI {
       b.classList.toggle('on', String(this.qty) === b.dataset.q);
       b.addEventListener('click', () => { this.qty = b.dataset.q === 'max' ? 'max' : +b.dataset.q; this._renderDetail(); });
     }
-    box.querySelector('.make').addEventListener('click', () => this._craft(r, qty));
+    const mk = box.querySelector('.make');
+    if (this.crafting) { mk.disabled = true; mk.classList.add('busy'); mk.textContent = 'Valmistetaan…'; }
+    mk.addEventListener('click', () => this._craft(r, qty));
   }
 
+  // Valmistus kestää hetken: nappi lukittuu ("Valmistetaan…") ja täyttyy.
   _craft(r, qty) {
+    if (this.crafting) return;
+    const dur = Math.min(5, CRAFT_TIME + 0.3 * (qty - 1));
+    this.crafting = { r, qty, t0: performance.now(), dur };
+    const tick = () => {
+      const c = this.crafting;
+      if (!c || !this.open) return;
+      const p = Math.min(1, (performance.now() - c.t0) / (c.dur * 1000));
+      const b = this.craftDetail.querySelector('.make');
+      if (b) {
+        b.disabled = true;
+        b.classList.add('busy');
+        b.textContent = 'Valmistetaan…';
+        b.style.setProperty('--p', p.toFixed(3));
+      }
+      if (p < 1) { requestAnimationFrame(tick); return; }
+      this.crafting = null;
+      this._finishCraft(c.r, c.qty);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  _finishCraft(r, qty) {
     let made = 0;
     for (let k = 0; k < qty; k++) {
       if (!this.inventory.craft(r.id, this.stations())) break;
@@ -333,11 +441,11 @@ export class InventoryUI {
     }
     if (made > 0) {
       events.emit('notify', { item: r.out, count: r.count * made });
-      const b = this.craftDetail.querySelector('.make');
-      if (b) b.animate([{ transform: 'scale(0.94)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
     } else if (this.inventory.canCraft(r, this.stations())) {
       events.emit('message', { text: 'Reppu on täynnä' });
     }
     this.render();
+    const b = this.craftDetail.querySelector('.make');
+    if (b && made > 0) b.animate([{ transform: 'scale(0.95)' }, { transform: 'scale(1.03)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
   }
 }

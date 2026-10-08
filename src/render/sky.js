@@ -103,7 +103,8 @@ void main() {
     float glow = band * (0.35 + 0.65 * clouds) * (1.0 - lane) * (0.35 + 0.9 * core);
     vec3 mwCol = mix(vec3(0.82, 0.86, 1.0), vec3(1.0, 0.94, 0.84), clamp(core * band, 0.0, 1.0));
     float extinction = smoothstep(0.02, 0.4, y);
-    milky = mwCol * glow * 0.034 * extinction;
+    // Sessio 20: himmeämpi (käyttäjä: liian kirkas/voimakas).
+    milky = mwCol * glow * 0.018 * extinction;
     // Kirkkaat tähdet
     vec3 sp = dir * 220.0;
     vec3 cell = floor(sp);
@@ -119,7 +120,7 @@ void main() {
     vec3 sp2 = dir * 340.0;
     vec3 cell2 = floor(sp2);
     float h2 = hash3(cell2 + 17.0);
-    float thr = 0.992 - band * 0.05 * (0.6 + clouds);
+    float thr = 0.992 - band * 0.028 * (0.6 + clouds);
     if (h2 > thr) {
       vec3 c2 = cell2 + 0.25 + 0.5 * vec3(hash3(cell2 + 3.1), hash3(cell2 + 5.7), hash3(cell2 + 8.3));
       float d2 = length(sp2 - c2);

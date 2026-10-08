@@ -51,6 +51,9 @@ export function rollLoot(st) {
   // Viidakkoveitsi: oma satunnaisvirta, jotta muu sisältö pysyy ennallaan.
   const rm = mulberry32((st.seed ^ 0xb1ade5) >>> 0);
   if (rm() < (st.type === 'camp' ? 0.4 : 0.2)) loot.push(['machete', 1]);
+  // Kello (sessio 20): ei harvinainen, mutta ei yleinenkään (n. joka 8. arkku).
+  const rc = mulberry32((st.seed ^ 0xc10c4) >>> 0);
+  if (rc() < 0.13) loot.push(['clock', 1]);
   if (st.valuables) {
     const vp = VALUABLE.slice();
     const nv = 1 + Math.floor(r() * 2);

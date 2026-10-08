@@ -2,6 +2,20 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-08 (sessio 20)
+**Tehtiin**
+- Kysyttiin 4 kysymystä (käyttö repussa, pinot, kellon näyttö, linnunrata).
+- Valkoinen maailma nopeissa siirroissa (`world/world.js`: `ensureLoaded` peruttavissa; `main.js`: `buildGen`, `teleportTo`).
+- Kuumuusväreily (`render/post.js`), linnunrata (`render/sky.js`), nimet (`world/objectTypes.js`: osuma-alueet), yöhiljaisuus (`main.js`).
+- Kello (`game/items.js`, `models/items.js`, `game/ruins.js`, `index.html`, `styles.css`, `ui/hud.js`).
+- Toinen käsi (`game/inventory.js`: `offhand`, `selectedItem`; `player/viewmodel.js`: soihtu vasemmassa kädessä; `main.js`: [F], soihdun valo; `game/interaction.js`).
+- Reppu: klikkaus ottaa/laskee, sykintä, Ctrl+oikea jakoikkuna, vihreä tausta, valmistuksen latausaika (`ui/inventoryUI.js`, `index.html`, `styles.css`); pinot (`game/items.js`).
+- Testattiin headless-Chromiumilla: 15 nopeaa siirtoa ilman korjausta jumittui yli 10 min, korjauksen jälkeen valmis (muisti ennallaan, WebGL kunnossa); repussa klikkaus/lasku, jako 12 → 8 + 4, soihdun ja kilven vaihto toiseen käteen, valmistus "Valmistetaan…" ja tulos vasta latauksen jälkeen; kellotaulu ja vasemman käden soihtu kuvina. ESLint ja savutesti puhtaat.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute; reppuun lisää myöhemmin (käyttäjä: "ei vielä valmis").
+- Pushaa haara ja avaa PR, kun GitHub-tili toimii.
+
 ## 2026-10-08 (sessio 19)
 **Tehtiin**
 - Kysyttiin repusta, valmistuksesta, panssarista ja minikartasta 8 kysymystä kahdessa erässä.

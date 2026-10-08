@@ -122,7 +122,7 @@ export const OBJECT_TYPES = {
   euphorbia: {
     name: 'Kandelaaberipuu', model: 'euphorbia', kind: 'static', material: 'solid', castShadow: true,
     density: { mountains: 2.2, laterite: 0.4, desert: 0.1 },
-    scale: [0.8, 1.3], maxSlope: 0.7, collider: 0.35, hit: null, drawDist: 4,
+    scale: [0.8, 1.3], maxSlope: 0.7, collider: 0.35, hit: { y: 1.2, r: 0.5 } /* sessio 20: nimilappu */, drawDist: 4,
   },
   stick: {
     name: 'Risu', model: 'stick', kind: 'pickup', material: 'solid', castShadow: false,
@@ -151,17 +151,17 @@ export const OBJECT_TYPES = {
   outcrop: {
     name: 'Kalliomuodostelma', model: 'outcrop', kind: 'static', material: 'solid', castShadow: true,
     density: { desert: 0.8, mountains: 1.2, laterite: 0.35 },
-    scale: [0.8, 1.6], maxSlope: 1, collider: 1.7, hit: null, drawDist: 99,
+    scale: [0.8, 1.6], maxSlope: 1, collider: 1.7, hit: { y: 1.1, r: 1.8 } /* sessio 20: nimilappu */, drawDist: 99,
   },
   spire: {
     name: 'Kalliotorni', model: 'spire', kind: 'static', material: 'solid', castShadow: true,
     density: { mountains: 1.5 },
-    scale: [0.8, 1.5], maxSlope: 1, collider: 1.5, hit: null, drawDist: 99,
+    scale: [0.8, 1.5], maxSlope: 1, collider: 1.5, hit: { y: 1.8, r: 1.5 } /* sessio 20: nimilappu */, drawDist: 99,
   },
   termite: {
     name: 'Termiittikeko', model: 'termite', kind: 'static', material: 'solid', castShadow: true,
     density: { savanna: 1.2, woodland: 1.6, mare: 0.3, laterite: 0.8, rainforest: 0.15 },
-    scale: [0.8, 1.3], maxSlope: 0.4, collider: 0.75, hit: null, drawDist: 99,
+    scale: [0.8, 1.3], maxSlope: 0.4, collider: 0.75, hit: { y: 0.9, r: 0.85 } /* sessio 20: nimilappu */, drawDist: 99,
   },
   // --- Koristeet (vain lähimmissä chunkeissa, ei vuorovaikutusta)
   grass: {

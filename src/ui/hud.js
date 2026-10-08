@@ -47,6 +47,10 @@ export class Hud {
     this.armorEl = $('armor');
     this.armorNum = this.armorEl.querySelector('span');
     this.armorShown = -1;
+    this.clockEl = $('clock');
+    this.clockH = this.clockEl.querySelector('.h');
+    this.clockM = this.clockEl.querySelector('.m');
+    this.hasClock = null;
     this.numShown = -1;   // näytetty terveysarvo
     this.numT = 0;
     this.stShowT = 0;
@@ -357,6 +361,15 @@ export class Hud {
       this.armorShown = armor;
       this.armorEl.classList.toggle('none', armor <= 0);
       if (armor > 0) this.armorNum.textContent = armor;
+    }
+
+    // Kello (sessio 20): kellotaulu näkyy vain, kun Kello on repussa.
+    const hasClock = this.inventory.count('clock') > 0;
+    if (hasClock !== this.hasClock) { this.hasClock = hasClock; this.clockEl.classList.toggle('none', !hasClock); }
+    if (hasClock && env) {
+      const t = env.time;
+      this.clockH.setAttribute('transform', `rotate(${(((t % 12) / 12) * 360).toFixed(1)} 24 24)`);
+      this.clockM.setAttribute('transform', `rotate(${((t % 1) * 360).toFixed(1)} 24 24)`);
     }
 
     // Kestävyys (keskellä): näkyy vain kun sitä kuluu.

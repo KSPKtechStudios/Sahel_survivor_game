@@ -10,8 +10,17 @@ export class Inventory {
     this.selected = 0;
   }
 
+  // Toiseen käteen varustettu pino (kilpi tai soihtu) ei ole samalla
+  // pääkädessä (sessio 20): valittu paikka näyttää silloin tyhjää kättä.
   get selectedItem() {
-    return this.slots[this.selected];
+    const s = this.slots[this.selected];
+    return s && s.eq && ITEMS[s.id].offhand ? null : s;
+  }
+
+  // Toisen käden esine (kilpi tai soihtu) tai null.
+  offhand() {
+    for (const s of this.slots) if (s && s.eq && ITEMS[s.id].offhand) return s;
+    return null;
   }
 
   // id voi olla myös tunniste ('#pelt' = mikä tahansa talja).
@@ -195,7 +204,7 @@ export class Inventory {
   }
 
   // Varusteet varustetaan repusta (sessio 19, kuten Valheimissa): pino
-  // merkitään eq-lipulla, joka kulkee sen mukana. Kilpi vasempaan käteen;
+  // merkitään eq-lipulla, joka kulkee sen mukana. Kilpi tai soihtu toiseen käteen;
   // panssareilla (armor: { slot, value }) yksi kutakin paikkaa kohti.
   equippedShield() {
     return this.slots.findIndex((s) => s && s.eq && ITEMS[s.id].shield);
@@ -203,7 +212,7 @@ export class Inventory {
 
   canEquip(id) {
     const d = ITEMS[id];
-    return !!(d && (d.shield || d.armor));
+    return !!(d && (d.offhand || d.armor));
   }
 
   toggleEquip(i) {
@@ -215,7 +224,7 @@ export class Inventory {
     for (const o of this.slots) {
       if (!o || !o.eq || o === s) continue;
       const od = ITEMS[o.id];
-      if ((d.shield && od.shield) || (d.armor && od.armor && od.armor.slot === d.armor.slot)) delete o.eq;
+      if ((d.offhand && od.offhand) || (d.armor && od.armor && od.armor.slot === d.armor.slot)) delete o.eq;
     }
     if (on) s.eq = true; else delete s.eq;
     events.emit('inventory');

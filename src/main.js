@@ -20,6 +20,7 @@ import { Sfx } from './audio/sfx.js';
 import { createModelLibrary } from './models/models.js';
 import { World } from './world/world.js';
 import { OBJECT_TYPES } from './world/objectTypes.js';
+import { ITEMS } from './game/items.js';
 import { Tumbleweeds } from './world/tumbleweeds.js';
 import { findSpawn, setWorldSeed, seedFromString, sampleTerrain, heightAt, displayBiome, waterAt } from './world/terrain.js';
 import { Player } from './player/player.js';
@@ -375,8 +376,12 @@ function clearWorldState(seed) {
   structures.held = null;
 }
 
+let nightSilence = false;
+// Vain uusin lataus on voimassa (sessio 20): uusi siirto peruu edellisen.
+let buildGen = 0;
 function buildAround(x, z, onProgress) {
-  return world.ensureLoaded(x, z, onProgress, nextFrame);
+  const gen = ++buildGen;
+  return world.ensureLoaded(x, z, onProgress, nextFrame, () => gen !== buildGen);
 }
 
 // Päävalikko: tausta on oikea pelimaailma auringonlaskussa.
@@ -550,6 +555,17 @@ window.addEventListener('keydown', (e) => {
     invUI.hide();
     input.lock();
     setTimeout(() => { if (state === 'inventory' && !input.locked) setState('paused'); }, 600);
+  } else if (state === 'playing' && e.code === 'KeyF') {
+    // Toinen käsi (sessio 20): kädessä oleva kilpi tai soihtu siirtyy toiseen
+    // käteen; uudelleen painettuna takaisin. Muulla esineellä [F] laskee
+    // toisen käden esineen pois.
+    const i = inventory.selected;
+    const s = inventory.slots[i];
+    if (s && inventory.canEquip(s.id) && ITEMS[s.id].offhand) inventory.toggleEquip(i);
+    else {
+      const o = inventory.offhand();
+      if (o) inventory.toggleEquip(inventory.slots.indexOf(o));
+    }
   } else if (state === 'playing' && e.code === 'KeyT') {
     // Opas piilossa oletuksena; [T] näyttää / piilottaa (sessio 19).
     guideUI.toggle();
@@ -630,7 +646,10 @@ async function teleportTo(x, z, look = null) {
   env.snapClimate();
   player.velocity.set(0, 0, 0);
   if (look) player.yaw = Math.atan2(-(look.x - x), -(look.z - z));
-  await buildAround(x, z);
+  const done = await buildAround(x, z);
+  if (!done) return; // uudempi siirto ohitti tämän
+  player.teleport(x, z); // maasto on nyt ladattu: korkeus varmasti oikein
+  if (look) player.yaw = Math.atan2(-(look.x - x), -(look.z - z));
   player.update(0, input, world);
 }
 const devtools = new DevTools({
@@ -799,7 +818,11 @@ function frame(now) {
   const musicMode = state === 'menu' ? 'menu' : currentWorld && state !== 'boot' && (state !== 'loading' || respawning) ? 'game' : 'none';
   music.setMode(musicMode);
   // Häivytykset todellisessa ajassa (eivät hidastu, vaikka ruudunpäivitys olisi hidas).
-  music.update(Math.min(0.25, rawDt), musicMode === 'game' ? BIOME_MUSIC[displayBiome(_s)] || null : null);
+  // Sessio 20: yöllä biomien musiikki hiljenee (vain luonto ja pelaaja);
+  // palaa aamulla. Hystereesi, ettei hämärässä vaihtele.
+  if (env.daylight < 0.2) nightSilence = true;
+  else if (env.daylight > 0.35) nightSilence = false;
+  music.update(Math.min(0.25, rawDt), musicMode === 'game' && !nightSilence ? BIOME_MUSIC[displayBiome(_s)] || null : null);
   env.setLocalHumidity(_s.rainforest);
   env.setClimate(_s);
   // Sademetsä: hidas eteneminen ja lyhyt piirtoetäisyys (näkyvyys on muutenkin lyhyt).
@@ -874,7 +897,13 @@ function frame(now) {
     camera.updateProjectionMatrix();
   }
   // Kädessä oleva soihtu valaisee ympäristön (jaettu tulivalo).
-  const torchSlot = inGame && !player.dead && inventory.selectedItem && inventory.selectedItem.id === 'torch' ? inventory.selectedItem : null;
+  // Soihtu pääkädessä tai toisessa kädessä (sessio 20).
+  const offItem = inventory.offhand();
+  const offTorch = offItem && offItem.id === 'torch' ? offItem : null;
+  const mainTorch = inventory.selectedItem && inventory.selectedItem.id === 'torch' ? inventory.selectedItem : null;
+  const torchSlot = inGame && !player.dead ? mainTorch || offTorch : null;
+  const torchLeft = !!torchSlot && torchSlot === offTorch && !mainTorch;
+  viewmodel.setOffhand(offItem ? (offItem.id === 'torch' ? 'torch' : 'shield') : null);
   // Soihtu (sessio 13): sammuu veden alla, syttyy uudelleen nuotion vieressä;
   // sateessa palaa heikosti ja "yskien".
   if (torchSlot && simDt > 0) {
@@ -908,9 +937,10 @@ function frame(now) {
     // ei vartalon keskellä (sessio 12e: soihdulla näki huonosti).
     camera.getWorldDirection(_camDir);
     const rx = -_camDir.z, rz = _camDir.x, rl = Math.hypot(rx, rz) || 1;
-    torchFire.x = camera.position.x + _camDir.x * 0.45 + (rx / rl) * 0.32;
+    const side = torchLeft ? -0.32 : 0.32; // toisen käden soihtu vasemmalla
+    torchFire.x = camera.position.x + _camDir.x * 0.45 + (rx / rl) * side;
     torchFire.y = camera.position.y + 0.12;
-    torchFire.z = camera.position.z + _camDir.z * 0.45 + (rz / rl) * 0.32;
+    torchFire.z = camera.position.z + _camDir.z * 0.45 + (rz / rl) * side;
   }
   structures.held = torchHeld ? torchFire : null;
   // Illan tullen ilmoitetaan kuun vaihe (täysikuulla viholliset liikkuvat).
@@ -956,7 +986,7 @@ function frame(now) {
       camera.position.y += (Math.random() - 0.5) * shake * 0.12;
       shake *= Math.exp(-dt * 6);
     }
-    const torchLit = inventory.selectedItem && inventory.selectedItem.id === 'torch' && !inventory.selectedItem.unlit ? 0.9 * torchFlameK : 0;
+    const torchLit = torchSlot && !torchSlot.unlit ? 0.9 * torchFlameK : 0;
     const fireNear = Math.max(torchLit, Math.max(0, 1 - structures.nearestFire / 7)) * (1.2 - env.daylight);
     viewmodel.setItem(inventory.selectedItem ? inventory.selectedItem.id : null);
     viewmodel.update(simDt, player, input, env, camera, fireNear * 1.5);

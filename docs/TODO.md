@@ -1,6 +1,7 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 20: nopea siirtyminen (ei valkoista maailmaa), kuumuusväreily, linnunrata, termiittikeon nimi, yön hiljaisuus, Kello arkuista ja kellotaulu, toinen käsi ([F], soihtu vasemmassa), reppu (klikkaus, Ctrl+oikea jako, sykintä, vihreä tausta), pinot, valmistuksen latausaika
 - [ ] Käyttäjä testaa session 19: vihollisten kiertäminen ja perääntyminen, savipeikon vahvuus, linnun ääni, kirves, kasvien murskaus, uusi reppu (raahaus, Shift+klikkaus, jako, varustus, pudotus), valmistusikkuna, 6 pikapaikkaa, panssarin näyttö, minikartan kehys, opas [T]
 - [ ] Panssarit (esineet, joilla `armor: { slot, value }`), jotta panssarin näyttö tulee käyttöön
 - [ ] Käyttäjä testaa session 18: soihtu sateessa, kestävyyden kulutus, paraneminen, kirveen/nuijan sarja ja viidakkoveitsen tahti, puut ilman kirvestä ja kivet ("Liian kovaa!"), punainen hehku, kuumuusväreily, jousen jännitys, nimilappujen tarkkuus

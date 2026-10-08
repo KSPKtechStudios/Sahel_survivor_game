@@ -69,14 +69,11 @@ export class Interaction {
     }
     this.structures.showGhost(null);
 
-    // Kilpi kädessä: hiiren oikea varustaa sen vasempaan käteen.
+    // Kilpi kädessä: hiiren oikea (tai [F]) varustaa sen toiseen käteen.
     if (def && def.shield && !item.eq) {
       this.target = null;
-      this.prompt = { name: def.name, action: '[Hiiri 2] Varusta vasempaan käteen' };
-      if (input.clicked.has(2) && input.enabled) {
-        this.inventory.toggleEquip(this.inventory.selected);
-        events.emit('message', { text: 'Kilpi varustettu: torju [Hiiri 2]' });
-      }
+      this.prompt = { name: def.name, action: '[F] / [Hiiri 2] Toiseen käteen' };
+      if (input.clicked.has(2) && input.enabled) this.inventory.toggleEquip(this.inventory.selected);
       return;
     }
 
