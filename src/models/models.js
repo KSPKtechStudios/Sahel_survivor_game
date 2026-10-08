@@ -3,10 +3,12 @@
 // Väliaikaisia malleja: jokainen malli on BufferGeometry (position, normal,
 // color). Kun grafiikkaa jalostetaan, nämä voi korvata glTF-malleilla samoilla
 // nimillä (ks. docs/DECISIONS.md).
-import { makeAcacia, makeBaobab, makeJungleTree, makePalm, makeCanopyTree, makeDeadTree } from './trees.js';
-import { makeBush, makeFern, makeTumbleweed, makeGrassTuft, makeBamboo, makeThicket, makeEuphorbia, makeReeds, makeUndergrowth } from './plants.js';
+import { makeAcacia, makeBaobab, makeJungleTree, makePalm, makeCanopyTree } from './trees.js';
+import { makeBush, makeTumbleweed, makeGrassTuft, makeBamboo, makeThicket, makeEuphorbia, makeReeds } from './plants.js';
 import { makeGroundStick, makeStone, makeTermiteMound, makeOutcrop, makeSpire } from './rocks.js';
 import { scannedBoulder, SCANNED_BOULDER_COUNT } from './scanned/build.js';
+import { kitModel } from './kit/build.js';
+import { makeAncientPillar, makeRustyShield, makeAncientRoots, makeTwigs } from './ancient.js';
 import { ensureUv } from './util.js';
 import { makeCampfireBase, createItemModels } from './items.js';
 import { createBuildModels } from './building.js';
@@ -19,13 +21,20 @@ import {
   makeMushPatch, makeJujubeBush, makeMoringa, makeHibiscus, makeReedClump, makeFonio, makeClayLump,
 } from './pickups.js';
 
+// Sessio 24: Quaternius-kitin mallit (CC0). Muunnelma i = siemen (base + i * 101).
+// indexed: pelkät koristeet (ei sirpaleita), kevyempi piirtää.
+function kit(names, base, indexed = false) {
+  return [(s, q) => kitModel(names[Math.round((s - base) / 101)], q, indexed), names.length, base];
+}
+
 const VARIANTS = {
   acacia: [makeAcacia, 4, 1],
   jungle: [makeJungleTree, 3, 11],
   palm: [makePalm, 3, 21],
   baobab: [makeBaobab, 2, 2],
   bush: [makeBush, 4, 3],
-  fern: [makeFern, 3, 31],
+  // Sessio 24: saniainen Quaterniuksen kitistä (ennen proseduraalinen makeFern).
+  fern: kit(['Fern_1', 'Plant_1_Big'], 31),
   stick: [makeGroundStick, 3, 4],
   stone: [makeStone, 3, 5],
   // Sessio 23: skannatut Namaqualand-lohkareet (Poly Haven, CC0).
@@ -34,14 +43,16 @@ const VARIANTS = {
   grass: [(s) => makeGrassTuft(s, 'dry'), 3, 8],
   grassGreen: [(s) => makeGrassTuft(s, 'green'), 3, 41],
   canopy: [makeCanopyTree, 4, 51],
-  deadTree: [makeDeadTree, 3, 61],
+  // Sessio 24: harmaantuneet kuolleet puut kitistä (ennen makeDeadTree).
+  deadTree: kit(['DeadTree_1', 'DeadTree_2', 'DeadTree_3'], 61),
   bamboo: [makeBamboo, 2, 71],
   thicket: [makeThicket, 3, 81],
   euphorbia: [makeEuphorbia, 2, 91],
   outcrop: [makeOutcrop, 3, 111],
   spire: [makeSpire, 3, 121],
   reeds: [makeReeds, 2, 131],
-  undergrowth: [makeUndergrowth, 3, 141],
+  // Sessio 24: sademetsän aluskasvit kitistä (ennen makeUndergrowth).
+  undergrowth: kit(['Plant_1_Big', 'Plant_1', 'Fern_1'], 141, true),
   shea: [makeSheaTree, 3, 151],
   doum: [makeDoumPalm, 3, 161],
   coconut: [makeCoconutPalm, 3, 171],
@@ -75,9 +86,20 @@ const VARIANTS = {
   mushTermite: [(s) => makeMushPatch('termite', s), 2, 551],
   // Sessio 10: sademetsän vesilammikot
   puddle: [makePuddle, 4, 601],
+  // Sessio 24: kerroksellinen maanpeite (Quaternius, CC0)
+  groundFern: kit(['Fern_1'], 701, true),
+  forestPlant: kit(['Clover_1', 'Plant_1', 'Plant_1_Big', 'Clover_2'], 711, true),
+  kitMushrooms: kit(['Mushroom_Common', 'Mushroom_Common', 'Mushroom_Laetiporus'], 721, true),
+  mossStone: kit(['Rock_Medium_1', 'Rock_Medium_2', 'Rock_Medium_3'], 731),
+  wildFlowers: kit(['Flower_3_Group', 'Flower_4_Group'], 741, true),
+  // Sessio 24: ympäristön tarinankerronta
+  ancientPillar: [makeAncientPillar, 4, 761],
+  rustyShield: [makeRustyShield, 3, 771],
+  ancientRoots: [makeAncientRoots, 3, 781],
+  twigs: [makeTwigs, 3, 791],
 };
 // Mallit, joilla on kevyt kaukoversio (ilman varjoa).
-const HAS_FAR = new Set(['acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut']);
+const HAS_FAR = new Set(['acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);
 // Mallit, joista tehdään tiheärunkoinen versio hakkaamista varten.
 const HAS_HI = new Set(['acacia', 'jungle', 'palm', 'canopy', 'shea', 'doum', 'coconut', 'baobab']);
 

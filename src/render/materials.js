@@ -251,6 +251,12 @@ export function createSharedMaterials(groundDetail) {
   const solidRock = addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 }), 'rock', { scale: 2.2, strength: 0.95, normal: 1.0 });
   const solidWood = addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 }), 'bark', { scale: 0.8, strength: 0.9 });
   const solidEarth = addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.97, metalness: 0 }), 'soil', { scale: 1.6, strength: 0.9 });
+  // Sessio 24: muinainen kivi (pylväät): sammaloitunut kivi ja sammal yläpinnoilla.
+  const solidAncient = addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, metalness: 0 }), [
+    { layer: 'mossrock', scale: 1.8, strength: 0.95, normal: 1.0 },
+    { layer: 'moss', mask: 'top', scale: 1.2, strength: 1.0, cover: true },
+  ]);
+  addWet(solidAncient, 0.9, 0.6);
   addWet(solidRock, 0.8, 0.6);
   addWet(solidWood, 0.8, 0.5);
   addWet(solidEarth, 0.8, 0.4);
@@ -261,5 +267,5 @@ export function createSharedMaterials(groundDetail) {
   const puddle = createPuddleMaterial();
 
   // Vesi luodaan erikseen (render/water.js), koska se tarvitsee taivaan värit.
-  return { terrain, vegetation, bush, grass, tall, solid, solid_rock: solidRock, solid_wood: solidWood, solid_earth: solidEarth, puddle };
+  return { terrain, vegetation, bush, grass, tall, solid, solid_rock: solidRock, solid_wood: solidWood, solid_earth: solidEarth, solid_ancient: solidAncient, puddle };
 }

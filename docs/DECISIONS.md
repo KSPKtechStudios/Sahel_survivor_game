@@ -2,6 +2,22 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-08 (sessio 24)
+- **Maaston pehmennys: terävät taitteet (abs) korvattiin pehmeillä (sabs = √(v² + k²) − k), jokiuomien leikkaus pehmeällä minimillä (smin), ja verkkoa tihennettiin (48 segmenttiä / chunk, 1,33 m).** Syy: käyttäjän tärkein toive; harjanteiden ja dyynien V-taitteet ja uomien reunat näkyivät kulmikkaina. Generointi pysyi säikeessä (~20–30 ms / chunk).
+- **Tiheä ruoho omana järjestelmänään (kortit + instanssit), ei valmiina 3D-ruohomalleina.** Syy: Quaterniuksen ruohomallit ovat 155–622 kolmiota tupsua kohti; kymmeniätuhansia tupsuja tarvitaan, joten tupsu on kolme ristikkäistä korttia (12 kolmiota). Tupsut lasketaan generointisäikeessä chunkin verkosta (korkeus tarkalleen piirretyltä pinnalta) ja piirretään osaruuduittain (32 m), vain ~46 m säteellä; kaukana tupsut painuvat maahan.
+- **Ruohoatlas datakanavina (sävy, korkeus, tunniste) ja värit instanssilta.** Syy: sama atlas kelpaa kuivalle savannille, rehevälle keitaalle ja vuoristonurmelle; biomien värit ja kuolleiden korsien osuus säädetään koodissa (`world/groundCover.js`).
+- **Metsänpohjan tiheys korteilla (saniaisryhmä, lehväkasvi, apilamatto, lehtiyrtti), jotka koottiin Quaterniuksen lehtiatlaksen kuvista.** Syy: tiheä aluskasvillisuus 3D-malleina olisi ollut ~1 milj. kolmiota; kortit ovat kevyitä, ja oikeat 3D-mallit (saniainen, lehväkasvit, sienet, kukat) näytetään harvempina "pääkasveina" lähellä.
+- **Valmiit mallit: Quaternius Stylized Nature MegaKit (CC0).** Syy: tyyli (stilisoitu realismi) sopii pyyntöön, lisenssi on vapaa, ja mallit ovat kevyitä. Sketchfabin lataukset vaatisivat käyttäjän API-avaimen, joten niitä ei käytetty.
+- **Kitin mallit upotetaan JS-moduuliksi kuten skannatut lohkareet; materiaalit ryhmittäin (`geometry.groups`).** Syy: mallikirjasto on synkroninen; yksi malli voi käyttää kahta tekstuuria (lehdet + kukat).
+- **Kuolleet puut kevennettiin sijainnin mukaan hitsaten (6 000 → 1 600 kolmiota, kaukomalli 400).** Syy: tavallinen kevennys ei edennyt oksien UV-saumojen takia.
+- **Koriste-esineet sijoitetaan chunkin verkon kärjistä (ei omaa maastonäytettä).** Syy: maanpeitteen tyypit moninkertaistivat koristeiden määrän; generointi nopeutui jopa entisestä.
+- **Tiheät aluskasvit näytetään vain ~44 m säteellä ja lisätään/poistetaan pelaajan liikkuessa (`decorDist`).** Syy: piirtotyö pysyy kohtuullisena; reunalla kasvit painuvat maahan, joten ne eivät ilmesty äkkiä.
+- **Vanhat ruohotupsut jäivät tyyppilistaan (`retired`).** Syy: tyyppien järjestys määrää esineiden siemenet; poistaminen olisi siirtänyt puita ja sotkenut tallennetut kaadot.
+- **Korkeussumu jälkikäsittelyssä syvyyspuskurin avulla (analyyttinen eksponentiaalinen tiheys).** Syy: yksi paikka kaikille materiaaleille; usva myötäilee maata ja kerääntyy laaksoihin. Voimakkuus kosteuden, sateen ja aamun mukaan.
+- **Sammal: maastossa laikuittain metsämaalla, rakenteissa yläpinnoilla (kosteus lisää).** Syy: "alimpana sammalta" ja "sammaleiset kivet"; aavikon raunioissa sammalta on vähän.
+- **Rauniot sammaloituneesta kivestä (Rock064) ja harmaantuneesta puusta.** Syy: rakenteiden pitää näyttää vanhoilta ja kuluneilta.
+- **Liaanit ja köynnökset tehtiin itse (puiden malleihin).** Syy: valmiit köynnösmallit eivät asetu proseduraalisiin puihin; omat liaanit seuraavat oksia ja kaatuvat puun mukana.
+
 ## 2026-10-08 (sessio 23)
 - **Lähteet: ambientCG (tekstuurit) ja Poly Haven (mallit), molemmat CC0.** Syy: korkea laatu, ei mainintavelvoitetta; lähteet silti assets/CREDITS.txt:ssä.
 - **Tekstuuri antaa yksityiskohdat, vertex-väri sävyn** (tekstuuri / sen keskiväri). Syy: biomien taiteellinen väritys säilyy, ja yksi tekstuuri kelpaa monelle biomille (esim. kuiva maa savannilla ja punaisella lateriitilla).

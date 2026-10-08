@@ -1,10 +1,11 @@
 // Sahel: käynnistys, tilat (päävalikko / lataus / peli / tauko / reppu) ja pääsilmukka.
 import * as THREE from 'three';
-import { loadSurfaces, addSurfaceDetail, leafTexture } from './render/surfaces.js';
+import { loadSurfaces, addSurfaceDetail, leafTexture, surfaceUniforms } from './render/surfaces.js';
 import { updateGlow } from './render/itemGlow.js';
 import { CONFIG } from './config.js';
 import { createGroundDetailTexture } from './render/textures.js';
 import { createSharedMaterials, wetUniforms, addWet } from './render/materials.js';
+import { grassUniforms } from './render/grassField.js';
 import { Sky } from './render/sky.js';
 import { Environment, WEATHER_KEYS } from './render/environment.js';
 import { Dust, Bursts } from './render/particles.js';
@@ -313,6 +314,11 @@ function applySettings(s) {
   post.motionBlur = s.motionBlur === 'high' ? 2 : s.motionBlur === 'low' ? 1 : 0;
   post.dof = !!s.dof;
   post.lensFlare = s.lensFlare !== false;
+  // Sessio 24: ruohon ja aluskasvien tiheys sekä ruohon näkyvyyssäde.
+  const fol = { low: [0.35, 0.4, 34], normal: [0.65, 0.7, 40], high: [1, 1, 46] }[s.foliage] || [1, 1, 46];
+  world.grass.setDensity(fol[0]);
+  world.setDecorDensity(fol[1]);
+  grassUniforms.uFadeR.value = fol[2];
   music.setVolumes(s.masterVolume ?? 1, s.musicVolume ?? 0.8);
   sfx.setVolumes(s.masterVolume ?? 1, s.sfxVolume ?? 1);
 }
@@ -857,6 +863,25 @@ function frame(now) {
   wetUniforms.uWetSky.value.copy(scene.fog.color);
   wetUniforms.uRain.value = rainAmt;
   wetUniforms.uPuddle.value = inGame && state !== 'menu' ? env.puddleWet : 0;
+  // Sessio 24: ruohokenttä (näkyvät osaruudut, pelaaja taivuttaa heinää).
+  grassUniforms.uGrassWet.value = wetUniforms.uWet.value;
+  surfaceUniforms.uMoss.value = 0.3 + 0.7 * env.humid;
+  // Sessio 24: maata myötäilevä korkeussumu: sademetsä, sade ja aamu-usva
+  // (laaksoissa ja kosteikoilla tiheämpi; ei aavikolla).
+  {
+    const t = env.time, dryK = 1 - Math.min(1, env.climate.desert + env.climate.dry * 0.6);
+    const dawn = _sm(4.3, 5.6, t) * (1 - _sm(7.6, 9.2, t));
+    const night = 1 - env.daylight;
+    const wetland = Math.min(1, _s.mare + _s.oasis * 0.7);
+    const hf = post.hfog;
+    hf.density = inGame && state !== 'menu'
+      ? Math.max(env.humid * 0.03, env.w.rain * 0.026, dawn * (0.008 + wetland * 0.022) * dryK, night * 0.006 * dryK)
+      : 0;
+    hf.base = Math.max(CONFIG.waterLevel, _s.h - 1.5);
+    hf.falloff = 0.1 + 0.06 * (1 - env.humid);
+    hf.color.copy(scene.fog.color);
+  }
+  world.grass.update(camera.position, player.position, env);
   updateSfx(musicMode === 'game' && state !== 'loading', rainAmt, Math.min(0.25, rawDt));
   // Vesipisarat linssillä (sessio 12e): vain purjehdittaessa myrskyssä
   // (tyrskyt ja sade), ja hyvin hillitysti.
@@ -992,7 +1017,7 @@ function frame(now) {
   debris.update(running ? dt : 0);
   bursts.update(simDt);
   dust.update(elapsed, camera.position, env);
-  ambient.update(simDt, elapsed, camera.position, env);
+  ambient.update(simDt, elapsed, camera.position, env, rainAmt);
   sky.update(camera.position);
 
   if (inGame) {

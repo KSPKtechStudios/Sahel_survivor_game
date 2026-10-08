@@ -15,11 +15,15 @@ const AVG = {
   rock: [0.0797, 0.0743, 0.0615],
   bark: [0.1935, 0.1347, 0.0821],
   planks: [0.0942, 0.0608, 0.0367],
+  // Sessio 24: sammal (maaston laikut) ja sammaloitunut kivi (muinaiset rakenteet).
+  moss: [0.0742, 0.1393, 0.0112],
+  mossrock: [0.1879, 0.1634, 0.0759],
 };
 const NAMES = Object.keys(AVG);
 
 // Yhteiset uniformit: kaikki materiaalit jakavat samat tekstuurit.
-export const surfaceUniforms = { uSurfOn: { value: 0 } };
+// uMoss: sammalen määrä rakenteiden yläpinnoilla (sessio 24, kosteus).
+export const surfaceUniforms = { uSurfOn: { value: 0 }, uMoss: { value: 0.35 } };
 for (const n of NAMES) {
   surfaceUniforms[`tC_${n}`] = { value: null };
   surfaceUniforms[`tN_${n}`] = { value: null };
@@ -73,6 +77,7 @@ function declare(names) {
 
 function bind(shader, names) {
   shader.uniforms.uSurfOn = surfaceUniforms.uSurfOn;
+  shader.uniforms.uMoss = surfaceUniforms.uMoss;
   for (const n of names) {
     shader.uniforms[`tC_${n}`] = surfaceUniforms[`tC_${n}`];
     shader.uniforms[`tN_${n}`] = surfaceUniforms[`tN_${n}`];
@@ -83,6 +88,13 @@ function bind(shader, names) {
 // Yhteiset apufunktiot: toistumista hajottava kaksoisnäyte ja UDN-normaalit.
 const COMMON = `
 uniform float uSurfOn;
+uniform float uMoss;
+float surfH(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float surfVN(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(surfH(i), surfH(i + vec2(1.0, 0.0)), f.x), mix(surfH(i + vec2(0.0, 1.0)), surfH(i + vec2(1.0, 1.0)), f.x), f.y);
+}
 vec3 surfCol(sampler2D t, vec2 uv) {
   vec3 a = texture2D(t, uv).rgb;
   vec3 b = texture2D(t, uv * 0.27 + vec2(0.37, 0.71)).rgb;
@@ -97,7 +109,7 @@ vec3 surfRatio(vec3 c, vec3 avg, float k) {
 
 // --- Maasto ------------------------------------------------------------------
 
-const TERRAIN = ['sand', 'soil', 'forest', 'rock'];
+const TERRAIN = ['sand', 'soil', 'forest', 'rock', 'moss'];
 
 export function applyTerrainSurfaces(material) {
   const prev = material.onBeforeCompile;
@@ -121,7 +133,13 @@ varying vec4 vGW;
 varying vec3 vTerW;
 varying vec3 vTerN;
 ${COMMON}
-vec3 terNw;`)
+vec3 terNw;
+float terH(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float terVN(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(terH(i), terH(i + vec2(1.0, 0.0)), f.x), mix(terH(i + vec2(0.0, 1.0)), terH(i + vec2(1.0, 1.0)), f.x), f.y);
+}`)
       .replace('#include <color_fragment>', `#include <color_fragment>
   terNw = normalize(vTerN);
   if (uSurfOn > 0.5) {
@@ -166,6 +184,19 @@ vec3 terNw;`)
       nAcc += w.w * normalize(tx * bw.x + ty * bw.y + tz * bw.z);
     }
     diffuseColor.rgb *= ratio;
+    // Sessio 24: sammalmatto metsämaalla (sademetsä, keidas, kosteikko)
+    // laikuittain tasaisilla kohdilla; reunat repaleisia.
+    if (w.z > 0.05) {
+      float mN = terVN(uv / 7.0) * 0.6 + terVN(uv / 2.1 + 13.0) * 0.28 + terVN(uv * 1.7) * 0.12;
+      float mAmt = clamp(w.z * 1.2, 0.0, 1.0) * smoothstep(0.44, 0.6, mN) * smoothstep(0.78, 0.95, terNw.y);
+      if (mAmt > 0.01) {
+        vec2 mu = uv / 2.2;
+        vec3 mc = surfCol(tC_moss, mu) * 0.75;
+        diffuseColor.rgb = mix(diffuseColor.rgb, mix(mc, mc * ratio / max(dot(ratio, vec3(0.333)), 0.2), 0.2), mAmt);
+        vec2 mn = surfNrm(tN_moss, mu);
+        nAcc = mix(nAcc, vec3(mn.x + terNw.x, terNw.y, mn.y + terNw.z), mAmt);
+      }
+    }
     terNw = normalize(mix(terNw, normalize(nAcc), k));
   }`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
@@ -188,6 +219,8 @@ const MASKS = {
   darkWood: 'sDark',
   warm: '(1.0 - sDark) * sNotGreen * smoothstep(2.0, 3.0, sRB)',
   grey: '(1.0 - sDark) * sNotGreen * (1.0 - smoothstep(1.6, 2.4, sRB))',
+  // Sessio 24: yläpinnat (sammal kasvaa sinne, minne sade ja lehdet kertyvät).
+  top: 'sNotGreen * smoothstep(0.35, 0.85, n0.y)',
 };
 
 export function addSurfaceDetail(material, layerOrList, opts = {}) {
@@ -195,11 +228,26 @@ export function addSurfaceDetail(material, layerOrList, opts = {}) {
   const layers = list.map((l) => ({ scale: 1.2, strength: 0.85, normal: 0.9, mask: 'none', ...l }));
   const names = [...new Set(layers.map((l) => l.layer))];
   const prev = material.onBeforeCompile;
-  const blocks = layers.map((l) => `
+  // cover: true = peittävä kerros (oma väri, esim. sammal), muuten
+  // yksityiskohta vertex-värin päällä (tekstuuri / keskiväri).
+  const blocks = layers.map((l) => (l.cover ? `
+  {
+    float m = ${MASKS[l.mask]} * uMoss;
+    if (m > 0.01) {
+      float cn = surfVN(vSurfP.xz * 0.8 + vSurfP.y * 0.3) * 0.65 + surfVN(vSurfP.xz * 2.9 + 7.0) * 0.35;
+      float cov = m * smoothstep(0.42, 0.62, cn) * ${l.strength.toFixed(3)};
+      vec3 p = vSurfP / ${l.scale.toFixed(3)};
+      vec3 c = surfCol(tC_${l.layer}, p.zy) * bw.x + surfCol(tC_${l.layer}, p.xz) * bw.y + surfCol(tC_${l.layer}, p.xy) * bw.z;
+      sCover = mix(sCover, c * 0.8, cov);
+      sCoverK = max(sCoverK, cov);
+    }
+  }` : `
   {
     float m = ${MASKS[l.mask]};
     if (m > 0.01) {
-      float k = m * mix(${l.strength.toFixed(3)}, ${(l.strength * 0.5).toFixed(3)}, sFar);
+      float k = m * mix(${l.strength.toFixed(3)}, ${(l.strength * 0.5).toFixed(3)}, sFar);${l.weather ? `
+      // Harmaantunut (sään kuluttama) puu: vaalea, hopeinen ja vähemmän kylläinen.
+      diffuseColor.rgb = mix(diffuseColor.rgb, vec3(dot(diffuseColor.rgb, vec3(0.3333))) * vec3(1.45, 1.42, 1.38), m * ${l.weather.toFixed(3)});` : ''}
       vec3 p = vSurfP / ${l.scale.toFixed(3)};
       vec3 c = surfCol(tC_${l.layer}, p.zy) * bw.x + surfCol(tC_${l.layer}, p.xz) * bw.y + surfCol(tC_${l.layer}, p.xy) * bw.z;
       sRatio *= surfRatio(c, uAvg_${l.layer}, k);
@@ -211,7 +259,7 @@ export function addSurfaceDetail(material, layerOrList, opts = {}) {
       sNAcc += k * normalize(tx * bw.x + ty * bw.y + tz * bw.z);
       surfK += k;
     }
-  }`).join('');
+  }`)).join('');
   material.onBeforeCompile = (shader, renderer) => {
     if (prev) prev(shader, renderer);
     bind(shader, names);
@@ -273,8 +321,10 @@ float surfK;`)
     bw /= bw.x + bw.y + bw.z;
     vec3 sRatio = vec3(1.0);
     vec3 sNAcc = vec3(0.0);
+    vec3 sCover = vec3(0.0);
+    float sCoverK = 0.0;
     ${blocks}
-    diffuseColor.rgb *= sRatio;
+    diffuseColor.rgb = mix(diffuseColor.rgb * sRatio, sCover, sCoverK);
     if (surfK > 0.0) surfNl = normalize(mix(n0, normalize(sNAcc), min(1.0, surfK)));
   }`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
@@ -284,7 +334,7 @@ float surfK;`)
     normal = gl_FrontFacing ? nv : -nv;
   }`);
   };
-  const key = layers.map((l) => `${l.layer}:${l.mask}:${l.scale}:${l.strength}:${l.normal}`).join('|');
+  const key = layers.map((l) => `${l.layer}:${l.mask}:${l.scale}:${l.strength}:${l.normal}:${l.cover ? 1 : 0}:${l.weather || 0}`).join('|');
   const prevKey = material.customProgramCacheKey;
   material.customProgramCacheKey = () => `${prevKey ? prevKey.call(material) : ''}-surf-${key}`;
   return material;

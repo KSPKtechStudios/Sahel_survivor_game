@@ -217,6 +217,17 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 24 (käyttäjän kertoma, 2026-10-08)
+- **Tavoite:** maailman visuaalinen uudistus nykyisestä tekoäly-3D-pohjasta syvään, elävään **"stilisoituun realismiin"** (tyyli: **Valheim / Stylized Realism**). Käytetään saatavilla olevia 3D-malleja ja korkean resoluution tekstuurikirjastoja.
+- **Huonot 3D-mallit korvataan valmiilla, hyvillä** (esim. Sketchfab tai jokin muu mallipankki). **Jo tarpeeksi hyvät mallit voi vain teksturoida uudelleen.**
+- **Materiaalit ja kerrostaminen:** sileät, yhtenäiset pinnat ja perusvärit korvataan monimutkaisilla, korkean resoluution, säänkestävillä tekstuureilla (esim. märkä turve, ikivanha kivi, rosoinen kaarna).
+- **Kasvillisuuden kerrostaminen:** kasvillisuutta paljon tiheämmin. Maanpinta "kerrostettuna": alimpana **sammalta**, sen päällä **useita ruoholajeja** (esim. sarat, lyhyt nurmi), **erilaisia sieniä, pudonneita oksia ja muinaisia kiviä**. Ruohoa ei ole vain muutama korsi, vaan **tiheitä mättäitä ja laajoja alueita**. Kunnon foliage: ruohoa, ryteikköä, puskia ja pensaita.
+- **Sää ja kosteus:** sadebiomeissa kaiken on näytettävä **säässä kuluneelta ja märältä**: pinnat (maa, puu, kivi) liukkaita ja kiiltäviä sateesta. Rakenteet ja esineet näyttävät **vanhoilta ja kuluneilta** (esim. sammaleiset kivet, harmaantunut puu).
+- **Valaistus ja volumetriikka:** volumetristä sumua, syvyysusvaa, hiukkastehosteita (sumusade, itiöt). **Moody ja diffuusi valaistus** on tärkeä (sadekuvissa). Yksinkertaiset sadesuihkut korvataan **hienolla sumusateella ja roisketehosteilla pinnoilla**.
+- **Ympäristön tarinankerronta:** pieniä yksityiskohtia, jotka vihjaavat historiaan, esim. **murenevat muinaiset kivipylväät, vanhat ruostuneet kilvet maassa, maasta nousevat ikivanhat juuret**.
+- **Ehkä tärkeimpänä: maailman generointia täytyy muuttaa.** Maailma generoituu nyt todella **kulmikkaasti**; sen täytyy olla **todella pehmeä**: mäet, harjanteet ja maastonmuutokset **pehmoisia ja sileitä**.
+- **Sademetsän puihin köynnöksiä** (haetaan netistä 3D-malli tai tehdään itse laadukas).
+
 ## Sessio 23 (käyttäjän kertoma, 2026-10-08)
 - Aletaan **parannella pelin ulkonäköä realistisempaan suuntaan**.
 - Haetaan netistä **ilmaisia CC0-3D-malleja ja -tekstuureita** ja korvataan esim. puita ja muita asioita ja esineitä hyvillä tekstuureilla.

@@ -148,7 +148,15 @@ uniform float uAspect;
 uniform float uFlare;
 uniform vec2 uSunUV;
 uniform vec3 uFlareColor;
+uniform vec4 uHFog;      // sessio 24: korkeussumu x = tiheys, y = pohja (m), z = vaimeneminen, w = aika
+uniform vec3 uHFogColor;
 varying vec2 vUv;
+float hfH(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float hfN(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hfH(i), hfH(i + vec2(1.0, 0.0)), f.x), mix(hfH(i + vec2(0.0, 1.0)), hfH(i + vec2(1.0, 1.0)), f.x), f.y);
+}
 
 // Linssiheijastus (sessio 12e): hehku ja säteet auringon ympärillä, hento
 // vaakajuova ja värilliset "haamut" auringon ja kuvan keskipisteen kautta
@@ -372,6 +380,26 @@ void main() {
     }
   }
 
+  // Sessio 24: maata myötäilevä korkeussumu (laaksot, sademetsä, sade,
+  // aamuusva). Tiheys vaimenee eksponentiaalisesti ylöspäin; säteen yli
+  // integroitu analyyttisesti, ja usva ajelehtii laikkuina tuulen mukana.
+  if (uHFog.x > 0.0) {
+    float L = sky ? 700.0 : dist;
+    vec3 P = uCamPos + ray * L;
+    float hc = uCamPos.y - uHFog.y, hp = P.y - uHFog.y;
+    float fz = uHFog.z;
+    float ec = exp(-fz * max(hc, -15.0)), ep = exp(-fz * max(hp, -15.0));
+    float dh = hp - hc;
+    float integ = abs(dh) > 0.05 ? (ec - ep) / (fz * dh) : ec;
+    float wisp = hfN(P.xz * 0.035 + vec2(uHFog.w * 0.05, uHFog.w * 0.02)) * 0.6 + hfN(P.xz * 0.11 - uHFog.w * 0.04) * 0.4;
+    float amt = 1.0 - exp(-uHFog.x * L * integ * (0.55 + 0.9 * wisp));
+    // Lähellä ohuempi (ei sumuseinää kasvojen edessä).
+    amt *= smoothstep(1.5, 14.0, L);
+    float mu = max(dot(ray, uSunDir), 0.0);
+    vec3 hcol = uHFogColor + uSunColor * pow(mu, 5.0) * 0.35 * uInscatter;
+    col = mix(col, hcol, clamp(amt, 0.0, 0.9));
+  }
+
   // Ilmakehä: sumu hehkuu auringon suunnassa (aamu- ja iltavalo, usva).
   if (uInscatter > 0.0 && !sky) {
     float f = clamp((dist - uFogNear) / max(uFogFar - uFogNear, 1.0), 0.0, 1.0);
@@ -458,7 +486,10 @@ export class PostFX {
       uFlare: { value: 0 }, uSunUV: { value: new THREE.Vector2(0.5, 0.5) }, uFlareColor: { value: new THREE.Color(1, 0.92, 0.8) },
       uFogNear: { value: 50 }, uFogFar: { value: 330 },
       uHeat: { value: 0 }, uTime: { value: 0 }, uViewProj: { value: new THREE.Matrix4() },
+      uHFog: { value: new THREE.Vector4(0, 0, 0.12, 0) }, uHFogColor: { value: new THREE.Color(0.7, 0.72, 0.74) },
     });
+    // Sessio 24: korkeussumu (main.js asettaa tiheyden ja pohjan).
+    this.hfog = { density: 0, base: 0, falloff: 0.12, color: new THREE.Color(0.7, 0.72, 0.74) };
     this.time = 0;
 
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.compMat);
@@ -483,7 +514,7 @@ export class PostFX {
   }
 
   get active() {
-    return this.godRays || this.motionBlur > 0 || this.dof || this.lens > 0.01 || this.splashOn || (this.lensFlare && this.flare > 0.01);
+    return this.godRays || this.motionBlur > 0 || this.dof || this.lens > 0.01 || this.splashOn || (this.lensFlare && this.flare > 0.01) || this.hfog.density > 0.0005;
   }
 
   _resize() {
@@ -619,6 +650,9 @@ export class PostFX {
     cu.uInscatter.value = 0.9 * env.daylight * (1 - env.w.cloud * 0.6);
     cu.uFogNear.value = env.scene.fog.near;
     cu.uFogFar.value = env.scene.fog.far;
+    const hf = this.hfog;
+    cu.uHFog.value.set(hf.density, hf.base, hf.falloff, this.time);
+    cu.uHFogColor.value.copy(hf.color);
 
     this._pass(this.compMat, null);
   }

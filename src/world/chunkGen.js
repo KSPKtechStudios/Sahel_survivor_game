@@ -8,6 +8,7 @@ import {
 } from './terrain.js';
 import { OBJECT_TYPES, OBJECT_TYPE_KEYS, DECOR_TYPES } from './objectTypes.js';
 import { openFactor } from './waves.js';
+import { generateCover } from './groundCover.js';
 
 // Tiheyden avaimet: biomit sekä muodostumat (graniittikallio, pöytävuori).
 const DENSITY_KEYS = [...BIOME_KEYS, 'rock', 'mesa'];
@@ -133,6 +134,17 @@ export function generateChunk(cx, cz, variantCounts) {
   }
 
   // --- Koristeet (ruoho ym.)
+  // Sessio 24: koristeita on paljon (kerroksellinen maanpeite), joten ne
+  // käyttävät lähimmän verkon kärjen maastonäytettä ja piirretyn verkon
+  // korkeutta eivätkä laske maastoa erikseen jokaiselle ehdokkaalle.
+  const gridHeight = (lx, lz) => {
+    const fi = Math.min(SEG - 1e-4, Math.max(0, lx / STEP)), fj = Math.min(SEG - 1e-4, Math.max(0, lz / STEP));
+    const gi = Math.floor(fi), gj = Math.floor(fj);
+    const fx = fi - gi, fz = fj - gj;
+    const a = gj * row + gi, b = a + 1, c = a + row, d = c + 1;
+    const ha = positions[a * 3 + 1], hb = positions[b * 3 + 1], hc = positions[c * 3 + 1], hd = positions[d * 3 + 1];
+    return fx + fz <= 1 ? ha + (hb - ha) * fx + (hc - ha) * fz : hd + (hc - hd) * (1 - fx) + (hb - hd) * (1 - fz);
+  };
   const decor = [];
   DECOR_TYPES.forEach((type, ti) => {
     const def = OBJECT_TYPES[type];
@@ -143,20 +155,22 @@ export function generateChunk(cx, cz, variantCounts) {
       const x = x0 + rand() * SIZE;
       const z = z0 + rand() * SIZE;
       const r1 = rand(), r2 = rand(), r3 = rand(), r4 = rand();
-      sampleTerrain(x, z, s);
+      const vi = Math.min(SEG, Math.max(0, Math.round((z - z0) / STEP))) * row + Math.min(SEG, Math.max(0, Math.round((x - x0) / STEP)));
+      const sv = samples[vi];
       let p = 0;
-      for (const b of DENSITY_KEYS) p += (def.density[b] || 0) * s[b];
+      for (const b of DENSITY_KEYS) p += (def.density[b] || 0) * sv[b];
       if (r1 >= p / maxD) continue;
-      let y = def.lift !== undefined ? s.h + def.lift : s.h - 0.03;
-      if (def.slopeCheck && slope(x, z, s.h) > def.maxSlope) continue;
+      const h = gridHeight(x - x0, z - z0);
+      let y = def.lift !== undefined ? h + def.lift : h - 0.03;
+      if (def.slopeCheck && 1 - normals[vi * 3 + 1] > def.maxSlope) continue;
       if (def.onWater) {
         // Kelluu tyynellä vedellä (ei joissa eikä meressä), 0.3..2.2 m syvyydessä.
-        const depth = s.wl - s.h;
-        if (depth < 0.3 || depth > 2.2 || s.wtype === 3 || s.wtype === 4 || s.ocean + s.beach > 0.2) continue;
-        y = s.wl + 0.005;
+        const depth = sv.wl - h;
+        if (depth < 0.3 || depth > 2.2 || sv.wtype === 3 || sv.wtype === 4 || sv.ocean + sv.beach > 0.2) continue;
+        y = sv.wl + 0.005;
       } else if (def.nearWater) {
-        if (s.h < s.wl - 0.35 || s.h > s.wl + 0.9) continue;
-      } else if (s.h < s.wl + 0.05) continue;
+        if (h < sv.wl - 0.35 || h > sv.wl + 0.9) continue;
+      } else if (h < sv.wl + 0.05) continue;
       if (insideStructure(x, z, -1)) continue;
       const sc = def.scale[0] + r3 * (def.scale[1] - def.scale[0]);
       if (def.puddleWeight) {
@@ -177,17 +191,21 @@ export function generateChunk(cx, cz, variantCounts) {
       }
       // Lammikon pysyvyys (1 = sademetsä, aina vettä; 0 = vain sateen jälkeen)
       // kulkee y-skaalassa (litteä malli, pystyskaala ei näy).
-      const sy = def.puddleWeight ? 0.05 + 0.95 * Math.min(1, s.rainforest + s.oasis)
-        : def.onWater ? sc : sc * (0.8 + s.mare * 0.5);
+      const sy = def.puddleWeight ? 0.05 + 0.95 * Math.min(1, sv.rainforest + sv.oasis)
+        : def.onWater ? sc : sc * (0.8 + sv.mare * 0.5);
       decor.push(ti, Math.floor(r4 * nv), x, y, z, r2 * Math.PI * 2, sc, sy);
     }
   });
+
+  // --- Sessio 24: tiheä ruohokenttä (render/grassField.js)
+  const { cover, coverCells } = generateCover(cx, cz, samples, positions, normals, gw);
 
   return {
     cx, cz, minH, rain: rain / (row * row),
     positions, normals, colors, uvs, gw,
     objects: new Float32Array(objs),
     decor: new Float32Array(decor),
+    cover, coverCells,
     water,
   };
 }

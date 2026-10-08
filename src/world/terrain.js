@@ -192,10 +192,20 @@ function zones(x, z, out) {
   return out;
 }
 
+// Sessio 24: pehmeä itseisarvo ja minimi. Tavallinen |n| ja min() tekivät
+// maastoon teräviä V-uurteita ja harjanteita ("kulmikas" maasto).
+function sabs(v, k = 0.12) {
+  return Math.sqrt(v * v + k * k) - k;
+}
+function smin(a, b, k) {
+  const hh = Math.max(k - Math.abs(a - b), 0) / k;
+  return Math.min(a, b) - hh * hh * k * 0.25;
+}
+
 function ridged(nx, nz, octaves) {
   let s = 0, a = 1, f = 1, w = 0;
   for (let o = 0; o < octaves; o++) {
-    const r = 1 - Math.abs(N.mount(nx * f, nz * f));
+    const r = 1 - sabs(N.mount(nx * f, nz * f), 0.14);
     s += r * r * a; w += a; a *= 0.5; f *= 2.1;
   }
   return s / w;
@@ -212,7 +222,7 @@ function coastHeight(x, z, c) {
   h += N.ripple(x / 14, z / 30) * 0.15;
   // Harvinaiset saaret avomerellä
   const isl = smoothstep(0.62, 0.84, fbm(N.island, x / 800, z / 800, 3)) * smoothstep(0.02, 0.05, c);
-  if (isl > 0) h += isl * 24 + Math.abs(N.detail(x / 26, z / 26)) * isl * 2;
+  if (isl > 0) h += isl * 24 + sabs(N.detail(x / 26, z / 26)) * isl * 2;
   return h;
 }
 
@@ -255,13 +265,14 @@ function sampleLand(x, z, out) {
     const u = (x + z) * 0.7071;
     const v = (x - z) * 0.7071;
     if (dn > 0.001) {
-      const ridge = 1 - Math.abs(N.dune(u / 85 + N.warp(x / 140, z / 140) * 0.4, v / 190));
-      const duneH = ridge * ridge * 9 + (1 - Math.abs(N.dune(u / 32, v / 60))) * 1.6;
+      const ridge = 1 - sabs(N.dune(u / 85 + N.warp(x / 140, z / 140) * 0.4, v / 190), 0.12);
+      const duneH = ridge * ridge * 9 + (1 - sabs(N.dune(u / 32, v / 60), 0.15)) * 1.6;
       h += dn * (duneH + N.ripple(u / 2.2, v / 9) * 0.05);
     }
-    plateau = smoothstep(0.3, 0.36, latField) * (1 - spawnW * 0.4);
+    // Sessio 24: loivemmat tasankojen reunat (ennen jyrkkä porras).
+    plateau = smoothstep(0.26, 0.42, latField) * (1 - spawnW * 0.4);
     if (plateau > 0.001) h += plateau * (1 - dn) * (4.5 + (N.rock(x / 300, z / 300) * 0.5 + 0.5) * 3 + N.rock(x / 40, z / 40) * 0.6);
-    if (lt > 0.001) h += lt * Math.abs(N.rock(x / 9, z / 9)) * 0.35;
+    if (lt > 0.001) h += lt * sabs(N.rock(x / 16, z / 16), 0.2) * 0.3;
     // Kausilampien painanteet ulottuvat aina veden alle maaston korkeudesta riippumatta.
     basin = smoothstep(0.4, 0.62, mareField) * (1 - dn) * (1 - plateau) * t1;
     if (basin > 0.001) h += (-2.0 + N.detail(x / 30, z / 30) * 0.3 - h) * basin;
@@ -277,8 +288,8 @@ function sampleLand(x, z, out) {
       // Valtavat dyynit (erg); reunoilla matalammat, sisäosissa korkeat.
       const u = (x + z) * 0.7071;
       const v = (x - z) * 0.7071;
-      const r1 = 1 - Math.abs(N.bigDune(u / 230 + N.warp(x / 500, z / 500) * 0.5, v / 520));
-      const r2 = 1 - Math.abs(N.bigDune(u / 70 + 13, v / 140 - 7));
+      const r1 = 1 - sabs(N.bigDune(u / 230 + N.warp(x / 500, z / 500) * 0.5, v / 520), 0.1);
+      const r2 = 1 - sabs(N.bigDune(u / 70 + 13, v / 140 - 7), 0.14);
       const big = 0.25 + 0.75 * out.desCore;
       hDesert = 3 + r1 * r1 * 22 * big + r2 * r2 * 3.5 + fbm(N.base, x / 600, z / 600, 2) * 3 + N.ripple(u / 2.5, v / 10) * 0.06;
       // Keidas: harvinainen painanne, jossa on vettä ja vehreyttä.
@@ -293,7 +304,7 @@ function sampleLand(x, z, out) {
     }
     if (rainforest > 0.0005) {
       // Kumpuileva, rosoinen maasto. (Kuivat uomat tulevat nyt valumaverkosta.)
-      hRain = 5.5 + fbm(N.hills, x / 320, z / 320, 4) * 11 + Math.abs(N.detail(x / 30, z / 30)) * 1.2;
+      hRain = 5.5 + fbm(N.hills, x / 320, z / 320, 4) * 11 + sabs(N.detail(x / 30, z / 30), 0.18) * 1.2;
     }
   }
 
@@ -302,7 +313,7 @@ function sampleLand(x, z, out) {
   if (mountW > 0.0005) {
     mountains = mountW;
     rise = out.mountCore;
-    hMount = 6 + ridged(x / 650, z / 650, 5) * 110 * rise + Math.abs(N.mount2(x / 60, z / 60)) * 3;
+    hMount = 6 + ridged(x / 650, z / 650, 5) * 110 * rise + sabs(N.mount2(x / 60, z / 60), 0.18) * 3;
   }
 
   // --- Meri ja hiekkaranta
@@ -746,7 +757,8 @@ function carveH(raw, dc, w, V, wl, depth) {
   } else {
     target = wl + 0.15 + (dc - w) * 0.35;
   }
-  let h = Math.min(raw, target);
+  // Sessio 24: pehmeä minimi (uoman reunat pyöristyvät, ei taitekohtaa).
+  let h = smin(raw, target, 0.9);
   h = h + (raw - h) * smoothstep(V * 0.6, V, dc);
   if (dc >= w && h < wl + 0.15 && raw > WATER_LEVEL) {
     h += (wl + 0.15 - h) * (1 - smoothstep(w + 3, Math.max(V, w + 9), dc));

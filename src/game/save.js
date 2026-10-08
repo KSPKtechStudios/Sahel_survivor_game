@@ -82,10 +82,10 @@ export function saveWorldData(id, data) {
 // Sessio 12e: syväterävyys ja linssiheijastukset oletuksena päällä
 // (matalalla pois, koska jälkikäsittely on silloin pois).
 export const QUALITY_PRESETS = {
-  low: { viewDistance: 3, shadows: 'off', renderScale: 0.7, godRays: false, motionBlur: 'off', dof: false, lensFlare: false },
-  medium: { viewDistance: 4, shadows: 'normal', renderScale: 0.85, godRays: true, motionBlur: 'off', dof: true, lensFlare: true },
-  high: { viewDistance: 5, shadows: 'normal', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true },
-  ultra: { viewDistance: 7, shadows: 'high', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true },
+  low: { viewDistance: 3, shadows: 'off', renderScale: 0.7, godRays: false, motionBlur: 'off', dof: false, lensFlare: false, foliage: 'low' },
+  medium: { viewDistance: 4, shadows: 'normal', renderScale: 0.85, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'normal' },
+  high: { viewDistance: 5, shadows: 'normal', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high' },
+  ultra: { viewDistance: 7, shadows: 'high', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high' },
 };
 // Asetusten versio: vanhoihin tallennettuihin asetuksiin kytketään uudet
 // oletukset kerran (DOF ja linssiheijastukset päälle).
@@ -104,6 +104,7 @@ export const DEFAULT_SETTINGS = {
   motionBlur: 'off',  // off | low | high
   dof: true,          // syväterävyys (sessio 12e: oletuksena päällä)
   lensFlare: true,    // linssiheijastukset aurinkoon katsottaessa (sessio 12e)
+  foliage: 'high',    // ruohon ja aluskasvien tiheys: low | normal | high (sessio 24)
   masterVolume: 1,    // äänenvoimakkuus 0..1
   musicVolume: 0.8,   // musiikki 0..1 (pelissä musiikki soi lisäksi hiljaa taustalla)
   sfxVolume: 1,       // äänitehosteet 0..1 (tuleville äänille)

@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
 import { V, partRand, displace, paint, limb, flatNormals, strip, merge, tag, leafCards } from './util.js';
+import { liana, climbingVine } from './ancient.js';
 
 function treeMeta(geo, meta) {
   geo.userData.tree = meta;
@@ -217,8 +218,9 @@ export function makeJungleTree(seed, q = 1) {
     const hasLiana = rand() < 0.45;
     const lj = jr();
     if (hasLiana && q) {
+      // Sessio 24: riippuva, lehtevä liaani (ennen suora sauva).
       const lp = b0.clone().lerp(tip, 0.6);
-      parts.push(paint(limb(V(lp.x, lp.y - 3.5 - lj() * 2, lp.z), lp, 0.025, 0.025, 3), 0x4a5a2a, { rand: lj }));
+      parts.push(...liana(lp, lj, 0, q));
     }
   }
   const crowns = [{ p: V(top.x, H + 1.0, top.z), s: V(2.8 + rand(), 1.1, 2.8 + rand()) }];
@@ -230,6 +232,9 @@ export function makeJungleTree(seed, q = 1) {
     if (!skip) parts.push(blob(c.p, c.s, q ? 1 : 0, leaves[i % 3], j, c.p.y - c.s.y * 0.3, rot));
     else j();
   });
+  // Sessio 24: runkoa kiertävä köynnös osassa puista.
+  const cv = partRand(seed, 950);
+  if (q && cv() < 0.55) parts.push(...climbingVine(base, top, r0, cv, q));
   return treeMeta(merge(parts), {
     kind: 'jungle', base: base.toArray(), top: top.toArray(), r0, r1, cutY,
     height: H + 2, fallLen: H - cutY + 1.5, logR: 0.5,
@@ -342,6 +347,17 @@ export function makeCanopyTree(seed, q = 1) {
     const detail = q === 2 || (q === 1 && i === 0) ? 1 : 0;
     parts.push(blob(c.p, c.s, detail, leaves[i % leaves.length], jr, c.p.y - c.s.y * 0.35, rot));
   });
+  // Sessio 24: liaanit roikkuvat latvuksista, osassa puista köynnös rungolla.
+  if (q) {
+    const vr = partRand(seed, 900);
+    const nl = vr() < 0.25 ? 0 : 1 + Math.floor(vr() * 3);
+    for (let i = 0; i < nl; i++) {
+      const c = crowns[1 + (i % Math.max(1, crowns.length - 1))] || crowns[0];
+      const p = V(c.p.x + (vr() - 0.5) * c.s.x, c.p.y - c.s.y * 0.55, c.p.z + (vr() - 0.5) * c.s.z);
+      parts.push(...liana(p, vr, 0, q));
+    }
+    if (vr() < 0.45) parts.push(...climbingVine(base, top, 0.34, vr, q));
+  }
   return treeMeta(merge(parts), {
     kind: 'canopy', base: base.toArray(), top: top.toArray(), r0: 0.34, r1: 0.2, cutY,
     height: H + 1.7, fallLen: H - cutY + 1.2, logR: 0.32,

@@ -1,8 +1,12 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 24 (stilisoitu realismi): pehmeä maasto (mäet, harjanteet, dyynit, vuoret), tiheä ruoho (savanni, kausilampi, keidas), sademetsän pohja (saniaiset, lehväkasvit, sienet, sammal), liaanit ja köynnökset, muinaiset pylväät, ruostuneet kilvet, juuret, rauniot, kuolleet puut, korkeussumu ja aamu-usva, itiöt, sade ja roiskeet
+- [ ] Suorituskyky omalla koneella: ruoho ja aluskasvit lisäävät piirtotyötä. Jos FPS laskee, kokeile Asetukset → Kasvillisuus: Normaali / Harva, ja kerro tulos
+- [ ] Sketchfabin mallit: lataukset vaativat käyttäjän API-avaimen (sketchfab.com → asetukset → Password & API). Jos haluat niitä, anna avain ympäristön salaisuudeksi, ja kerro mitä malleja toivot
+- [ ] Ulkoasu jatkuu: palmut, akasiat ja baobabit valmiilla malleilla tai paremmin teksturoituina, olennot, esineet kädessä, rakennelmat; pudonneet oksat maahan (nyt oksat ovat poimittavia keppejä)
 - [ ] Käyttäjä testaa session 23 (ulkoasu, osa 1): maaston tekstuurit, lehvästöt, pensaat, kaarna, kivet, skannatut lohkareet; myös suorituskyky omalla koneella (lehtikortit lisäävät piirtotyötä)
-- [ ] Ulkoasu, osa 2 (käyttäjän palautteen mukaan): palmut ja doumpalmut, ruoho, aavikkopensaat, olennot, esineet kädessä, rakennelmat; Poly Havenin pensaat / viinipuut (quiver tree) / kuolleet rungot
+- [x] Ulkoasu, osa 2: ruoho, metsänpohja, kuolleet puut, sammal, rauniot (sessio 24); palmut, olennot, esineet ja rakennelmat jatkuvat
 - [ ] Käyttäjä testaa session 22: tasot ([F3] → Esineet → Taso… / Metallit), puulajit (jalopuu, ydinpuu), baobabin kuorinta ja kaato, panssarit ja kilvet, rubiinin hehku ja voimat, jouset ja nuolet
 - [ ] Päätös: miten kupari, rauta ja rubiini hankitaan (malmit? sulatus? paja?) ja tarvitaanko metalliesineille oma valmistuspaikka
 - [ ] Päätös: jousien valmistus (nyt työstöpenkillä puulajeista ja jänteestä)

@@ -15,7 +15,7 @@ const N = 9000;     // pisaroita
 const R = 16;       // vaakasäde kameran ympärillä (m): näkyvät pisarat ovat lähellä
 const H = 14;       // pystysuuntainen toistoalue (m)
 const SPEED = 9.5;  // putoamisnopeus (m/s), isot pisarat
-const SPLASHES = 220;
+const SPLASHES = 700; // sessio 24: ennen 220
 
 const dropVS = /* glsl */ `
 attribute float aSeed;
@@ -134,27 +134,49 @@ const splashVS = /* glsl */ `
 attribute float aBirth;
 uniform float uTime;
 varying float vA;
+varying float vK;
+varying float vSeed;
 void main() {
   float age = uTime - aBirth;
-  float k = clamp(age / 0.22, 0.0, 1.0);
-  vec4 mv = modelViewMatrix * vec4(position + vec3(0.0, k * 0.05, 0.0), 1.0);
+  float k = clamp(age / 0.3, 0.0, 1.0);
+  vec4 mv = modelViewMatrix * vec4(position + vec3(0.0, 0.05, 0.0), 1.0);
   gl_Position = projectionMatrix * mv;
-  gl_PointSize = (0.03 + 0.07 * k) * 420.0 / max(-mv.z, 0.3);
-  vA = (age < 0.0 || age > 0.22) ? 0.0 : (1.0 - k) * smoothstep(0.0, 0.03, age);
+  gl_PointSize = 0.2 * 420.0 / max(-mv.z, 0.3);
+  vA = (age < 0.0 || age > 0.3) ? 0.0 : smoothstep(0.0, 0.02, age);
+  vK = k;
+  vSeed = fract(aBirth * 7.31);
 }
 `;
+// Sessio 24: roiske kruununa: maahan leviävä litteä rengas ja pisarat, jotka
+// lentävät kaarena ylös ja ulos (ennen pelkkä välähdys).
 const splashFS = /* glsl */ `
 uniform vec3 uColor;
 uniform float uOpacity;
 varying float vA;
+varying float vK;
+varying float vSeed;
 void main() {
   vec2 q = gl_PointCoord * 2.0 - 1.0;
-  float r = length(q);
-  // Pehmeä välähdys ja himmeä rengas (pisara iskeytyy ja roiskuu).
-  float ring = smoothstep(1.0, 0.8, r) * smoothstep(0.45, 0.8, r);
-  float a = vA * (ring * 0.35 + smoothstep(0.6, 0.0, r) * 0.7) * uOpacity;
+  q.y = -q.y;
+  float k = vK;
+  float a = 0.0;
+  // Rengas maassa (litistetty ellipsi alareunassa).
+  float e = length(vec2(q.x, (q.y + 0.72) * 3.2));
+  a += smoothstep(0.07, 0.0, abs(e - k * 0.85)) * (1.0 - k) * 0.6;
+  // Keskellä nouseva pylväs alussa.
+  float col = smoothstep(0.06, 0.0, abs(q.x)) * step(-0.75, q.y) * step(q.y, -0.75 + 0.55 * sin(min(k * 2.2, 1.0) * 3.14159));
+  a += col * (1.0 - smoothstep(0.2, 0.5, k)) * 0.8;
+  // Kruunun pisarat kaarena.
+  for (int i = 0; i < 6; i++) {
+    float fi = float(i);
+    float ang = fi * 1.0472 + vSeed * 6.2832;
+    float sp = 0.55 + 0.35 * fract(sin(fi * 12.7 + vSeed * 31.0) * 4375.5);
+    vec2 dp = vec2(cos(ang) * k * sp * 0.9, -0.72 + sin(k * 3.14159) * 0.55 * sp + sin(ang) * k * 0.08);
+    a += smoothstep(0.075, 0.0, length(q - dp)) * (1.0 - k * 0.8);
+  }
+  a *= vA * uOpacity;
   if (a < 0.01) discard;
-  gl_FragColor = vec4(uColor, a);
+  gl_FragColor = vec4(uColor, min(a, 1.0));
   #include <colorspace_fragment>
 }
 `;
@@ -327,14 +349,14 @@ export class Rain {
     this.splashU.uTime.value = this.t;
     if (fog) this.splashU.uColor.value.copy(fog).multiplyScalar(1.25).addScalar(0.05);
     if (this.splashes.visible && dt > 0) {
-      this.splashAcc += dt * 90 * a;
+      this.splashAcc += dt * 260 * a;
       const pos = this.splashes.geometry.attributes.position;
       const birth = this.splashes.geometry.attributes.aBirth;
       let n = 0;
-      while (this.splashAcc >= 1 && n < 12) {
+      while (this.splashAcc >= 1 && n < 30) {
         this.splashAcc -= 1;
         n++;
-        const ang = Math.random() * Math.PI * 2, r = 0.8 + Math.pow(Math.random(), 0.7) * 8;
+        const ang = Math.random() * Math.PI * 2, r = 0.8 + Math.pow(Math.random(), 0.8) * 11;
         const x = camera.position.x + Math.cos(ang) * r, z = camera.position.z + Math.sin(ang) * r;
         const w = waterAt(x, z, _wq);
         // Myös vedenpinnalle (sessio 12d): pisara ponnauttaa pienen kruunun,
@@ -346,7 +368,7 @@ export class Rain {
         birth.setX(i, this.t + Math.random() * 0.03);
       }
       if (n > 0) { pos.needsUpdate = true; birth.needsUpdate = true; }
-      if (this.splashAcc > 12) this.splashAcc = 0;
+      if (this.splashAcc > 30) this.splashAcc = 0;
     }
 
     for (let i = this.fireballs.length - 1; i >= 0; i--) {

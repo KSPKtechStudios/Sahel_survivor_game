@@ -2,6 +2,18 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-08 (sessio 24): stilisoitu realismi – pehmeä maasto, tiheä kasvillisuus ja tunnelma
+
+- **Pehmeämpi maasto:** mäet, harjanteet, dyynit, vuoret ja jokiuomat eivät enää taitu teräviksi särmiksi, vaan kaartuvat pehmeästi. Maaston verkko on tiheämpi (1,33 m, ennen 2 m).
+- **Tiheä ruoho:** savannilla laajat kultaiset heinäniityt ja korkean heinän (Andropogon) laikut, kausilammilla ja keitailla rehevä vihreä heinikko ja sarat vesirajassa, vuorilla lyhyt nurmi. Ruoho huojuu tuulen puuskissa aaltoina, taipuu pelaajan tieltä ja hehkuu vastavalossa. Kaukana ruoho painuu pehmeästi maahan.
+- **Kerroksellinen metsänpohja:** sademetsän pohjalla tiheästi saniaisia, lehväkasveja, apilamattoja ja lehtiyrttejä, sekä 3D-saniaisia, sieniä, kukkia ja sammaleisia kiviä (Quaternius, CC0). Maastossa laikuittain sammalmattoa.
+- **Liaanit ja köynnökset:** sademetsän puista roikkuu lehteviä liaaneja, ja osaa rungoista kiertää köynnös.
+- **Ympäristön tarinankerronta:** murenevia muinaisia kivipylväitä (kaatuneita rumpuja vieressä, sammalta yläpinnoilla), maahan jääneitä ruostuneita kilpiä (joskus katkenneen miekan kanssa) ja maasta kaarina nousevia ikivanhoja juuria.
+- **Vanhat rauniot:** kivet sammaloituneita, puu harmaantunutta.
+- **Kuolleet puut** vaihdettiin valmiisiin, harmaantuneisiin malleihin.
+- **Tunnelma:** maata myötäilevä korkeussumu laaksoissa, sademetsässä, sateella ja aamuisin; leijuvat itiöt sademetsän valossa; hieno usvapisara sateella; sadepisarat roiskuvat maahan kruunuina.
+- **Uusi asetus: Kasvillisuus** (harva / normaali / tiheä) grafiikka-asetuksissa.
+
 ## 2026-10-08 (sessio 23): realistisempi ulkoasu, osa 1
 
 - **Maasto** saa oikeat valokuvatekstuurit ja pinnanmuodot (normaalikartat): hiekka, kuiva savannimaa, sademetsän karike ja kallio sekoittuvat biomien mukaan. Biomien värisävyt säilyivät.

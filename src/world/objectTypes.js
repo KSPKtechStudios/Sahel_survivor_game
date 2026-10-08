@@ -172,13 +172,16 @@ export const OBJECT_TYPES = {
     scale: [0.8, 1.3], maxSlope: 0.4, collider: 0.75, hit: { y: 0.9, r: 0.85 } /* sessio 20: nimilappu */, drawDist: 99,
   },
   // --- Koristeet (vain lähimmissä chunkeissa, ei vuorovaikutusta)
+  // Sessio 24: ruohotupsut (grass, grassGreen, tallGrass) korvattiin tiheällä
+  // ruohokentällä (world/groundCover.js + render/grassField.js). Tyypit
+  // jäävät listaan (retired), jotta muiden esineiden siemenet eivät muutu.
   grass: {
-    name: 'Ruoho', model: 'grass', kind: 'decor', material: 'grass', castShadow: false, decorative: true,
+    name: 'Ruoho', model: 'grass', kind: 'decor', material: 'grass', castShadow: false, decorative: true, retired: true,
     density: { savanna: 170, woodland: 120, mare: 230, laterite: 45, dunes: 16, desert: 5, mountains: 25 },
     scale: [0.7, 1.4], maxSlope: 0.6, collider: 0, hit: null,
   },
   grassGreen: {
-    name: 'Ruoho', model: 'grassGreen', kind: 'decor', material: 'grass', castShadow: false, decorative: true,
+    name: 'Ruoho', model: 'grassGreen', kind: 'decor', material: 'grass', castShadow: false, decorative: true, retired: true,
     density: { rainforest: 150, mare: 25, oasis: 130, beach: 25 },
     scale: [0.8, 1.5], maxSlope: 0.7, collider: 0, hit: null,
   },
@@ -188,7 +191,7 @@ export const OBJECT_TYPES = {
     scale: [0.8, 1.6], maxSlope: 0.8, collider: 0, hit: null,
   },
   tallGrass: {
-    name: 'Heinikko', model: 'tallGrass', kind: 'decor', material: 'grass', castShadow: false, decorative: true,
+    name: 'Heinikko', model: 'tallGrass', kind: 'decor', material: 'grass', castShadow: false, decorative: true, retired: true,
     density: { savanna: 35, woodland: 45, mare: 40, laterite: 10 },
     scale: [0.8, 1.3], maxSlope: 0.6, collider: 0, hit: null,
   },
@@ -336,7 +339,57 @@ export const OBJECT_TYPES = {
     density: { rainforest: 9, savanna: 2, woodland: 2, mare: 3 },
     scale: [0.7, 1.8], maxSlope: 0.12, slopeCheck: true, lift: 0.03, collider: 0, hit: null, puddleWeight: true,
   },
+  // --- Sessio 24: kerroksellinen maanpeite (Quaternius-kitin mallit, CC0).
+  // Lisätty loppuun, jotta vanhojen esineiden siemenet eivät muutu.
+  groundFern: {
+    name: 'Saniainen', model: 'groundFern', kind: 'decor', material: 'bush', castShadow: false, decorative: true,
+    density: { rainforest: 110, oasis: 20, mare: 10, woodland: 3 },
+    scale: [0.45, 1.0], maxSlope: 0.3, slopeCheck: true, collider: 0, hit: null, decorDist: 44,
+  },
+  forestPlant: {
+    name: 'Aluskasvi', model: 'forestPlant', kind: 'decor', material: 'bush', castShadow: false, decorative: true,
+    density: { rainforest: 160, oasis: 50, mare: 30, woodland: 8, savanna: 3 },
+    scale: [0.6, 1.25], maxSlope: 0.3, slopeCheck: true, collider: 0, hit: null, decorDist: 44,
+  },
+  kitMushrooms: {
+    name: 'Sieniä', model: 'kitMushrooms', kind: 'decor', material: 'solid', castShadow: false, decorative: true,
+    density: { rainforest: 60, oasis: 6, mare: 4, woodland: 3 },
+    scale: [0.6, 1.3], maxSlope: 0.25, slopeCheck: true, collider: 0, hit: null, decorDist: 44,
+  },
+  wildFlowers: {
+    name: 'Villikukkia', model: 'wildFlowers', kind: 'decor', material: 'bush', castShadow: false, decorative: true,
+    density: { mare: 30, oasis: 40, savanna: 8, woodland: 12, mountains: 10, rainforest: 6 },
+    scale: [0.6, 1.1], maxSlope: 0.2, slopeCheck: true, collider: 0, hit: null, decorDist: 44,
+  },
+  // Pudonneet oksat ja risut maassa.
+  twigs: {
+    name: 'Risuja', model: 'twigs', kind: 'decor', material: 'solid', surface: 'wood', castShadow: false, decorative: true,
+    density: { rainforest: 45, woodland: 30, savanna: 12, mare: 8, oasis: 12, mountains: 5, laterite: 4 },
+    scale: [0.7, 1.3], maxSlope: 0.3, slopeCheck: true, collider: 0, hit: null, decorDist: 44,
+  },
+  // Sammaleiset muinaiset kivet: isoimmissa törmäys.
+  mossStone: {
+    name: 'Sammaloitunut kivi', model: 'mossStone', kind: 'static', material: 'solid', castShadow: true,
+    density: { rainforest: 7, mountains: 5, oasis: 2, woodland: 1.2, mare: 1, savanna: 0.5 },
+    scale: [0.25, 0.85], maxSlope: 0.7, collider: 0.5, hit: { y: 0.4, r: 0.8 }, drawDist: 4,
+  },
+  // Sessio 24: ympäristön tarinankerronta (vihjeitä menneestä).
+  ancientPillar: {
+    name: 'Muinainen pylväs', model: 'ancientPillar', kind: 'static', material: 'solid', surface: 'ancient', castShadow: true,
+    density: { rainforest: 0.3, mountains: 0.22, woodland: 0.16, savanna: 0.12, oasis: 0.18, laterite: 0.12, desert: 0.1, mare: 0.08 },
+    scale: [0.85, 1.25], maxSlope: 0.35, collider: 0.55, hit: { y: 1.0, r: 0.7 }, drawDist: 99,
+  },
+  rustyShield: {
+    name: 'Ruostunut kilpi', model: 'rustyShield', kind: 'static', material: 'solid', surface: 'earth', castShadow: false,
+    density: { savanna: 0.18, woodland: 0.18, laterite: 0.25, desert: 0.14, mountains: 0.14, rainforest: 0.12, mare: 0.1 },
+    scale: [0.9, 1.1], maxSlope: 0.4, collider: 0, hit: { y: 0.1, r: 0.55 }, drawDist: 2,
+  },
+  ancientRoots: {
+    name: 'Ikivanhat juuret', model: 'ancientRoots', kind: 'static', material: 'solid', surface: 'wood', castShadow: true,
+    density: { rainforest: 3.5, oasis: 0.6, mare: 0.4, woodland: 0.3 },
+    scale: [0.8, 1.4], maxSlope: 0.5, collider: 0, hit: { y: 0.3, r: 1.3 }, drawDist: 3,
+  },
 };
 
 export const OBJECT_TYPE_KEYS = Object.keys(OBJECT_TYPES);
-export const DECOR_TYPES = OBJECT_TYPE_KEYS.filter((k) => OBJECT_TYPES[k].decorative);
+export const DECOR_TYPES = OBJECT_TYPE_KEYS.filter((k) => OBJECT_TYPES[k].decorative && !OBJECT_TYPES[k].retired);

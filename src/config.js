@@ -4,7 +4,7 @@ export const CONFIG = {
 
   // Maailma
   chunkSize: 64,          // metriä
-  chunkSegments: 32,      // maaston verkon tarkkuus / chunk (64 m / 32 = 2 m)
+  chunkSegments: 48,      // maaston verkon tarkkuus / chunk (64 m / 48 = 1,33 m; sessio 24, ennen 2 m)
   viewRadius: 5,          // montako chunkia näkyy joka suuntaan
   grassRadius: 2,         // ruohotupsut vain lähimpiin chunkeihin
   chunksPerFrame: 2,      // montako chunkia saa rakentaa yhden ruudun aikana

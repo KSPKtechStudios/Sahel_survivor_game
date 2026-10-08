@@ -76,9 +76,11 @@ export class Ruins {
     this.read = new Set();   // käännetyt riimukivet
     // Sessio 23: laudat, saviseinät ja kivet saavat oikeat pintatekstuurit.
     this.material = addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 }), [
-      { layer: 'planks', mask: 'darkWood', scale: 1.6, strength: 0.9 },
+      { layer: 'planks', mask: 'darkWood', scale: 1.6, strength: 0.9, weather: 0.7 },
       { layer: 'soil', mask: 'warm', scale: 1.8, strength: 0.8 },
-      { layer: 'rock', mask: 'grey', scale: 2.0, strength: 0.85 },
+      // Sessio 24: muinaiset kivet sammaloituneita, yläpinnoilla sammalta.
+      { layer: 'mossrock', mask: 'grey', scale: 2.4, strength: 0.9 },
+      { layer: 'moss', mask: 'top', scale: 1.4, strength: 0.95, cover: true },
     ]);
     this.chestModels = makeChestModels();
     this.timer = 0;

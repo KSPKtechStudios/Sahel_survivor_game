@@ -12,10 +12,12 @@ import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 import { OBJECT_TYPES, OBJECT_TYPE_KEYS, DECOR_TYPES } from './objectTypes.js';
 import { scannedMaterial } from '../render/scannedMaterials.js';
+import { kitMaterials } from '../render/kitMaterials.js';
 import { InstancePool } from './instancePool.js';
 import { GenPool } from './genPool.js';
 import { OBJ_STRIDE, DECOR_STRIDE } from './chunkGen.js';
 import { splitTree } from '../game/treeCut.js';
+import { GrassField } from '../render/grassField.js';
 
 const SIZE = CONFIG.chunkSize;
 const SEG = CONFIG.chunkSegments;
@@ -59,6 +61,8 @@ export class World {
     this.center = null;
     this.viewRadius = CONFIG.viewRadius;
     this.detailRange = Infinity; // sademetsässä esineitä piirretään lyhyemmälle
+    this.decorDensity = 1;       // sessio 24: aluskasvien tiheys (asetus)
+    this.decorPos = null;
     this.terrainIndex = createTerrainIndex();
     this.shakes = [];
     this.extraColliders = []; // pelaajan rakennelmat, kaatuneet rungot, rauniot
@@ -70,19 +74,24 @@ export class World {
     const variantCounts = {};
     for (const type of OBJECT_TYPE_KEYS) {
       const def = OBJECT_TYPES[type];
+      if (def.retired) continue;
       const near = models.world[def.model];
       const far = models.far[def.model];
       variantCounts[def.model] = near.length;
       const mat = (def.surface && materials[`${def.material}_${def.surface}`]) || materials[def.material];
+      // Sessio 23: skannatuilla malleilla on oma tekstuurimateriaalinsa;
+      // sessio 24: kitin malleilla omat materiaalit ryhmittäin.
+      const matFor = (geo) => (geo.userData.kit ? kitMaterials(geo.userData.kit) : geo.userData.tex ? scannedMaterial(geo.userData.tex) : mat);
       this.pools[type] = {
-        // Sessio 23: skannatuilla malleilla on oma tekstuurimateriaalinsa.
-        near: near.map((geo) => new InstancePool(scene, geo, geo.userData.tex ? scannedMaterial(geo.userData.tex) : mat, { capacity: def.decorative ? 4096 : 256, castShadow: def.castShadow })),
-        far: far ? far.map((geo) => new InstancePool(scene, geo, geo.userData.tex ? scannedMaterial(geo.userData.tex) : mat, { capacity: 512, castShadow: false })) : null,
+        near: near.map((geo) => new InstancePool(scene, geo, matFor(geo), { capacity: def.decorative ? 4096 : 256, castShadow: def.castShadow })),
+        far: far ? far.map((geo) => new InstancePool(scene, geo, matFor(geo), { capacity: 512, castShadow: false })) : null,
       };
       if (def.kind === 'tree') {
         this.stumpPools[type] = near.map((_, v) => new InstancePool(scene, splitTree(models.hi(def.model, v)).stump, materials.solid_wood || materials.solid, { capacity: 64, castShadow: true }));
       }
     }
+    // Sessio 24: tiheä ruohokenttä (render/grassField.js)
+    this.grass = new GrassField(scene);
     this.gen = new GenPool(variantCounts);
     this.gen.onChunk = (data) => this.ready.push(data);
   }
@@ -104,6 +113,7 @@ export class World {
     this.stumps = new Set();
     this.centerKey = null;
     this.center = null;
+    this.decorPos = null;
     this.shakes = [];
     this.extraColliders.length = 0;
     this.platforms.length = 0;
@@ -137,6 +147,7 @@ export class World {
       this.centerKey = ck;
       this._refresh(ccx, ccz);
     }
+    this._updateDecorNear(px, pz);
     this.gen.pump(budgetMs);
     // Rakenna valmiit chunkit lähimmät ensin, aikabudjetin puitteissa.
     if (this.ready.length) {
@@ -307,28 +318,74 @@ export class World {
       if (cr > 0) chunk.colliders.push({ x: obj.x, z: obj.z, r: cr * obj.scale, obj });
     }
     this.chunks.set(this.key(cx, cz), chunk);
+    this.grass.addChunk(chunk, data.cover, data.coverCells);
     this._applyLod(chunk);
     return chunk;
   }
 
-  // Koriste-esineet (ruoho ym.) vain lähimpiin chunkeihin.
+  // Koriste-esineet (ruoho ym.) vain lähimpiin chunkeihin. Sessio 24:
+  // tiheät aluskasvit (decorDist) näytetään vain pelaajan lähellä; ne
+  // lisätään ja poistetaan pelaajan liikkuessa (_updateDecorNear).
   _setDecor(chunk, on) {
     if (on && !chunk.decor) {
       chunk.decor = [];
       const d = chunk.decorData;
       for (let n = 0; n < d.length; n += DECOR_STRIDE) {
-        const pool = this.pools[DECOR_TYPES[d[n]]].near[d[n + 1]];
-        _p.set(d[n + 2], d[n + 3], d[n + 4]);
-        _q.setFromAxisAngle(THREE.Object3D.DEFAULT_UP, d[n + 5]);
-        _s.set(d[n + 6], d[n + 7], d[n + 6]);
-        _m.compose(_p, _q, _s);
-        const e = { pool, slot: -1 };
-        pool.add(_m, e);
+        const def = OBJECT_TYPES[DECOR_TYPES[d[n]]];
+        // Tiheysasetus: osa koristeista jätetään pois tasaisesti.
+        if (def.decorDist && ((n / DECOR_STRIDE) * 0.6180339) % 1 >= this.decorDensity) continue;
+        const e = { pool: this.pools[DECOR_TYPES[d[n]]].near[d[n + 1]], slot: -1, n, near: def.decorDist || 0, shown: false };
         chunk.decor.push(e);
+        if (!e.near) this._showDecor(chunk, e);
       }
+      this._updateDecorChunk(chunk);
     } else if (!on && chunk.decor) {
-      for (const e of chunk.decor) e.pool.remove(e.slot);
+      for (const e of chunk.decor) if (e.shown) e.pool.remove(e.slot);
       chunk.decor = null;
+    }
+  }
+
+  _showDecor(chunk, e) {
+    const d = chunk.decorData, n = e.n;
+    _p.set(d[n + 2], d[n + 3], d[n + 4]);
+    _q.setFromAxisAngle(THREE.Object3D.DEFAULT_UP, d[n + 5]);
+    _s.set(d[n + 6], d[n + 7], d[n + 6]);
+    _m.compose(_p, _q, _s);
+    e.pool.add(_m, e);
+    e.shown = true;
+  }
+
+  _updateDecorChunk(chunk) {
+    if (!chunk.decor || !this.decorPos) return;
+    const d = chunk.decorData;
+    const px = this.decorPos.x, pz = this.decorPos.z;
+    for (const e of chunk.decor) {
+      if (!e.near) continue;
+      const dx = d[e.n + 2] - px, dz = d[e.n + 4] - pz;
+      const d2 = dx * dx + dz * dz;
+      if (!e.shown && d2 < e.near * e.near) this._showDecor(chunk, e);
+      else if (e.shown && d2 > (e.near + 6) * (e.near + 6)) {
+        e.pool.remove(e.slot);
+        e.shown = false;
+        e.slot = -1;
+      }
+    }
+  }
+
+  // Kutsutaan joka ruudulla; työ tehdään vain, kun pelaaja on liikkunut.
+  _updateDecorNear(px, pz) {
+    if (this.decorPos && Math.abs(px - this.decorPos.x) + Math.abs(pz - this.decorPos.z) < 3) return;
+    this.decorPos = { x: px, z: pz };
+    for (const ch of this.chunks.values()) if (ch.decor) this._updateDecorChunk(ch);
+  }
+
+  setDecorDensity(k) {
+    if (Math.abs(k - this.decorDensity) < 0.01) return;
+    this.decorDensity = k;
+    for (const ch of this.chunks.values()) {
+      if (!ch.decor) continue;
+      this._setDecor(ch, false);
+      this._applyLod(ch);
     }
   }
 
@@ -358,6 +415,7 @@ export class World {
       if (obj.active) this.deactivate(obj, true);
     }
     this._setDecor(ch, false);
+    this.grass.removeChunk(ch);
     this.chunks.delete(k);
   }
 

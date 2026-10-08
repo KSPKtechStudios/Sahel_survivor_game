@@ -7,10 +7,21 @@ vapaasti ilman mainintaa. Lähteet kirjataan silti tähän.
 Tekstuurit (assets/textures/), ambientCG (https://ambientcg.com), CC0:
   sand    = Ground054      soil   = Ground072      forest = Ground078
   rock    = Rock030        bark   = Bark014        planks = Planks012
+  moss    = Moss002        mossrock = Rock064 (sessio 24)
   (1K-JPG; väri- ja normaalikartta, uudelleenpakattu JPEG:ksi)
+  leaves.png = LeafSet019, LeafSet024, LeafSet022 (koottu atlakseksi)
+  grass.png = Clauden piirtämä ruohoatlas (sessio 24, CC0)
+  forestfloor.png = koottu Quaterniuksen lehtikuvista (ks. alla)
 
 Mallit (assets/models/, src/models/scanned/), Poly Haven (https://polyhaven.com), CC0:
   rocks/boulder_02..06 = namaqualand_boulder_02 .. namaqualand_boulder_06
   (1k glTF, kevennetty gltf-transform + meshoptimizer)
+
+Mallit ja tekstuurit (assets/models/nature/, src/models/kit/), Quaternius
+Stylized Nature MegaKit, ilmainen versio (https://quaternius.com), CC0 (sessio 24):
+  Fern_1, Clover_1-2, Plant_1, Plant_1_Big, Mushroom_Common, Mushroom_Laetiporus,
+  Rock_Medium_1-3, Flower_3_Group, Flower_4_Group, DeadTree_1-3
+  (mittakaava pelin metreihin, kiinteät osat kevennetty meshoptimizerilla;
+  tekstuurit pienennetty)
 
 Fontit: ks. assets/fonts (OFL).

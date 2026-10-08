@@ -296,16 +296,86 @@ class DustDevils {
   }
 }
 
+// Sessio 24: leijuvat hiukkaset kameran ympärillä (toistuva laatikko):
+// itiöt ja siitepöly sademetsän valossa, sekä hieno usvapisara sateella.
+const moteVS = /* glsl */ `
+attribute vec4 aSeed;
+uniform float uTime;
+uniform vec3 uCam;
+uniform vec3 uDrift;
+uniform float uBox;
+uniform float uSize;
+uniform float uAmount;
+uniform float uTwinkle;
+varying float vAlpha;
+void main() {
+  float t = uTime;
+  vec3 p = aSeed.xyz * uBox + uDrift * t + vec3(
+    sin(t * 0.31 + aSeed.w * 40.0) * 0.7,
+    sin(t * 0.23 + aSeed.x * 30.0) * 0.5,
+    cos(t * 0.27 + aSeed.y * 35.0) * 0.7);
+  // Toistuu kameran ympärillä (ei hyppäyksiä kameran liikkuessa).
+  p = mod(p - uCam + uBox * 0.5, uBox) - uBox * 0.5 + uCam;
+  vec4 mv = modelViewMatrix * vec4(p, 1.0);
+  gl_Position = projectionMatrix * mv;
+  float dist = -mv.z;
+  gl_PointSize = uSize * (0.6 + 0.8 * aSeed.w) * 300.0 / max(dist, 0.3);
+  float tw = mix(1.0, 0.35 + 0.65 * pow(0.5 + 0.5 * sin(t * (0.6 + aSeed.w) + aSeed.z * 50.0), 2.0), uTwinkle);
+  vAlpha = uAmount * tw * smoothstep(0.3, 1.5, dist) * (1.0 - smoothstep(uBox * 0.3, uBox * 0.5, dist));
+}
+`;
+
+class Motes {
+  constructor(scene, map, { count, box, size, color, drift, twinkle, additive }) {
+    const seed = new Float32Array(count * 4);
+    for (let i = 0; i < seed.length; i++) seed[i] = Math.random();
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+    g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 4));
+    this.uniforms = {
+      uTime: { value: 0 }, uCam: { value: new THREE.Vector3() }, uDrift: { value: new THREE.Vector3(...drift) },
+      uBox: { value: box }, uSize: { value: size }, uAmount: { value: 0 }, uTwinkle: { value: twinkle },
+      uMap: { value: map }, uColor: { value: new THREE.Color(color) }, uOpacity: { value: 1 },
+    };
+    this.points = new THREE.Points(g, new THREE.ShaderMaterial({
+      uniforms: this.uniforms, vertexShader: moteVS, fragmentShader: dotFS, transparent: true, depthWrite: false,
+      blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
+    }));
+    this.points.frustumCulled = false;
+    this.points.visible = false;
+    this.points.renderOrder = 3;
+    scene.add(this.points);
+  }
+
+  set(amount, elapsed, camPos) {
+    this.uniforms.uAmount.value = amount;
+    this.points.visible = amount > 0.005;
+    if (!this.points.visible) return;
+    this.uniforms.uTime.value = elapsed % 10000;
+    this.uniforms.uCam.value.copy(camPos);
+  }
+}
+
 export class Ambient {
   constructor(scene, world) {
     const map = createSoftDotTexture();
     this.fireflies = new Fireflies(scene, map, world);
     this.devils = new DustDevils(scene, map);
+    this.spores = new Motes(scene, map, { count: 700, box: 26, size: 0.05, color: 0xfff1c8, drift: [0.05, 0.035, 0.03], twinkle: 1, additive: true });
+    this.mist = new Motes(scene, map, { count: 1400, box: 22, size: 0.035, color: 0xd8dee6, drift: [0.2, -0.45, 0.1], twinkle: 0.2, additive: false });
   }
 
-  update(dt, elapsed, camPos, env) {
+  update(dt, elapsed, camPos, env, rain = 0) {
     this.fireflies.update(elapsed, camPos, env);
     this.devils.update(dt, elapsed, camPos, env);
+    // Itiöt: sademetsässä ja keitailla päivällä, auringon valossa kirkkaimmillaan.
+    const sun = env.daylight * (1 - env.w.cloud * 0.5);
+    this.spores.uniforms.uColor.value.copy(env.sun.color).lerp(new THREE.Color(1, 0.95, 0.8), 0.5);
+    this.spores.set((env.humid * 0.75 + 0.12) * sun * (1 - rain) * 0.85, elapsed, camPos);
+    // Usvapisarat: hieno tihku leijuu ilmassa sateella ja sademetsässä.
+    this.mist.uniforms.uColor.value.copy(env.scene.fog.color).multiplyScalar(1.1);
+    this.mist.uniforms.uDrift.value.set(env.windDir.x * (0.3 + env.w.wind), -0.45, env.windDir.y * (0.3 + env.w.wind));
+    this.mist.set(Math.min(1, rain * 1.2) * 0.55, elapsed, camPos);
   }
 
   clear() {
