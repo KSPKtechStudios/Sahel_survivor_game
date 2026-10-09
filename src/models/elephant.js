@@ -456,7 +456,7 @@ function solveLeg(L, tz, ty, stance, pitch, curl) {
 // keskikohtaan nähden, m).
 export function animateElephant(e, o, dt) {
   const B = e.bones;
-  const S = e.anim || (e.anim = { cyc: Math.random(), w: 0, rF: 0, rH: 0, graze: 0, alert: 0, look: 0, flap: 0, ph: Math.random() * 9 });
+  const S = e.anim || (e.anim = { cyc: Math.random(), w: 0, rF: 0, rH: 0, drink: 0, graze: 0, alert: 0, look: 0, flap: 0, ph: Math.random() * 9 });
   const k = (hz) => 1 - Math.exp(-dt * hz);
   // Paikallaan kääntyminen saa myös jalat askeltamaan.
   const v = Math.max(o.speed, Math.abs(o.turn || 0) * 1.4);
@@ -512,6 +512,9 @@ export function animateElephant(e, o, dt) {
 
   // Pää: laiduntaessa alempana, valppaana ylhäällä ja kohti pelaajaa.
   S.graze += ((o.graze || 0) - S.graze) * k(1.5);
+  // Sessio 33: juominen. Kärsä ojentuu veteen (pää alas), imee hetken,
+  // kiertyy suulle ja laskee taas.
+  S.drink += ((o.drink || 0) - S.drink) * k(1.2);
   S.alert += ((o.alert || 0) - S.alert) * k(2.5);
   S.look += ((o.look || 0) * S.alert - S.look) * k(2);
   const t = o.t + S.ph;
@@ -519,7 +522,10 @@ export function animateElephant(e, o, dt) {
   // Sessio 32: enemmän liikettä (käyttäjä). Pää nyökkää askelten tahdissa,
   // kääntyilee hitaasti katsellen ympärilleen ja laskee laiduntaessa.
   const look = Math.sin(t * 0.21) * 0.16 + Math.sin(t * 0.53 + 1.3) * 0.06;
-  B.head.rotation.x = 0.16 * S.graze - 0.14 * S.alert + step2 * 0.05 * S.w + Math.sin(t * 0.5) * 0.03 + Math.sin(t * 0.17) * 0.04;
+  const dp = ((o.t + S.ph) * 0.27) % 1;
+  const curlD = smoothstep(0.5, 0.66, dp) * (1 - smoothstep(0.84, 0.98, dp)) * S.drink;
+  const reachD = S.drink - curlD;
+  B.head.rotation.x = 0.24 * reachD - 0.06 * curlD + 0.16 * S.graze - 0.14 * S.alert + step2 * 0.05 * S.w + Math.sin(t * 0.5) * 0.03 + Math.sin(t * 0.17) * 0.04;
   B.head.rotation.y = Math.max(-0.5, Math.min(0.5, S.look)) + look * (1 - S.alert);
   B.head.rotation.z = -sway * 0.04 * S.w + Math.sin(t * 0.31) * 0.03;
 
@@ -528,13 +534,14 @@ export function animateElephant(e, o, dt) {
   // toisistaan jälkeen, joten liike kulkee aaltona kärkeä kohti. Välillä
   // kärsä nousee ja kiertyy haistelemaan (myös kävellessä).
   const eat = S.graze * Math.max(0, Math.sin(t * 0.9)) ** 2;
-  const sniff = smoothstep(0.55, 0.95, Math.sin(t * 0.19 + 0.7)) * (1 - S.graze);
+  const sniff = smoothstep(0.55, 0.95, Math.sin(t * 0.19 + 0.7)) * (1 - S.graze) * (1 - S.drink);
   const T = B.trunk;
   for (let i = 0; i < 3; i++) {
     const lag = i * 0.6;
     const swing = Math.sin(S.cyc * Math.PI * 2 - lag) * 0.14 * S.w;
     const idle = Math.sin(t * 0.7 - lag) * 0.1 + Math.sin(t * 1.9 - lag) * 0.03 + Math.sin(t * 0.29 - lag) * 0.08;
-    T[i].rotation.x = swing - eat * [0.25, 0.55, 1.0][i] + S.alert * [0.0, -0.15, -0.35][i] - sniff * [0.35, 0.6, 0.9][i] + idle;
+    T[i].rotation.x = swing - eat * [0.25, 0.55, 1.0][i] + S.alert * [0.0, -0.15, -0.35][i] - sniff * [0.35, 0.6, 0.9][i] + idle * (1 - S.drink * 0.7)
+      - reachD * [0.32, 0.12, 0.05][i] - curlD * [0.5, 0.95, 1.45][i];
     T[i].rotation.z = Math.sin(t * 0.45 - lag) * (0.1 + i * 0.05) + Math.sin(S.cyc * Math.PI * 2 - lag) * 0.06 * S.w + sniff * Math.sin(t * 1.3 - lag) * 0.15;
   }
 

@@ -322,6 +322,7 @@ export class Mobs {
       m.state = 'graze';
       m.timer = 2 + Math.random() * 6;
       m.prevYaw = m.yaw;
+      m.thirst = 0.45 + Math.random() * 0.5; // sessio 33: käy välillä juomassa
     }
     model.group.position.copy(m.pos);
     this.scene.add(model.group);
@@ -1197,6 +1198,7 @@ export class Mobs {
     m.timer -= dt;
     m.hurtT = (m.hurtT ?? 99) + dt;
     if (m.hurtT > 8) m.hp = Math.min(def.hp, m.hp + dt * 12);
+    if (m.state !== 'drink') m.thirst = (m.thirst ?? 0.5) + dt / 150;
     const { dx, dz, d } = this._toPlayer(m);
     const P = this.player;
     const sight = P.dead ? 0 : def.sight * (P.crouching ? 0.45 : P.sprinting ? 1.25 : 1);
@@ -1204,8 +1206,30 @@ export class Mobs {
       case 'graze':
         this._steer(m, 0, 0, 0, dt);
         if (d < sight * 0.55) this._set(m, 'alert', 2.5 + Math.random() * 2);
-        else if (m.timer <= 0) this._elephantWander(m);
+        else if (m.timer <= 0) {
+          if (m.thirst >= 1 && this._elephantFindWater(m)) this._set(m, 'toWater', 40);
+          else this._elephantWander(m);
+        }
         break;
+      case 'toWater': {
+        // Sessio 33: kävelee rantaan juomaan.
+        const wx = m.tx - m.pos.x, wz = m.tz - m.pos.z;
+        const wd = Math.hypot(wx, wz);
+        this._steer(m, wx / (wd || 1), wz / (wd || 1), def.walk, dt);
+        if (d < sight * 0.45) this._set(m, 'alert', 2.5 + Math.random() * 2);
+        else if (wd < 1.2 || (m.stateT > 3 && Math.hypot(m.vel.x, m.vel.z) < 0.08)) this._set(m, 'drink', 10 + Math.random() * 8);
+        else if (m.timer <= 0) { m.thirst = 0.7; this._set(m, 'graze', 3); }
+        break;
+      }
+      case 'drink': {
+        // Kääntyy veteen päin ja juo kärsällä.
+        const wx = m.wx - m.pos.x, wz = m.wz - m.pos.z;
+        const wl = Math.hypot(wx, wz) || 1;
+        this._steer(m, wx / wl, wz / wl, 0, dt, true);
+        if (d < sight * 0.4) this._set(m, 'alert', 2.5 + Math.random() * 2);
+        else if (m.timer <= 0) { m.thirst = Math.random() * 0.2; this._set(m, 'graze', 4 + Math.random() * 6); }
+        break;
+      }
       case 'wander': {
         const wx = m.tx - m.pos.x, wz = m.tz - m.pos.z;
         const wd = Math.hypot(wx, wz);
@@ -1262,6 +1286,28 @@ export class Mobs {
     m.tx = tx;
     m.tz = tz;
     this._set(m, 'wander', 25);
+  }
+
+  // Lähin vesi 50 m säteellä: tavoite rannalla, katse veteen.
+  _elephantFindWater(m) {
+    let best = null;
+    for (let a = 0; a < 16; a++) {
+      const ang = (a / 16) * Math.PI * 2 + Math.random() * 0.3;
+      const cx = Math.sin(ang), cz = Math.cos(ang);
+      let px = m.pos.x, pz = m.pos.z;
+      for (let r = 4; r <= 50; r += 2.5) {
+        const x = m.pos.x + cx * r, z = m.pos.z + cz * r;
+        const w = waterAt(x, z, _wq);
+        if (w.wl - w.h > 0.12) {
+          if (!best || r < best.r) best = { r, x: px - cx * 0.6, z: pz - cz * 0.6, wx: x + cx * 1.5, wz: z + cz * 1.5 };
+          break;
+        }
+        px = x; pz = z;
+      }
+    }
+    if (!best) { m.thirst = 0.6; return false; }
+    m.tx = best.x; m.tz = best.z; m.wx = best.wx; m.wz = best.wz;
+    return true;
   }
 
   _elephantLeave(m, hurt) {
@@ -1805,6 +1851,7 @@ export class Mobs {
     animateElephant(md, {
       speed, turn, t: elapsed,
       graze: m.state === 'graze' ? 1 : 0,
+      drink: m.state === 'drink' && m.stateT > 1.5 ? 1 : 0,
       alert: m.state === 'alert' || (m.state === 'leave' && m.hurtT < 2.5) ? 1 : 0,
       look, dhF: hF - m.pos.y, dhH: hH - m.pos.y,
     }, dt);

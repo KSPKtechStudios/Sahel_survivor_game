@@ -1,5 +1,6 @@
 // Sessio 9: uusien esineiden mallit (materiaalit, ruoat, rohdot, työkalut,
 // aseet ja nuolet). Kahva tai pohja origossa, esine +Y-suuntaan.
+import { userTorch, userKnife } from './userItems.js';
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
 import { V, displace, paint, limb, flatNormals, merge, strip } from './util.js';
@@ -408,19 +409,6 @@ export function itemSalve() {
 
 const HANDLE = 0x7a5a3a;
 
-export function itemKnife() {
-  const rand = mulberry32(93);
-  const blade = new THREE.OctahedronGeometry(0.03, 0);
-  displace(blade, () => [(rand() - 0.5) * 0.006, (rand() - 0.5) * 0.008, (rand() - 0.5) * 0.004]);
-  blade.scale(0.7, 3.6, 0.25);
-  blade.translate(0, 0.17, 0);
-  return merge([
-    paint(limb(V(0, -0.07, 0), V(0, 0.08, 0), 0.016, 0.015, 6, true), HANDLE, { rand }),
-    paint(flatNormals(blade), 0x3d3a38, { rand, jitter: 0.2 }),
-    lash(0.07, 0.019),
-  ]);
-}
-
 export function itemFlintAxe() {
   const rand = mulberry32(94);
   const head = new THREE.OctahedronGeometry(0.09, 0);
@@ -456,21 +444,6 @@ export function itemHammer() {
     paint(limb(V(0, -0.14, 0), V(0, 0.46, 0), 0.019, 0.017, 6, true), HANDLE, { rand }),
     paint(flatNormals(head), 0x8a8178, { rand, jitter: 0.12 }),
     lash(0.42, 0.026), lash(0.38, 0.024),
-  ]);
-}
-
-export function itemTorch() {
-  const rand = mulberry32(97);
-  const head = new THREE.CylinderGeometry(0.034, 0.026, 0.11, 8);
-  displace(head, () => [(rand() - 0.5) * 0.006, (rand() - 0.5) * 0.008, (rand() - 0.5) * 0.006]);
-  head.translate(0, 0.36, 0);
-  const tip = new THREE.CylinderGeometry(0.024, 0.033, 0.03, 8);
-  tip.translate(0, 0.43, 0);
-  return merge([
-    paint(limb(V(0, -0.15, 0), V(0, 0.33, 0), 0.016, 0.018, 6, true), 0x6e5238, { rand }),
-    paint(head, 0x5a3e24, { rand, jitter: 0.15 }),
-    paint(tip, 0x2a2018, { rand }),
-    lash(0.32, 0.03), lash(0.38, 0.036),
   ]);
 }
 
@@ -626,11 +599,11 @@ export function createItemModels2() {
     bissap: itemBissap(),
     herbal_remedy: itemRemedy(),
     shea_salve: itemSalve(),
-    stone_knife: itemKnife(),
+    stone_knife: userKnife(), // sessio 33: uusi malli tekstuureineen (ennen itemKnife)
     flint_axe: itemFlintAxe(),
     flint_pick: itemFlintPick(),
     hammer: itemHammer(),
-    torch: itemTorch(),
+    torch: userTorch(), // sessio 33: käyttäjän malli (ennen itemTorch)
     spear: itemSpear(),
     bow: itemBow(BOW_STYLES.bow),
     sinew_bow: itemBow(BOW_STYLES.sinew_bow),

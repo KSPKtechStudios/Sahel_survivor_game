@@ -2,6 +2,13 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-09 (sessio 33): uudet nuija ja soihtu, ihotekstuuri, kivipuukko ja norsu juomaan
+
+- **Puunuija ja soihtu käyttäjän malleista:** nuija on nyt nuppipäinen, tekstuuroitu puunuija ja soihtu kangaspäinen, köydellä sidottu soihtu (väri-, normaali- ja karheustekstuurit). Ne näkyvät kädessä, toisessa kädessä (soihtu) ja maassa, ja kuvakkeet piirretään samoista malleista.
+- **Iho:** käden pinnassa on nyt oikean ihon pintakuvio (ShareTextures, Human Skin 2): huokoset ja pienet rypyt, varjokohdat ja karheuden vaihtelu. Käden värit pysyvät ennallaan, mutta pinta ei näytä enää muoviselta.
+- **Kivipuukko uusiksi:** lehden muotoinen, lohkottu piikiviterä, jossa on lohkaisuarvet molemmin puolin. Terä on kiiltävä (lakkapinta ja heijastukset), joten se välkkyy valossa. Kahva on pähkinäpuuta, ja sen yläpäässä on kierretty nyörisidos (ambientCG Wood051, Rope001 ja Rock030).
+- **Norsu käy juomassa:** jano kasvaa vähitellen, ja kun se täyttyy, norsu etsii lähimmän veden (enintään 50 m), kävelee rantaan, kääntyy veteen päin ja juo: kärsä laskeutuu veteen, kiertyy suulle ja laskee taas.
+
 ## 2026-10-09 (sessio 32): pystyiskut nuijalla, nyrkki, lastut ja norsun jalat
 
 - **Nuija iskee ylhäältä alas:** nuijan sarja on nyt kaksi pystyiskua (ennen sivuiskut oikealta ja vasemmalta). Vuorottelevat muunnelmat ovat suoraan ylhäältä, vinosti oikean olan yli ja kevyesti vasemman olan yli. Sama koskee moukaria (sivupyyhkäisy pois).

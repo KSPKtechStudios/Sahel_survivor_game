@@ -217,6 +217,12 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 33 (käyttäjän kertoma, 2026-10-09)
+- **Uudet mallit puunuijalle ja soihdulle** (käyttäjän GLB-tiedostot wooden_club.glb ja torch.glb).
+- **Kunnon ihotekstuurit kädelle netistä**, ettei tule niin "muovinen" tunnelma.
+- **Puukon malli paremmaksi** ja siihen **realistiset tekstuurit**, niin että **terä kiiltelee valossa**.
+- **Norsu käy välillä vesistön äärellä juomassa** vettä kärsällä.
+
 ## Sessio 32 (käyttäjän kertoma, 2026-10-09)
 - **Vähemmän sivuttaislyöntejä**, etenkin **nuijassa**, koska sillä hakataan yleensä pystyssä. Kirveessä ja puukossa ne ovat ok, joskin välillä hieman luonnottomia.
 - **Nyrkin peukalo** taittuu oudosti pitkälle alas (käyttäjän kuva).

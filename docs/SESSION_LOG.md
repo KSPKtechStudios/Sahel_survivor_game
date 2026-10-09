@@ -2,6 +2,18 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-09 (sessio 33)
+**Tehtiin**
+- Käyttäjän nuija ja soihtu peliin: muunnin `shots/s33/convert.html` (suoristus, koko, otekohta, kvantisointi, WebP-tekstuurit), `src/models/userItems.js` ja `src/models/data/userItems.js`. Viewmodel ja drops käyttävät `geo.userData.material`-kenttää. Vanhat `itemClub` ja `itemTorch` poistettiin.
+- Ihotekstuuri (ShareTextures Human Skin 2, normaali + AO + karheus) pintakuviona käden materiaaliin (`player/arms.js`).
+- Kivipuukko: `userKnife` (lohkottu piikiviterä, puukahva, nyörisidos, ambientCG-tekstuurit, lakkapinta ja ympäristökartta).
+- Norsu juomaan: `game/mobs.js` (`thirst`, `_elephantFindWater`, tilat toWater / drink), `models/elephant.js` (kärsän ja pään juomaliike).
+- Testattiin: esineiden kuvat tekstuureilla ja ilman (`shots/s33/view.html`), kädessä (`shots/s29/vm.html`), ihon voimakkuus kahdella arvolla, juomisen kuvasarja, pelin savutesti, ESLint.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute. Avoimet: norsun metsästys ja puolustus.
+- Pushaa haara, kun GitHub-tili toimii.
+
 ## 2026-10-09 (sessio 32)
 **Tehtiin**
 - Iskut: nuija käyttää ylhäältä alas -iskuja (`game/combat.js`), muunnelmista pois kirveen vaakahakkuu ja nuijan/moukarin sivupyyhkäisy, uusi `smash4` (`player/viewmodel.js`). Nyrkkiiskut 4,5 cm ylempää.

@@ -44,6 +44,7 @@ const NEUTRAL_DEV = -0.22;
 // Kyynärvarren kierto ranteen mukana (loput kiertyy ranteessa, rajattuna).
 const TWIST = 0.8;
 const FINGERS = ['1', '2', '3', '4', '5'];
+const SKIN_REP = 4; // ihon pintakuvion toisto käden UV-alueella (sessio 33)
 
 const _v = new THREE.Vector3();
 const _w = new THREE.Vector3();
@@ -183,7 +184,31 @@ export class Arms {
       // näy reikiä (iho kääntyy taitteessa nurin) eikä olkapään aukko näy.
       side: THREE.DoubleSide,
     });
+    // Sessio 33: oikea ihotekstuuri (ShareTextures, Human Skin 2, CC0-pohjainen
+    // lisenssi) toistuvana pintakuviona käden oman tekstuurin päällä:
+    // huokoset ja pienet rypyt normaalikarttana, varjokohdat (AO) ja
+    // karheuden vaihtelu. Käden värit pysyvät ennallaan.
+    const skinN = tex('skin_detail_n.webp'), skinAS = tex('skin_detail_as.webp');
+    for (const t of [skinN, skinAS]) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; }
+    const skinU = { uSkinN: { value: skinN }, uSkinAS: { value: skinAS }, uSkinRep: { value: SKIN_REP }, uSkinK: { value: 2.0 } };
     this.material.onBeforeCompile = (sh) => {
+      Object.assign(sh.uniforms, skinU);
+      sh.fragmentShader = 'uniform sampler2D uSkinN;\nuniform sampler2D uSkinAS;\nuniform float uSkinRep;\nuniform float uSkinK;\n' + sh.fragmentShader;
+      sh.fragmentShader = sh.fragmentShader.replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+        vec2 skinUv = vNormalMapUv * uSkinRep;
+        vec2 skinAS = texture2D(uSkinAS, skinUv).rg;
+        roughnessFactor = clamp(roughnessFactor * (0.86 + (0.2 - skinAS.g) * 2.2), 0.45, 1.0);
+        diffuseColor.rgb *= mix(1.0, skinAS.r, 0.55);`);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        #if defined( USE_NORMALMAP_TANGENTSPACE ) && !defined( USE_TANGENT )
+        {
+          mat3 stbn = getTangentFrame( - vViewPosition, normal, skinUv );
+          stbn[0] *= faceDirection; stbn[1] *= faceDirection;
+          vec3 dN = texture2D(uSkinN, skinUv).xyz * 2.0 - 1.0;
+          dN.xy *= uSkinK;
+          normal = normalize( stbn * dN );
+        }
+        #endif`);
       sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
         #if NUM_DIR_LIGHTS > 0
         {

@@ -2,6 +2,13 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-09 (sessio 33)
+- **Käyttäjän nuija ja soihtu muunnetaan valmiiksi pelin dataksi** (`src/models/data/userItems.js`: geometria kvantisoituna base64-muodossa; tekstuurit WebP-kuvina `assets/models/items/`). Syy: esinemallit tarvitaan heti käynnistyksessä (kuvakkeet, maassa olevat esineet), joten GLB:n asynkronista latausta ei voi odottaa. Verteksivärit näytteistetään tekstuurista, ja kuvakkeet ja varalla olevat piirrot käyttävät niitä. Kädessä ja maassa esineellä on omat tekstuurimateriaalinsa (`geo.userData.material`).
+- **glTF-tekstuureille `flipY = false`.** Syy: GLB:n UV-suunta; ilman sitä tekstuurit menivät väärin päin (testikuvassa näkyi).
+- **Ihotekstuuri: ShareTextures Human Skin 2.** Poly Havenissa ja ambientCG:ssä ei ole ihmisen ihoa. ShareTexturesin lisenssi on CC0-pohjainen: käyttö peleissä ja muokkaus ovat sallittuja, mutta tiedostoja ei saa jakaa sellaisenaan muualla. Ihoa käytetään toistuvana pintakuviona (normaali, AO ja karheus, 1024 px, toisto 4 käden UV-alueella), ei värinä, joten käden oma ihonväri säilyy ja sävyä voi yhä vaihtaa.
+- **Kivipuukon terä on piikiveä eikä terästä.** Syy: esine on "Kivipuukko". Kiilto syntyy lakkakerroksesta (clearcoat), matalasta karheudesta ja pienestä, piirretystä ympäristökartasta, joka on vain terän materiaalissa, joten muu kuva ei muutu.
+- **Norsun jano:** jano kasvaa 1/150 s:ssa. Vettä etsitään 16 suunnasta 50 m:iin asti, tavoite on rannassa ja katse veteen. Jos vettä ei löydy, haku yritetään myöhemmin uudelleen.
+
 ## 2026-10-09 (sessio 32)
 - **Nuija käyttää moukarin murskausiskuja (`smash`)** eikä omia uusia animaatioita. Syy: ylhäältä alas iskevät avainasennot olivat jo olemassa ja testattuja. Sivupyyhkäisy (`smash3`) ja kirveen vaakahakkuu (`swingE`) jäivät koodiin, mutta ne eivät ole enää vuorossa.
 - **Nyrkin peukalo: mallin nyrkkiasennon peukalon kärkinivelet puolitetaan** (tyvi ennallaan; kerroin 1 / 0,6 / 0,5). Syy: kolmesta kuvatusta vaihtoehdosta tämä asetti peukalon etu- ja keskisormen päälle; suurempi ojennus sojotti peukaloa eteenpäin.

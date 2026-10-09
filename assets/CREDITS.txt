@@ -35,4 +35,17 @@ Norsu (assets/models/elephant/elephant.glb), sessio 31: käyttäjän antama
   malli low_poly_realistic_elephant_3d_model_free.glb (sellaisenaan, upotettu
   tekstuuri). Luuranko ja painot rakennetaan pelissä latauksen yhteydessä.
 
+Puunuija ja soihtu (assets/models/items/club_*, torch_*; geometria
+  src/models/data/userItems.js), sessio 33: käyttäjän antamat mallit
+  wooden_club.glb ja torch.glb, muunnettu pelin muotoon (koko, suunta,
+  tekstuurit WebP).
+
+Ihon pintakuvio (assets/models/arms/skin_detail_*.webp), sessio 33:
+  ShareTextures.com, Human Skin 2 (custom CC0 -lisenssi: vapaa käyttö
+  myös kaupallisesti, muokkaus sallittu, tiedostoja ei jaeta sellaisenaan
+  muualla). Pienennetty, AO ja smoothness yhdistetty.
+
+Kivipuukko (assets/models/items/knife_*.webp), sessio 33: ambientCG.com
+  Wood051, Rope001 ja Rock030 (CC0), pienennetty 512 px.
+
 Fontit: ks. assets/fonts (OFL).

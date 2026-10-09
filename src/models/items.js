@@ -1,4 +1,5 @@
 // Esinemallit (kädessä, maassa ja kuvakkeissa). Kahva origossa, esine +Y-suuntaan.
+import { userClub } from './userItems.js';
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
 import { V, displace, paint, limb, flatNormals, merge, prep } from './util.js';
@@ -186,33 +187,6 @@ function itemClock() {
   return merge(parts);
 }
 
-// Puunuija: suora varsi ja raskas nuppi (kuin knobkerrie), kahvassa kuitusidos.
-function itemClub() {
-  const rand = mulberry32(31);
-  const parts = [];
-  parts.push(paint(limb(V(0, -0.16, 0), V(0.004, 0.46, 0.002), 0.019, 0.026, 7, true), 0x6a4a2e, { rand }));
-  let knob = new THREE.IcosahedronGeometry(0.068, 1);
-  displace(knob, (x, y, z) => {
-    const n = 0.86 + rand() * 0.28;
-    return [x * (n - 1), y * (n - 1) + Math.max(0, y) * 0.25, z * (n - 1)];
-  });
-  knob.translate(0.004, 0.52, 0.002);
-  parts.push(paint(flatNormals(knob), 0x5e3f25, { rand, jitter: 0.12 }));
-  // Muutama oksan tynkä nupissa
-  for (let i = 0; i < 3; i++) {
-    const a = rand() * Math.PI * 2;
-    const y = 0.5 + rand() * 0.06;
-    parts.push(paint(limb(V(Math.cos(a) * 0.05, y, Math.sin(a) * 0.05), V(Math.cos(a) * 0.085, y + 0.015, Math.sin(a) * 0.085), 0.014, 0.008, 4, true), 0x523620, { rand }));
-  }
-  // Kahvan sidos
-  for (let i = 0; i < 4; i++) {
-    const g = new THREE.CylinderGeometry(0.0225, 0.0225, 0.022, 8);
-    g.translate(0, -0.12 + i * 0.03, 0);
-    parts.push(paint(g, i % 2 ? 0xb39a68 : 0x9c8456, { rand, jitter: 0.1 }));
-  }
-  return merge(parts);
-}
-
 // Viidakkoveitsi: leveä, kärkeä kohti levenevä terä ja puukahva niitteineen.
 // Terän leveys X-suunnassa (terä +X, selkä -X), pituus +Y.
 function itemMachete() {
@@ -345,7 +319,7 @@ export function createItemModels() {
     cowrie: itemCowrie(),
     bronze_bracelet: itemBracelet(),
     clock: itemClock(),
-    wooden_club: itemClub(),
+    wooden_club: userClub(), // sessio 33: käyttäjän malli (ennen itemClub)
     machete: itemMachete(),
     shield: itemShield(),
     raw_meat: itemMeat(),

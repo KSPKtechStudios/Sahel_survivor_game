@@ -260,7 +260,8 @@ export class ViewModel {
     this.items = {};
     this.sockets = {};  // sessio 30: kahvan keskipiste ja säde otteen kohdalla
     for (const [id, geo] of Object.entries(itemGeometries)) {
-      const m = new THREE.Mesh(geo, itemMat);
+      // Sessio 33: tekstuuroiduilla malleilla (käyttäjän nuija ja soihtu) on omat materiaalit.
+      const m = new THREE.Mesh(geo, geo.userData.material || itemMat);
       const h = holdFor(id);
       m.position.set(...h.pos);
       m.rotation.set(...h.rot);
@@ -324,7 +325,7 @@ export class ViewModel {
     this.shieldMesh = new THREE.Mesh(itemGeometries.shield || new THREE.CylinderGeometry(0.3, 0.3, 0.03, 16).rotateX(Math.PI / 2), itemMat);
     this.shieldMesh.scale.setScalar(0.8);
     // Soihtu toisessa kädessä (sessio 20) ja sen liekki.
-    this.leftTorch = new THREE.Mesh(itemGeometries.torch || new THREE.CylinderGeometry(0.02, 0.025, 0.5, 6), itemMat);
+    this.leftTorch = new THREE.Mesh(itemGeometries.torch || new THREE.CylinderGeometry(0.02, 0.025, 0.5, 6), (itemGeometries.torch && itemGeometries.torch.userData.material) || itemMat);
     this.leftTorch.position.set(0, -0.04, 0);
     this.leftTorch.scale.setScalar(0.6);
     this.leftTorch.visible = false;

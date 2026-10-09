@@ -97,7 +97,8 @@ export class Drops {
 
   _add(item, count, pos, vel, resting) {
     if (this.list.length >= MAX_DROPS) this._remove(this.list[0]);
-    const mesh = new THREE.Mesh(this.geos[item], ITEMS[item].valuable ? this.valuableMaterial : this.material);
+    const geo0 = this.geos[item];
+    const mesh = new THREE.Mesh(geo0, ITEMS[item].valuable ? this.valuableMaterial : (geo0 && geo0.userData.material) || this.material);
     mesh.castShadow = true;
     mesh.position.copy(pos);
     const yaw = Math.random() * Math.PI * 2;
