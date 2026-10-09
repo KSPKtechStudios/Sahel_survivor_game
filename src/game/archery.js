@@ -8,6 +8,7 @@ import { ITEMS } from './items.js';
 import { events } from './events.js';
 import { waterAt } from '../world/terrain.js';
 import { makeArrowGeometry } from '../models/items2.js';
+import { bodyPoint } from './mobs.js';
 
 const GRAVITY = 9.8;
 const MAX_ARROWS = 24;
@@ -18,6 +19,7 @@ const _q = new THREE.Vector3();
 const _up = new THREE.Vector3(0, 1, 0);
 const _r = new THREE.Vector3();
 const _wq = {};
+const _bp = { x: 0, z: 0 };
 const TRAIL_LEN = 3.2;   // nuolen perässä näkyvä juova (m)
 const TRAIL_LIFE = 0.9;  // juova häipyy (s)
 const _cols = [];
@@ -193,10 +195,11 @@ export class Archery {
       // Lähin kohta liikkeen janalla olennon keskilinjaan (2D) ja korkeus.
       const dx = a.pos.x - ox, dz = a.pos.z - oz;
       const L2 = dx * dx + dz * dz || 1e-6;
-      let t = ((m.pos.x - ox) * dx + (m.pos.z - oz) * dz) / L2;
+      const bp = bodyPoint(m, a.pos.x, a.pos.z, _bp); // norsu: koko rungon pituudelta
+      let t = ((bp.x - ox) * dx + (bp.z - oz) * dz) / L2;
       t = Math.max(0, Math.min(1, t));
       const cx = ox + dx * t, cz = oz + dz * t, cy = oy + (a.pos.y - oy) * t;
-      if ((cx - m.pos.x) ** 2 + (cz - m.pos.z) ** 2 > r * r) continue;
+      if ((cx - bp.x) ** 2 + (cz - bp.z) ** 2 > r * r) continue;
       if (cy < m.pos.y - 0.1 || cy > m.pos.y + m.def.height + 0.15) continue;
       const killed = this.mobs.damage(m, a.dmg, { fromX: ox, fromZ: oz, knock: 2.5, up: 0.4, arrow: true });
       _p.set(cx, cy, cz);

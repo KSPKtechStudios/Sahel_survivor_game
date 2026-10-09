@@ -7,7 +7,7 @@
 // - Muut kohteet (puut, pensaat, esineet...) saavat nimilapun, kun niihin
 //   katsotaan; kestävyyspalkkia niillä ei ole.
 import * as THREE from 'three';
-import { MOB_TYPES } from '../game/mobs.js';
+import { MOB_TYPES, bodyPoint } from '../game/mobs.js';
 import { events } from '../game/events.js';
 
 const LOOK_RANGE = 14;   // katsotun olennon lappu näkyy tämän etäisyyden sisällä (m)
@@ -21,13 +21,17 @@ const EYE = '<svg viewBox="0 0 24 24"><path d="M12 5C6.5 5 2.4 9.2 1 12c1.4 2.8 
 
 const _v = new THREE.Vector3();
 const _dir = new THREE.Vector3();
+const _bp = { x: 0, z: 0 };
 
 // Säteen ja olennon pystykapselin leikkaus: palauttaa etäisyyden tai null.
 function rayCapsule(o, d, m) {
   const r = m.def.radius;
   const y0 = m.pos.y + r * 0.6, y1 = m.pos.y + Math.max(r * 0.6, m.def.height - r * 0.6);
+  // Norsu: pystyjana rungon keskilinjan kohdassa, joka on lähinnä sädettä.
+  const s0 = (m.pos.x - o.x) * d.x + (m.pos.z - o.z) * d.z;
+  const c = bodyPoint(m, o.x + d.x * s0, o.z + d.z * s0, _bp);
   // Lähimmät pisteet säteen ja pystyjanan välillä.
-  const wx = o.x - m.pos.x, wy = o.y - y0, wz = o.z - m.pos.z;
+  const wx = o.x - c.x, wy = o.y - y0, wz = o.z - c.z;
   const segLen = y1 - y0;
   const b = d.y;                      // d · u (u = (0,1,0))
   const dd = d.x * wx + d.y * wy + d.z * wz;

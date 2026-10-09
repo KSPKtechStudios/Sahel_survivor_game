@@ -2,6 +2,19 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-09 (sessio 31)
+**Tehtiin**
+- Norsu: `models/elephant.js` lataa käyttäjän mallin (`assets/models/elephant/elephant.glb`), rakentaa luurangon ja painot (jalat, kärsä, korvat, häntä, syöksyhampaat), ja `animateElephant` hoitaa kävelyn (sivuttaiskäynti, tukijalka paikallaan, rungon keinunta ja kallistus), kärsän, korvat ja hännän.
+- `game/mobs.js`: norsu-olento (savanni, enintään 2, rauhallinen tekoäly graze / wander / alert / leave, ei kuole), törmäysjana `world.extraColliders`-listaan ja `bodyPoint` osumille (`combat.js`, `archery.js`, `ui/nameplates.js`). [F3]-paneeliin Norsu-nappi.
+- Jousen jänteen käsi heiluu juostessa ja puukon ote pysyy sivuttaisiskuissa (`player/viewmodel.js`, `player/arms.js`; commitoitu jo aiemmin tässä sessiossa).
+- Haamun viitta: muotojousi, rajattu poikkeama, taivutusrajoitteet ja liikkeen kanto; hihat omina kangasputkina (`models/ghostCloak.js`, `GhostSleeve`).
+- Testattiin: rigin kuvat ääriasennossa, kävelyn kuvasarjat (`shots/s31/elewalk.html`), jalkojen akselit (`eleaxis.html`), viitan testi sivuttaislennossa, siksakissa, syöksyssä ja kädet ylhäällä (`ghost.html`), pelin savutesti (norsu syntyy, kävelee 1,05 m/s, päivitys 0,05 ms, lähtee lyötynä, poisto siivoaa törmäysjanan; haamu ja hihat ilman virheitä), ESLint.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute norsusta ja viitasta. Avoin: metsästys ja puolustus, laumat ja poikaset, äänet.
+- Ihonsävy (vaalea vs. tumma) on yhä avoin.
+- Pushaa haara, kun GitHub-tili toimii.
+
 ## 2026-10-08 (sessio 30)
 **Tehtiin**
 - Ote kahvasta: `player/viewmodel.js` `measureSocket` (kahvan keskipiste ja säde esineen mallista: esineet, soihtu, jousen kahva), käsi kahvan kohdalle ja esine seuraa korjattua otetta.

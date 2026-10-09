@@ -16,6 +16,10 @@
 // Huomattuaan pelaajan se kiertää tätä ja syöksyy iskuun (varoitus: hehku
 // kirkastuu). Vähillä voimilla se pakenee latvusten yläpuolelle. Aamulla se
 // haihtuu.
+// Norsu (sessio 31): rauhallinen savannin jättiläinen (käyttäjän malli,
+// luuranko rakennetaan latauksessa). Vaeltaa ja laiduntaa yksin tai pareittain;
+// liian lähelle tulevaa pelaajaa se katsoo korvat levällään ja siirtyy sitten
+// verkkaisesti kauemmas. Runko on liikkuva este, joka tönäisee pelaajaa.
 import * as THREE from 'three';
 import { waterAt, sampleTerrain, insideStructure } from '../world/terrain.js';
 import { makeWarthog, makeClayGolem, makeGazelle, makeFennec, makeMonkey, makeGuineafowl, makeBird, makeHaamu } from '../models/creatures.js';
@@ -23,6 +27,7 @@ import { createFlameTexture, createSoftDotTexture } from '../render/textures.js'
 import { events } from './events.js';
 import { windUniforms } from '../render/materials.js';
 import { GhostCloak } from '../models/ghostCloak.js';
+import { loadElephant, elephantReady, makeElephant, animateElephant } from '../models/elephant.js';
 
 export const MOB_TYPES = {
   warthog: {
@@ -73,6 +78,12 @@ export const MOB_TYPES = {
     damage: 17, knock: 7, up: 2.2, reach: 1.1, windup: 0.9, sight: 30, poise: 12, turn: 3.5,
     drops: [['cowrie', 1, 3], ['bronze_bracelet', 0, 1]], cause: 'haamu', ghost: true,
   },
+  // Norsu: radius = rungon leveys (pituus tulee törmäysjanasta), turn = rad/s.
+  // Ei kuole eikä pudota mitään (avoin kysymys, ks. DESIGN).
+  elephant: {
+    name: 'Norsu', hp: 400, radius: 0.85, height: 2.9, walk: 1.05, run: 1.9, mass: 40, sight: 16, turn: 0.6, poise: 999,
+    drops: [], heavy: true,
+  },
 };
 const WILD = ['gazelle', 'guineafowl', 'monkey', 'fennec', 'bird'];
 const FACTORY = { warthog: makeWarthog, gazelle: makeGazelle, fennec: makeFennec, monkey: makeMonkey, guineafowl: makeGuineafowl, bird: makeBird, haamu: makeHaamu };
@@ -80,10 +91,11 @@ const FACTORY = { warthog: makeWarthog, gazelle: makeGazelle, fennec: makeFennec
 const MAX_WARTHOGS = 3;
 const MAX_CLAY = 3;
 const MAX_HAAMU = 1;
+const MAX_ELEPHANTS = 2;
 // Soihdun sytyttämä olento palaa näin kauan (s) ja ottaa vahinkoa / s.
 const FIRE_TIME = 5;
 const FIRE_DPS = 3.5;
-const DESPAWN = { warthog: 150, clay: 70, gazelle: 170, guineafowl: 150, monkey: 150, fennec: 150, bird: 120, haamu: 120 };
+const DESPAWN = { warthog: 150, clay: 70, gazelle: 170, guineafowl: 150, monkey: 150, fennec: 150, bird: 120, haamu: 120, elephant: 230 };
 const PLAYER_R = 0.35;
 
 const _wq = {};
@@ -98,7 +110,7 @@ const _cw = { x: 0, z: 0 }; // sessio 27: tuuli haamun viittaan
 const RED = new THREE.Color(0.55, 0.03, 0.02);
 const BLOOD = {
   warthog: RED, clay: new THREE.Color(0.45, 0.16, 0.07), gazelle: RED, guineafowl: RED, monkey: RED, fennec: RED, bird: RED,
-  haamu: new THREE.Color(0.12, 0.06, 0.26),
+  haamu: new THREE.Color(0.12, 0.06, 0.26), elephant: RED,
 };
 
 // Hiiltynyt versio geometriasta (palanut savipeikko murenee mustina paloina).
@@ -124,6 +136,8 @@ function charredGeometry(geo) {
 const VARIANTS = 3;
 const templates = new Map();
 function instantiate(type, n, eyeMat) {
+  // Norsulla on oma luuranko (kopioidaan ladatusta mallista).
+  if (type === 'elephant') return makeElephant();
   const key = `${type}:${n % VARIANTS}`;
   let t = templates.get(key);
   if (!t) {
@@ -153,6 +167,18 @@ function instantiate(type, n, eyeMat) {
   if (out.core) out.core.material = out.core.material.clone();
   return out;
 }
+
+// Rungon keskilinjan lähin piste kohtaan (x, z): norsulla jana takaa eteen,
+// muilla olennon paikka (osumat, nuolet ja nimilappu koko rungon pituudelta).
+export function bodyPoint(m, x, z, out) {
+  if (!m.def.heavy) { out.x = m.pos.x; out.z = m.pos.z; return out; }
+  const fx = Math.sin(m.yaw), fz = Math.cos(m.yaw), md = m.model;
+  const t = Math.max(md.zH - 0.2, Math.min(md.zF + 0.3, (x - m.pos.x) * fx + (z - m.pos.z) * fz));
+  out.x = m.pos.x + fx * t;
+  out.z = m.pos.z + fz * t;
+  return out;
+}
+const _bp = { x: 0, z: 0 };
 
 function angleDiff(a, b) {
   let d = a - b;
@@ -209,6 +235,7 @@ export class Mobs {
     this.clayTimer = 6;
     this.wildTimer = 2;
     this.haamuTimer = 25;
+    this.elephantTimer = 6;
     this.combat = null; // asetetaan main.js:ssä (osumat pelaajaan)
     this.enabled = true;
     this.seed = 1;
@@ -217,7 +244,9 @@ export class Mobs {
   // Rakennetaan mallit valmiiksi (latausruudun aikana), jottei ensimmäinen
   // olento nyi peliä.
   prepare() {
+    loadElephant(); // ladataan taustalla; norsuja syntyy vasta kun malli on valmis
     for (const type of Object.keys(MOB_TYPES)) {
+      if (type === 'elephant') continue;
       for (let n = 0; n < VARIANTS; n++) {
         const inst = instantiate(type, n, this.eyeMaterial);
         inst.material.dispose();
@@ -284,6 +313,15 @@ export class Mobs {
         this.scene.add(t);
         m.trail.push(t);
       }
+    }
+    if (def.heavy) {
+      // Rungon törmäysjana (päivitetään liikkuessa): pelaaja ja muut olennot
+      // väistyvät sen tieltä.
+      m.collider = { seg: true, ax: x, az: z, bx: x, bz: z, r: def.radius, top: m.pos.y + 2.5, mob: m };
+      this.world.extraColliders.push(m.collider);
+      m.state = 'graze';
+      m.timer = 2 + Math.random() * 6;
+      m.prevYaw = m.yaw;
     }
     model.group.position.copy(m.pos);
     this.scene.add(model.group);
@@ -375,7 +413,13 @@ export class Mobs {
     m.model.material.dispose(); // geometriat ovat yhteisiä (templates)
     if (m.model.glow) m.model.glow.material.dispose();
     if (m.model.core) m.model.core.material.dispose();
-    if (m.model.cloak) { m.model.cloak.geo.dispose(); m.model.cloak.material.dispose(); } // sessio 28
+    if (m.model.cloak) m.model.cloak.dispose(); // sessio 28 (31: myös hihat)
+    if (m.model.skeleton) m.model.skeleton.dispose(); // norsun luiden tekstuuri
+    if (m.collider) {
+      const ci = this.world.extraColliders.indexOf(m.collider);
+      if (ci >= 0) this.world.extraColliders.splice(ci, 1);
+      m.collider = null;
+    }
     if (m.trail) for (const t of m.trail) { this.scene.remove(t); t.material.dispose(); }
     if (m.dazeStars) this._clearDaze(m);
     if (m.emergeGlow) { this.scene.remove(m.emergeGlow); m.emergeGlow.material.dispose(); m.emergeGlow = null; }
@@ -388,6 +432,7 @@ export class Mobs {
     this.clayTimer = 6;
     this.wildTimer = 2;
     this.haamuTimer = 25;
+    this.elephantTimer = 6;
   }
 
   // Lähin olento säteellä (kohteen nimi ja terveys tähtäimessä).
@@ -396,7 +441,10 @@ export class Mobs {
     for (const m of this.list) {
       if (m.state === 'dead' || m.yOff < -0.6) continue;
       const r = m.def.radius * 1.15;
-      _v.set(m.pos.x - origin.x, m.pos.y + m.def.height * 0.5 - origin.y, m.pos.z - origin.z);
+      // Norsu: lähin kohta rungon keskilinjalla (säteen kohdalla).
+      const s0 = (m.pos.x - origin.x) * dir.x + (m.pos.z - origin.z) * dir.z;
+      bodyPoint(m, origin.x + dir.x * s0, origin.z + dir.z * s0, _bp);
+      _v.set(_bp.x - origin.x, m.pos.y + m.def.height * 0.5 - origin.y, _bp.z - origin.z);
       const tca = _v.dot(dir);
       if (tca < -r) continue;
       const d2 = _v.lengthSq() - tca * tca;
@@ -416,7 +464,8 @@ export class Mobs {
     const pitch = Math.atan2(dir.y, hl);
     for (const m of this.list) {
       if (m.state === 'dead' || m.yOff < -0.6) continue;
-      const dx = m.pos.x - px, dz = m.pos.z - pz;
+      bodyPoint(m, px, pz, _bp);
+      const dx = _bp.x - px, dz = _bp.z - pz;
       const d = Math.hypot(dx, dz);
       const surf = d - m.def.radius;
       if (surf > reach) continue;
@@ -438,6 +487,15 @@ export class Mobs {
   // Vahinko olentoon. opts: { fromX, fromZ, knock, up, stagger }
   damage(m, amount, opts = {}) {
     if (m.state === 'dead') return false;
+    if (m.def.heavy) {
+      // Norsu ei kaadu: osuma vain ärsyttää sitä, ja se lähtee pois.
+      m.hp = Math.max(m.def.hp * 0.2, m.hp - amount);
+      m.flash = 1;
+      m.hurtT = 0;
+      events.emit('mobHit', { type: m.type, amount, mob: m });
+      this._elephantLeave(m, true);
+      return true;
+    }
     if (m.vulnerable) amount *= 1.5;
     m.hp -= amount;
     m.flash = 1;
@@ -483,7 +541,7 @@ export class Mobs {
 
   // Horjahdus: keskeyttää hyökkäyksen. Parryn jälkeen olento on haavoittuvainen.
   stagger(m, dur, vulnerable) {
-    if (m.state === 'dead' || m.state === 'panic' || m.state === 'emerge' || m.state === 'appear' || m.state === 'fade') return;
+    if (m.def.heavy || m.state === 'dead' || m.state === 'panic' || m.state === 'emerge' || m.state === 'appear' || m.state === 'fade') return;
     m.staggerDur = dur;
     m.vulnerable = !!vulnerable;
     this._set(m, 'stagger');
@@ -598,6 +656,7 @@ export class Mobs {
   // aamulla; muut palavat hetken (vahinkoa ajan mukana) ja pakenevat.
   setOnFire(m) {
     if (m.state === 'dead' || m.def.ghost || !this.list.includes(m)) return;
+    if (m.def.heavy) { this._elephantLeave(m, true); return; }
     if (m.type === 'clay') { if (!m.burning) this._ignite(m); return; }
     const fresh = !(m.fireT > 0);
     m.fireT = FIRE_TIME;
@@ -689,6 +748,11 @@ export class Mobs {
       } else if (!night) {
         this.haamuTimer = 20 + Math.random() * 30;
       }
+      this.elephantTimer -= dt;
+      if (this.elephantTimer <= 0) {
+        this.elephantTimer = 15 + Math.random() * 20;
+        this._trySpawnElephants();
+      }
     }
     for (const m of this.list.slice()) {
       const d = Math.hypot(m.pos.x - p.x, m.pos.z - p.z);
@@ -714,6 +778,7 @@ export class Mobs {
         if (m.def.skittish) this._thinkSkittish(m, dt);
         else if (m.type === 'warthog') this._thinkWarthog(m, dt);
         else if (m.def.ghost) this._thinkHaamu(m, dt);
+        else if (m.def.heavy) this._thinkElephant(m, dt);
         else this._thinkClay(m, dt);
         if (!this.list.includes(m)) continue;
         if (m.state === 'fly') this._flyPhysics(m, dt);
@@ -792,6 +857,24 @@ export class Mobs {
     }
   }
 
+  // Norsut: savannilla yksin tai pareittain 55-90 m päähän (enintään 2).
+  _trySpawnElephants() {
+    if (!elephantReady() || this.count('elephant') >= MAX_ELEPHANTS || Math.random() > 0.55) return;
+    const p = this.player.position;
+    for (let a = 0; a < 6; a++) {
+      const ang = Math.random() * Math.PI * 2;
+      const r = 55 + Math.random() * 35;
+      const x = p.x + Math.cos(ang) * r, z = p.z + Math.sin(ang) * r;
+      if (!this._okSpot(x, z) || _s.savanna < 0.55) continue;
+      const n = Math.random() < 0.45 ? 2 : 1;
+      for (let i = 0; i < n && this.count('elephant') < MAX_ELEPHANTS; i++) {
+        const ox = x + i * (Math.random() < 0.5 ? -6 : 6), oz = z + i * (Math.random() - 0.5) * 8;
+        if (this._okSpot(ox, oz)) this.spawn('elephant', ox, oz);
+      }
+      return;
+    }
+  }
+
   // Arat eläimet: valitaan biomiin sopiva laji ja lauma 45–95 m päähän.
   _trySpawnWild(night) {
     const p = this.player.position;
@@ -849,6 +932,7 @@ export class Mobs {
       const ang = yaw + (a % 2 ? 1 : -1) * Math.floor((a + 1) / 2) * 0.35;
       const x = p.x - Math.sin(ang) * dist, z = p.z - Math.cos(ang) * dist;
       if (!this._okSpot(x, z)) continue;
+      if (type === 'elephant' && !elephantReady()) return null;
       const m = this.spawn(type, x, z, { emerge: type === 'clay' });
       m.yaw = Math.atan2(p.x - x, p.z - z);
       return m;
@@ -1102,6 +1186,88 @@ export class Mobs {
       default:
         this._set(m, 'graze', 2);
     }
+  }
+
+  // Norsu: graze = seisoo ja syö (kärsä poimii ruohoa), wander = kävelee
+  // uuteen paikkaan (pari pysyttelee yhdessä), alert = katsoo pelaajaa korvat
+  // levällään, leave = kävelee pelaajasta poispäin (lyötynä ripeämmin).
+  _thinkElephant(m, dt) {
+    const def = m.def;
+    m.stateT += dt;
+    m.timer -= dt;
+    m.hurtT = (m.hurtT ?? 99) + dt;
+    if (m.hurtT > 8) m.hp = Math.min(def.hp, m.hp + dt * 12);
+    const { dx, dz, d } = this._toPlayer(m);
+    const P = this.player;
+    const sight = P.dead ? 0 : def.sight * (P.crouching ? 0.45 : P.sprinting ? 1.25 : 1);
+    switch (m.state) {
+      case 'graze':
+        this._steer(m, 0, 0, 0, dt);
+        if (d < sight * 0.55) this._set(m, 'alert', 2.5 + Math.random() * 2);
+        else if (m.timer <= 0) this._elephantWander(m);
+        break;
+      case 'wander': {
+        const wx = m.tx - m.pos.x, wz = m.tz - m.pos.z;
+        const wd = Math.hypot(wx, wz);
+        this._steer(m, wx / (wd || 1), wz / (wd || 1), def.walk, dt);
+        if (d < sight * 0.55) this._set(m, 'alert', 2.5 + Math.random() * 2);
+        else if (wd < 1.5 || m.timer <= 0) this._set(m, 'graze', 5 + Math.random() * 9);
+        break;
+      }
+      case 'alert':
+        // Kääntyy katsomaan; jos pelaaja tulee lähemmäs tai jää liian
+        // lähelle, norsu lähtee verkkaisesti pois.
+        this._steer(m, dx, dz, 0, dt, true);
+        if (d < sight * 0.3) this._elephantLeave(m, false);
+        else if (m.timer <= 0) {
+          if (d < sight * 0.5) this._elephantLeave(m, false);
+          else this._set(m, 'graze', 3 + Math.random() * 4);
+        }
+        break;
+      case 'leave': {
+        const wob = Math.sin(m.stateT * 0.4 + m.phase) * 0.35;
+        const fx = -dx * Math.cos(wob) + dz * Math.sin(wob);
+        const fz = -dz * Math.cos(wob) - dx * Math.sin(wob);
+        this._steer(m, fx, fz, m.hurtT < 10 ? def.run : def.walk * 1.15, dt);
+        if (m.timer <= 0) {
+          if (d > sight * 0.8 || P.dead) this._set(m, 'graze', 4 + Math.random() * 6);
+          else m.timer = 2;
+        }
+        break;
+      }
+      default:
+        this._set(m, 'graze', 3);
+    }
+  }
+
+  _elephantWander(m) {
+    let mate = null;
+    for (const o of this.list) if (o !== m && o.type === 'elephant') { mate = o; break; }
+    let tx, tz;
+    if (mate && Math.hypot(mate.pos.x - m.pos.x, mate.pos.z - m.pos.z) > 14) {
+      tx = mate.pos.x + (Math.random() - 0.5) * 6;
+      tz = mate.pos.z + (Math.random() - 0.5) * 6;
+    } else {
+      // Mieluiten suunnilleen eteenpäin; vesi ja sademetsä käännyttävät.
+      let a = m.yaw + (Math.random() - 0.5) * 2.2;
+      const r = 10 + Math.random() * 16;
+      for (let k = 0; k < 4; k++) {
+        tx = m.pos.x + Math.sin(a) * r;
+        tz = m.pos.z + Math.cos(a) * r;
+        sampleTerrain(tx, tz, _s);
+        if (_s.h > _s.wl + 0.2 && _s.ocean < 0.3 && _s.rainforest < 0.5) break;
+        a += Math.PI * (0.5 + Math.random() * 0.5);
+      }
+    }
+    m.tx = tx;
+    m.tz = tz;
+    this._set(m, 'wander', 25);
+  }
+
+  _elephantLeave(m, hurt) {
+    if (hurt) m.hurtT = 0;
+    if (m.state !== 'leave') this._set(m, 'leave', hurt ? 10 + Math.random() * 4 : 7 + Math.random() * 4);
+    else m.timer = Math.max(m.timer, hurt ? 10 : 5);
   }
 
   // Lento: nousu, liuku ja lasku (ei maaston törmäyksiä ilmassa).
@@ -1512,8 +1678,27 @@ export class Mobs {
 
     // Puut ja kivet
     const r = m.def.radius;
-    this.world.collidersNear(pos.x, pos.z, 1.5, _cols);
+    const heavy = m.def.heavy;
+    this.world.collidersNear(pos.x, pos.z, heavy ? 3 : 1.5, _cols);
+    const fx = Math.sin(m.yaw), fz = Math.cos(m.yaw);
     for (const c of _cols) {
+      if (c.mob === m) continue;
+      if (heavy) {
+        // Norsu: rungon jana (takaa eteen) puuta vasten; rungot se astuu yli.
+        if (c.seg) continue;
+        const md = m.model;
+        const t = Math.max(md.zH - 0.25, Math.min(md.zF + 0.35, (c.x - pos.x) * fx + (c.z - pos.z) * fz));
+        const qx = pos.x + fx * t, qz = pos.z + fz * t;
+        const ddx = qx - c.x, ddz = qz - c.z;
+        const min = c.r + r * 0.9;
+        const d2 = ddx * ddx + ddz * ddz;
+        if (d2 < min * min && d2 > 1e-8) {
+          const dd = Math.sqrt(d2);
+          pos.x += (ddx / dd) * (min - dd);
+          pos.z += (ddz / dd) * (min - dd);
+        }
+        continue;
+      }
       let cx = c.x, cz = c.z;
       if (c.seg) {
         if (pos.y > c.top - 0.15) continue;
@@ -1531,9 +1716,10 @@ export class Mobs {
         pos.z += (ddz / dd) * (min - dd);
       }
     }
-    // Toiset olennot ja pelaaja
+    // Toiset olennot ja pelaaja (norsun runko on törmäysjana: muut väistyvät)
     for (const o of this.list) {
-      if (o === m || o.state === 'dead' || o.def.ghost) continue;
+      if (heavy) break;
+      if (o === m || o.state === 'dead' || o.def.ghost || o.def.heavy) continue;
       const ddx = pos.x - o.pos.x, ddz = pos.z - o.pos.z;
       const min = r + o.def.radius;
       const d2 = ddx * ddx + ddz * ddz;
@@ -1543,7 +1729,7 @@ export class Mobs {
         pos.z += (ddz / dd) * (min - dd) * 0.5;
       }
     }
-    if (m.state !== 'dead') {
+    if (m.state !== 'dead' && !heavy) {
       const p = this.player.position;
       const ddx = pos.x - p.x, ddz = pos.z - p.z;
       const min = r + PLAYER_R;
@@ -1576,6 +1762,14 @@ export class Mobs {
     } else {
       pos.y = ground;
     }
+    if (m.collider) {
+      const c = m.collider, md = m.model;
+      c.ax = pos.x + fx * (md.zH - 0.2);
+      c.az = pos.z + fz * (md.zH - 0.2);
+      c.bx = pos.x + fx * (md.zF + 0.3);
+      c.bz = pos.z + fz * (md.zF + 0.3);
+      c.top = pos.y + 2.5;
+    }
   }
 
   // --- Animaatio ---------------------------------------------------------------
@@ -1588,13 +1782,32 @@ export class Mobs {
     const speed = Math.hypot(m.vel.x, m.vel.z);
     const kind = md.kind;
     m.phase += speed * dt * (m.type === 'warthog' ? 4.4 : kind === 'bird' ? 14 : kind === 'guineafowl' ? 9 : m.def.skittish ? 5 : 3.2);
-    if (m.type === 'warthog') this._animWarthog(m, md, speed, dt, elapsed);
+    if (kind === 'elephant') this._animElephant(m, md, speed, dt, elapsed);
+    else if (m.type === 'warthog') this._animWarthog(m, md, speed, dt, elapsed);
     else if (kind === 'guineafowl' || kind === 'bird') this._animFowl(m, md, speed, dt, elapsed);
     else if (kind === 'haamu') this._animHaamu(m, md, speed, dt, elapsed);
     else if (m.def.skittish) this._animQuad(m, md, speed, dt, elapsed);
     else this._animClay(m, md, speed, dt, elapsed);
     this._fxDaze(m, md, dt, elapsed);
     if (m.emergeGlow) this._fxEmerge(m, dt);
+  }
+
+  // Norsu: kävely, kärsä, korvat ja häntä (models/elephant.js). Jalat
+  // asettuvat maaston mukaan etu- ja takapäässä.
+  _animElephant(m, md, speed, dt, elapsed) {
+    const turn = dt > 0 ? angleDiff(m.yaw, m.prevYaw ?? m.yaw) / dt : 0;
+    m.prevYaw = m.yaw;
+    const fx = Math.sin(m.yaw), fz = Math.cos(m.yaw);
+    const hF = waterAt(m.pos.x + fx * md.zF, m.pos.z + fz * md.zF, _wq).h;
+    const hH = waterAt(m.pos.x + fx * md.zH, m.pos.z + fz * md.zH, _wq).h;
+    const p = this.player.position;
+    const look = angleDiff(Math.atan2(p.x - m.pos.x, p.z - m.pos.z), m.yaw);
+    animateElephant(md, {
+      speed, turn, t: elapsed,
+      graze: m.state === 'graze' ? 1 : 0,
+      alert: m.state === 'alert' || (m.state === 'leave' && m.hurtT < 2.5) ? 1 : 0,
+      look, dhF: hF - m.pos.y, dhH: hH - m.pos.y,
+    }, dt);
   }
 
   // Nelijalkaiset arat eläimet: käynti ristikkäin, juostessa loikka (etu- ja
@@ -1745,7 +1958,7 @@ export class Mobs {
       md.group.updateMatrixWorld(true);
       _cw.x = windUniforms.uWindDir.value.x * windUniforms.uWindStrength.value * 4;
       _cw.z = windUniforms.uWindDir.value.y * windUniforms.uWindStrength.value * 4;
-      md.cloak.update(md.torso, dt, elapsed + m.phase, _cw);
+      md.cloak.update(md.torso, dt, elapsed + m.phase, _cw, md.arms); // sessio 31: hihat
     }
     // Hehku sykkii hitaasti.
     const pulse = 1 + Math.sin(elapsed * 2.6 + m.phase) * 0.12;

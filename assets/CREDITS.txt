@@ -31,4 +31,8 @@ Kädet (assets/models/arms/), sessio 29: käyttäjän antama malli
   GLB:ksi (metrit, luiden lepokierrot nollattu), tekstuurit pienennetty
   1024 px WebP-kuviksi ja karheus skaalattu mattapintaisemmaksi.
 
+Norsu (assets/models/elephant/elephant.glb), sessio 31: käyttäjän antama
+  malli low_poly_realistic_elephant_3d_model_free.glb (sellaisenaan, upotettu
+  tekstuuri). Luuranko ja painot rakennetaan pelissä latauksen yhteydessä.
+
 Fontit: ks. assets/fonts (OFL).

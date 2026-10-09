@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 import { ITEMS } from './items.js';
 import { events } from './events.js';
+import { bodyPoint } from './mobs.js';
 
 // Iskut. anim = käden animaatio (viewmodel.js), dur = kesto (s),
 // hitAt = osumahetki, chain = milloin sarjan seuraava isku voi alkaa,
@@ -134,6 +135,7 @@ const BUFFER = 0.35;      // ennakkoon painettu isku muistetaan näin kauan
 const _dir = new THREE.Vector3();
 const _hits = [];
 const _v = new THREE.Vector3();
+const _bp = { x: 0, z: 0 };
 
 export class Combat {
   constructor({ camera, player, inventory, viewmodel, interaction, mobs, debris, bursts }) {
@@ -332,9 +334,10 @@ export class Combat {
         if (def && def.mystic) this._lifesteal(m, Math.max(0, hp0 - m.hp));
         if (m.state === 'dead' || !this.mobs.list.includes(m)) killed = true;
         // Osumakohta olennon pinnalla pelaajan puolella
-        const dx = p.x - m.pos.x, dz = p.z - m.pos.z;
+        const bp = bodyPoint(m, p.x, p.z, _bp);
+        const dx = p.x - bp.x, dz = p.z - bp.z;
         const d = Math.hypot(dx, dz) || 1;
-        _v.set(m.pos.x + (dx / d) * m.def.radius, m.pos.y + m.def.height * 0.55, m.pos.z + (dz / d) * m.def.radius);
+        _v.set(bp.x + (dx / d) * m.def.radius, m.pos.y + m.def.height * 0.55, bp.z + (dz / d) * m.def.radius);
         if (m.type === 'clay') this.debris.chips(_v, 0x9c4a2a, 5, null, 0.9);
         this.mobs.bleed(m, _v, -dx, -dz, dmg);
         // Soihtu sytyttää lyödyn olennon palamaan (sessio 12e).

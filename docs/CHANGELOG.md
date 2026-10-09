@@ -2,6 +2,16 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-08 (sessio 31): norsu savannille, jousen vasen käsi, puukon ote ja haamun viitta
+
+- **Norsu:** savannilla kävelee nyt norsuja (käyttäjän malli), yksin tai pareittain. Mallissa ei ollut luurankoa eikä animaatioita, joten peli rakentaa sille luut ja painot latauksessa: jalat (lonkka ja polvi), pää, kolmiosainen kärsä, korvat ja häntä.
+- **Norsun kävely:** sivuttaiskäynti kuten oikealla norsulla (vasen taka, vasen etu, oikea taka, oikea etu). Tukijalka pysyy maassa paikallaan, eikä jalka liu'u, ja nouseva jalka koukistuu. Runko keinuu ja kallistuu askelten ja rinteen mukaan. Kärsä heilahtaa askelten tahdissa ja laiduntaessa poimii ruohoa. Korvat leyhyvät, ja häntä huiskii.
+- **Norsun käytös:** laiduntaa ja vaeltaa rauhallisesti, ja pari pysyttelee yhdessä. Liian lähelle tulevaa pelaajaa se katsoo korvat levällään ja lähtee sitten verkkaisesti pois. Lyötynä se lähtee ripeämmin, mutta ei kuole eikä pudota mitään (avoin kysymys). Norsu on kiinteä este, joka tönäisee pelaajan sivuun, ja osumat, nuolet ja nimilappu toimivat koko rungon pituudelta. Testausta varten [F3] → Olennot → Norsu.
+- **Jousi:** jänteen käsi heiluu nyt juostessa samassa tahdissa kuin muu käsi (ennen se jäi paikalleen).
+- **Puukko:** kämmen pysyy kahvassa myös laajoissa sivuttaisiskuissa (esine seuraa nyt ranteen todellista paikkaa).
+- **Haamun viitta jäykemmäksi:** kangas pyrkii takaisin viitan muotoon (hartioilla jäykkä, helmassa vapaampi), poikkeama muodosta on rajattu, ja taivutusjäykkyys estää kangasta laskostumasta kasaan. Osa haamun liikkeestä kantaa kankaan mukana, joten nopeassa sivuttaislennossa helma ei enää painu kasaan, vaan viitta pysyy kokonaisena.
+- **Haamun hihat:** hihoissa on oma kangasfysiikkansa. Ne ovat leveät, riekaleiset ja kirjaillut kellohihat, jotka lepattavat ja laahaavat liikkeen perässä. Kun käsi nousee, hiha valuu kohti olkaa.
+
 ## 2026-10-08 (sessio 30): ote kahvasta, sormet kahvan ympäri, jousi, juoksu ja hakatut puut
 
 - **Ote kahvasta ("socket"):** jokaisen esineen kahvan keskipiste ja paksuus luetaan esineen mallista, ja käsi asettuu sen kohdalle. Kahva lepää kämmentä vasten.

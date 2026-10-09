@@ -217,6 +217,12 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 31 (käyttäjän kertoma, 2026-10-08)
+- **Norsu savannille:** käyttäjä antoi mallin (low_poly_realistic_elephant, GLB ja tekstuuri) ja toivoi, että savannilla kävelisi **norsu-NPC**. ("Et sää tosin pysty animoimaa varmaa, mut saisikkohan sää jotenki.")
+- **Jousi kahdella kädellä:** vasen käsi oli yhä staattinen juostessa, kun jousi on kädessä.
+- **Puukon sivuttaisiskuissa** kämmen irtosi puukosta.
+- **Haamun vaatefysiikka on liian löysä:** kun haamu lentää sivulle, helma painuu niin kasaan, että näkyy vain pää ja kädet. Viittaa pitää **jäykistää**, ja **hihoihin fysiikat**.
+
 ## Sessio 30 (käyttäjän kertoma, 2026-10-08)
 - **Hakatut (rikotut) puut** ovat yhä huonolaatuisia.
 - **Ote ei voi olla tällainen:** sormet ovat solmussa ja niistä näkee läpi (käyttäjän kuva kepistä). **Veistä ei pidetä kunnolla kiinni.**
@@ -543,7 +549,10 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
   - Tuulikerroin 0,6–1,15 (selkeällä n. 0,72, ukkosella n. 1,07). Karilleajo yli 1,6 m/s vaurioittaa. Joissa virta kuljettaa venettä.
   - Tuulen suunta: uusi tavoitesuunta 4–10 min välein, enintään ±100°, kääntyy n. 0,7° / s.
 
+- **Norsu (sessio 31):** savannilla yksin tai pareittain, enintään 2 kerrallaan, 55–90 m päässä pelaajasta (tarkistus 15–35 s välein). Korkeus n. 2,9 m, kävely 1,05 m/s, ripeä poistuminen 1,9 m/s. Laiduntaa (kärsä poimii ruohoa), vaeltaa 10–26 m kerrallaan ja pari pysyttelee yhdessä; vesi ja sademetsä käännyttävät sen. Kun pelaaja tulee n. 9 m päähän (kyykyssä lähemmäs), se kääntyy katsomaan korvat levällään ja lähtee verkkaisesti pois, jos pelaaja tulee lähemmäs tai jää viereen. Ei kuole (terveys ei laske alle 20 %:n ja palautuu), ei pudota mitään, ei syty palamaan. Runko on liikkuva este, joka tönäisee pelaajaa.
+
 ## Avoimet kysymykset
+- Voiko norsua metsästää, puolustaako se itseään (hyökkääkö lyötynä), ja pitääkö siitä saada saalista? Nyt norsu ei kuole eikä pudota mitään: lyötynä se vain lähtee ripeästi pois.
 - Mihin **Hiekan jäljet** -kappale laitetaan? (Se oli liitteissä, mutta ei luettelossa.)
 - Oma kappale sademetsään (nyt väliaikaisesti Deep Exploration)? Soiko vuoristossa, rannalla, yöllä tai taistelussa jokin musiikki (käyttäjä toimittaa)?
 - Lisätäänkö miekka tai muita kevyitä aseita, joilla on iskusarja?

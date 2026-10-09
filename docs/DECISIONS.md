@@ -2,6 +2,13 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-08 (sessio 31)
+- **Norsun luuranko rakennetaan latauksessa, ei käsin.** Syy: mallissa (yksi staattinen verkko) ei ole luita, eikä ympäristössä ole Blenderiä. Jalat erotellaan ryhmittelemällä maahan koskevat verteksit (k-means, 4 ryhmää, kauimmaisen pisteen alustus) ja täyttämällä pintaa pitkin lantiokorkeudelle. Kärsä tunnistetaan sijainnista (laatikko pään edessä) ja syöksyhampaat tekstuurin norsunluunvärisistä kohdista. Painot riippuvat etäisyydestä jalan akseliin, jotta vatsan iho ei seuraa jalkaa.
+- **Norsun jalat ovat "suoria pylväitä" ja runko keinuu.** Syy: tavallinen kahden luun IK taivutti polvia rajusti, koska malli on askeleen keskeltä (jalkojen lepokulmat eroavat) ja lähes suorat jalat ovat herkkiä pituuseroille. Nyt jalka pidetään tukivaiheessa lähes lepopituudessaan, ja runko nousee ja laskee (etu- ja takapää erikseen) niin, että tukijalat ylettävät maahan. Polvi koukistuu vain jalan noustessa.
+- **Norsun origo siirretään jalkojen puoliväliin, ja törmäys on jana takaa eteen.** Syy: mallin keskipiste oli pään puolella. Jana on `world.extraColliders`-listassa, joten pelaajan nykyinen törmäyskoodi tönäisee pelaajaa ilman muutoksia. Osumille (lyönnit, nuolet, nimilappu) on `bodyPoint`, joka antaa rungon keskilinjan lähimmän pisteen.
+- **Norsu ei kuole eikä pudota saalista.** Syy: käyttäjä pyysi rauhallista NPC:tä eikä puhunut metsästämisestä; asia on avoin kysymys (DESIGN).
+- **Haamun viitta: muotojousi, rajattu poikkeama, taivutusrajoitteet ja liikkeen kanto (60 %).** Syy: pelkät pituusrajoitteet antoivat kankaan laahata ja laskostua vapaasti, joten nopeassa sivuttaisliikkeessä helma painui kasaan. Hihat ovat erillisiä kangasputkia (10 × 6) käsivarren ympärillä. Ylös nostetussa kädessä hihan pystyrajoitteet sallivat kasautumisen, jotta kangas valuu olkaa kohti.
+
 ## 2026-10-08 (sessio 30)
 - **Ote "socket"-periaatteella (käyttäjän ehdotus):** kahvan kohta mitataan esineen mallista (keskipiste ja säde 3 cm:n viipaleesta otteen kohdalla). Käsi asettuu siihen, ja käsivarsi seuraa IK:lla. Erillisiä socket-pisteitä ei kirjoitettu käsin jokaiselle esineelle. Syy: kymmenille esineille, myös tuleville, sama mittaus toimii automaattisesti.
 - **Sormet ratkaistaan geometrisesti** eikä valmiista asennoista: jokainen nivel koukistuu, kunnes seuraava nivel, jänteen keskikohta tai sormenpää koskettaa kahvaa (sormen säde 8,5 mm, peukalon 10,5 mm). Tulos lasketaan kerran kahvan paksuutta kohti ja tallennetaan välimuistiin. Syy: kivääriasennosta kopioidut sormet menivät solmuun ja kahvan läpi.
