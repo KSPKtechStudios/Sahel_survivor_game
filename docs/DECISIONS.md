@@ -2,6 +2,12 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-09 (sessio 32)
+- **Nuija käyttää moukarin murskausiskuja (`smash`)** eikä omia uusia animaatioita. Syy: ylhäältä alas iskevät avainasennot olivat jo olemassa ja testattuja. Sivupyyhkäisy (`smash3`) ja kirveen vaakahakkuu (`swingE`) jäivät koodiin, mutta ne eivät ole enää vuorossa.
+- **Nyrkin peukalo: mallin nyrkkiasennon peukalon kärkinivelet puolitetaan** (tyvi ennallaan; kerroin 1 / 0,6 / 0,5). Syy: kolmesta kuvatusta vaihtoehdosta tämä asetti peukalon etu- ja keskisormen päälle; suurempi ojennus sojotti peukaloa eteenpäin.
+- **Lastut ovat yksi instanssiverkko (enintään 700 hiutaletta).** Syy: satoja pieniä hiutaleita ilman piirtokutsujen kasvua; vanhimmat korvautuvat, jos raja täyttyy. Kiviin osuessa lastuja ei tehdä (käyttäjän toive).
+- **Norsun polven lepokorjaus mitataan mallin pinnasta** (reiden ja säären keskilinjat korkeuksilla 0,33 → 0,22 ja 0,19 → 0,09), 85 % mutkasta suoristetaan. Jalkoihin lisättiin nilkka, ja IK:n kohde on nilkka. Syy: suoristus kallistaisi muuten jalkapohjaa, ja nilkka pitää sen vaakatasossa.
+
 ## 2026-10-08 (sessio 31)
 - **Norsun luuranko rakennetaan latauksessa, ei käsin.** Syy: mallissa (yksi staattinen verkko) ei ole luita, eikä ympäristössä ole Blenderiä. Jalat erotellaan ryhmittelemällä maahan koskevat verteksit (k-means, 4 ryhmää, kauimmaisen pisteen alustus) ja täyttämällä pintaa pitkin lantiokorkeudelle. Kärsä tunnistetaan sijainnista (laatikko pään edessä) ja syöksyhampaat tekstuurin norsunluunvärisistä kohdista. Painot riippuvat etäisyydestä jalan akseliin, jotta vatsan iho ei seuraa jalkaa.
 - **Norsun jalat ovat "suoria pylväitä" ja runko keinuu.** Syy: tavallinen kahden luun IK taivutti polvia rajusti, koska malli on askeleen keskeltä (jalkojen lepokulmat eroavat) ja lähes suorat jalat ovat herkkiä pituuseroille. Nyt jalka pidetään tukivaiheessa lähes lepopituudessaan, ja runko nousee ja laskee (etu- ja takapää erikseen) niin, että tukijalat ylettävät maahan. Polvi koukistuu vain jalan noustessa.

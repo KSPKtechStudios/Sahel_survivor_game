@@ -1,6 +1,7 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 32: nuijan pystyiskut (ja moukari), kirveen iskut, nyrkki (peukalo, iskujen korkeus), lastut (hakkaa puuta, kaadettua runkoa, pensasta, termiittikekoa; kivestä ei tule), norsun jalat ja pään ja kärsän liike
 - [ ] Käyttäjä testaa session 31: norsu savannilla ([F3] → Olennot → Norsu, tai odota savannilla): kävely ja jalat, kärsä ja korvat, käytös kun menet lähelle (kyykyssä / juosten), lyönti (lähteekö pois), törmäys (tönäiseekö); jousi kahdella kädellä juostessa; puukon sivuttaisiskut; haamun viitta ja hihat sivuttaislennossa ja syöksyssä (yöllä sademetsässä, tai [F3] → Haamu)
 - [ ] Vastaus: voiko norsua metsästää, puolustaako se itseään, ja pitääkö siitä saada saalista? Pitäisikö savannilla olla isompia laumoja tai poikasia?
 - [ ] Norsun äänet (töräytys, askeleet), jos käyttäjä toimittaa tai haluaa

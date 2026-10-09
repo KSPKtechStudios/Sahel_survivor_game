@@ -2,6 +2,16 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-09 (sessio 32): pystyiskut nuijalla, nyrkki, lastut ja norsun jalat
+
+- **Nuija iskee ylhäältä alas:** nuijan sarja on nyt kaksi pystyiskua (ennen sivuiskut oikealta ja vasemmalta). Vuorottelevat muunnelmat ovat suoraan ylhäältä, vinosti oikean olan yli ja kevyesti vasemman olan yli. Sama koskee moukaria (sivupyyhkäisy pois).
+- **Kirves:** vaakahakkuu poistettiin vaihtoehdoista; jäljellä ovat hakkuut ylhäältä ja vinosti.
+- **Nyrkki:** peukalo lepää nyt etu- ja keskisormen päällä (ennen se taittui pitkälle alas sormien yli).
+- **Nyrkkiiskut** lähtevät ja osuvat hieman ylempää (tappelun tuntu).
+- **Lastut ja kaarnahiutaleet:** kun puuta, kaadettua runkoa, pensasta tai baobabin kuorta hakkaa, osumasta pöllähtää pieniä vaaleita lastuja ja tummia kaarnahiutaleita. Ne leijailevat hetken ja häviävät maahan. Termiittikeosta murenee punaruskeita muruja ja pensaista lehti- ja oksanpaloja. Kivestä niitä ei tule.
+- **Norsun jalat:** mallin lepoasennossa osassa jalkoja sääri oli vinossa eteen, joten polvi näytti taipuvan taaksepäin. Polvi suoristetaan nyt lepoasennossa, ja jaloissa on nilkka, joka pitää jalkapohjan vaakatasossa maata vasten (nostossa varpaat painuvat hieman).
+- **Norsun pää ja kärsä liikkuvat enemmän:** pää nyökkää askelten tahdissa ja kääntyilee katsellen ympärilleen, kärsä heiluu laajemmin ja nousee välillä haistelemaan.
+
 ## 2026-10-08 (sessio 31): norsu savannille, jousen vasen käsi, puukon ote ja haamun viitta
 
 - **Norsu:** savannilla kävelee nyt norsuja (käyttäjän malli), yksin tai pareittain. Mallissa ei ollut luurankoa eikä animaatioita, joten peli rakentaa sille luut ja painot latauksessa: jalat (lonkka ja polvi), pää, kolmiosainen kärsä, korvat ja häntä.

@@ -1149,7 +1149,17 @@ const ANIMS = {
     [0.62, [-0.07, 0.1, -0.31, 0.12, -1.58, -0.1, 0], 'out'],
     [1, ZERO, 'inOut'],
   ],
-  // Nuijan sivupyyhkäisy.
+  // Sessio 32: kevyt vino isku vasemman olan yli (nuija iskee ylhäältä).
+  smash4: [
+    [0, ZERO],
+    [0.36, [-0.05, 0.2, 0.08, 0.25, 0.98, 0.18, 0], 'inOut'],
+    [0.46, [-0.05, 0.22, 0.1, 0.28, 1.1, 0.2, 0], 'out'],
+    [0.6, [-0.03, 0.01, -0.15, -0.18, -1.52, -0.12, 0], 'strike'],
+    [0.72, [-0.04, 0.1, -0.19, -0.17, -1.62, -0.11, 0], 'out'],
+    [1, ZERO, 'inOut'],
+  ],
+  // Nuijan sivupyyhkäisy (sessio 32: ei enää vuorossa, käyttäjä toivoi
+  // nuijalle pystysuoria iskuja).
   smash3: [
     [0, ZERO],
     [0.36, [0.14, 0.12, 0.06, -1.1, 0.4, -0.8, 0], 'inOut'],
@@ -1173,6 +1183,11 @@ const ANIMS = {
   ],
 };
 
+// Sessio 32: nyrkkiiskut hieman ylempää (tappelun tuntu, käyttäjän toive).
+for (const k of ['punch', 'punchB', 'punchC', 'punchD', 'uppercut', 'hook']) {
+  for (const f of ANIMS[k]) if (f[1] !== ZERO) { f[1] = f[1].slice(); f[1][1] += 0.045; }
+}
+
 // Torjunta-asennot oikealle kädelle.
 const BLOCK_POSE = {
   weapon: [-0.08, 0.17, 0.02, 0.25, -0.1, 1.15, 0],   // ase vinosti eteen (sessio 29: luontevampi ranne)
@@ -1188,13 +1203,15 @@ const EASE = {
 };
 
 // Sessio 25: iskujen muunnelmat (play valitsee vuorotellen); sessio 26: lisää.
+// Sessio 32: vähemmän sivuiskuja (käyttäjä): kirveen vaakahakkuu (swingE) ja
+// nuijan sivupyyhkäisy (smash3) pois vuorosta.
 const VARIANTS = {
-  swing: ['swing', 'swingB', 'swingD', 'swingC', 'swingE'],
+  swing: ['swing', 'swingB', 'swingD', 'swingC'],
   punch: ['punch', 'punchB', 'punchC', 'uppercut', 'punchD'],
   slashR: ['slashR', 'slashR2', 'slashR3'],
   slashL: ['slashL', 'slashL2', 'slashL3'],
   thrust: ['thrust', 'thrust2', 'thrust3'],
-  smash: ['smash', 'smash2', 'smash3'],
+  smash: ['smash', 'smash2', 'smash4'],
 };
 
 // Sessio 29: iskun jälkeinen asento jatkaa hieman iskun suuntaan

@@ -32,6 +32,11 @@ const CHIP = {
   desertShrub: [0x9cab86, 0x9a9478],
 };
 
+// Tummempi sävy (kaarnan varjopuoli).
+function darker(hex) {
+  return (((hex >> 16) & 255) * 0.6) << 16 | (((hex >> 8) & 255) * 0.6) << 8 | ((hex & 255) * 0.6);
+}
+
 // Kiven materiaali, johon piirtyy säröjä vaurion kasvaessa (uDamage 0..1).
 function createCrackMaterial(seed, tex = null) {
   // Sessio 23: skannattu kivi käyttää omia tekstuurejaan, muut kolmitasoprojektiota.
@@ -121,6 +126,7 @@ export class Breakables {
     this.world.shake(obj, 1);
     this.debris.chips(hitPoint, c1, 5, from, 0.7);
     this.debris.chips(hitPoint, c2, 3, null, 0.6);
+    this.debris.splinters(hitPoint, from, [c1, c2, 0x6a5236], 16, 1.1, 0.8); // sessio 32: lehti- ja oksanpalat
     if (obj.hp > 0) return false;
     const geo = this.models.world[def.model][obj.variant];
     this.debris.shatter(geo, this.world.matrixOf(obj), { pieces: 7, inner: c1, power: 1.6, life: 1.8, seed: obj.id.length * 77, closed: false });
@@ -177,6 +183,7 @@ export class Breakables {
     const [c1] = CHIP[obj.type] || [0x8a7a6a];
     this.debris.chips(hitPoint, 0xc9a679, 6, from, 1.0);
     this.debris.chips(hitPoint, c1, 4, from, 0.8);
+    this.debris.splinters(hitPoint, from, [0xc9a679, c1, 0x5a4a3c], 26);
     this.world.shake(obj, 0.12);
     events.emit('woodHit', { x: hitPoint.x, z: hitPoint.z });
     this.drops.spawn(P.item, power >= 2.8 ? 2 : 1, hitPoint.clone().addScaledVector(from, 0.7));
@@ -219,6 +226,8 @@ export class Breakables {
     const weak = dmg < 0.5; // ilman kirvestä: vähemmän lastuja
     this.debris.chips(cutWorld, c1, weak ? 2 : 7, from, 0.9);
     this.debris.chips(cutWorld, c2, weak ? 1 : 3, from, 0.8);
+    // Sessio 32: hienot lastut ja kaarnahiutaleet.
+    this.debris.splinters(cutWorld, from, [c1, c1, c2, darker(c2)], weak ? 8 : 30, 1, weak ? 0.6 : 1);
     this.world.shake(obj, weak ? 0.15 : 0.35);
     if (obj.hp > 0) return false;
     this.fallen.fell(obj, geo, hitPoint.clone().addScaledVector(from, 2));

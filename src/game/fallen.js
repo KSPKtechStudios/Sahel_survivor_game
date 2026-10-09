@@ -347,6 +347,7 @@ export class FallenTrees {
     log.shake = 1;
     this.debris.chips(hitPoint, 0xd2ad78, 7, from.clone().normalize().applyQuaternion(log.pivot.quaternion), 0.9);
     this.debris.chips(hitPoint, 0x5b4838, 3, null, 0.8);
+    this.debris.splinters(hitPoint, null, [0xd2ad78, 0xd2ad78, 0x5b4838, 0x3e3026], 26); // sessio 32
     log.hp -= dmg;
     if (log.hp > 0) return false;
 

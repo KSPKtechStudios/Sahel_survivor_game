@@ -17,6 +17,8 @@ const _hit = new THREE.Vector3();
 const _anc = new THREE.Vector3(), _a1 = new THREE.Vector3(), _a2 = new THREE.Vector3();
 const _place = new THREE.Vector3();
 const _cols = [];
+const _sv = new THREE.Vector3();
+const CHIP_FINE = [0xc8a878, 0x8a6a4a, 0x5b4838]; // sessio 32: hienot lastut
 
 export class Interaction {
   constructor({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs, boats }) {
@@ -271,6 +273,7 @@ export class Interaction {
       if (axe && !this._tierOk(lt.harvest, def)) {
         // Liian heikko kirves (esim. ydinpuu): kopsahtaa, ei vahinkoa.
         this.debris.chips(_hit, 0x8a6a4a, 3, null, 0.6);
+        this.debris.splinters(_hit, null, [0xc8a878, 0x5b4838], 6, 1, 0.5);
         events.emit('hitFeedback', { strength: 0.2 });
         return;
       }
@@ -286,7 +289,11 @@ export class Interaction {
       return;
     }
     if (!t.harvest) {
+      // Sessio 32: termiittikeosta ym. murenee hienoja paloja (ei kivestä).
+      if (t.surface === 'rock') { this.debris.chips(_hit, 0x8a7a6a, 3, null, 0.6); return; }
       this.debris.chips(_hit, 0x9a5a36, 4, null, 0.6);
+      _sv.subVectors(this.player.position, _hit).setY(0).normalize();
+      this.debris.splinters(_hit, _sv, t.surface === 'earth' ? [0x9a5a36, 0xb5703f, 0x7a4428] : [0xc8a878, 0x6a5236], 18, 0.9, 0.8);
       return;
     }
     const h = t.harvest;
@@ -301,6 +308,7 @@ export class Interaction {
       // Liian heikko työkalu: kopsahtaa, ei vahinkoa.
       this.world.shake(obj, 0.25);
       this.debris.chips(_hit, t.kind === 'rock' ? 0x8a7a6a : 0x8a6a4a, 3, null, 0.6);
+      if (t.kind !== 'rock') this.debris.splinters(_hit, null, CHIP_FINE, 8, 1, 0.5);
       events.emit('hitFeedback', { strength: 0.25 });
       return;
     }

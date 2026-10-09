@@ -2,6 +2,18 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-09 (sessio 32)
+**Tehtiin**
+- Iskut: nuija käyttää ylhäältä alas -iskuja (`game/combat.js`), muunnelmista pois kirveen vaakahakkuu ja nuijan/moukarin sivupyyhkäisy, uusi `smash4` (`player/viewmodel.js`). Nyrkkiiskut 4,5 cm ylempää.
+- Nyrkin peukalo (`player/arms.js`: FIST-asennon peukalon kärkinivelet 0,6 / 0,5).
+- Lastut ja kaarnahiutaleet: `render/debris.js` `splinters` (instanssiverkko), kutsut `game/breakables.js` (puut, pensaat, kuorinta), `game/fallen.js` (kaadettu runko), `game/interaction.js` (termiittikeko, liian heikko työkalu; ei kiviin).
+- Norsu: polven lepokorjaus ja nilkkaluu (jalkapohja vaakatasossa), pään ja kärsän liikkeet isommiksi (`models/elephant.js`).
+- Testattiin: nyrkin peukalon kolme vaihtoehtoa kolmesta kulmasta (`shots/s29/vm.html?block=fist&thumb=…`; parametri poistettiin koodista valinnan jälkeen), nuijan iskut kuvasarjoina, lastujen kuvasarja (`shots/s32/splinters.html`), norsun kävely ja seisonta (`shots/s31/elewalk.html`), pelin savutesti, ESLint.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute. Avoimet: norsun metsästys ja puolustus, ihonsävy.
+- Pushaa haara, kun GitHub-tili toimii.
+
 ## 2026-10-09 (sessio 31)
 **Tehtiin**
 - Norsu: `models/elephant.js` lataa käyttäjän mallin (`assets/models/elephant/elephant.glb`), rakentaa luurangon ja painot (jalat, kärsä, korvat, häntä, syöksyhampaat), ja `animateElephant` hoitaa kävelyn (sivuttaiskäynti, tukijalka paikallaan, rungon keinunta ja kallistus), kärsän, korvat ja hännän.

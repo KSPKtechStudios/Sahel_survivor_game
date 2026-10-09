@@ -260,6 +260,10 @@ export class Arms {
       lib.GRIP.push(poseQ('Riffle Gun Pose', src).slerp(poseQ('Fists Pose', n), 0.12));
       lib.CUP.push(mirrorQ(poseQ('Riffle Gun Pose', lNames[i]), new THREE.Quaternion()));
     });
+    // Sessio 32: mallin nyrkkiasennossa peukalo taittui pitkälle alas
+    // sormien yli; nyt se on vähemmän koukussa ja lepää etu- ja keskisormen
+    // keskijäsenten päällä.
+    [1, 0.6, 0.5].forEach((k, j) => { lib.FIST[16 + j] = new THREE.Quaternion().slerp(lib.FIST[16 + j], k); });
     // Rento: puolivälissä avoimen ja kupin välillä; koukku (jousen jänne).
     lib.RELAX = lib.CUP.map((q) => new THREE.Quaternion().slerp(q, 0.75));
     lib.HOOK = lib.FIST.map((q, i) => (rNames[i].startsWith('Finger_5') ? lib.CUP[i].clone() : new THREE.Quaternion().slerp(q, 0.62)));

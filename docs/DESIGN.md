@@ -217,6 +217,13 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 32 (käyttäjän kertoma, 2026-10-09)
+- **Vähemmän sivuttaislyöntejä**, etenkin **nuijassa**, koska sillä hakataan yleensä pystyssä. Kirveessä ja puukossa ne ovat ok, joskin välillä hieman luonnottomia.
+- **Nyrkin peukalo** taittuu oudosti pitkälle alas (käyttäjän kuva).
+- **Nyrkillä lyödessä** käsi hitusen ylempänä, jotta tulisi oikea "tappelu"-fiilis.
+- Kun **kirveellä, nyrkillä tai millä vain hakkaa** puuta, termiittikekoja tai mitä vain (**paitsi kiveä**, se on liian kovaa), lentää **ihan pieniä puun partikkeleita** tai ikään kuin kuoren paloja.
+- **Norsu** on hyvin toteutettu, mutta **yksi jalka taipuu välillä erikoisesti** (käyttäjän kuva takajalasta). **Kärsä ja pää** saisivat liikkua vähän enemmän.
+
 ## Sessio 31 (käyttäjän kertoma, 2026-10-08)
 - **Norsu savannille:** käyttäjä antoi mallin (low_poly_realistic_elephant, GLB ja tekstuuri) ja toivoi, että savannilla kävelisi **norsu-NPC**. ("Et sää tosin pysty animoimaa varmaa, mut saisikkohan sää jotenki.")
 - **Jousi kahdella kädellä:** vasen käsi oli yhä staattinen juostessa, kun jousi on kädessä.

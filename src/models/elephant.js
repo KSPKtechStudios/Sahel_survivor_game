@@ -18,6 +18,7 @@ const URL = 'assets/models/elephant/elephant.glb';
 export const ELEPHANT_SCALE = 3.6;
 const HIP_Y = 0.42;      // jalkojen yläraja (vatsan alapinta)
 const KNEE_Y = 0.2;
+const ANKLE_Y = 0.075;   // nilkka (sessio 32: jalkapohja pysyy vaakatasossa)
 const LEG_R = 0.075;     // jalan säde (mallin yksiköissä)
 
 let template = null;
@@ -250,6 +251,13 @@ function buildRig(src) {
     L.hip.y = HIP_Y + 0.02;
     L.knee = centroid((i) => label[i] === l && Math.abs(P.getY(i) - KNEE_Y) < 0.02) || new THREE.Vector3(L.foot.x, KNEE_Y, L.foot.z);
     L.footP = new THREE.Vector3(L.foot.x, 0.02, L.foot.z);
+    L.ankle = centroid((i) => label[i] === l && Math.abs(P.getY(i) - ANKLE_Y) < 0.015) || new THREE.Vector3(L.foot.x, ANKLE_Y, L.foot.z);
+    // Sessio 32: malli on askeleen keskeltä, ja osassa jalkoja sääri on
+    // vinossa eteen (polvi näytti taipuvan taaksepäin). Mitataan reiden ja
+    // säären akselit mallin pinnasta ja suoristetaan polvea lepoasennossa.
+    const cz = (Y) => { const c = centroid((i) => label[i] === l && Math.abs(P.getY(i) - Y) < 0.015); return c ? c.z : L.knee.z; };
+    const upA = Math.atan2(cz(0.22) - cz(0.33), 0.11), loA = Math.atan2(cz(0.09) - cz(0.19), 0.1);
+    L.kc = Math.max(-0.6, Math.min(0.6, 0.85 * (loA - upA)));
   }
   const tusk = (i) => find(rep[i]) !== mainComp || ivory[i] === 2;
   const trunkMid = centroid((i) => label[i] === 4 && P.getY(i) > 0.3 && P.getY(i) < 0.34) || new THREE.Vector3(0, 0.32, 0.36);
@@ -280,7 +288,7 @@ function buildRig(src) {
   add('earL', new THREE.Vector3(earX, 0.62, 0.28), head);
   add('earR', new THREE.Vector3(-earX, 0.62, 0.28), head);
   add('tail', tailTop, root);
-  for (const L of legs) add('knee' + L.name, L.knee, add('hip' + L.name, L.hip, root));
+  for (const L of legs) add('ankle' + L.name, L.ankle, add('knee' + L.name, L.knee, add('hip' + L.name, L.hip, root)));
   const B = Object.fromEntries(bones.map((b, i) => [b.name, i]));
 
   // 6) Painot.
@@ -306,8 +314,10 @@ function buildRig(src) {
       const radial = y < 0.26 ? 1 : smoothstep(LEG_R + 0.04, LEG_R, d);
       const hipW = smoothstep(HIP_Y - 0.02, HIP_Y - 0.12, y) * radial;
       const lower = smoothstep(KNEE_Y + 0.04, KNEE_Y - 0.04, y);
+      const foot = smoothstep(ANKLE_Y + 0.035, ANKLE_Y - 0.025, y);
       put(B['hip' + Lg.name], hipW * (1 - lower));
-      put(B['knee' + Lg.name], hipW * lower);
+      put(B['knee' + Lg.name], hipW * lower * (1 - foot));
+      put(B['ankle' + Lg.name], hipW * lower * foot);
       put(B.root, 1 - hipW);
     } else if (l === 4) {
       // Kärsä: kolme osaa korkeuden mukaan, yläpää liittyy päähän.
@@ -357,16 +367,24 @@ function buildRig(src) {
   group.updateMatrixWorld(true);
   mesh.bind(new THREE.Skeleton(bones));
   // Jalkojen IK:n vakiot (luun 'root' lepopaikan suhteen, YZ-taso). Jalka
-  // käsitellään suorana pylväänä lonkasta jalkapohjaan (pituus d0, lepokulma
-  // th0); polvi jakaa sen samassa suhteessa kuin mallissa.
+  // käsitellään suorana pylväänä lonkasta nilkkaan (pituus d0, lepokulma
+  // th0); polvi jakaa sen samassa suhteessa kuin mallissa. Sessio 32: polven
+  // lepokorjaus kc (sääri suoremmaksi) ja nilkka, joka pitää jalkapohjan
+  // vaakatasossa (kohde on nilkka, joka on jalkapohjan yläpuolella).
   const R0 = root.userData.world;
   const ik = legs.map((L) => {
-    const a = L.knee.distanceTo(L.hip), b = L.footP.distanceTo(L.knee);
-    const hy = L.hip.y - R0.y, hz = L.hip.z - R0.z, fy = L.footP.y - R0.y, fz = L.footP.z - R0.z;
-    const d0 = Math.hypot(fz - hz, fy - hy);
+    const a = L.knee.distanceTo(L.hip);
+    // Säären suunta korjauksen jälkeen (YZ-tasossa kierretty polven ympäri).
+    const ly = L.ankle.y - L.knee.y, lz = L.ankle.z - L.knee.z;
+    const b = Math.hypot(ly, lz);
+    const tl = Math.atan2(lz, -ly) - L.kc;
+    const Ay = L.knee.y - Math.cos(tl) * b, Az = L.knee.z + Math.sin(tl) * b;
+    const hy = L.hip.y - R0.y, hz = L.hip.z - R0.z;
+    const d0 = Math.hypot(Az - L.hip.z, Ay - L.hip.y);
     return {
       name: L.name, front: L.name.endsWith('F'),
-      hy, hz, fy, d0, th0: Math.atan2(fz - hz, hy - fy), ra: a / (a + b),
+      hy, hz, fy: L.footP.y - R0.y, up: L.ankle.y - L.footP.y, az: L.ankle.z - L.footP.z,
+      d0, th0: Math.atan2(Az - L.hip.z, L.hip.y - Ay), ra: a / (a + b), kc: L.kc,
     };
   });
   // Etu- ja takajalkojen z maailman yksiköissä (maaston kallistus).
@@ -392,7 +410,7 @@ export function makeElephant() {
     bones: {
       root: bone('root'), head: bone('head'), trunk: [bone('trunk1'), bone('trunk2'), bone('trunk3')],
       earL: bone('earL'), earR: bone('earR'), tail: bone('tail'),
-      legs: template.legs.map((L) => ({ ...L, hip: bone('hip' + L.name), knee: bone('knee' + L.name) })),
+      legs: template.legs.map((L) => ({ ...L, hip: bone('hip' + L.name), knee: bone('knee' + L.name), ankle: bone('ankle' + L.name) })),
     },
     rootY: template.rootY, zF: template.zF, zH: template.zH,
   };
@@ -414,7 +432,7 @@ const DUTY = 0.68; // osuus jaksosta, jonka jalka on maassa
 
 // Kahden luun IK suoraksi oletetulle jalalle. stance: tukijalka pidetään
 // lähes suorana (ei kyykistele, vaikka kohde olisi hieman lähempänä).
-function solveLeg(L, tz, ty, stance) {
+function solveLeg(L, tz, ty, stance, pitch, curl) {
   const a = L.d0 * L.ra, b = L.d0 - a;
   const rz = tz - L.hz, ry = ty - L.hy;
   let d = Math.hypot(rz, ry);
@@ -425,8 +443,12 @@ function solveLeg(L, tz, ty, stance) {
   const kz = Math.sin(tu) * a, ky = -Math.cos(tu) * a;
   const tl = Math.atan2(Math.sin(phi) * d - kz, Math.cos(phi) * d + ky);
   const hip = L.th0 - tu;
+  const knee = L.th0 - tl - hip + L.kc;
   L.hip.rotation.x = hip;
-  L.knee.rotation.x = L.th0 - tl - hip;
+  L.knee.rotation.x = knee;
+  // Jalkapohja vaakatasoon (ketjun kierrot kumotaan); nostossa varpaat
+  // painuvat hieman alas.
+  L.ankle.rotation.x = -(pitch + hip + knee) + curl;
 }
 
 // o: speed (m/s), turn (rad/s), t (s), graze 0..1, alert 0..1, look (rad,
@@ -451,7 +473,7 @@ export function animateElephant(e, o, dt) {
   for (const L of B.legs) {
     const p = (S.cyc + GAIT[L.name]) % 1;
     const g = Math.max(-0.12, Math.min(0.12, ((L.front ? o.dhF : o.dhH) || 0) / ELEPHANT_SCALE));
-    let z, y = L.fy + g;
+    let z, y = L.fy + g + L.up;
     const stance = p < DUTY;
     if (stance) {
       const s = p / DUTY;
@@ -466,7 +488,8 @@ export function animateElephant(e, o, dt) {
       z = L.hz + stride * (s * s * (3 - 2 * s) - 0.5);
       y += lift * (L.front ? 1.15 : 1) * Math.sin(Math.PI * Math.min(1, s * 1.12));
     }
-    feet.push(z, y, stance);
+    const curl = stance ? 0 : 0.35 * S.w * Math.sin(Math.PI * (p - DUTY) / (1 - DUTY));
+    feet.push(z, y, stance, curl);
   }
   const rF = wsum[0] ? rise[0] / wsum[0] : 0, rH = wsum[1] ? rise[1] / wsum[1] : 0;
   S.rF += (rF - S.rF) * k(9);
@@ -483,8 +506,8 @@ export function animateElephant(e, o, dt) {
   // Kohteet juuriluun omaan koordinaatistoon (kallistus ja nousu pois).
   const cp = Math.cos(pitch), sp = Math.sin(pitch);
   B.legs.forEach((L, i) => {
-    const z = feet[i * 3], y = feet[i * 3 + 1] - off;
-    solveLeg(L, -y * sp + z * cp, y * cp + z * sp, feet[i * 3 + 2]);
+    const z = feet[i * 4], y = feet[i * 4 + 1] - off;
+    solveLeg(L, -y * sp + z * cp, y * cp + z * sp, feet[i * 4 + 2], pitch, feet[i * 4 + 3]);
   });
 
   // Pää: laiduntaessa alempana, valppaana ylhäällä ja kohti pelaajaa.
@@ -493,21 +516,26 @@ export function animateElephant(e, o, dt) {
   S.look += ((o.look || 0) * S.alert - S.look) * k(2);
   const t = o.t + S.ph;
   const step2 = Math.sin(S.cyc * Math.PI * 4);
-  B.head.rotation.x = 0.1 * S.graze - 0.12 * S.alert + step2 * 0.025 * S.w + Math.sin(t * 0.5) * 0.015;
-  B.head.rotation.y = Math.max(-0.45, Math.min(0.45, S.look)) + Math.sin(t * 0.23) * 0.04 * (1 - S.alert);
-  B.head.rotation.z = -sway * 0.02 * S.w;
+  // Sessio 32: enemmän liikettä (käyttäjä). Pää nyökkää askelten tahdissa,
+  // kääntyilee hitaasti katsellen ympärilleen ja laskee laiduntaessa.
+  const look = Math.sin(t * 0.21) * 0.16 + Math.sin(t * 0.53 + 1.3) * 0.06;
+  B.head.rotation.x = 0.16 * S.graze - 0.14 * S.alert + step2 * 0.05 * S.w + Math.sin(t * 0.5) * 0.03 + Math.sin(t * 0.17) * 0.04;
+  B.head.rotation.y = Math.max(-0.5, Math.min(0.5, S.look)) + look * (1 - S.alert);
+  B.head.rotation.z = -sway * 0.04 * S.w + Math.sin(t * 0.31) * 0.03;
 
   // Kärsä: heiluri askelten tahdissa ja hitaasti sivulle; laiduntaessa se
   // poimii ruohoa (kierähtää kärjestä ja nousee suulle). Osat jättävät
-  // toisistaan jälkeen, joten liike kulkee aaltona kärkeä kohti.
+  // toisistaan jälkeen, joten liike kulkee aaltona kärkeä kohti. Välillä
+  // kärsä nousee ja kiertyy haistelemaan (myös kävellessä).
   const eat = S.graze * Math.max(0, Math.sin(t * 0.9)) ** 2;
+  const sniff = smoothstep(0.55, 0.95, Math.sin(t * 0.19 + 0.7)) * (1 - S.graze);
   const T = B.trunk;
   for (let i = 0; i < 3; i++) {
-    const lag = i * 0.55;
-    const swing = Math.sin(S.cyc * Math.PI * 2 - lag) * 0.07 * S.w;
-    const idle = Math.sin(t * 0.7 - lag) * 0.05 + Math.sin(t * 1.9 - lag) * 0.015;
-    T[i].rotation.x = swing - eat * [0.25, 0.55, 1.0][i] + S.alert * [0.0, -0.15, -0.35][i] + idle * 0.5;
-    T[i].rotation.z = Math.sin(t * 0.45 - lag) * (0.06 + i * 0.03) + Math.sin(S.cyc * Math.PI * 2 - lag) * 0.03 * S.w;
+    const lag = i * 0.6;
+    const swing = Math.sin(S.cyc * Math.PI * 2 - lag) * 0.14 * S.w;
+    const idle = Math.sin(t * 0.7 - lag) * 0.1 + Math.sin(t * 1.9 - lag) * 0.03 + Math.sin(t * 0.29 - lag) * 0.08;
+    T[i].rotation.x = swing - eat * [0.25, 0.55, 1.0][i] + S.alert * [0.0, -0.15, -0.35][i] - sniff * [0.35, 0.6, 0.9][i] + idle;
+    T[i].rotation.z = Math.sin(t * 0.45 - lag) * (0.1 + i * 0.05) + Math.sin(S.cyc * Math.PI * 2 - lag) * 0.06 * S.w + sniff * Math.sin(t * 1.3 - lag) * 0.15;
   }
 
   // Korvat: rauhallinen leyhytys (viilennys); valppaana levällään.

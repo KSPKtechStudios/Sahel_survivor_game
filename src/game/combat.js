@@ -59,8 +59,9 @@ export const WEAPONS = {
   },
   club: {
     name: 'Puunuija', block: 'weapon', reach: 2.5, combo: [
-      { anim: 'slashR', dur: 0.62, hitAt: 0.52, chain: 0.85, cd: 0.6, dmg: 19, kb: 11, up: 3.8, stam: 15, arc: 0.85, multi: true, stagger: 0.5, heavy: true },
-      { anim: 'slashL', dur: 0.7, hitAt: 0.52, chain: 1, cd: 0.9, dmg: 23, kb: 13, up: 4.5, stam: 20, arc: 0.85, multi: true, stagger: 0.65, heavy: true },
+      // Sessio 32: nuijalla isketään ylhäältä alas (ennen sivuiskut).
+      { anim: 'smash', dur: 0.62, hitAt: 0.52, chain: 0.85, cd: 0.6, dmg: 19, kb: 11, up: 3.8, stam: 15, arc: 0.85, multi: true, stagger: 0.5, heavy: true },
+      { anim: 'smash', dur: 0.7, hitAt: 0.52, chain: 1, cd: 0.9, dmg: 23, kb: 13, up: 4.5, stam: 20, arc: 0.85, multi: true, stagger: 0.65, heavy: true },
     ],
     leap: { anim: 'leap', dur: 0.7, hitAt: 0.6, chain: 1, cd: 0.8, dmg: 36, kb: 14, up: 4, stam: 18, arc: 0.85, reach: 0.3, multi: true, stagger: 1, heavy: true, crit: true },
   },

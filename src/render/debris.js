@@ -1,6 +1,9 @@
 // Sirpaleet ja lastut: esineen murskautuessa sen geometria jaetaan paloihin,
 // jotka lentävät fysiikalla, pomppivat maassa ja häviävät hetken päästä.
 // Lisäksi pienet lastut/kivensirut jokaisesta osumasta.
+// Sessio 32: hienot puulastut ja kaarnahiutaleet (splinters): satoja pieniä
+// litteitä hiutaleita yhdessä instanssiverkossa. Ne pöllähtävät osumasta,
+// leijailevat ilmanvastuksen hidastamina ja häviävät maahan.
 import * as THREE from 'three';
 import { heightAt } from '../world/terrain.js';
 import { leafTexture, addSurfaceDetail } from './surfaces.js';
@@ -10,6 +13,13 @@ import { WHITE_UV } from '../models/util.js';
 
 const _q = new THREE.Quaternion();
 const _axis = new THREE.Vector3();
+const _sm = new THREE.Matrix4();
+const _sq = new THREE.Quaternion();
+const _ss = new THREE.Vector3();
+const _sp = new THREE.Vector3();
+const _se = new THREE.Euler();
+const _sc = new THREE.Color();
+const SPL_MAX = 700;
 
 // Jaa (ei-indeksoitu, vertex-väritetty) geometria k palaan. Palat suljetaan
 // lisäämällä jokaisesta kolmion sivusta kolmio palan keskipisteeseen.
@@ -109,6 +119,73 @@ export class Debris {
     this.leafMaterial = addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide, map: leafTexture, alphaTest: 0.42, alphaToCoverage: true }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 0.3, 0);
     this.chipGeo = new THREE.TetrahedronGeometry(0.06, 0);
     this.chipMats = new Map();
+    // Hiutaleet: suikale (pituus 1, leveys 0,45), skaalataan 1-3 cm.
+    const sg = new THREE.PlaneGeometry(1, 0.45);
+    this.spl = new THREE.InstancedMesh(sg, new THREE.MeshStandardMaterial({ roughness: 0.95, side: THREE.DoubleSide }), SPL_MAX);
+    this.spl.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.spl.setColorAt(0, _sc.set(1, 1, 1));
+    this.spl.count = 0;
+    this.spl.frustumCulled = false;
+    this.spl.castShadow = false;
+    scene.add(this.spl);
+    this.splList = [];
+  }
+
+  // Hienot lastut (sessio 32): pos = osumakohta, dir = suunta pelaajaa kohti
+  // (vaakataso), colors = värit (hex), joista arvotaan, count = määrä,
+  // size = koon kerroin, power = lentonopeuden kerroin.
+  splinters(pos, dir, colors, count = 20, size = 1, power = 1) {
+    for (let i = 0; i < count; i++) {
+      if (this.splList.length >= SPL_MAX) this.splList.shift();
+      const a = Math.random() * Math.PI * 2;
+      const sp = (1.2 + Math.random() * 3.2) * power;
+      const v = new THREE.Vector3(Math.cos(a) * 0.9, 0.6 + Math.random() * 1.4, Math.sin(a) * 0.9).multiplyScalar(sp * 0.6);
+      if (dir) v.addScaledVector(dir, sp * (0.6 + Math.random() * 0.8));
+      const len = (0.01 + Math.random() * 0.022) * size;
+      this.splList.push({
+        p: pos.clone().addScaledVector(v, 0.012),
+        v,
+        r: new THREE.Euler(Math.random() * 6, Math.random() * 6, Math.random() * 6),
+        w: new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(30),
+        s: len,
+        col: colors[Math.floor(Math.random() * colors.length)],
+        shade: 0.75 + Math.random() * 0.4,
+        age: 0,
+        life: 0.9 + Math.random() * 1.1,
+        rest: false,
+      });
+    }
+  }
+
+  _updateSplinters(dt) {
+    const L = this.splList;
+    let n = 0;
+    for (let i = L.length - 1; i >= 0; i--) {
+      const d = L[i];
+      d.age += dt;
+      if (d.age >= d.life) { L.splice(i, 1); continue; }
+      if (!d.rest) {
+        // Kevyt hiutale: voimakas ilmanvastus ja leijailu.
+        const drag = Math.exp(-dt * 3.2);
+        d.v.x *= drag; d.v.z *= drag;
+        d.v.y = d.v.y * Math.exp(-dt * 1.6) - 9 * dt;
+        d.v.x += Math.sin(d.age * 9 + d.shade * 20) * dt * 1.2;
+        d.p.addScaledVector(d.v, dt);
+        d.r.x += d.w.x * dt; d.r.y += d.w.y * dt; d.r.z += d.w.z * dt;
+        const g = heightAt(d.p.x, d.p.z) + 0.004;
+        if (d.p.y < g) { d.p.y = g; d.rest = true; d.r.x = -Math.PI / 2 + (Math.random() - 0.5) * 0.4; }
+      }
+      const k = Math.min(1, (d.life - d.age) / 0.35);
+      _ss.set(d.s * k, d.s * k, d.s * k);
+      _sq.setFromEuler(_se.copy(d.r));
+      _sm.compose(_sp.copy(d.p), _sq, _ss);
+      this.spl.setMatrixAt(n, _sm);
+      this.spl.setColorAt(n, _sc.setHex(d.col).multiplyScalar(d.shade));
+      n++;
+    }
+    this.spl.count = n;
+    this.spl.instanceMatrix.needsUpdate = true;
+    if (this.spl.instanceColor) this.spl.instanceColor.needsUpdate = true;
   }
 
   // Murskaa geometria (mallin koordinaatistossa) paloiksi. matrix = mallin
@@ -182,6 +259,7 @@ export class Debris {
   }
 
   update(dt) {
+    if (this.splList.length || this.spl.count) this._updateSplinters(dt);
     for (let i = this.list.length - 1; i >= 0; i--) {
       const d = this.list[i];
       d.age += dt;
@@ -221,6 +299,8 @@ export class Debris {
       if (d.owned) d.mesh.geometry.dispose();
     }
     this.list = [];
+    this.splList.length = 0;
+    this.spl.count = 0;
   }
 }
 
