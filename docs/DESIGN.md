@@ -217,6 +217,18 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 48 (käyttäjän kertoma, 2026-10-12): sademetsäbiomin hiominen
+- Sademetsästä tai viidakosta tulee käyttäjälle ensimmäisenä mieleen **tiheä, pimeä metsikkö**; nykyinen ei anna sellaista fiilistä.
+  1. **Sademetsän ambienssiäänet** eivät enää kuulu taustalla.
+  2. **Lisää kasveja:** sademetsä on vaikeakulkuinen eli tiheää pusikkoa. Enemmän kasvillisuutta (internetistä saa hakea malleja).
+  3. **Enemmän puita tai ainakin oksia puille:** kunnon lehtikatto (latvusto), jonka läpi päivänvalo paistaa maahan vain pieninä säteinä lehvästöjen raoista.
+  4. **Hyönteisiä:** partikkeleina tai todella pieninä 3D-malleina; niitä sademetsissä piisaa.
+  5. **Uusi mobi: herkuleskuoriainen.** Niin suuri ötökkä, että sille voi tehdä oman 3D-mallin.
+- Avoimet kysymykset:
+  - Pitääkö herkuleskuoriaisen olla todellisen kokoinen (noin 17 cm) vai pelin vuoksi suurempi?
+  - Hyökkääkö se? Mitä siitä saa?
+  - Pitäisikö tiheän pusikon hidastaa liikkumista ("vaikeakulkuinen")?
+
 ## Sessio 47 (käyttäjän kertoma, 2026-10-12)
 - Sessio 46 korjasi lehvästön. Nyt viimeinen grafiikkasäätö ennen seuraavia kehityskohteita: **pientä atmosfäärin parantelua. Varovasti, ulkonäköä ei saa taas pilata.**
 - Käyttäjän ohje (tiivistetty): **sademetsän tunnelma ja kontrasti takaisin**, ilman liike-epäterävyyttä, suttua tai terävöintiä.

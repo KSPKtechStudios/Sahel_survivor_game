@@ -14,7 +14,12 @@
 const BEDS = {
   wind: { file: 'assets/sfx/wind.mp3', level: 0.3, tau: 1.6 },
   // Viidakko: hiljempi ja pehmeämpi (sessio 12: linnut kuuluivat terävästi).
-  jungle: { file: 'assets/sfx/jungle.mp3', level: 0.22, tau: 0.9, lowpass: 4200 },
+  // Sessio 48: käyttäjä ei kuullut sitä enää. Mitattu: tiedosto −20,9 LUFS,
+  // joten taso 0,22 = n. −34 LUFS, ja 4,2 kHz:n alipäästö leikkasi hyönteiset
+  // ja linnut (tiedoston yläpää −27,5 LUFS). Sademetsän musiikki soi
+  // −28 LUFS:ssä ja peitti sen. Nyt n. −29 LUFS ja alipäästö 8 kHz
+  // (terävin kirkuna pois, sirinä ja linnut kuuluvat).
+  jungle: { file: 'assets/sfx/jungle.mp3', level: 0.4, tau: 0.9, lowpass: 8000 },
   rain: { file: 'assets/sfx/rain.mp3', level: 0.42, tau: 1.2 },
   thunder: { file: 'assets/sfx/thunder-distant.mp3', level: 0.42, tau: 2.2 },
   // Sessio 12c: aavikon tuuli (aina hyvin hiljaa, hiekkamyrskyssä kovaa) ja
