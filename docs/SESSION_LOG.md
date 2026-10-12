@@ -2,6 +2,17 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 46)
+**Tehtiin**
+- Selvitettiin lehvästön pikselimössö ja välkyntä: sessio 36 ja nykyinen versio vertailtiin samasta kohdasta. Latvukset olivat samanlaiset, eli vika ei tullut grafiikkapäivityksestä.
+- Testattiin varjot pois, entinen hajavalo, jälkikäsittely pois, syväterävyys pois, kolme alfareunan muunnelmaa, mipmap-bias ja varjojen pehmennys kaukana.
+- `render/materials.js`: `softFoliage` (mipmap-bias kaukana ja keskitetty alfareuna). Käytössä `vegetation`- ja `bush`-materiaaleissa, `debris.js`:n lehdissä, `main.js`:n `activeMaterial`issa sekä `kitMaterials.js`:n lehdissä ja kukissa.
+- `render/post.js`: syväterävyys hieman voimakkaammaksi.
+- Testattiin: savanni klo 11, 1280 × 720, välkyntämittaus (kamera kääntyy 0,0006 rad), ESLint. Tarkistusajossa löytyi etumerkkivirhe (`-vViewPosition.z`, jolloin bias ei kytkeytynyt), ja se korjattiin. Korjattu versio: −11–16 % (bias 8–30 m), ja lopuksi alue siirrettiin 4–20 m:iin.
+
+**Seuraavaksi**
+- Käyttäjän palaute. Jos latvukset välkkyvät yhä liikaa, seuraava askel on rakenteellinen: kaukaisille puille harvemmat ja isommat lehtikortit tai valmiiksi renderöidyt kuvat (impostorit). Tämä on isompi työ, ja ruudunpäivitys on tarkistettava (sessio 43).
+
 ## 2026-10-12 (sessio 45)
 **Tehtiin**
 - `render/post.js`: okkluusio ohittaa ohuen geometrian (korret, lehdet), isompi säde, kevyempi ja leveämpi pehmennys; terävöinti poistettu.

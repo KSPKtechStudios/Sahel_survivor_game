@@ -217,6 +217,11 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 46 (käyttäjän kertoma, 2026-10-12)
+- **Puiden lehvästöt näyttävät pikselimössöltä** (kuva savannilta) **ja välkkyvät kameraa liikutettaessa.** Ruoho toimii nyt; lehvät ovat suuri ongelma.
+- Käyttäjä: "sano jos et ymmärrä missä vika on", ettei krediittejä kulu turhaan.
+- **Syväterävyyttä saa taas hieman lisätä**: se ei ollut ongelman aiheuttaja.
+
 ## Sessio 45 (käyttäjän kertoma, 2026-10-12)
 - **Edelleen ei hyvä** (kuva). Mikä tarkalleen näyttää yhä huonolta? (avoin kysymys)
 - **SSAO aiheuttaa tiheässä ruohossa ja lehdissä valtavasti rumaa välkkymistä** → säädettävä.

@@ -2,6 +2,25 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 46)
+- **Lehvästön pikselimössön syy selvitettiin vertailemalla:**
+  - sessio 36 (ennen grafiikkapäivitystä) ja nykyinen versio renderöitiin samasta kohdasta;
+  - latvusten rakenne ja välkyntä olivat molemmissa samat, ja muutos alle pikselin kameran käännöksessä oli samaa luokkaa;
+  - vika ei siis tullut grafiikkapäivityksestä. Päivityksen tummemmat varjot ja suurempi kontrasti tekivät siitä vain näkyvämmän.
+
+  Syy on alfaleikattujen lehtikorttien (satoja muutaman pikselin kortteja latvusta kohden) kovat reunat ja tekstuurin pienet yksityiskohdat.
+- **Korjaus `softFoliage` (materials.js):** mipmap-bias 0 → 1 välillä 4–20 m (`vViewPosition.z` on positiivinen etäisyys), ja alfareuna peittävyydeksi keskitetysti 1,5 pikselin matkalla. Testatut vaihtoehdot ja vaikutus välkyntään (muutos kameran käännöksessä):
+  - pelkkä reunan pehmennys: −10 %;
+  - kaukana tiheämmät lehdet: −10 %;
+  - varjojen pehmennys kaukana (40–60 %): ±0;
+  - varjot kokonaan pois: latvukset siistimpiä, mutta syvyys katoaa;
+  - jälkikäsittely tai syväterävyys pois: ei vaikutusta;
+  - mipmap-bias (1 kaikkialla) ja reunan pehmennys yhdessä: −15–34 %. Tämä valittiin.
+  - Lopullinen toteutus (bias vasta 8–30 m): −11–16 %. Siksi alue siirrettiin 4–20 m:iin, jotta myös lähempänä olevat latvukset hyötyvät. Lähellä (alle 4 m) lehdet ovat ennallaan.
+
+  TAA ei tule kysymykseen (käyttäjä ei halua suttua, sessio 42).
+- **Syväterävyys:** kaukana alkaen max(tarkennus × 2,5 + 12, 24) m, enintään 0,5, säde 3,5. Puolikkaan tarkkuuden kuva sekoittuu yhä vasta voimakkuudesta 0,2. Syy: käyttäjä pyysi hieman lisää.
+
 ## 2026-10-12 (sessio 45)
 - **Okkluusiosta pois ohut geometria:** syvyyden toinen derivaatta suhteessa etäisyyteen (`thin`) häivyttää okkluusion välillä 0,015–0,06. Lisäksi näytteet alkavat 35 %:sta säteestä, säde 0,85 → 1,2, voimakkuus 0,62 → 0,5, kantama 90 → 70 m ja sumennusaskel 2 tekseliä. Syy: käyttäjän mukaan SSAO välkytti tiheää ruohoa ja lehtiä. Korret ja lehdet ovat pikselin levyisiä ja liikkuvat tuulessa, joten niiden okkluusio vaihtui ruudusta toiseen. Isot muodot (rungot, kivet, maaston kuopat) pitävät okkluusion.
 - **Terävöinti (CAS, sessio 38) poistettu kokonaan** (shader, uniformit, asetus, valikko). Syy: käyttäjä pyysi; tehoste korosti reunojen ja kasvillisuuden kohinaa.

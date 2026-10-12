@@ -96,6 +96,38 @@ uniform vec3 uTrSunCol;`)
   return material;
 }
 
+// Sessio 46: lehvästöjen "pikselimössö" ja välkyntä kameraa käännettäessä.
+// Syy: kaukaisissa latvuksissa on satoja muutaman pikselin kokoisia
+// lehtikortteja, joiden kova alfareuna ja tekstuurin pienet yksityiskohdat
+// (tummat ja vaaleat lehdet, pikselin kokoiset reiät) vaihtuvat pikselistä
+// toiseen pienimmästäkin liikkeestä. Korjaus:
+// 1) yli 4 m:n päässä lehdet luetaan pehmeämmältä mipmap-tasolta (20 m:stä
+//    alkaen yhden tason verran); lähellä tekstuuri on ennallaan;
+// 2) alfareuna muuttuu MSAA:n peittävyydeksi keskitetysti noin 1,5 pikselin
+//    matkalla (three: 1 pikseli ja vain rajan yläpuolella), joten reunat ja
+//    reiät eivät hypi pikselistä toiseen.
+// Mittaus (sama näkymä, kamera kääntyy alle pikselin): latvusten muutos
+// pieneni 15-33 %. Käytä uloimpana kääreenä (korvaa map- ja alfakohdan).
+const FOLIAGE_MAP = THREE.ShaderChunk.map_fragment.replace(
+  'texture2D( map, vMapUv )',
+  'texture2D( map, vMapUv, smoothstep( 4.0, 20.0, vViewPosition.z ) )',
+);
+export function softFoliage(material) {
+  const prev = material.onBeforeCompile;
+  material.onBeforeCompile = (shader, renderer) => {
+    if (prev) prev(shader, renderer);
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <map_fragment>', FOLIAGE_MAP)
+      .replace('#include <alphatest_fragment>', `#ifdef USE_ALPHATEST
+  diffuseColor.a = clamp((diffuseColor.a - alphaTest) / max(fwidth(diffuseColor.a) * 1.5, 1e-4) + 0.5, 0.0, 1.0);
+  if (diffuseColor.a <= 0.0) discard;
+#endif`);
+  };
+  const prevKey = material.customProgramCacheKey;
+  material.customProgramCacheKey = () => `${prevKey ? prevKey.call(material) : ''}-soft`;
+  return material;
+}
+
 // Märkyys (sademetsä, sade): pinnat tummuvat, siloittuvat (terävämmät
 // auringon heijastukset) ja heijastavat taivasta viistossa kulmassa.
 // Märkyys vaihtelee laikuittain, ettei pinta näytä tasaisen sumuiselta.
@@ -308,6 +340,8 @@ export function createSharedMaterials(groundDetail) {
   addWet(tall, 0.6, 0.2);
   addTranslucency(vegetation, 0.38);
   addTranslucency(bush, 0.3);
+  softFoliage(vegetation); // sessio 46 (uloimpana)
+  softFoliage(bush);
   addWet(grass, 1, 0.5);
   addWet(solid, 0.8, 0.6);
   const puddle = createPuddleMaterial();

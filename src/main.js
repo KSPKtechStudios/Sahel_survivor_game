@@ -4,7 +4,7 @@ import { loadSurfaces, addSurfaceDetail, leafTexture, surfaceUniforms } from './
 import { updateGlow } from './render/itemGlow.js';
 import { CONFIG } from './config.js';
 import { createGroundDetailTexture } from './render/textures.js';
-import { createSharedMaterials, wetUniforms, addWet, addTranslucency, sunUniforms } from './render/materials.js';
+import { createSharedMaterials, wetUniforms, addWet, addTranslucency, softFoliage, sunUniforms } from './render/materials.js';
 import { grassUniforms } from './render/grassField.js';
 import { Sky } from './render/sky.js';
 import { Environment, WEATHER_KEYS } from './render/environment.js';
@@ -85,7 +85,7 @@ const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerH
 // --- Järjestelmät -------------------------------------------------------------
 const materials = createSharedMaterials(createGroundDetailTexture());
 // Hakattavat ja kaatuvat puut: sama kaarna kuin seisovissa (sessio 23).
-const activeMaterial = addTranslucency(addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, map: leafTexture, alphaTest: 0.42, alphaToCoverage: true, side: THREE.DoubleSide }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 0.3, 0), 0.38);
+const activeMaterial = softFoliage(addTranslucency(addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, map: leafTexture, alphaTest: 0.42, alphaToCoverage: true, side: THREE.DoubleSide }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 0.3, 0), 0.38));
 loadSurfaces(renderer);
 const models = createModelLibrary();
 const sky = new Sky(scene);

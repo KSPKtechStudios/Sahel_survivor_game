@@ -3,7 +3,7 @@
 // kivet ja kuollut puu saavat märkyyden. aAO = mallin oma varjostus.
 import * as THREE from 'three';
 import { loadAlphaTexture } from './alphaMips.js';
-import { addWind, addWet, addTranslucency } from './materials.js';
+import { addWind, addWet, addTranslucency, softFoliage } from './materials.js';
 
 const DIR = 'assets/models/nature';
 const loader = new THREE.TextureLoader();
@@ -54,12 +54,13 @@ diffuseColor.rgb *= vKitAO;`);
 }
 
 const BUILD = {
-  leaves: () => addTranslucency(addWet(addAO(addWind(new THREE.MeshStandardMaterial({
+  // Sessio 46: softFoliage (pehmeämpi mipmap kaukana, keskitetty alfareuna).
+  leaves: () => softFoliage(addTranslucency(addWet(addAO(addWind(new THREE.MeshStandardMaterial({
     map: tex('leaves.png'), alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, roughness: 0.8, metalness: 0,
-  }), 0.35, 0.6), true), 0.3, 0), 0.3, false),
-  flowers: () => addAO(addWind(new THREE.MeshStandardMaterial({
+  }), 0.35, 0.6), true), 0.3, 0), 0.3, false)),
+  flowers: () => softFoliage(addAO(addWind(new THREE.MeshStandardMaterial({
     map: tex('flowers.png'), alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, roughness: 0.7, metalness: 0,
-  }), 0.35, 0.6), true),
+  }), 0.35, 0.6), true)),
   mushrooms: () => addWet(addAO(new THREE.MeshStandardMaterial({ map: tex('mushrooms.jpg'), roughness: 0.6, metalness: 0 }), true), 1, 0.5),
   rocks: () => addWet(addAO(new THREE.MeshStandardMaterial({ map: tex('rocks.jpg'), roughness: 0.92, metalness: 0 })), 0.9, 0.6),
   // Sessio 28: haalistunut kuori (Poly Haven bark_willow_02, CC0), noin

@@ -1,6 +1,8 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 46: puiden latvukset kaukana (pikselimössö, välkkyykö kameraa käännettäessä), lähellä olevat lehdet (näyttävätkö yhä terävältä), syväterävyys (sopiva?)
+- [ ] Jos latvukset välkkyvät yhä: kaukaisille puille harvemmat ja isommat lehtikortit tai impostorit (isompi työ, tarkista ruudunpäivitys)
 - [ ] Käyttäjä testaa session 45: Ambienttiokkluusio päälle asetuksista → välkkyykö ruoho ja lehdet yhä; terävöinti-asetusta ei enää ole
 - [ ] Vastaus: mikä tarkalleen näyttää yhä huonolta (sessio 45, "edelleen ei hyvä")? Kokeile asetuksista Hehku, Värimäärittely, Vinjetti ja Syväterävyys pois yksi kerrallaan ja kerro, mikä niistä parantaa
 - [x] Historia siirretty uuteen repoon `KSPKtechStudios/Sahel_survivor_game` ja pushattu (2026-10-12)

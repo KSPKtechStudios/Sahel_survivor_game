@@ -2,6 +2,15 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 46): lehvästöjen pikselimössö ja välkyntä, syväterävyys hieman takaisin
+
+- **Puiden latvukset siistimmiksi kaukana:**
+  - yli 4 metrin päässä lehdet piirretään hieman pehmeämmästä tekstuuritasosta, joten latvusten sisällä ei enää ole rakeista tummien ja vaaleiden pikselien sotkua eikä pikselin kokoisia reikiä;
+  - lehtien reunat pehmenevät reunanpehmennykseen tasaisemmin.
+
+  Testinäkymässä latvukset muuttuivat kameraa käännettäessä noin 10–30 % vähemmän (eniten kaukaisissa puissa). Lähellä lehdet näyttävät samalta kuin ennen. Koskee puita, pensaita, kaadettavia puita, puun paloja sekä aluskasvien lehtiä ja kukkia.
+- **Syväterävyys hieman voimakkaammaksi:** tausta alkaa sumentua aiemmin ja vähän enemmän kuin sessiossa 44, mutta lievemmin kuin sessioissa 39–40.
+
 ## 2026-10-12 (sessio 45): okkluusio ei välky kasvillisuudessa, terävöinti poistettu
 
 - **Ambienttiokkluusio (SSAO) ei enää välky ruohossa ja lehdissä:**
