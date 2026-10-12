@@ -7,6 +7,8 @@ import { attachGlow } from '../render/itemGlow.js';
 import { ITEMS } from '../game/items.js';
 import { createFlameTexture } from '../render/textures.js';
 import { Arms } from './arms.js';
+import { TorchFlame } from '../render/torchFlame.js';
+import { windUniforms } from '../render/materials.js';
 
 const _qi = new THREE.Quaternion();
 
@@ -340,6 +342,10 @@ export class ViewModel {
     }
     this.left.visible = false;
     this.rig.add(this.left);
+    // Sessio 34: realistiset liekit (shader, noste ja ilmavirta, kipinät).
+    // Vanhat liekkispritet jäävät piiloon.
+    this.torchFlames = [new TorchFlame(this.scene, 1), new TorchFlame(this.scene, 2)];
+    for (const f of this.torchFlames) f.setVisible(false);
     this.hasShield = false;
     this.offhand = null;  // 'shield' | 'torch' | null (main.js)
     this.torchPose = 0;   // 0 = kilven asento, 1 = soihdun asento
@@ -628,7 +634,7 @@ export class ViewModel {
     const torch = this.current === 'torch' && this.items.torch && this.items.torch.visible && fk > 0.02;
     for (let i = 0; i < this.flames.length; i++) {
       const f = this.flames[i];
-      f.visible = torch;
+      f.visible = false;
       if (!torch) continue;
       const m = this.items.torch;
       // Heikkokin liekki näkyy selvästi (sateessa ei näytä sammuneelta).
@@ -660,7 +666,7 @@ export class ViewModel {
     const ft = this.left.visible && this.leftTorch.visible && (this.torchFlame ?? 1) > 0.02;
     for (let i = 0; i < this.leftFlames.length; i++) {
       const f = this.leftFlames[i];
-      f.visible = ft;
+      f.visible = false;
       if (!ft) continue;
       const m = this.leftTorch;
       const k = (0.85 + Math.sin(this.time * (8 + i * 3.3) + i * 2) * 0.1 + Math.sin(this.time * 21 + i) * 0.05) * (0.45 + 0.55 * Math.min(1, this.torchFlame ?? 1));
@@ -686,8 +692,29 @@ export class ViewModel {
       );
     }
     this._updateArms(dt, player);
+    this._updateTorchFlames(dt, mainCamera);
+  }
+
+  // Sessio 34: liekit soihtujen kärkiin (kärki mallin y = 0,44).
+  _updateTorchFlames(dt, cam) {
+    const fk = this.torchFlame ?? 1;
+    const wind = { x: windUniforms.uWindDir.value.x * windUniforms.uWindStrength.value * 4, z: windUniforms.uWindDir.value.y * windUniforms.uWindStrength.value * 4 };
+    const list = [
+      [this.current === 'torch' && this.items.torch && this.items.torch.visible && !this.bowMode, this.items.torch],
+      [this.left.visible && this.leftTorch.visible, this.leftTorch],
+    ];
+    list.forEach(([on, m], i) => {
+      const f = this.torchFlames[i];
+      const vis = !!on && fk > 0.02 && !!cam;
+      f.setVisible(vis);
+      if (!vis) return;
+      m.updateWorldMatrix(true, false);
+      _tip.set(0, 0.425, 0).applyMatrix4(m.matrixWorld);
+      f.update(dt, this.time, _tip, cam, wind, Math.min(1, fk), 0.3 * m.scale.y / 0.85);
+    });
   }
 }
+const _tip = new THREE.Vector3();
 
 // Sessio 29: pehmeät ja sulavat liikkeet (käyttäjä: ennen liian nopeita ja
 // teräviä). Animaation asento kulkee jousen läpi: liike käynnistyy ja
@@ -812,11 +839,30 @@ const _sv = new THREE.Vector3();
 // Käsi asettuu tähän ja sormet kiertyvät kahvan ympäri (arms.js).
 function measureSocket(mesh, y0 = 0) {
   mesh.updateMatrix();
-  const pa = mesh.geometry.attributes.position;
+  const geo = mesh.geometry;
+  const pa = geo.attributes.position;
   const xs = [], zs = [];
   for (let i = 0; i < pa.count; i++) {
     _sv.fromBufferAttribute(pa, i).applyMatrix4(mesh.matrix);
     if (Math.abs(_sv.y - y0) < 0.03) { xs.push(_sv.x); zs.push(_sv.z); }
+  }
+  // Sessio 34: harvoissa malleissa (esim. soihdun varsi) otekohdalla ei ole
+  // verteksejä; poikkileikkaus kolmioiden reunojen ja tason y0 leikkauksista.
+  if (xs.length < 6) {
+    const idx = geo.index ? geo.index.array : null;
+    const n = idx ? idx.length : pa.count;
+    const tri = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+    for (let t = 0; t < n; t += 3) {
+      for (let k = 0; k < 3; k++) tri[k].fromBufferAttribute(pa, idx ? idx[t + k] : t + k).applyMatrix4(mesh.matrix);
+      for (let k = 0; k < 3; k++) {
+        const a = tri[k], b = tri[(k + 1) % 3];
+        if ((a.y - y0) * (b.y - y0) < 0) {
+          const f = (y0 - a.y) / (b.y - a.y);
+          xs.push(a.x + (b.x - a.x) * f);
+          zs.push(a.z + (b.z - a.z) * f);
+        }
+      }
+    }
   }
   if (xs.length < 6) return { x: 0, z: 0, r: 0.015 };
   let cx = 0, cz = 0;
@@ -1183,6 +1229,18 @@ const ANIMS = {
     [1, ZERO, 'inOut'],
   ],
 };
+
+// Sessio 34: nuijan ja terien iskuissa ranne joutui ääriasentoihin (kaikki
+// rajat yhtä aikaa), ja IK kiersi kättä varren ympäri. Lyönnin kärkiasentojen
+// kallistusta ja kääntöä loivennetaan, jotta isku tulee käsivarresta.
+for (const k of ['smash', 'smash2', 'smash4', 'slashR', 'slashR2', 'slashR3', 'slashL', 'slashL2', 'slashL3']) {
+  for (const f of ANIMS[k]) {
+    if (f[1] === ZERO) continue;
+    f[1] = f[1].slice();
+    if (Math.abs(f[1][4]) > 0.9) f[1][4] *= 0.78;
+    f[1][3] *= 0.8;
+  }
+}
 
 // Sessio 32: nyrkkiiskut hieman ylempää (tappelun tuntu, käyttäjän toive).
 for (const k of ['punch', 'punchB', 'punchC', 'punchD', 'uppercut', 'hook']) {

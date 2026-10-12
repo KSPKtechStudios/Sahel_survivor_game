@@ -26,7 +26,11 @@ const PALM_T = 0.024;
 // nivelten suurimmat koukistukset (tyvi, keski, kärki).
 const FINGER_R = 0.0085;
 const THUMB_R = 0.0105;
-const FLEX_MAX = [1.6, 1.45, 1.1];
+const FLEX_MAX = [1.7, 1.7, 1.5];
+// Sessio 34 (käyttäjä: käsi saisi gripata paremmin): sormet puristuvat
+// kahvaan (nivelen keskilinja puoli sormen sädettä pinnan sisällä), kärjet
+// kiertyvät pidemmälle ja peukalo kiertyy kahvan yli nyrkin tapaan.
+const GRIP_SQUEEZE = 0.5;
 const THUMB_MAX = [1.0, 1.3];
 // Varren vinous kämmenessä (rad).
 const GRIP_DIAG = 0.35;
@@ -134,8 +138,10 @@ function limitWrist(rel, S) {
 // Otteen kierron hinta: kyynärpään etäisyysvirhe olkavarren pituudesta
 // (neliönä) + pieni hinta kierrosta, jottei ote kierry turhaan.
 const ROLL_EPS = 0.04;
-const ROLL_MAX = 0.7;
-const ROLL_W = 0.015;
+// Sessio 34: kierto rajattu pienemmäksi ja kalliimmaksi (käyttäjä: nuijan ja
+// puukon iskuissa käsi pyöri oudosti; ote kiertyi iskussa ±0,6 rad ja takaisin).
+const ROLL_MAX = 0.3;
+const ROLL_W = 0.05;
 function rollCost(S, gripPos, gripQuat, Sh, th) {
   _rq.setFromAxisAngle(_yw, th).multiply(gripQuat);
   _rh.copy(_rq).multiply(S.qG0inv).multiply(S.neutralInv);
@@ -439,7 +445,7 @@ export class Arms {
         const off = j < 3 ? new THREE.Vector3().subVectors(P[i0 + j + 1], P[i0 + j]) : new THREE.Vector3().subVectors(P[i0 + 3], P[i0 + 2]).multiplyScalar(0.9);
         seg.copy(off).applyQuaternion(Wp);
         axis.copy(lat).applyQuaternion(Wp);
-        const th = solveJoint(pos, r + FINGER_R, FLEX_MAX[j - 1]);
+        const th = solveJoint(pos, r + FINGER_R * GRIP_SQUEEZE, FLEX_MAX[j - 1]);
         out[i0 + j].setFromAxisAngle(lat, th);
         Wb.copy(Wp).multiply(out[i0 + j]);
         if (j < 3) pos.add(off.applyQuaternion(Wb));
@@ -448,7 +454,7 @@ export class Arms {
     }
     // Peukalo: tyvi vastakkain (nyrkin asennosta), sitten kaksi niveltä
     // kiertyy kahvaa kohti.
-    out[16].identity().slerp(this.fistQ[16], 0.55);
+    out[16].identity().slerp(this.fistQ[16], 1);
     Wp.copy(out[16]);
     pos.subVectors(P[17], P[16]).applyQuaternion(Wp).add(P[16]);
     const qa = new THREE.Vector3();
@@ -459,7 +465,7 @@ export class Arms {
       v.subVectors(pos, C);
       qa.copy(C).addScaledVector(Y, v.dot(Y)).sub(pos);
       axis.crossVectors(seg, qa).normalize();
-      const th = solveJoint(pos, r + THUMB_R, THUMB_MAX[j - 1]);
+      const th = solveJoint(pos, r + THUMB_R * 0.7, THUMB_MAX[j - 1]);
       const la = axis.clone().applyQuaternion(Wp.clone().invert());
       out[16 + j].setFromAxisAngle(la, th);
       Wb.copy(Wp).multiply(out[16 + j]);
@@ -514,7 +520,7 @@ export class Arms {
       th = Math.max(-ROLL_MAX, Math.min(ROLL_MAX, th));
     }
     // Pehmeästi: ratkaisu ei saa hyppiä ruudusta toiseen (tärinä).
-    S.roll += (th - S.roll) * (dt > 0 ? 1 - Math.exp(-dt * 12) : 1);
+    S.roll += (th - S.roll) * (dt > 0 ? 1 - Math.exp(-dt * 6) : 1);
     th = S.roll;
     _qg.setFromAxisAngle(_yw, th).multiply(gripQuat);
     gripQuat = _qg;

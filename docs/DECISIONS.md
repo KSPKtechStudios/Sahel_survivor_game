@@ -2,6 +2,12 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 34)
+- **Otteen puristus:** sormen nivelen keskilinja saa olla puoli sormen sädettä kahvan pinnan sisällä (`GRIP_SQUEEZE` 0,5), nivelten maksimit 1,7 / 1,7 / 1,5, ja peukalon tyvi on täysin nyrkkiasennossa. Syy: kolmesta kuvatusta vaihtoehdosta tämä näytti tiukimmalta luonnottomuuksitta.
+- **Kahvan mittaus kolmioiden reunoista**, jos otekohdalla on alle 6 verteksiä. Syy: soihdun varressa on vain päätyrenkaat, joten mittaus antoi oletusarvon.
+- **Liekki on oma shaderi kahdella ristikkäisellä tasoparilla**, jotka suunnataan maailman suunnassa ja käännetään kameraa kohti (ei partikkelijärjestelmä). Syy: kevyt (4 tasoa ja enintään 40 kipinää) ja tarkka hallinta. Suunta on jousi kohti vektoria noste + ilmavirta, ja kärjen hitaampi suunta tuottaa taipuman (`uBend`).
+- **Otteen kierto rajattu (ROLL_MAX 0,3 ja kalliimpi, hitaampi jousi) ja iskujen kärkiasentoja loivennettu** (kallistus yli 0,9 rad × 0,78, kääntö × 0,8) nuijalla ja terillä. Syy: mittaus näytti, että ranne oli iskussa kaikissa rajoissa yhtä aikaa ja kierto heilui ±0,6 rad.
+
 ## 2026-10-09 (sessio 33)
 - **Käyttäjän nuija ja soihtu muunnetaan valmiiksi pelin dataksi** (`src/models/data/userItems.js`: geometria kvantisoituna base64-muodossa; tekstuurit WebP-kuvina `assets/models/items/`). Syy: esinemallit tarvitaan heti käynnistyksessä (kuvakkeet, maassa olevat esineet), joten GLB:n asynkronista latausta ei voi odottaa. Verteksivärit näytteistetään tekstuurista, ja kuvakkeet ja varalla olevat piirrot käyttävät niitä. Kädessä ja maassa esineellä on omat tekstuurimateriaalinsa (`geo.userData.material`).
 - **glTF-tekstuureille `flipY = false`.** Syy: GLB:n UV-suunta; ilman sitä tekstuurit menivät väärin päin (testikuvassa näkyi).

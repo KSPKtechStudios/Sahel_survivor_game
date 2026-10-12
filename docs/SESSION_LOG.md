@@ -2,6 +2,17 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 34)
+**Tehtiin**
+- Ote: `player/arms.js` (`GRIP_SQUEEZE`, `FLEX_MAX`, peukalo), `player/viewmodel.js` (`measureSocket` kolmioiden reunoista).
+- Liekki: uusi `render/torchFlame.js` (shader, noste ja ilmavirta jousella, taipuma, kipinät); `viewmodel.js` `_updateTorchFlames` (vanhat spritet piiloon).
+- Iskut: `arms.js` ROLL_MAX 0,3, ROLL_W 0,05, jousi 6/s; `viewmodel.js` nuijan ja terien iskujen loivennus.
+- Testattiin: otteen kolme vaihtoehtoa kahdesta kulmasta, sormien etäisyys kahvan akselista (kaikki esineet), kierron ja ranteen kulmien läpikäynti iskuissa ennen ja jälkeen, liekki paikallaan ja liikkeessä (`vm.html?camv=…`), pelin savutesti, ESLint.
+
+**Kesken / seuraavaksi**
+- Käyttäjän palaute.
+- Pushaa haara, kun GitHub-tili toimii.
+
 ## 2026-10-09 (sessio 33)
 **Tehtiin**
 - Käyttäjän nuija ja soihtu peliin: muunnin `shots/s33/convert.html` (suoristus, koko, otekohta, kvantisointi, WebP-tekstuurit), `src/models/userItems.js` ja `src/models/data/userItems.js`. Viewmodel ja drops käyttävät `geo.userData.material`-kenttää. Vanhat `itemClub` ja `itemTorch` poistettiin.

@@ -2,6 +2,12 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 34): tiukempi ote, uusi soihdun liekki ja rauhallisemmat iskut
+
+- **Ote:** sormet puristuvat kahvaan tiukemmin, kärjet kiertyvät pidemmälle ja peukalo kiertyy kahvan yli nyrkin tapaan. Kahvan paksuus luetaan nyt luotettavasti myös malleista, joissa otekohdalla on vähän pisteitä (soihtu).
+- **Soihdun liekki uusiksi:** liekki piirretään shaderilla. Siinä on nouseva, pyörteinen kohina, repeilevät liekkikielet, kuuma valkokeltainen ydin, oranssi ja punainen reuna ja sininen tyvi. Liekki ympäröi kangaspään. Fysiikka: liekki pyrkii aina ylöspäin, ja ilmavirta (soihdun liike, pelaajan liike ja kääntyminen sekä tuuli) kallistaa sitä. Liekki laahaa perässä ja taipuu kaarelle. Kipinöitä irtoaa ja ne leijuvat tuulen mukana. Sateessa liekki pienenee kuten ennenkin. Toimii kädessä ja toisessa kädessä.
+- **Iskut ilman käden pyörimistä:** nuijan ja terien iskuissa ranne joutui ääriasentoihin, ja käsi kiertyi varren ympäri jopa ±0,7 rad ja takaisin. Kierto on nyt rajattu (±0,3 rad) ja hidastettu, ja lyöntien kärkiasentoja on loivennettu niin, että isku tulee käsivarresta.
+
 ## 2026-10-09 (sessio 33): uudet nuija ja soihtu, ihotekstuuri, kivipuukko ja norsu juomaan
 
 - **Puunuija ja soihtu käyttäjän malleista:** nuija on nyt nuppipäinen, tekstuuroitu puunuija ja soihtu kangaspäinen, köydellä sidottu soihtu (väri-, normaali- ja karheustekstuurit). Ne näkyvät kädessä, toisessa kädessä (soihtu) ja maassa, ja kuvakkeet piirretään samoista malleista.

@@ -217,6 +217,11 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 34 (käyttäjän kertoma, 2026-10-12)
+- **Käsi saisi gripata esineitä paremmin** (käyttäjän kuva nuijasta: sormet löysästi).
+- **Soihdun liekki on todella epärealistinen** soihtuun nähden (käyttäjän kuva). Toive: **hyperrealistinen liekki**, jossa on **fysiikat**, niin että se **heiluu tuulen mukana** ym.
+- **Nuija- ja puukkoanimaatioissa** kädet **pyörivät yhä jotenkin erikoisesti**.
+
 ## Sessio 33 (käyttäjän kertoma, 2026-10-09)
 - **Uudet mallit puunuijalle ja soihdulle** (käyttäjän GLB-tiedostot wooden_club.glb ja torch.glb).
 - **Kunnon ihotekstuurit kädelle netistä**, ettei tule niin "muovinen" tunnelma.
