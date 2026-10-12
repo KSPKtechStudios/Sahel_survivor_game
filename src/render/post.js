@@ -1,7 +1,16 @@
 // Jälkikäsittely: valonsäteet (god rays), ilmakehän hehku sumussa,
 // syväterävyys (DOF) ja liike-epäterävyys. Maailma piirretään ensin
-// HDR-kuvaan syvyyksineen; käsi piirretään lopuksi suoraan ruudulle, joten
-// tehosteet eivät sumenna sitä.
+// HDR-kuvaan syvyyksineen; käsi piirretään sen jälkeen, joten tehosteet
+// eivät sumenna sitä.
+//
+// Sessio 37 (grafiikkapäivitys, käyttäjä: päivä näytti ylivalottuneelta,
+// latteelta ja halvalta):
+//  - Ambienttiokkluusio (SSAO) syvyyspuskurista: kontaktivarjot ruohotuppaiden,
+//    puiden ja esineiden juurelle (ei "leijuvia" malleja).
+//  - Viimeistelyvaihe: maailma ja käsi kootaan HDR-kuvaan, josta tehdään
+//    bloom (vain voimakkaat kohokohdat: aurinko, liekit, välkkeet), ja
+//    lopuksi ACES-sävytys, värimäärittely (kontrasti, kylläisyys, lämmin
+//    maanläheinen sävy) ja kevyt vinjetti.
 //
 // Jos kaikki tehosteet ovat pois päältä, maailma piirretään suoraan ruudulle
 // kuten ennenkin (heikoille koneille).
@@ -156,6 +165,7 @@ void main() {
 
 // Lopullinen kuva: liike-epäterävyys, DOF, valonsäteet, ilmakehän hehku ja sävytys.
 const compositeFS = /* glsl */ `
+#include <packing>
 uniform sampler2D tColor;
 uniform sampler2D tDepth;
 uniform sampler2D tRays;
@@ -192,7 +202,29 @@ uniform vec3 uHFogColor;
 uniform sampler2D tVol;  // sessio 26: valokeilat (r = valaistu matka m, g = säteen pituus)
 uniform vec3 uVolCol;    // auringon väri * voimakkuus * ilman tiheys
 uniform vec2 uVolTexel;
+uniform sampler2D tAO;   // sessio 37: ambienttiokkluusio (r = okkluusio, g = syvyys)
+uniform vec2 uAORes;
+uniform float uAOStr;
 varying vec2 vUv;
+// Puolikkaan tarkkuuden okkluusio täyteen kokoon: neljä lähintä näytettä
+// painotetaan syvyyden samankaltaisuudella (ei tummia sädekehiä reunoille).
+float aoAt(vec2 uv, float z) {
+  vec2 hp = uv * uAORes - 0.5;
+  vec2 f = fract(hp);
+  vec2 b = floor(hp);
+  float s = 0.0, ws = 0.0;
+  float tol = z * 0.04 + 0.05;
+  for (int j = 0; j < 2; j++) {
+    for (int i = 0; i < 2; i++) {
+      vec2 t = texture2D(tAO, (b + vec2(float(i), float(j)) + 0.5) / uAORes).rg;
+      float bw = (i == 0 ? 1.0 - f.x : f.x) * (j == 0 ? 1.0 - f.y : f.y);
+      float w = (bw + 0.001) * max(0.002, 1.0 - abs(t.g - z) / tol);
+      s += t.r * w;
+      ws += w;
+    }
+  }
+  return s / ws;
+}
 float hfH(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float hfN(vec2 p) {
   vec2 i = floor(p), f = fract(p);
@@ -411,6 +443,15 @@ void main() {
     col = sceneAt(uv);
   }
 
+  // Sessio 37: ambienttiokkluusio ennen sumua ja ilmakehää (kaukainen usva ei
+  // tummu). Kirkkaissa, auringon valaisemissa kohdissa heikompi, koska
+  // okkluusio koskee oikeasti vain hajavaloa.
+  if (uAOStr > 0.0 && !sky) {
+    float ao = aoAt(vUv, -perspectiveDepthToViewZ(depth, uNear, uFar));
+    float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
+    col *= mix(1.0, ao, uAOStr * (1.0 - 0.35 * smoothstep(0.4, 2.0, lum)));
+  }
+
   // Kangastus: kaukainen maa aivan horisontin alla heijastaa taivasta kuin
   // väreilevä vesi.
   if (heatW > 0.001 && !sky && ray.y < 0.0) {
@@ -527,6 +568,186 @@ void main() {
 }
 `;
 
+// Sessio 37: ambienttiokkluusio (Scalable Ambient Obscurance -tyyli)
+// puolikkaalla tarkkuudella. Pinnan paikka ja normaali päätellään
+// syvyyspuskurista (normaali naapureista, terävämpi puoli valitaan, jotta
+// reunat eivät sotkeudu). Näytteet kiertävät spiraalina, jonka kierto
+// vaihtelee pikseleittäin; kohina siivotaan reunat säilyttävällä sumennuksella.
+// Tulos: r = okkluusio (1 = ei varjoa), g = lineaarinen syvyys (sumennusta
+// ja tarkkaa skaalausta varten).
+const aoFS = /* glsl */ `
+uniform sampler2D tDepth;
+uniform mat4 uProjInv;
+uniform vec2 uTexel;
+uniform vec2 uHalfTexel;
+uniform float uProjScale;
+uniform float uRadius;
+uniform float uIntensity;
+uniform float uMaxPx;
+uniform float uFade;
+varying vec2 vUv;
+vec3 viewPos(vec2 uv) {
+  float d = texture2D(tDepth, uv).r;
+  vec4 p = uProjInv * vec4(uv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);
+  return p.xyz / p.w;
+}
+void main() {
+  float d = texture2D(tDepth, vUv).r;
+  if (d >= 0.99999) { gl_FragColor = vec4(1.0, 60000.0, 0.0, 1.0); return; }
+  vec3 P = viewPos(vUv);
+  float z = -P.z;
+  float fade = 1.0 - smoothstep(uFade * 0.55, uFade, z);
+  float ssR = min(uProjScale * uRadius / z, uMaxPx);
+  if (fade <= 0.0 || ssR < 1.0) { gl_FragColor = vec4(1.0, z, 0.0, 1.0); return; }
+  vec2 dx = vec2(uTexel.x * 2.0, 0.0), dy = vec2(0.0, uTexel.y * 2.0);
+  vec3 Pr = viewPos(vUv + dx), Pl = viewPos(vUv - dx), Pu = viewPos(vUv + dy), Pd = viewPos(vUv - dy);
+  vec3 ddx = abs(Pr.z - P.z) < abs(P.z - Pl.z) ? Pr - P : P - Pl;
+  vec3 ddy = abs(Pu.z - P.z) < abs(P.z - Pd.z) ? Pu - P : P - Pd;
+  vec3 N = normalize(cross(ddx, ddy));
+  float R2 = uRadius * uRadius;
+  float rnd = 6.2831853 * fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+  float bias = 0.01 + 0.0012 * z;
+  float sum = 0.0;
+  for (int i = 0; i < NS; i++) {
+    float a = (float(i) + 0.5) / float(NS);
+    float ang = a * 6.2831853 * TURNS + rnd;
+    vec2 uv = vUv + vec2(cos(ang), sin(ang)) * (ssR * a) * uHalfTexel;
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) continue;
+    vec3 v = viewPos(uv) - P;
+    float vv = dot(v, v);
+    float f = max(R2 - vv, 0.0);
+    sum += f * f * f * max((dot(v, N) - bias) / (0.02 + vv), 0.0);
+  }
+  float A = max(0.0, 1.0 - sum * uIntensity * 5.0 / (R2 * R2 * R2 * float(NS)));
+  gl_FragColor = vec4(mix(1.0, A, fade), z, 0.0, 1.0);
+}
+`;
+
+// Reunat säilyttävä sumennus (erotettava, 9 näytettä): vain samalla
+// syvyydellä olevat naapurit sekoittuvat.
+const aoBlurFS = /* glsl */ `
+uniform sampler2D tAO;
+uniform vec2 uDir;
+varying vec2 vUv;
+void main() {
+  vec2 c = texture2D(tAO, vUv).rg;
+  float z = c.g;
+  if (z > 50000.0) { gl_FragColor = vec4(1.0, z, 0.0, 1.0); return; }
+  float tol = z * 0.035 + 0.04;
+  float s = c.r * 0.227, ws = 0.227;
+  for (int i = 1; i <= 4; i++) {
+    float g = i == 1 ? 0.1945 : i == 2 ? 0.1216 : i == 3 ? 0.054 : 0.0162;
+    vec2 a = texture2D(tAO, vUv + uDir * float(i)).rg;
+    vec2 b = texture2D(tAO, vUv - uDir * float(i)).rg;
+    float wa = g * max(0.0, 1.0 - abs(a.g - z) / tol);
+    float wb = g * max(0.0, 1.0 - abs(b.g - z) / tol);
+    s += a.r * wa + b.r * wb;
+    ws += wa + wb;
+  }
+  gl_FragColor = vec4(s / ws, z, 0.0, 1.0);
+}
+`;
+
+// Bloom (sessio 37): kirkkaat kohdat pehmeällä kynnyksellä (valotuksen
+// jälkeen), Karis-keskiarvo estää yksittäisten välkkeiden vilkkumisen.
+const bloomPreFS = /* glsl */ `
+uniform sampler2D tInput;
+uniform vec2 uTexel;
+uniform vec4 uThresh; // x kynnys, y polvi, z valotus, w yläraja
+varying vec2 vUv;
+vec3 pre(vec3 c) {
+  vec3 e = min(c * uThresh.z, vec3(uThresh.w));
+  float br = max(e.r, max(e.g, e.b));
+  float rq = clamp(br - uThresh.x + uThresh.y, 0.0, 2.0 * uThresh.y);
+  rq = rq * rq / (4.0 * uThresh.y + 1e-4);
+  return e * (max(rq, br - uThresh.x) / max(br, 1e-4)) / uThresh.z;
+}
+float kw(vec3 c) { return 1.0 / (1.0 + dot(c, vec3(0.2126, 0.7152, 0.0722)) * uThresh.z); }
+void main() {
+  vec3 a = pre(texture2D(tInput, vUv + uTexel * vec2(-1.0, -1.0)).rgb);
+  vec3 b = pre(texture2D(tInput, vUv + uTexel * vec2(1.0, -1.0)).rgb);
+  vec3 c = pre(texture2D(tInput, vUv + uTexel * vec2(-1.0, 1.0)).rgb);
+  vec3 d = pre(texture2D(tInput, vUv + uTexel * vec2(1.0, 1.0)).rgb);
+  float wa = kw(a), wb = kw(b), wc = kw(c), wd = kw(d);
+  gl_FragColor = vec4((a * wa + b * wb + c * wc + d * wd) / (wa + wb + wc + wd), 1.0);
+}
+`;
+
+// Alasnäytteistys (13 näytettä, tasainen ja välkkymätön).
+const bloomDownFS = /* glsl */ `
+uniform sampler2D tInput;
+uniform vec2 uTexel;
+varying vec2 vUv;
+vec3 t(float x, float y) { return texture2D(tInput, vUv + uTexel * vec2(x, y)).rgb; }
+void main() {
+  vec3 A = t(-2.0, -2.0), B = t(0.0, -2.0), C = t(2.0, -2.0);
+  vec3 D = t(-1.0, -1.0), E = t(1.0, -1.0);
+  vec3 F = t(-2.0, 0.0), G = t(0.0, 0.0), H = t(2.0, 0.0);
+  vec3 I = t(-1.0, 1.0), J = t(1.0, 1.0);
+  vec3 K = t(-2.0, 2.0), L = t(0.0, 2.0), M = t(2.0, 2.0);
+  vec3 o = (D + E + I + J) * 0.125 + (A + B + F + G + B + C + G + H + F + G + K + L + G + H + L + M) * 0.03125;
+  gl_FragColor = vec4(o, 1.0);
+}
+`;
+
+// Ylösnäytteistys (3 × 3 telttasuodin), lisätään edelliseen tasoon.
+const bloomUpFS = /* glsl */ `
+uniform sampler2D tInput;
+uniform vec2 uTexel;
+uniform float uWeight;
+varying vec2 vUv;
+vec3 t(float x, float y) { return texture2D(tInput, vUv + uTexel * vec2(x, y)).rgb; }
+void main() {
+  vec3 s = t(-1.0, -1.0) + t(1.0, -1.0) + t(-1.0, 1.0) + t(1.0, 1.0)
+    + (t(0.0, -1.0) + t(-1.0, 0.0) + t(1.0, 0.0) + t(0.0, 1.0)) * 2.0 + t(0.0, 0.0) * 4.0;
+  gl_FragColor = vec4(s * (uWeight / 16.0), 1.0);
+}
+`;
+
+// Viimeistely (sessio 37): bloom, ACES-sävytys, värimäärittely ja vinjetti
+// koko kuvalle (maailma ja käsi). Värimäärittely tehdään havaintoavaruudessa:
+// kontrasti keskisävyn ympäri, kylläisyys, lämpimät valot ja syvemmät,
+// hieman ruskeanvihreät varjot (savannin maanläheiset sävyt). Lopuksi
+// värisytys estää liukuvärien raidoittumisen.
+const finalFS = /* glsl */ `
+uniform sampler2D tHDR;
+uniform sampler2D tBloom;
+uniform float uBloom;
+uniform vec4 uGrade;   // x kontrasti, y kylläisyys, z lämpö, w päällä
+uniform float uVig;
+uniform float uAspect;
+varying vec2 vUv;
+void main() {
+  vec3 c = texture2D(tHDR, vUv).rgb;
+  if (uBloom > 0.0) c += texture2D(tBloom, vUv).rgb * uBloom;
+  #ifdef TONE_MAPPING
+  c = toneMapping(c);
+  #endif
+  c = clamp(c, 0.0, 1.0);
+  if (uGrade.w > 0.5) {
+    vec3 p = pow(c, vec3(1.0 / 2.2));
+    // Kontrasti: S-käyrä keskisävyn (0,45) ympäri, ääripäät pehmeästi.
+    vec3 q = clamp((p - 0.45) * uGrade.x + 0.45, 0.0, 1.0);
+    p = mix(p, q, smoothstep(0.0, 0.12, p) * (1.0 - smoothstep(0.88, 1.0, p)) * 0.5 + 0.5);
+    float l = dot(p, vec3(0.2126, 0.7152, 0.0722));
+    p = mix(vec3(l), p, uGrade.y);
+    // Sävytys: valot lämpimiksi, varjot syviksi ja hieman vihreänruskeiksi.
+    float hi = smoothstep(0.35, 0.95, l);
+    float sh = 1.0 - smoothstep(0.05, 0.45, l);
+    p *= mix(vec3(1.0), vec3(1.0 + 0.04 * uGrade.z, 1.0 + 0.012 * uGrade.z, 1.0 - 0.05 * uGrade.z), hi);
+    p *= mix(vec3(1.0), vec3(0.97, 0.985, 0.94), sh * uGrade.z);
+    c = pow(clamp(p, 0.0, 1.0), vec3(2.2));
+  }
+  if (uVig > 0.0) {
+    vec2 v = (vUv - 0.5) * vec2(uAspect, 1.0);
+    float r = length(v) / length(vec2(uAspect, 1.0) * 0.5);
+    c *= 1.0 - uVig * smoothstep(0.45, 1.15, r);
+  }
+  gl_FragColor = linearToOutputTexel(vec4(c, 1.0));
+  gl_FragColor.rgb += (fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) - 0.5) / 255.0;
+}
+`;
+
 function makeRT(w, h, opts = {}) {
   return new THREE.WebGLRenderTarget(w, h, {
     type: THREE.HalfFloatType,
@@ -597,6 +818,7 @@ export class PostFX {
       uHFog: { value: new THREE.Vector4(0, 0, 0.12, 0) }, uHFogColor: { value: new THREE.Color(0.7, 0.72, 0.74) },
       tLum: { value: null }, uAE: { value: new THREE.Vector4(0.3, 0, 0.6, 3) },
       tVol: { value: null }, uVolCol: { value: new THREE.Color(0, 0, 0) }, uVolTexel: { value: new THREE.Vector2(1, 1) },
+      tAO: { value: null }, uAORes: { value: new THREE.Vector2(1, 1) }, uAOStr: { value: 0 },
     });
     // Sessio 26: volumetriset valokeilat (main.js asettaa ilman tiheyden).
     this.shafts = 0;
@@ -612,7 +834,9 @@ export class PostFX {
     this.autoExposure = true;
     // Sessio 27: voimakkaampi ja hitaampi pimeään tottuminen (käyttäjä ei huomannut
     // efektiä); yön yläraja matalampi (selkeä yö hieman tummemmaksi).
-    this.ae = { ref: 0.3, strength: 0.82, min: 0.5, max: 2.8, nightMax: 1.9, darkTau: 1.7, brightTau: 0.5 };
+    // Sessio 37: päivällä matalampi tavoitekirkkaus (dayRef; käyttäjä: päivä
+    // näytti ylivalottuneelta). Yöllä ennallaan.
+    this.ae = { ref: 0.3, dayRef: 0.25, strength: 0.82, min: 0.5, max: 2.8, nightMax: 1.9, darkTau: 1.7, brightTau: 0.5 };
     this.lumRT = [0, 1].map(() => makeRT(1, 1, { type: THREE.FloatType, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter }));
     this.lumIdx = 0;
     this.lumInit = true;
@@ -623,6 +847,40 @@ export class PostFX {
     // Sessio 24: korkeussumu (main.js asettaa tiheyden ja pohjan).
     this.hfog = { density: 0, base: 0, falloff: 0.12, color: new THREE.Color(0.7, 0.72, 0.74) };
     this.time = 0;
+
+    // Sessio 37: ambienttiokkluusio (0 = pois, 1 = kevyt, 2 = laadukas),
+    // bloom, värimäärittely ja vinjetti (asetukset, main.js).
+    this.ao = 0;
+    this.bloom = true;
+    this.grade = true;
+    this.vignette = true;
+    this.bloomCfg = { threshold: 1.25, knee: 0.6, intensity: 0.32, clamp: 40 };
+    this.gradeCfg = { contrast: 1.1, saturation: 1.12, warmth: 1 };
+    this.vigStrength = 0.24;
+    this.aoCfg = { radius: 0.85, intensity: 1.15, strength: 0.75, fade: 90 };
+    this.aoRT = makeRT(1, 1);
+    this.aoRT2 = makeRT(1, 1);
+    this._aoNS = 0;
+    this.aoMat = mat(aoFS, {
+      tDepth: { value: depthTexture }, uProjInv: { value: new THREE.Matrix4() },
+      uTexel: { value: new THREE.Vector2() }, uHalfTexel: { value: new THREE.Vector2() },
+      uProjScale: { value: 300 }, uRadius: { value: 0.85 }, uIntensity: { value: 1 }, uMaxPx: { value: 48 }, uFade: { value: 90 },
+    }, { toneMapped: false, defines: { NS: 8, TURNS: '5.0' } });
+    this.aoBlurMat = mat(aoBlurFS, { tAO: { value: null }, uDir: { value: new THREE.Vector2() } }, { toneMapped: false });
+    // Viimeistelyvaihe: HDR-kuva (maailma + käsi), syvyyspuskuri kättä varten.
+    this.hdrRT = makeRT(1, 1, { depthBuffer: true, samples: 4 });
+    this.bloomMips = [0, 1, 2, 3, 4].map(() => makeRT(1, 1));
+    this.bloomPreMat = mat(bloomPreFS, {
+      tInput: { value: null }, uTexel: { value: new THREE.Vector2() }, uThresh: { value: new THREE.Vector4() },
+    }, { toneMapped: false });
+    this.bloomDownMat = mat(bloomDownFS, { tInput: { value: null }, uTexel: { value: new THREE.Vector2() } }, { toneMapped: false });
+    this.bloomUpMat = mat(bloomUpFS, { tInput: { value: null }, uTexel: { value: new THREE.Vector2() }, uWeight: { value: 1 } }, {
+      toneMapped: false, transparent: true, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor,
+    });
+    this.finalMat = mat(finalFS, {
+      tHDR: { value: this.hdrRT.texture }, tBloom: { value: this.bloomMips[0].texture }, uBloom: { value: 0 },
+      uGrade: { value: new THREE.Vector4(1, 1, 1, 0) }, uVig: { value: 0 }, uAspect: { value: 1 },
+    });
 
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.compMat);
     this.quad.frustumCulled = false;
@@ -662,6 +920,14 @@ export class PostFX {
     this.raysB.setSize(hw, hh);
     this.dofRT.setSize(hw, hh);
     this.volRT.setSize(hw, hh);
+    this.aoRT.setSize(hw, hh);
+    this.aoRT2.setSize(hw, hh);
+    this.hdrRT.setSize(w, h);
+    this.bloomMips.forEach((rt, i) => rt.setSize(Math.max(1, w >> (i + 1)), Math.max(1, h >> (i + 1))));
+    this.compMat.uniforms.uAORes.value.set(hw, hh);
+    this.aoMat.uniforms.uTexel.value.set(1 / w, 1 / h);
+    this.aoMat.uniforms.uHalfTexel.value.set(1 / hw, 1 / hh);
+    this.finalMat.uniforms.uAspect.value = w / h;
     this.compMat.uniforms.uVolTexel.value.set(1 / hw, 1 / hh);
     this.dofMat.uniforms.uTexel.value.set(1 / hw, 1 / hh);
     this.maskMat.uniforms.uAspect.value = w / h;
@@ -674,13 +940,21 @@ export class PostFX {
     this.renderer.render(this.quadScene, this.quadCam);
   }
 
+  // Viimeistelyvaihe käytössä (bloom, värimäärittely tai vinjetti).
+  get finishing() {
+    return this.bloom || this.grade || this.vignette;
+  }
+
   // Piirrä maailma tehosteineen ruudulle. env: aurinko, sumu ja sää.
-  render(scene, camera, env, dt) {
+  // overlay = { scene, camera } (käsi): piirretään maailman päälle omalla
+  // syvyydellään, viimeistelyvaiheessa samaan HDR-kuvaan (bloom ja sävytys).
+  render(scene, camera, env, dt, overlay = null) {
     const r = this.renderer;
     if (!this.active) {
       r.setRenderTarget(null);
       r.clear();
       r.render(scene, camera);
+      if (overlay) { r.clearDepth(); r.render(overlay.scene, overlay.camera); }
       this.hasPrev = false;
       return;
     }
@@ -688,6 +962,7 @@ export class PostFX {
     r.setRenderTarget(this.sceneRT);
     r.clear();
     r.render(scene, camera);
+    this._ambientOcclusion(camera);
 
     const near = camera.near, far = camera.far;
     const viewProj = _m.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
@@ -828,11 +1103,84 @@ export class PostFX {
       this.lumIdx = 1 - this.lumIdx;
       this.lumInit = false;
       cu.tLum.value = next.texture;
-      cu.uAE.value.set(this.ae.ref, this.ae.strength, this.ae.min, THREE.MathUtils.lerp(this.ae.nightMax, this.ae.max, env.daylight));
+      cu.uAE.value.set(THREE.MathUtils.lerp(this.ae.ref, this.ae.dayRef, env.daylight), this.ae.strength, this.ae.min, THREE.MathUtils.lerp(this.ae.nightMax, this.ae.max, env.daylight));
     } else {
       cu.uAE.value.y = 0;
     }
 
-    this._pass(this.compMat, null);
+    const fin = this.finishing;
+    this._pass(this.compMat, fin ? this.hdrRT : null);
+    if (overlay) {
+      r.setRenderTarget(fin ? this.hdrRT : null);
+      r.clearDepth();
+      r.render(overlay.scene, overlay.camera);
+    }
+    if (fin) this._finish();
+  }
+
+  // Sessio 37: ambienttiokkluusio puolikkaalla tarkkuudella + sumennus.
+  _ambientOcclusion(camera) {
+    const cu = this.compMat.uniforms;
+    if (!this.ao) { cu.uAOStr.value = 0; return; }
+    const ns = this.ao >= 2 ? 16 : 8;
+    const au = this.aoMat.uniforms;
+    if (this._aoNS !== ns) {
+      this._aoNS = ns;
+      this.aoMat.defines.NS = ns;
+      this.aoMat.defines.TURNS = ns >= 16 ? '7.0' : '5.0';
+      this.aoMat.needsUpdate = true;
+    }
+    au.uProjInv.value.copy(camera.projectionMatrixInverse);
+    // Pikseliä (puolikas kuva) metriä kohti 1 m etäisyydellä.
+    au.uProjScale.value = (this.h >> 1) * 0.5 * camera.projectionMatrix.elements[5];
+    au.uRadius.value = this.aoCfg.radius;
+    au.uIntensity.value = this.aoCfg.intensity;
+    au.uFade.value = this.aoCfg.fade;
+    au.uMaxPx.value = this.ao >= 2 ? 56 : 40;
+    this._pass(this.aoMat, this.aoRT);
+    const bu = this.aoBlurMat.uniforms;
+    bu.tAO.value = this.aoRT.texture;
+    bu.uDir.value.set(1 / this.aoRT.width, 0);
+    this._pass(this.aoBlurMat, this.aoRT2);
+    bu.tAO.value = this.aoRT2.texture;
+    bu.uDir.value.set(0, 1 / this.aoRT.height);
+    this._pass(this.aoBlurMat, this.aoRT);
+    cu.tAO.value = this.aoRT.texture;
+    cu.uAOStr.value = this.aoCfg.strength;
+  }
+
+  // Sessio 37: bloom HDR-kuvasta ja viimeistely ruudulle.
+  _finish() {
+    const fu = this.finalMat.uniforms;
+    if (this.bloom) {
+      const b = this.bloomCfg;
+      const mips = this.bloomMips;
+      const pu = this.bloomPreMat.uniforms;
+      pu.tInput.value = this.hdrRT.texture;
+      pu.uTexel.value.set(1 / this.w, 1 / this.h);
+      pu.uThresh.value.set(b.threshold, b.knee, this.renderer.toneMappingExposure, b.clamp);
+      this._pass(this.bloomPreMat, mips[0]);
+      const du = this.bloomDownMat.uniforms;
+      for (let i = 1; i < mips.length; i++) {
+        du.tInput.value = mips[i - 1].texture;
+        du.uTexel.value.set(1 / mips[i - 1].width, 1 / mips[i - 1].height);
+        this._pass(this.bloomDownMat, mips[i]);
+      }
+      // Ylös: jokainen taso lisätään edelliseen (isommat tasot = leveämpi hehku).
+      const uu = this.bloomUpMat.uniforms;
+      for (let i = mips.length - 1; i > 0; i--) {
+        uu.tInput.value = mips[i].texture;
+        uu.uTexel.value.set(1 / mips[i].width, 1 / mips[i].height);
+        uu.uWeight.value = 0.85;
+        this._pass(this.bloomUpMat, mips[i - 1]);
+      }
+      fu.uBloom.value = b.intensity / mips.length;
+    } else {
+      fu.uBloom.value = 0;
+    }
+    const g = this.gradeCfg;
+    fu.uGrade.value.set(g.contrast, g.saturation, g.warmth, this.grade ? 1 : 0);
+    fu.uVig.value = this.vignette ? this.vigStrength : 0;
+    this._pass(this.finalMat, null);
   }
 }

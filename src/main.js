@@ -327,6 +327,11 @@ function applySettings(s) {
   post.motionBlur = s.motionBlur === 'high' ? 2 : s.motionBlur === 'low' ? 1 : 0;
   post.dof = !!s.dof;
   post.lensFlare = s.lensFlare !== false;
+  // Sessio 37: ambienttiokkluusio, bloom, värimäärittely ja vinjetti.
+  post.ao = s.ao === 'high' ? 2 : s.ao === 'low' ? 1 : 0;
+  post.bloom = s.bloom !== false;
+  post.grade = s.grade !== false;
+  post.vignette = s.vignette !== false;
   // Sessio 25: silmän mukautuminen on aina päällä (yön valotus riippuu siitä).
   env.autoExposure = post.autoExposure;
   // Sessio 24: ruohon ja aluskasvien tiheys sekä ruohon näkyvyyssäde.
@@ -1112,13 +1117,9 @@ function frame(now) {
   drawTimer -= dt;
   if (state !== 'paused' || drawTimer <= 0) {
     drawTimer = 0.25;
-    // Maailma tehosteineen, sitten käsi päälle (ei tehosteita).
-    post.render(scene, camera, env, state === 'paused' ? 0 : dt);
-    if (inGame) {
-      renderer.setRenderTarget(null);
-      renderer.clearDepth();
-      renderer.render(viewmodel.scene, viewmodel.camera);
-    }
+    // Maailma tehosteineen, sitten käsi päälle (ei sumennuksia; sessio 37:
+    // bloom ja sävytys koskevat myös kättä).
+    post.render(scene, camera, env, state === 'paused' ? 0 : dt, inGame ? viewmodel : null);
   }
   input.endFrame();
 

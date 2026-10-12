@@ -217,6 +217,19 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 37 (käyttäjän kertoma, 2026-10-12): grafiikka ja valaistus
+- Päivänvalossa maasto ja grafiikka näyttävät **ylivalottuneilta, haaleilta, latteilta ja "halvoilta"**. Tavoite on rikas, elokuvamainen tunnelma (Valheim-tyyliin), enemmän kontrastia, ja pelin tyylin ja ulkonäön pitää olla viimeistellympi.
+- **Sävytys ja värimäärittely:** ACES Filmic -sävytys säädetyllä valotuksella; kontrastia ja värikylläisyyttä hieman lisää, niin että savannin maanläheiset sävyt (syvät lämpimät keltaiset, paahtuneet ruskeat, tummat vihreät) korostuvat.
+- **Jälkikäsittely:**
+  - **SSAO / GTAO:** realistiset kontaktivarjot ruohotuppaiden, puiden ja esineiden juurille, ettei mikään näytä leijuvalta.
+  - **Bloom:** hienovarainen, valikoiva bloom korostaa vain voimakkaita kohokohtia (aurinko, soihtujen liekit, aseiden heijastukset) eikä vaalenna koko kuvaa.
+  - **Syväterävyys / vinjetti:** hyvin kevyt reunojen vinjetti kehystämään kuvaa ja syventämään tilaa.
+- **Varjot ja valaistus:**
+  - laadukkaat suunnatut varjot (kaskadivarjot tai dynaaminen bias ja säde): terävät varjot lähellä ja pehmeä häivytys kaukana;
+  - auringon kulma värjää maiseman aamulla ja illalla (kultainen tunti, oranssi ja punainen sävy);
+  - ambient-valoa vähemmän, niin että varjot pysyvät selvästi tummina ja dramaattisina eivätkä tasaisen valaistuina.
+- **Kaikki ominaisuudet säädettäviksi asetuksista**, jotta peli pyörii myös heikommilla koneilla.
+
 ## Sessio 36 (käyttäjän kertoma, 2026-10-12)
 - **Liekki saisi olla hieman suurempi.**
 - **Lepatus ei reagoi tuuleen tarpeeksi.**

@@ -12,16 +12,21 @@ import { windUniforms } from './materials.js';
 import { smoothstep, lerp } from '../noise.js';
 
 // Värien avainkohdat tunnin mukaan (sRGB-heksat).
+// Sessio 37: aurinko hieman voimakkaampi ja keskipäivän taivas syvemmän
+// sininen; aamuun ja iltaan "kultainen tunti" (klo 7,2 ja 16,9): matala
+// aurinko värjää maiseman oranssiksi ja punaiseksi.
 const KEYS = [
   { h: 0.0, zen: 0x04060d, hor: 0x0b1222, sun: 0x000000, sunI: 0, hemiS: 0x26345a, hemiG: 0x16130f, hemiI: 0.5, fog: 0x0a0f1a },
   { h: 4.8, zen: 0x070b18, hor: 0x161d30, sun: 0x000000, sunI: 0, hemiS: 0x2c3a5e, hemiG: 0x18140f, hemiI: 0.52, fog: 0x121827 },
   { h: 5.7, zen: 0x22345a, hor: 0x8a6a6a, sun: 0xff8a50, sunI: 0.3, hemiS: 0x7a84ac, hemiG: 0x4a382e, hemiI: 0.9, fog: 0x6a5a62 },
-  { h: 6.4, zen: 0x3d6094, hor: 0xeea36a, sun: 0xffa060, sunI: 1.4, hemiS: 0x95a0bc, hemiG: 0x6a4a34, hemiI: 0.75, fog: 0xd2a27e },
-  { h: 8.0, zen: 0x3a72c0, hor: 0xe6cfae, sun: 0xffdcb0, sunI: 2.6, hemiS: 0xaabbd4, hemiG: 0x8a6646, hemiI: 0.95, fog: 0xdccab0 },
-  { h: 12.0, zen: 0x2f6cc8, hor: 0xd2dade, sun: 0xfff3e2, sunI: 3.3, hemiS: 0xb8cbe2, hemiG: 0x957250, hemiI: 1.05, fog: 0xd8d6cc },
-  { h: 16.2, zen: 0x386fbc, hor: 0xe2cfb0, sun: 0xffe2bc, sunI: 2.7, hemiS: 0xacbcd6, hemiG: 0x8e6a4a, hemiI: 0.95, fog: 0xdcc8ae },
-  { h: 17.6, zen: 0x3a5a8e, hor: 0xf2a060, sun: 0xffa055, sunI: 1.5, hemiS: 0x98a0bc, hemiG: 0x6e4a34, hemiI: 0.75, fog: 0xd49870 },
-  { h: 18.3, zen: 0x24345e, hor: 0xd06a48, sun: 0xff6a3a, sunI: 0.35, hemiS: 0x8a84b0, hemiG: 0x5a4030, hemiI: 1.05, fog: 0x8a5a50 },
+  { h: 6.4, zen: 0x3d6094, hor: 0xeea36a, sun: 0xff9448, sunI: 1.7, hemiS: 0x95a0bc, hemiG: 0x6a4a34, hemiI: 0.75, fog: 0xd2a27e },
+  { h: 7.2, zen: 0x3a68aa, hor: 0xeab47e, sun: 0xffb46a, sunI: 2.4, hemiS: 0x9eaac6, hemiG: 0x7a5636, hemiI: 0.85, fog: 0xd8b48e },
+  { h: 8.0, zen: 0x3570c2, hor: 0xdac6a8, sun: 0xffd6a2, sunI: 2.9, hemiS: 0xa8b8d2, hemiG: 0x8a6444, hemiI: 0.95, fog: 0xcfbea2 },
+  { h: 12.0, zen: 0x2a66c8, hor: 0xb4c8de, sun: 0xfff0dc, sunI: 3.6, hemiS: 0xb2c6e0, hemiG: 0x8e6a48, hemiI: 1.05, fog: 0xbcc6c8 },
+  { h: 16.2, zen: 0x326abc, hor: 0xd4c4a8, sun: 0xffdcb2, sunI: 3.0, hemiS: 0xa8b8d4, hemiG: 0x8c6646, hemiI: 0.95, fog: 0xcebc9e },
+  { h: 16.9, zen: 0x3664a6, hor: 0xeab078, sun: 0xffb062, sunI: 2.4, hemiS: 0x9eaac6, hemiG: 0x7c5636, hemiI: 0.85, fog: 0xd8b088 },
+  { h: 17.6, zen: 0x3a5a8e, hor: 0xf2a060, sun: 0xff8c40, sunI: 1.7, hemiS: 0x98a0bc, hemiG: 0x6e4a34, hemiI: 0.75, fog: 0xd49870 },
+  { h: 18.3, zen: 0x24345e, hor: 0xd06a48, sun: 0xff5a2c, sunI: 0.4, hemiS: 0x8a84b0, hemiG: 0x5a4030, hemiI: 1.05, fog: 0x8a5a50 },
   { h: 19.2, zen: 0x0c1430, hor: 0x3a2a3e, sun: 0x000000, sunI: 0, hemiS: 0x4a5480, hemiG: 0x28201a, hemiI: 0.8, fog: 0x1e1c2a },
   { h: 20.5, zen: 0x05080f, hor: 0x0e1424, sun: 0x000000, sunI: 0, hemiS: 0x28365a, hemiG: 0x16130f, hemiI: 0.5, fog: 0x0b101c },
   { h: 24.0, zen: 0x04060d, hor: 0x0b1222, sun: 0x000000, sunI: 0, hemiS: 0x26345a, hemiG: 0x16130f, hemiI: 0.5, fog: 0x0a0f1a },
@@ -96,6 +101,8 @@ export class Environment {
     this.day = 1;
     this.moonSeed = 0; // main.js: maailman siemen
     this.timeScale = 24 / CONFIG.dayLengthSec;
+    // Sessio 37: päivän hajavalon kerroin (kontrasti: varjot tummemmiksi).
+    this.ambientDay = 0.6;
 
     // Aurinko: kaksi varjokaskadia (tarkat varjot lähellä, karkeammat kauempana),
     // jotka sovitetaan kameran näkymään. Varjon reunat pehmenevät etäisyyden mukaan.
@@ -509,7 +516,11 @@ export class Environment {
     const hemiI = lerp(A.hemiI, B.hemiI, f);
     // Pilvisellä säällä hajavaloa on suhteessa enemmän.
     // Pilvisyyden lisähajavalo vain päivällä (sessio 25: yö ei kirkastu).
-    this.hemi.intensity = hemiI * (1 + (greyAmt * 0.25 + w.haze * 0.15) * this.daylight) * (1 - 0.2 * this.humid) * nightDark + this.flash * 1.6;
+    // Sessio 37: päivällä hajavaloa selvästi vähemmän (ennen lähes auringon
+    // veroinen: varjot jäivät vaaleiksi ja kuva latteaksi). Pilvisellä säällä
+    // hajavalo säilyy, koska silloin valo tulee koko taivaalta.
+    const ambK = lerp(1, lerp(this.ambientDay, 0.9, Math.min(1, greyAmt * 1.2 + w.haze * 0.6)), this.daylight);
+    this.hemi.intensity = hemiI * ambK * (1 + (greyAmt * 0.25 + w.haze * 0.15) * this.daylight) * (1 - 0.2 * this.humid) * nightDark + this.flash * 1.6;
     if (this.humid > 0.001) this.hemi.color.lerp(_c2.copy(CANOPY_GREEN).multiplyScalar(dayLum), 0.35 * this.humid);
 
     // Valon suunta (SunLight valaisee sijainnistaan origoa kohti).
