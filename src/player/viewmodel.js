@@ -707,10 +707,13 @@ export class ViewModel {
       const f = this.torchFlames[i];
       const vis = !!on && fk > 0.02 && !!cam;
       f.setVisible(vis);
-      if (!vis) return;
-      m.updateWorldMatrix(true, false);
-      _tip.set(0, 0.425, 0).applyMatrix4(m.matrixWorld);
-      f.update(dt, this.time, _tip, cam, wind, Math.min(1, fk), 0.32 * m.scale.y / 0.85);
+      // Sessio 36: piilotettunakin päivitetään, jotta ilmassa olevat kipinät
+      // ja savu leijuvat ja häipyvät loppuun. Liekki ~30 % isompi.
+      if (vis) {
+        m.updateWorldMatrix(true, false);
+        _tip.set(0, 0.425, 0).applyMatrix4(m.matrixWorld);
+      }
+      f.update(dt, this.time, vis ? _tip : null, cam, wind, Math.min(1, fk), 0.42 * m.scale.y / 0.85);
     });
   }
 }

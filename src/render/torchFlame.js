@@ -16,6 +16,12 @@
 //     häipyvät elinikänsä mukaan.
 //  4. Väri: ytimen valkokeltaisesta oranssin kautta tummanpunaiseen
 //     reunaan, pehmeä läpinäkyvyys; tyvessä hento sininen.
+// Sessio 36 (käyttäjä: lepatus ei reagoinut tuuleen tarpeeksi; kipinät ja
+// savu katosivat heti kun soihdun otti pois kädestä):
+//  - Tuuli puuskittaa ja taivuttaa kärkeä selvästi; tuulessa liekki myös
+//    lepattaa kovemmin ja nopeammin (aallot kulkevat ylös tuulen suuntaan).
+//  - Piilotus koskee vain liekkiä: ilmassa jo olevat kipinät ja savu jatkavat
+//    lentoaan ja häipyvät elinikänsä loppuun.
 import * as THREE from 'three';
 
 const NOISE = /* glsl */`
@@ -69,6 +75,8 @@ uniform float uTime;
 uniform float uSeed;
 uniform vec2 uBend;      // kärjen sivusiirtymä (liekin korkeuden suhteen), maailman x/z
 uniform float uStretch;
+uniform vec2 uWind;      // tuulen suunta * voimakkuus (0..1,5) maailman x/z, puuskat mukana
+uniform float uFlow;     // nousevan kohinan vaihe (kiihtyy tuulessa)
 varying vec3 vObj;
 varying float vY;
 varying vec3 vNv;
@@ -77,18 +85,29 @@ ${NOISE}
 void main() {
   vec3 p = position;
   float y = clamp(p.y, 0.0, 1.0);
-  float t = uTime + uSeed;
+  float t = uFlow + uSeed;
+  float wk = length(uWind);
   // Nouseva kohina: pullistumat ja kuroumat kulkevat ylöspäin.
   vec3 q = vec3(p.x * 3.2, y * 2.6 - t * 2.3, p.z * 3.2);
   float n1 = snoise(q + uSeed);
   float n2 = snoise(q * 2.3 + vec3(7.1, -t * 1.1, 3.7));
   vec2 rad = p.xz;
-  p.xz += rad * (n1 * 0.55 + n2 * 0.25) * (0.35 + y);
-  // Sivuttainen lepatus voimistuu ylöspäin.
+  p.xz += rad * (n1 * 0.55 + n2 * 0.25) * (0.35 + y + wk * 0.3 * y);
+  // Sivuttainen lepatus voimistuu ylöspäin ja tuulessa.
   float fx = snoise(vec3(t * 1.6, y * 1.8 - t * 1.4, uSeed));
   float fz = snoise(vec3(uSeed + 11.0, y * 1.8 - t * 1.4, t * 1.5));
-  p.x += fx * 0.13 * y * y;
-  p.z += fz * 0.13 * y * y;
+  float fa = (0.13 + wk * 0.12) * y * y;
+  p.x += fx * fa;
+  p.z += fz * fa;
+  // Tuulilepatus: tuulen suuntaiset aallot nousevat liekkiä pitkin ja kärki
+  // repsahtelee poikittain kuin lippu.
+  if (wk > 0.001) {
+    vec2 wd = uWind / wk;
+    vec2 wn = vec2(-wd.y, wd.x);
+    float wa = snoise(vec3(y * 3.4 - t * 4.2, t * 1.7, uSeed + 4.0));
+    float wb = snoise(vec3(uSeed - 3.0, y * 2.6 - t * 3.6, t * 2.3));
+    p.xz += (wd * wa * 0.55 + wn * wb) * 0.22 * wk * y * y;
+  }
   // Korkeus sykkii; liike venyttää.
   p.y *= uStretch * (1.0 + 0.14 * snoise(vec3(t * 2.1, uSeed, 0.0)));
   // Tuuli ja liike taivuttavat kärkeä (kaari).
@@ -102,7 +121,7 @@ void main() {
 }`;
 
 const FRAG = /* glsl */`
-uniform float uTime;
+uniform float uFlow;
 uniform float uSeed;
 uniform float uLayer;   // 0 = ydin ... 1 = uloin kuori
 uniform float uPower;
@@ -121,7 +140,7 @@ vec3 fireRamp(float t) {
 void main() {
   float facing = abs(dot(normalize(vNv), normalize(-vPv)));
   float edge = pow(facing, 1.2 + uLayer * 0.9);
-  float t = uTime + uSeed;
+  float t = uFlow + uSeed;
   vec3 q = vec3(vObj.x * 5.0, vObj.y * 3.4 - t * 3.0, vObj.z * 5.0);
   float nz = 0.5 + 0.5 * (snoise(q) * 0.65 + snoise(q * 2.2 + 5.0) * 0.35);
   float y = vY;
@@ -238,7 +257,12 @@ const LAYERS = [[1, 1, 1, 0.0], [0.78, 0.86, 0.66, 3.1], [0.56, 0.68, 0.33, 6.7]
 export class TorchFlame {
   constructor(scene, seed = 0) {
     this.scene = scene;
-    const shared = { uTime: { value: 0 }, uBend: { value: new THREE.Vector2() }, uStretch: { value: 1 }, uPower: { value: 1 } };
+    const shared = {
+      uTime: { value: 0 }, uFlow: { value: 0 }, uBend: { value: new THREE.Vector2() }, uStretch: { value: 1 },
+      uPower: { value: 1 }, uWind: { value: new THREE.Vector2() },
+    };
+    this.ph = seed * 2.17;
+    this.power = 1;
     this.shared = shared;
     const geo = shellGeometry();
     this.group = new THREE.Group();
@@ -268,38 +292,60 @@ export class TorchFlame {
     this.setVisible(false);
   }
 
-  // Piilotus piilottaa myös kipinät ja savun ja tyhjentää ne (ennen jäätyneet
-  // kipinät jäivät näkyviin valkoisina pisteinä).
+  // Piilotus koskee vain liekkiä (sessio 36): ilmassa olevat kipinät ja savu
+  // elävät loppuun, kunhan update()-kutsuja jatketaan (tip = null). Pisteet
+  // näkyvät vain kun niitä on (sessio 35: jäätyneet pisteet valkoisina).
   setVisible(v) {
     if (v === this.visible) return;
     this.visible = v;
     this.group.visible = v;
-    this.embers.points.visible = v;
-    this.smoke.points.visible = v;
-    if (!v) {
-      this.prevTip = null;
-      this.embers.clear();
-      this.smoke.clear();
-    }
+    if (!v) this.prevTip = null;
+  }
+
+  // Kaikki pois heti (esim. kamera puuttuu).
+  clearParticles() {
+    this.embers.clear();
+    this.smoke.clear();
+    this.embers.points.visible = false;
+    this.smoke.points.visible = false;
   }
 
   // tipView = soihdun kärki näkymän koordinaateissa (viewmodel-kamera on
   // origossa), cam = pelin kamera, wind = { x, z } m/s, power 0..1 (sade),
-  // size = liekin korkeus (m).
+  // size = liekin korkeus (m). Piilotettuna (tai tipView = null) päivitetään
+  // vain ilmassa olevat hiukkaset.
   update(dt, time, tipView, cam, wind, power = 1, size = 0.24) {
-    if (!this.visible || dt <= 0 || !cam) return;
+    if (dt <= 0) return;
+    if (!cam) { this.clearParticles(); return; }
     cam.updateMatrixWorld();
+    const wx = wind ? wind.x : 0, wz = wind ? wind.z : 0;
+    if (this.visible && tipView) this._flame(dt, time, tipView, cam, wx, wz, power, size);
+    this._particles(dt, time, cam, wx, wz);
+  }
+
+  _flame(dt, time, tipView, cam, wx, wz, power, size) {
+    this.power = power;
     const tipW = _w.copy(tipView).applyMatrix4(cam.matrixWorld);
     if (!this.prevTip) { this.prevTip = tipW.clone(); this.vel.set(0, 0, 0); }
     _v.subVectors(tipW, this.prevTip).divideScalar(Math.max(dt, 1e-3));
     this.vel.lerp(_v, 1 - Math.exp(-dt * 18));
     this.prevTip.copy(tipW);
-    const wx = wind ? wind.x : 0, wz = wind ? wind.z : 0;
-    // Ilmavirta liekin suhteen -> kärjen taipuma (jousi).
-    const ax = wx - this.vel.x, az = wz - this.vel.z;
-    let tx = ax * 0.16, tz = az * 0.16;
+    // Puuskat: tuuli vaihtelee hitaasti ja välillä nykäisee.
+    const ph = this.ph;
+    const gust = Math.max(0.15, 1 + 0.35 * Math.sin(time * 1.37 + ph) + 0.25 * Math.sin(time * 3.1 + ph * 2) * Math.sin(time * 0.53 + ph)
+      + 0.15 * Math.sin(time * 7.3 + ph * 3));
+    // Tuulen vaikutus liekkiin (m/s -> 0..1,5): taipuma ja lepatus.
+    const wl = Math.hypot(wx, wz);
+    const wk = Math.min(1.5, wl * 0.4 * gust);
+    if (wl > 1e-4) this.shared.uWind.value.set(wx / wl * wk, wz / wl * wk);
+    else this.shared.uWind.value.set(0, 0);
+    this.shared.uFlow.value += dt * (1 + wk * 1.1);
+    // Ilmavirta liekin suhteen -> kärjen taipuma (jousi). Tuuli taivuttaa
+    // selvästi (ennen vain ~0,1 liekin korkeutta), liike kuten ennen.
+    let tx = (wl > 1e-4 ? wx / wl * wk * 1.35 : 0) - this.vel.x * 0.18;
+    let tz = (wl > 1e-4 ? wz / wl * wk * 1.35 : 0) - this.vel.z * 0.18;
     const tl = Math.hypot(tx, tz);
-    if (tl > 1.3) { tx *= 1.3 / tl; tz *= 1.3 / tl; }
+    if (tl > 1.7) { tx *= 1.7 / tl; tz *= 1.7 / tl; }
     const k = 55, c = 8;
     this.bendV.x += ((tx - this.bend.x) * k - this.bendV.x * c) * dt;
     this.bendV.y += ((tz - this.bend.y) * k - this.bendV.y * c) * dt;
@@ -307,8 +353,10 @@ export class TorchFlame {
     this.bend.y += this.bendV.y * dt;
     const sp = this.vel.length();
     this.shared.uBend.value.set(this.bend.x, this.bend.y);
-    // Nopea liike venyttää, alaspäin heilautus pidentää liekkiä hetkeksi.
-    this.shared.uStretch.value = 1 + Math.min(0.35, sp * 0.04) + THREE.MathUtils.clamp(-this.vel.y * 0.05, -0.15, 0.25);
+    // Nopea liike venyttää, alaspäin heilautus pidentää liekkiä hetkeksi;
+    // kova taipuma madaltaa (liekki kallistuu eikä vain veny sivulle).
+    const bl = Math.hypot(this.bend.x, this.bend.y);
+    this.shared.uStretch.value = 1 + Math.min(0.35, sp * 0.04) + THREE.MathUtils.clamp(-this.vel.y * 0.05, -0.15, 0.25) - Math.min(0.2, bl * 0.1);
     this.shared.uTime.value = time;
     this.shared.uPower.value = 0.5 + 0.5 * power;
     // Liekin akseli = maailman ylös (ryhmän kierto = kameran käänteinen).
@@ -317,16 +365,18 @@ export class TorchFlame {
     const s = size * (0.6 + 0.4 * power) * (0.95 + 0.05 * Math.sin(time * 17.3));
     _up.set(0, 1, 0).applyQuaternion(_qi);
     this.group.position.copy(tipView).addScaledVector(_up, -s * 0.22);
-    this.group.scale.set(s * 0.48, s, s * 0.48);
+    this.group.scale.set(s * 0.52, s, s * 0.52);
 
     // Kipinät: lähtevät liekin yläosasta, nousevat, kulkevat tuulen mukana.
-    this.emitE += dt * (7 + sp * 2.5) * (0.4 + 0.6 * power);
+    // Kova tuuli irrottaa enemmän kipinöitä.
+    const bx = this.bend.x * s * 0.52 * 0.6, bz = this.bend.y * s * 0.52 * 0.6;
+    this.emitE += dt * (7 + sp * 2.5 + wk * 6) * (0.4 + 0.6 * power);
     while (this.emitE > 1) {
       this.emitE -= 1;
       if (this.embers.list.length >= this.embers.max) this.embers.list.shift();
       const a = Math.random() * Math.PI * 2;
       this.embers.list.push({
-        p: tipW.clone().add(_v.set(Math.cos(a) * s * 0.08, s * (0.25 + Math.random() * 0.4), Math.sin(a) * s * 0.08)),
+        p: tipW.clone().add(_v.set(Math.cos(a) * s * 0.08 + bx, s * (0.25 + Math.random() * 0.4), Math.sin(a) * s * 0.08 + bz)),
         v: new THREE.Vector3(Math.cos(a) * 0.25, 0.6 + Math.random() * 0.8, Math.sin(a) * 0.25).addScaledVector(this.vel, 0.5),
         age: 0, life: 0.5 + Math.random() * 1.0, sz: 0.006 + Math.random() * 0.007, ph: Math.random() * 9,
       });
@@ -337,11 +387,16 @@ export class TorchFlame {
       this.emitS -= 1;
       if (this.smoke.list.length >= this.smoke.max) this.smoke.list.shift();
       this.smoke.list.push({
-        p: tipW.clone().add(_v.set((Math.random() - 0.5) * s * 0.1, s * 0.85, (Math.random() - 0.5) * s * 0.1)),
+        p: tipW.clone().add(_v.set((Math.random() - 0.5) * s * 0.1 + bx * 1.4, s * 0.85, (Math.random() - 0.5) * s * 0.1 + bz * 1.4)),
         v: new THREE.Vector3((Math.random() - 0.5) * 0.08, 0.32 + Math.random() * 0.25, (Math.random() - 0.5) * 0.08).addScaledVector(this.vel, 0.3),
         age: 0, life: 1.3 + Math.random() * 1.1,
       });
     }
+  }
+
+  // Ilmassa olevat kipinät ja savu: liike, ikä ja piirto.
+  _particles(dt, time, cam, wx, wz) {
+    const power = this.power;
     const step = (list, drag, rise, jitter) => {
       for (let i = list.length - 1; i >= 0; i--) {
         const p = list[i];
@@ -355,6 +410,8 @@ export class TorchFlame {
     };
     step(this.embers.list, 1.4, 0.3, 4);
     step(this.smoke.list, 1.8, 0.05, 0.6);
+    this.embers.points.visible = this.embers.list.length > 0;
+    this.smoke.points.visible = this.smoke.list.length > 0;
     const inv = cam.matrixWorldInverse;
     this.embers.write(inv, (p) => {
       const f = 1 - p.age / p.life;

@@ -2,6 +2,17 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 36)
+**Tehtiin**
+- `render/torchFlame.js`: tuulen kallistus ja puuskat, `uWind`- ja `uFlow`-uniformit (tuulilepatus, kiihtyvä kohina), liekki 0,52 leveä. Piilotus koskee vain liekkiä, ja `update(…, tip = null)` päivittää pelkät hiukkaset. Kova taipuma madaltaa liekkiä.
+- `player/viewmodel.js`: liekin koko 0,42 (oli 0,32); liekkejä päivitetään piilotettunakin.
+- `player/arms.js`: `_thumbOnIndex` (nyrkki ja ote), `_thumbAroundHandle` (kahvan läpäisyn esto); `THUMB_ON`. Vanha slerp-säätö ja kahvan peukalonkiertäjä poistettiin.
+- Testisivu `shots/s29/vm.html`: uudet parametrit `wind`, `pre`, `hideN`, `th` ja `ht=1` (kamerat oikean käden ympärillä, `P<d>` = pelaajan näkölinja), sekä peukalon etäisyys kahvan akselista (`t17`, `t18`).
+- Testattiin: liekki ilman tuulta ja tuulilla 0,35, 0,5 ja 0,9 (aikasarja), hiukkaset soihdun pois oton jälkeen (40 ja 240 ruutua), nyrkin peukalon neljä vaihtoehtoa kahdesta kulmasta, ote neljällä esineellä (kuva ja etäisyys akselista), pelin savutesti, ESLint.
+
+**Seuraavaksi**
+- Käyttäjän palaute.
+
 ## 2026-10-12 (sessio 35)
 **Tehtiin**
 - Uusi `render/torchFlame.js`: 4 kohinakuorta (simplex-kohina vertex- ja fragment-shaderissa), taipuma jousella, kipinä- ja savupisteet omalla shaderilla, piilotus tyhjentää partikkelit (valkoiset pisteet).

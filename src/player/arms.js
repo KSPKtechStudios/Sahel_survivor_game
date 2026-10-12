@@ -31,7 +31,12 @@ const FLEX_MAX = [1.7, 1.7, 1.5];
 // kahvaan (nivelen keskilinja puoli sormen sädettä pinnan sisällä), kärjet
 // kiertyvät pidemmälle ja peukalo kiertyy kahvan yli nyrkin tapaan.
 const GRIP_SQUEEZE = 0.5;
-const THUMB_MAX = [1.0, 1.3];
+// Sessio 36 (käyttäjä: peukalo taittui oudosti sivulle alas; sen pitäisi
+// levätä melkein etusormen päällä): peukalo ratkaistaan asennon etusormen
+// mukaan. Peukalon pää lepää etusormen keskijäsenen päällä kohdassa ALONG
+// (0 = keskinivel, 1 = kärkinivel). Suunta etusormen päälle on sekoitus
+// ylöspäin (etusormen puoli, l0) ja nyrkin etupintaa (kämmenestä poispäin).
+const THUMB_ON = { fist: [0.45, 0.6, 0.8], grip: [0.45, 0.7, 0.7] };
 // Varren vinous kämmenessä (rad).
 const GRIP_DIAG = 0.35;
 // Olkapään (solisluun) suurin siirtymä, jotta olkavarsi ylettää kyynärpäähän.
@@ -291,11 +296,11 @@ export class Arms {
       lib.GRIP.push(poseQ('Riffle Gun Pose', src).slerp(poseQ('Fists Pose', n), 0.12));
       lib.CUP.push(mirrorQ(poseQ('Riffle Gun Pose', lNames[i]), new THREE.Quaternion()));
     });
-    // Sessio 32: mallin nyrkkiasennossa peukalo taittui pitkälle alas
-    // sormien yli; nyt se on vähemmän koukussa ja lepää etu- ja keskisormen
-    // keskijäsenten päällä.
-    // Sessio 35: peukalo vielä vähemmän koukkuun (käyttäjä: taittui yhä liikaa alas).
-    [0.9, 0.5, 0.3].forEach((k, j) => { lib.FIST[16 + j] = new THREE.Quaternion().slerp(lib.FIST[16 + j], k); });
+    // Sessiot 32 ja 35: mallin nyrkkiasennon peukalo taittui pitkälle alas
+    // sormien yli. Sessio 36: peukalo ratkaistaan etusormen päälle
+    // (_thumbOnIndex, alempana, kun käden akselit tunnetaan).
+    // Peukalon nivelten koukistusakselit ja -kulmat mallin nyrkistä.
+    this.thumbFist = [16, 17, 18].map((i) => lib.FIST[i].clone());
     // Rento: puolivälissä avoimen ja kupin välillä; koukku (jousen jänne).
     lib.RELAX = lib.CUP.map((q) => new THREE.Quaternion().slerp(q, 0.75));
     lib.HOOK = lib.FIST.map((q, i) => (rNames[i].startsWith('Finger_5') ? lib.CUP[i].clone() : new THREE.Quaternion().slerp(q, 0.62)));
@@ -369,6 +374,137 @@ export class Arms {
         .multiply(new THREE.Quaternion().setFromAxisAngle(Sd.flexAxis, NEUTRAL_FLEX)).invert();
       this.setFingers(s, 'RELAX', 1, true);
     }
+    this._thumbOnIndex(lib.FIST, THUMB_ON.fist);
+  }
+
+  // Peukalo etusormen keskijäsenen päälle asennossa Q (oikean käden
+  // lepokoordinaatit; luiden lepokierrot ovat nollia, joten paikallinen kierto
+  // = kierto vanhemman kehyksessä). Kaksi kärkiniveltä koukistuvat mallin
+  // nyrkin akseleiden ympäri juuri sen verran, että peukalon pää ulottuu
+  // kohteeseen, ja tyvinivel (vastakkain asettuva) kääntää pään kohteeseen.
+  // handle = { C, Y, R } (kahvan akselin piste, suunta ja peukalon
+  // vähimmäisetäisyys akselista): peukalo kiertää kahvan pinnan ympäri.
+  _thumbOnIndex(Q, opt, handle = null) {
+    const [along, wTop, wFront] = opt;
+    const P = this.fingerRest;
+    const S = this.sides.R;
+    // Etusormi (indeksit 12-15): keskijäsen keskinivelestä kärkiniveleen.
+    const W = Q[12].clone();
+    const p13 = P[13].clone().sub(P[12]).applyQuaternion(W).add(P[12]);
+    W.multiply(Q[13]);
+    const p14 = P[14].clone().sub(P[13]).applyQuaternion(W).add(p13);
+    W.multiply(Q[14]);
+    const p15 = P[15].clone().sub(P[14]).applyQuaternion(W).add(p14);
+    const seg = p15.clone().sub(p14).normalize();
+    const n = S.l0.clone().multiplyScalar(wTop).addScaledVector(S.b0, -wFront);
+    if (handle) {
+      // Kahvan ympärillä etusormen "päällä" = kahvasta poispäin.
+      const m = p14.clone().lerp(p15, along).sub(handle.C);
+      m.addScaledVector(handle.Y, -m.dot(handle.Y)).normalize();
+      n.multiplyScalar(0.4).add(m);
+    }
+    n.addScaledVector(seg, -n.dot(seg)).normalize();
+    const target = p14.clone().lerp(p15, along).addScaledVector(n, (FINGER_R + THUMB_R) * 0.85);
+    // Mallin nyrkin peukalon nivelet: akselit ja kulmat.
+    const axes = this.thumbFist.slice(1).map((q) => {
+      const a = 2 * Math.acos(Math.min(1, Math.abs(q.w)));
+      const sn = Math.sqrt(Math.max(1e-9, 1 - q.w * q.w)) * Math.sign(q.w || 1);
+      return [new THREE.Vector3(q.x / sn, q.y / sn, q.z / sn).normalize(), a];
+    });
+    const base = this.thumbFist[0];
+    const d1 = P[17].clone().sub(P[16]), d2 = P[18].clone().sub(P[17]);
+    const q1 = new THREE.Quaternion(), q2 = new THREE.Quaternion(), Wt = new THREE.Quaternion();
+    // Peukalon pää (kärkijäsenen puoliväli) tyvinivelen suhteen koukistuksella k.
+    const pad = (k, b, out) => {
+      q1.setFromAxisAngle(axes[0][0], axes[0][1] * k);
+      q2.setFromAxisAngle(axes[1][0], axes[1][1] * k);
+      Wt.copy(b);
+      out.copy(d1).applyQuaternion(Wt);
+      Wt.multiply(q1);
+      out.add(_v.copy(d2).applyQuaternion(Wt));
+      Wt.multiply(q2);
+      return out.add(_v.copy(d2).multiplyScalar(0.95 * 0.55).applyQuaternion(Wt));
+    };
+    const want = target.clone().sub(P[16]);
+    const L = want.length();
+    const tmp = new THREE.Vector3();
+    let lo = 0, hi = 1.1;
+    if (pad(0, base, tmp).length() <= L) hi = 0;
+    else {
+      for (let it = 0; it < 18; it++) {
+        const m = (lo + hi) / 2;
+        if (pad(m, base, tmp).length() > L) lo = m; else hi = m;
+      }
+    }
+    const k = hi;
+    pad(k, base, tmp);
+    const corr = new THREE.Quaternion().setFromUnitVectors(tmp.normalize(), want.normalize());
+    Q[16] = corr.multiply(base);
+    Q[17] = new THREE.Quaternion().setFromAxisAngle(axes[0][0], axes[0][1] * k);
+    Q[18] = new THREE.Quaternion().setFromAxisAngle(axes[1][0], axes[1][1] * k);
+    if (handle) this._thumbAroundHandle(Q, axes, target, handle, k);
+    return Q;
+  }
+
+  // Tarkennus kahvalle: suora ratkaisu veisi peukalon kärkinivelen kahvan
+  // läpi. Haetaan (koordinaattihaku) tyvinivelen lisäkierto ja kahden nivelen
+  // koukistus niin, että pää on yhä kohteessa mutta nivelet ja jäsenet
+  // pysyvät kahvan pinnan ulkopuolella, ja muutos on mahdollisimman pieni.
+  _thumbAroundHandle(Q, axes, target, handle, k0) {
+    const P = this.fingerRest;
+    const base0 = Q[16].clone();
+    const d1 = P[17].clone().sub(P[16]), d2 = P[18].clone().sub(P[17]);
+    const W = new THREE.Quaternion(), qw = new THREE.Quaternion(), qa = new THREE.Quaternion();
+    const p17 = new THREE.Vector3(), p18 = new THREE.Vector3(), pad = new THREE.Vector3(), tip = new THREE.Vector3();
+    const wv = new THREE.Vector3(), t = new THREE.Vector3();
+    const lim = [axes[0][1] * 1.4, axes[1][1] * 1.5];
+    const fk = (x) => {
+      wv.set(x[0], x[1], x[2]);
+      const ang = wv.length();
+      qw.setFromAxisAngle(ang > 1e-9 ? wv.divideScalar(ang) : wv.set(1, 0, 0), ang);
+      W.copy(qw).multiply(base0);
+      p17.copy(d1).applyQuaternion(W).add(P[16]);
+      W.multiply(qa.setFromAxisAngle(axes[0][0], x[3]));
+      p18.copy(d2).applyQuaternion(W).add(p17);
+      W.multiply(qa.setFromAxisAngle(axes[1][0], x[4]));
+      t.copy(d2).applyQuaternion(W);
+      pad.copy(p18).addScaledVector(t, 0.95 * 0.55);
+      tip.copy(p18).addScaledVector(t, 0.95);
+    };
+    const inside = (p) => {
+      t.subVectors(p, handle.C);
+      t.addScaledVector(handle.Y, -t.dot(handle.Y));
+      return Math.max(0, handle.R - t.length());
+    };
+    const mid = new THREE.Vector3();
+    const cost = (x) => {
+      fk(x);
+      let e = pad.distanceToSquared(target) / (0.004 * 0.004);
+      let pen = inside(p18) + inside(tip) + inside(mid.lerpVectors(p17, p18, 0.5)) + inside(mid.lerpVectors(p18, tip, 0.5));
+      e += (pen * pen) / (0.0015 * 0.0015);
+      e += (x[0] * x[0] + x[1] * x[1] + x[2] * x[2]) * 4;
+      for (let j = 0; j < 2; j++) if (x[3 + j] < -0.1 || x[3 + j] > lim[j]) e += 1e4;
+      return e;
+    };
+    const x = [0, 0, 0, axes[0][1] * k0, axes[1][1] * k0];
+    let best = cost(x);
+    let step = 0.25;
+    for (let it = 0; it < 400 && step > 0.002; it++) {
+      let moved = false;
+      for (let i = 0; i < 5; i++) {
+        for (const sgn of [1, -1]) {
+          x[i] += sgn * step;
+          const c = cost(x);
+          if (c < best) { best = c; moved = true; break; }
+          x[i] -= sgn * step;
+        }
+      }
+      if (!moved) step *= 0.5;
+    }
+    fk(x);
+    Q[16].copy(qw).multiply(base0);
+    Q[17].setFromAxisAngle(axes[0][0], x[3]);
+    Q[18].setFromAxisAngle(axes[1][0], x[4]);
   }
 
   // Sessio 30: ote kahvasta (käyttäjä: "socket"-järjestelmä). Käsi asettuu
@@ -453,26 +589,8 @@ export class Arms {
         Wp.copy(Wb);
       }
     }
-    // Peukalo: tyvi vastakkain (nyrkin asennosta), sitten kaksi niveltä
-    // kiertyy kahvaa kohti.
-    out[16].identity().slerp(this.fistQ[16], 1);
-    Wp.copy(out[16]);
-    pos.subVectors(P[17], P[16]).applyQuaternion(Wp).add(P[16]);
-    const qa = new THREE.Vector3();
-    for (let j = 1; j <= 2; j++) {
-      const off = j < 2 ? new THREE.Vector3().subVectors(P[18], P[17]) : new THREE.Vector3().subVectors(P[18], P[17]).multiplyScalar(0.95);
-      seg.copy(off).applyQuaternion(Wp);
-      // Akseli kohti kahvan akselia.
-      v.subVectors(pos, C);
-      qa.copy(C).addScaledVector(Y, v.dot(Y)).sub(pos);
-      axis.crossVectors(seg, qa).normalize();
-      const th = solveJoint(pos, r + THUMB_R * 0.7, THUMB_MAX[j - 1]);
-      const la = axis.clone().applyQuaternion(Wp.clone().invert());
-      out[16 + j].setFromAxisAngle(la, th);
-      Wb.copy(Wp).multiply(out[16 + j]);
-      if (j < 2) pos.add(off.applyQuaternion(Wb));
-      Wp.copy(Wb);
-    }
+    // Peukalo kahvan yli etusormen keskijäsenen päälle (sessio 36).
+    this._thumbOnIndex(out, THUMB_ON.grip, { C, Y, R: r + THUMB_R * 0.8 });
     this.wrapCache.set(key, out);
     return out;
   }

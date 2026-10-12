@@ -2,6 +2,11 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 36)
+- **Tuulen vaikutus liekkiin omalla kertoimellaan, puuskat sinikäyrien summana.** Syy: ennen tuuli meni samaan ilmavirtakertoimeen kuin liike (0,16), ja tavallisella tuulella kärki taipui vain noin 0,1 liekin korkeutta. Tuulen voimakkuus (0–1,5) välitetään myös shaderiin (`uWind`), jolloin lepatus voimistuu ja saa tuulen suunnan. Lepatuksen nopeutus kertyy vaiheeksi CPU:lla (`uFlow`), ettei kohina hyppää, kun tuulen voima vaihtelee.
+- **Liekin piilotus ei enää tyhjennä hiukkasia.** Liekkiä päivitetään piilotettunakin (ilman kärkeä), joten hiukkaset liikkuvat ja häipyvät elinikänsä loppuun. Pisteet ovat näkyvissä vain, kun niitä on. Syy: käyttäjä huomasi kipinöiden ja savun katoavan heti. Session 35 jäätyneet pisteet eivät palaa, koska päivitys jatkuu.
+- **Peukalo ratkaistaan etusormen mukaan** (`_thumbOnIndex`) eikä skaalata mallin nyrkistä. Etusormen keskijäsenen paikka lasketaan kyseisestä asennosta (nyrkki tai kahvan ote). Peukalon kaksi niveltä koukistuvat mallin nyrkin akseleiden ympäri juuri niin paljon, että pää ulottuu, ja tyvinivel kääntää pään paikalleen. Kahvalla lisäksi koordinaattihaku pitää nivelet kahvan pinnan ulkopuolella (`_thumbAroundHandle`). Syy: slerp-skaalaus ei kolmella yrityksellä saanut peukaloa etusormen päälle (se jäi sivulle ja taittui alas). Suora ratkaisu vei kahvalla peukalon kärkinivelen kahvan läpi (4–10 mm akselista); nyt se on 20–25 mm akselista.
+
 ## 2026-10-12 (sessio 35)
 - **Liekki: sisäkkäiset kohinakuoret, ei sädemarssausta.** Syy: käyttäjän kuvaus pyysi kohinalla vääristettyä monikerroksista meshiä. Kuoret ovat kevyitä (4 × 24 × 30 verteksiä), ja katselukulmaan perustuva häivytys antaa tilavuuden tunnun joka suunnasta, toisin kuin ristikkäiset tasot. Taipuma on 2D-jousi (ilmavirta = tuuli − kärjen nopeus), ja ryhmän kierto on kameran käänteinen, joten liekin akseli on maailman ylös.
 - **Kipinät ja savu: omat ShaderMaterial-pisteet** (pehmeä pyöreä muoto, väri ja koko per piste). PointsMaterial piirsi neliöitä, ja niiden koko ja läpinäkyvyys eivät vaihdelleet. Pisteiden pikselikoko lasketaan piirtohetkellä kuten PointsMaterialissa.

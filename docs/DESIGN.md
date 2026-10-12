@@ -217,6 +217,12 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 36 (käyttäjän kertoma, 2026-10-12)
+- **Liekki saisi olla hieman suurempi.**
+- **Lepatus ei reagoi tuuleen tarpeeksi.**
+- **Peukalo:** sen ei pitäisi olla erikoisesti sivulla ja taittua sinne alas, vaan levätä melkein **etusormen päällä**.
+- **Savu ja kipinät** eivät saisi kadota heti, kun soihdun ottaa pois kädestä. Niiden kuuluu jäädä ilmaan leijumaan ja kadota hitaasti.
+
 ## Sessio 35 (käyttäjän kertoma, 2026-10-12)
 - **Liekki ei ole realistinen** (käyttäjän kuva), ja **peukalo taittuu yhä hieman liikaa alas** (kuva nyrkistä).
 - **Näytölle ilmestyi yhtäkkiä pari valkoista pikseliä** (kuva).

@@ -2,6 +2,7 @@
 
 ## Heti (odottaa käyttäjää)
 - [x] Historia siirretty uuteen repoon `KSPKtechStudios/Sahel_survivor_game` ja pushattu (2026-10-12)
+- [ ] Käyttäjä testaa session 36: liekin koko, liekki tuulessa (tuulinen sää, myrsky), kipinät ja savu jäävät leijumaan kun soihdun vaihtaa pois, peukalo nyrkissä ja kahvoilla (soihtu, nuija, kirves, puukko)
 - [ ] Käyttäjä testaa session 35: soihdun liekki (paikallaan, kävellen, juosten, kääntyen, heilauttaen, tuulessa, sateessa, yöllä), kipinät ja savu, ei jumiin jääviä pisteitä soihdun vaihdon jälkeen, nyrkin peukalo
 - [ ] Käyttäjä testaa session 34: ote (nuija, kirves, soihtu, puukko), soihdun liekki (seiso, kävele, juokse, käänny nopeasti, heilauta; tuulisella säällä; sateessa), nuijan ja puukon iskut (pyöriikö käsi enää)
 - [ ] Käyttäjä testaa session 33: nuija ja soihtu (kädessä, toisessa kädessä, maassa, kuvake), käden iho (huokoset, ei muovinen), kivipuukko (terän kiilto valossa, kahva, sidos), norsu juomassa (vie norsu järven tai joen lähelle tai odota)

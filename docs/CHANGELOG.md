@@ -2,6 +2,13 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 36): isompi liekki tuulessa, leijuvat kipinät ja peukalo etusormen päälle
+
+- **Soihdun liekki on noin 30 % isompi** (korkeampi ja leveämpi).
+- **Liekki reagoi tuuleen selvästi:** tuuli kallistaa liekkiä ja puuskittaa (voimistuu ja heikkenee hetkittäin). Tuulessa liekki lepattaa kovemmin ja nopeammin: aallot kulkevat ylös tuulen suuntaan, ja kärki repsahtelee sivuille kuin lippu. Kova tuuli irrottaa myös enemmän kipinöitä.
+- **Kipinät ja savu jäävät ilmaan,** kun soihdun ottaa pois kädestä (tai se sammuu). Ne leijuvat tuulen mukana ja hiipuvat rauhassa loppuun. Uusia ei synny.
+- **Peukalo etusormen päälle:** nyrkissä ja kahvaotteessa peukalo lepää nyt etusormen keskijäsenen päällä eikä taitu sivulle alas. Kahvalla peukalo kiertää kahvan ympäri eikä mene sen läpi.
+
 ## 2026-10-12 (sessio 35): uusi soihdun liekki, peukalo ja valkoiset pisteet
 
 - **Soihdun liekki kirjoitettu uusiksi** käyttäjän kuvauksen mukaan:
