@@ -2,6 +2,26 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 39)
+**Tehtiin**
+- PR #1 oli yhdistetty mainiin, ja käyttäjä lisäsi videon mainiin. Työhaara siirrettiin mainin päälle (suora eteenpäin siirto).
+- Intro: `index.html` (kerros ja skripti), `menu.css` (#intro), `main.js` (ei piirtoa intron aikana), `assets/videos/intro.mp4` (faststart, nimetty uudelleen).
+- `render/post.js`:
+  - valoisuus: sironta, valokeilat, säteet, silmän mukautumisen taivaspaino ja päivätavoite;
+  - bloomin yläraja, terävöinti 0,25;
+  - syväterävyys tarkennuksen mukaan;
+  - liike-epäterävyys;
+  - käden mukautuminen alfakanavalla (`uOutA`, `uHandAE`, `handAE`).
+- `player/viewmodel.js`: täytevalot miedommiksi. `main.js`: valokeilojen ilma.
+- Testattiin:
+  - intro (Playwright; H.264 ei toimi testiselaimessa, joten testi syötti saman videon WebM-muodossa): toisto äänen kanssa ja Esc-ohitus, ja valikko latautui;
+  - ilman videotukea intro ohittuu itsestään;
+  - sademetsä aamulla, keskipäivällä ja yöllä;
+  - ESLint.
+
+**Seuraavaksi**
+- Käyttäjän palaute.
+
 ## 2026-10-12 (sessio 38)
 **Tehtiin**
 - `render/post.js`:

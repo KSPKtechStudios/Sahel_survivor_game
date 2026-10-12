@@ -409,3 +409,13 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Sessio 39: intro ennen valikoita */
+#intro { position: fixed; inset: 0; z-index: 100000; background: #000; display: flex; align-items: center; justify-content: center; transition: opacity 0.6s ease; cursor: default; }
+#intro.out { opacity: 0; pointer-events: none; }
+#intro video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+#intro .intro-hint { position: absolute; color: rgba(255, 240, 215, 0.55); font-size: 13px; letter-spacing: 0.04em; text-shadow: 0 1px 3px #000; pointer-events: none; }
+#intro #intro-skip { right: 22px; bottom: 18px; animation: introHint 1.2s ease 1s both; }
+#intro #intro-sound { left: 50%; bottom: 18px; transform: translateX(-50%); color: rgba(255, 240, 215, 0.8); }
+#intro .intro-hint.hidden { display: none; }
+@keyframes introHint { from { opacity: 0; } to { opacity: 1; } }

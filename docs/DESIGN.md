@@ -217,6 +217,15 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 39 (käyttäjän kertoma, 2026-10-12)
+- **Intro:** käyttäjän video (`sahel intro valmis (1).mp4`, nyt `assets/videos/intro.mp4`) pelin aivan alkuun ennen valikoita ja latausikkunoita. Ohitus: **Esc, välilyönti tai hiiren oikea**.
+- Käyttäjä haluaa repoon kansion videoille (cutscenet ja videoanimaatiot): `assets/videos/`.
+- **Päivällä selkeällä säällä on yhä aivan liian valoisaa** (kuvat sademetsästä auringon suuntaan).
+- **Asiat näyttävät "huonoilta", ja reunat ovat rumat** (esim. lehdissä). Laatu on heikko, ja se liittyy uusiin tehosteisiin.
+- **Liike-epäterävyyttä hieman enemmän; syväterävyys toimivammaksi ja huomattavammaksi.**
+- **Käsi ja työkalu ovat pimeässä nyt liiankin valoisia.** Niissä pitää näkyä heijastukset ja pimeys, mutta pieni valo, etteivät ne ole yöllä aivan pimennossa.
+- **Ukkosmyrsky ja sade ovat juuri hyviä:** silloin yöllä tulee niin pimeää, että täytyy käyttää soihtua (osui nappiin, ei muuteta).
+
 ## Sessio 38 (käyttäjän kertoma, 2026-10-12)
 - Grafiikkapäivitys näyttää tosi hyvältä, mutta sivuvaikutuksena **kaikki näyttää ärsyttävästi sumealta ja epätarkalta**.
 - **Sademetsässä on yöllä yhä aivan liian pimeää** (kuva): ilman soihtua ei näe eteensä ollenkaan, eikä se ole kiva.

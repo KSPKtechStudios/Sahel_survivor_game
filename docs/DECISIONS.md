@@ -2,6 +2,22 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 39)
+- **Intro on index.html:n oma kerros, jonka käynnistää tavallinen (ei moduuli) skripti heti sivun alussa.** Peli latautuu taustalla, mutta `main.js` ei piirrä mitään, kun `window.sahelIntroActive` on tosi. Syy: video alkaa heti, eikä raskas piirto nyi sitä. Ääni yritetään ensin; jos selain estää, video alkaa äänettömänä ja vasen klikkaus avaa äänen. Virhe, tai jos toisto ei ala 9 sekunnissa, ohittaa intron. Syy: Playwrightin Chromium (ja jotkin Linux-selaimet) ei osaa H.264:ää, ja hidas yhteys ei saa jumittaa peliä.
+- **Video nimettiin `intro.mp4`:ksi ja ajettiin `-movflags +faststart -c copy`** (kuva ja ääni ennallaan). Syy: välilyönnit ja sulkeet ovat hankalia osoitteissa, ja moov-laatikko oli tiedoston lopussa, jolloin selain olisi ladannut 20 Mt ennen toistoa.
+- **Valoisuus:**
+  - ilmakehän sironta 0,9 → 0,5 × (1 − 0,4 × kosteus);
+  - valokeilat 0,011 → 0,0075 ja niiden ilma 0,8 → 0,6 × kosteus;
+  - valonsäteet 1,35 → 0,95;
+  - silmän mukautumisen taivaspaino 0,4 → 0,75 ja päivätavoite 0,25 → 0,22;
+  - bloomin yläraja 40 → 12.
+
+  Syy: käyttäjän kuvissa aurinkoa kohti koko kuva hukkui kultaiseen hehkuun, ja taivaan aukot lehtien välissä puhkesivat valkoisiksi läiskiksi.
+- **Terävöinti 0,5 → 0,25.** Syy: käyttäjä koki reunat rumiksi; terävöinti korosti lehtien reunoja.
+- **Kädelle osittainen silmän mukautuminen alfakanavan avulla:** kooste kirjoittaa HDR-kuvaan alfan 0, käsi ja esineet 1, ja lopullinen vaihe käyttää kädelle mukautumista potenssiin 0,4 (esim. 3,4 → 1,6). Lisäksi täytevalot ovat noin kolmasosa entisestä. Syy: täysi mukautuminen ja vahvat täytevalot tekivät kädestä yöllä liian kirkkaan, ja ilman niitä käsi oli musta.
+- **Syväterävyys:** kaukainen sumennus alkaa tarkennusetäisyys × 1,8 + 8 m ja on täysi × 3 + 60 m kohdalla (max 0,85, säde 5). Lähisumennus on alle ~1–2,5 m, kun katse on kaukana. Syy: käyttäjä halusi toimivamman ja huomattavamman (sessiossa 25 se oli hillitty liian voimakkaana).
+- **Liike-epäterävyys:** kerroin 0,9 → 1,4 (kevyt) ja 1,7 → 2,6 (vahva), suurin siirtymä 0,08 → 0,12.
+
 ## 2026-10-12 (sessio 38)
 - **Sumeuden syy oli bloom, korjaus kynnyksellä ja terävöinnillä.** Kynnys 2,0 ja polvi 0,7 (oli 1,25 ja 0,6), voimakkuus 0,2 (oli 0,32), ja ylösnäytteistyksen paino 0,65 (oli 0,85) tiivistää hehkun. Lisäksi CAS-terävöinti tehdään lopullisessa vaiheessa sävytetyille arvoille (5 näytettä). Syy: matalalla kynnyksellä kirkas taivas ja usva hehkuivat ja levittivät hohdetta koko kuvaan.
 - **Silmän mukautuminen siirrettiin viimeistelyvaiheeseen** (kun bloom, värimäärittely, vinjetti tai terävöinti on päällä). Syy: käsi piirretään koosteen jälkeen, joten se ei saanut mukautumista ja jäi yöllä mustaksi muun maailman kirkastuessa. Bloomin kynnys laskee mukautumisen kertoimen GPU:lla samasta kirkkaustekstuurista (ei lukua prosessorille, joka pysäyttäisi piirron).

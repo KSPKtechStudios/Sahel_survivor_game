@@ -514,10 +514,12 @@ export class ViewModel {
     // Täytevalot: pimeys arvioidaan maailman valojen kirkkaudesta.
     const envLum = env.hemi.intensity * lumOf(env.hemi.color) + env.lightIntensity * lumOf(env.lightColor) * 0.6 + fireLight * 0.15;
     const dark = THREE.MathUtils.clamp(1 - envLum / 0.7, 0, 1);
-    this.fill.intensity = 0.12 + 0.6 * dark;
+    // Sessio 39: selvästi miedommat (käyttäjä: yöllä liiankin valoisia; pimeyden
+    // ja heijastusten pitää näkyä, vain pieni valo).
+    this.fill.intensity = 0.05 + 0.24 * dark;
     this.fill.color.setRGB(1, 0.94, 0.86).lerp(_fillNight, dark);
-    this.rim.intensity = 0.08 + 0.35 * dark;
-    this.amb.intensity = 0.04 + 0.22 * dark;
+    this.rim.intensity = 0.04 + 0.16 * dark;
+    this.amb.intensity = 0.015 + 0.07 * dark;
 
     // Esineen vaihto: käsi laskee alas, esine vaihtuu, käsi nousee.
     if (this.pending !== undefined) {

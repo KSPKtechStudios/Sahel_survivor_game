@@ -332,7 +332,7 @@ function applySettings(s) {
   post.bloom = s.bloom !== false;
   post.grade = s.grade !== false;
   post.vignette = s.vignette !== false;
-  post.sharpen = s.sharpen !== false ? 0.5 : 0; // sessio 38
+  post.sharpen = s.sharpen !== false ? 0.25 : 0; // sessio 38; sessio 39: kevyempi
   // Sessio 25: silmän mukautuminen on aina päällä (yön valotus riippuu siitä).
   env.autoExposure = post.autoExposure;
   // Sessio 24: ruohon ja aluskasvien tiheys sekä ruohon näkyvyyssäde.
@@ -927,7 +927,7 @@ function frame(now) {
     hf.color.copy(scene.fog.color);
     // Sessio 26: valokeilojen ilman tiheys (sademetsän kostea ilma, aamu-usva, utu).
     post.shafts = inGame && state !== 'menu'
-      ? Math.min(1.2, env.humid * 0.8 + dawn * 0.6 * dryK + env.w.haze * 0.35 + env.w.rain * 0.3)
+      ? Math.min(1.0, env.humid * 0.6 + dawn * 0.45 * dryK + env.w.haze * 0.3 + env.w.rain * 0.3)
       : 0;
   }
   world.grass.update(camera.position, player.position, env);
@@ -1116,7 +1116,8 @@ function frame(now) {
     if (menuShadowTimer <= 0) { menuShadowTimer = 0.5; renderer.shadowMap.needsUpdate = true; }
   }
   drawTimer -= dt;
-  if (state !== 'paused' || drawTimer <= 0) {
+  // Sessio 39: intron aikana ei piirretä (peli latautuu taustalla).
+  if ((state !== 'paused' || drawTimer <= 0) && !window.sahelIntroActive) {
     drawTimer = 0.25;
     // Maailma tehosteineen, sitten käsi päälle (ei sumennuksia; sessio 37:
     // bloom ja sävytys koskevat myös kättä).

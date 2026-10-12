@@ -16,6 +16,58 @@
   </script>
 </head>
 <body>
+  <!-- Sessio 39: intro ennen valikoita ja latausta (ohitus: Esc, välilyönti, hiiren oikea). -->
+  <div id="intro">
+    <video id="intro-video" src="assets/videos/intro.mp4" playsinline preload="auto"></video>
+    <div id="intro-sound" class="intro-hint hidden">Klikkaa: ääni päälle</div>
+    <div id="intro-skip" class="intro-hint">Ohita: Esc · välilyönti · hiiren oikea</div>
+  </div>
+  <script>
+    // Intro toistetaan heti (ennen pelin moduuleja). window.sahelIntro täyttyy, kun
+    // video loppuu tai ohitetaan; main.js ei piirrä sitä ennen mitään.
+    (function () {
+      var root = document.getElementById('intro');
+      var v = document.getElementById('intro-video');
+      var hint = document.getElementById('intro-sound');
+      var done = false, started = false, resolve;
+      window.sahelIntroActive = true;
+      window.sahelIntro = new Promise(function (r) { resolve = r; });
+      function finish() {
+        if (done) return;
+        done = true;
+        window.sahelIntroActive = false;
+        try { v.pause(); } catch (e) { /* ei väliä */ }
+        window.removeEventListener('keydown', onKey, true);
+        root.classList.add('out');
+        setTimeout(function () { root.remove(); }, 700);
+        resolve();
+      }
+      function onKey(e) {
+        if (e.code === 'Escape' || e.code === 'Space') { e.preventDefault(); e.stopImmediatePropagation(); finish(); }
+      }
+      window.addEventListener('keydown', onKey, true);
+      root.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      root.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        if (e.button === 2) finish();
+        else if (e.button === 0 && v.muted) { v.muted = false; hint.classList.add('hidden'); }
+      });
+      v.addEventListener('ended', finish);
+      v.addEventListener('error', finish);
+      v.addEventListener('playing', function () { started = true; });
+      // Selain voi estää äänellisen automaattitoiston: silloin äänettömänä ja vihje.
+      var p = v.play();
+      if (p && p.catch) {
+        p.catch(function () {
+          v.muted = true;
+          hint.classList.remove('hidden');
+          v.play().catch(finish);
+        });
+      }
+      // Jos video ei käynnisty (hidas yhteys tai tukematon muoto), ei jäädä odottamaan.
+      setTimeout(function () { if (!started) finish(); }, 9000);
+    })();
+  </script>
   <canvas id="game"></canvas>
   <div id="weather-tint"></div>
 

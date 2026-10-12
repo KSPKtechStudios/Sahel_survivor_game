@@ -2,6 +2,22 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 39): intro, hillitympi päivänvalo, liike-epäterävyys ja syväterävyys, käsi yöllä
+
+- **Intro:** käyttäjän video soi pelin alussa ennen valikkoa ja latausta, ja peli latautuu taustalla. Ohitus: Esc, välilyönti tai hiiren oikea.
+  - Jos selain estää äänellisen automaattitoiston, video alkaa äänettömänä ja näyttää vihjeen "Klikkaa: ääni päälle".
+  - Jos video ei käynnisty 9 sekunnissa tai selain ei osaa toistaa sitä, intro ohitetaan.
+  - Tiedosto on nimetty uudelleen: `assets/videos/intro.mp4`. Lisäksi sen hakemisto (moov) on siirretty alkuun häviöttömästi, joten toisto alkaa ennen kuin koko tiedosto on ladattu.
+- **Päivä ei enää huku valoon:**
+  - auringon suuntaan hohtava sironta noin puoleen (sademetsässä vielä vähemmän);
+  - valokeilat ja valonsäteet miedommiksi;
+  - silmän mukautuminen painottaa kirkasta taivasta enemmän, joten aurinkoon katsottaessa valotus laskee eikä taivas puhkea;
+  - päivän valotus hieman matalampi.
+- **Siistimmät reunat:** bloomin yläraja on matalampi (ei suuria hehkuläiskiä lehtien väleissä), ja terävöinti on puolet kevyempi.
+- **Liike-epäterävyys:** noin 1,5 kertaa voimakkaampi (kevyt ja vahva).
+- **Syväterävyys tarkennuksen mukaan:** lähelle katsottaessa tausta sumenee selvästi; kauas katsottaessa vain aivan kameran edessä oleva sumenee. Sumennus on isompi.
+- **Käsi ja työkalut yöllä:** täytevalot noin kolmasosaan, ja kädelle tulee vain osa silmän mukautumisesta. Pimeys ja heijastukset näkyvät, mutta esineet eivät katoa mustaan.
+
 ## 2026-10-12 (sessio 38): terävämpi kuva, näkyvät työkalut pimeässä ja sademetsän valo
 
 - **Ei enää sumeaa kuvaa:**
