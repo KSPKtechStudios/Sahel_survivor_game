@@ -105,7 +105,7 @@ export class Environment {
     this.ambientDay = 0.6;
     // Sessio 38: sademetsän yön lisähajavalo ja päivän usvan tummennus.
     this.humidNightAmb = 2.2;
-    this.humidFogDark = 0.3;
+    this.humidFogDark = 0.45;
 
     // Aurinko: kaksi varjokaskadia (tarkat varjot lähellä, karkeammat kauempana),
     // jotka sovitetaan kameran näkymään. Varjon reunat pehmenevät etäisyyden mukaan.

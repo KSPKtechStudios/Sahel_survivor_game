@@ -2,6 +2,18 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 38): terävämpi kuva, näkyvät työkalut pimeässä ja sademetsän valo
+
+- **Ei enää sumeaa kuvaa:**
+  - bloom hehkuu vain todella kirkkaista kohdista (kynnys 1,25 → 2,0), on heikompi ja pysyy tiiviimpänä (ennen kirkas taivas ja usva hehkuivat koko kuvan yli);
+  - uusi kontrastiin mukautuva terävöinti (AMD CAS -tyyli) terävöittää reunat mutta ei kohinaa (asetus Terävöinti, oletuksena päällä).
+- **Työkalut ja käsi pimeässä:** kädessä olevat esineet eivät enää muutu mustiksi.
+  - kameraan kiinnitetyt täyte- ja reunavalo sekä hajavalon alaraja valaisevat vain kättä ja esineitä (eivät maailmaa, eivät varjoja), ja ne voimistuvat pimeässä;
+  - silmän mukautuminen koskee nyt myös kättä: yöllä käsi kirkastuu samalla tavalla kuin maailma.
+- **Sademetsä yöllä:** selvästi enemmän hajavaloa (latvuston alla ei ole kuunvaloa) ja enemmän silmän mukautumista. Lähiympäristö erottuu ilman soihtuakin.
+- **Tummat sävyt säilyvät:** värimäärittelyn kontrastikäyrä ei enää tummenna valmiiksi tummia sävyjä (yöt ja varjot pysyvät näkyvinä).
+- **Sademetsä päivällä:** usva on latvuston alla tummempaa ja korkeussumu ohuempaa, valokeilat ovat miedompia ja valotus hieman matalampi (ennen ylivalottunut).
+
 ## 2026-10-12 (sessio 37): grafiikka- ja valaistuspäivitys
 
 - **Ambienttiokkluusio (SSAO):** kontaktivarjot ruohotuppaiden, puiden, kivien ja esineiden juurelle ja koloihin, joten mikään ei enää näytä leijuvalta. Okkluusio häipyy kaukana eikä tummenna usvaa tai taivasta. Asetus: Pois, Kevyt (8 näytettä) tai Laadukas (16 näytettä).

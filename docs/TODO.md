@@ -2,6 +2,7 @@
 
 ## Heti (odottaa käyttäjää)
 - [x] Historia siirretty uuteen repoon `KSPKtechStudios/Sahel_survivor_game` ja pushattu (2026-10-12)
+- [ ] Käyttäjä testaa session 38: onko kuva nyt terävä (asetus Terävöinti päälle ja pois), näkyvätkö työkalut ja käsi pimeässä ja varjossa, sademetsä yöllä ilman soihtua ja päivällä (ylivalotus)
 - [ ] Käyttäjä testaa session 37: grafiikka päivällä, kultaisella tunnilla (aamu ~7, ilta ~17) ja yöllä soihdun kanssa; asetukset Ambienttiokkluusio, Hehku, Värimäärittely ja Vinjetti sekä laatutasot (Matala, Keskitaso, Korkea, Ultra). Toimiiko heikommalla koneella, ja onko kontrasti nyt sopiva (liian tumma tai yhä liian vaalea)?
 - [ ] Käyttäjä testaa session 36: liekin koko, liekki tuulessa (tuulinen sää, myrsky), kipinät ja savu jäävät leijumaan kun soihdun vaihtaa pois, peukalo nyrkissä ja kahvoilla (soihtu, nuija, kirves, puukko)
 - [ ] Käyttäjä testaa session 35: soihdun liekki (paikallaan, kävellen, juosten, kääntyen, heilauttaen, tuulessa, sateessa, yöllä), kipinät ja savu, ei jumiin jääviä pisteitä soihdun vaihdon jälkeen, nyrkin peukalo

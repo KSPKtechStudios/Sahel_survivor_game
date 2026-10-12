@@ -2,6 +2,13 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 38)
+- **Sumeuden syy oli bloom, korjaus kynnyksellä ja terävöinnillä.** Kynnys 2,0 ja polvi 0,7 (oli 1,25 ja 0,6), voimakkuus 0,2 (oli 0,32), ja ylösnäytteistyksen paino 0,65 (oli 0,85) tiivistää hehkun. Lisäksi CAS-terävöinti tehdään lopullisessa vaiheessa sävytetyille arvoille (5 näytettä). Syy: matalalla kynnyksellä kirkas taivas ja usva hehkuivat ja levittivät hohdetta koko kuvaan.
+- **Silmän mukautuminen siirrettiin viimeistelyvaiheeseen** (kun bloom, värimäärittely, vinjetti tai terävöinti on päällä). Syy: käsi piirretään koosteen jälkeen, joten se ei saanut mukautumista ja jäi yöllä mustaksi muun maailman kirkastuessa. Bloomin kynnys laskee mukautumisen kertoimen GPU:lla samasta kirkkaustekstuurista (ei lukua prosessorille, joka pysäyttäisi piirron).
+- **Käden valot ovat viewmodel-näkymässä:** täytevalo kamerasta, viileä reunavalo takaa ja AmbientLight-alaraja. Voimakkuus kasvaa pimeyden mukaan, joka arvioidaan maailman valojen kirkkaudesta. Materiaaleihin ei lisätty emissiivistä hehkua. Syy: samoja materiaaleja käytetään maassa olevissa esineissä, jolloin ne hehkuisivat maailmassa, eikä kloonaus säilyttäisi materiaalien shader-muokkauksia. Hajavalon alaraja ajaa saman asian. Käsi on jo valmiiksi omassa näkymässään ilman sumua ja okkluusiota, joten erillistä syvyysvaihetta ei tarvittu.
+- **Sademetsän yö:** hajavalo × (1 + 2,2 × kosteus) yöllä, ja silmän mukautumisen yläraja 1,9 → 3,4. Päivällä usva latvuston alla × (1 − 0,45 × kosteus), korkeussumu 0,008 → 0,006, valokeilat 1,1 → 0,8 ja valotuksen tavoite 0,05 matalampi. Syy: latvusto varjostaa kuunvalon, ja aiemmin kosteus vähensi yön hajavaloa entisestään.
+- **Kontrastikäyrä ei koske tummimpia sävyjä** (paino smoothstep 0,03 → 0,32). Syy: käyrä tummensi lähes mustia sävyjä 20–40 %.
+
 ## 2026-10-12 (sessio 37)
 - **Ei EffectComposeria: tehosteet omaan jälkikäsittelyketjuun** (`render/post.js`). Syy: pelissä oli jo oma HDR-ketju (syvyys, valonsäteet, DOF, liike-epäterävyys, silmän mukautuminen, korkeussumu), ja EffectComposer olisi tuonut päällekkäisiä renderöintikohteita ja sävytyksen kahteen kertaan.
 - **SSAO syvyyspuskurista puolikkaalla tarkkuudella** (Scalable Ambient Obscurance -tyyli, normaali naapurisyvyyksistä, 8 tai 16 näytettä spiraalina, reunat säilyttävä erotettava sumennus, syvyyden mukaan painotettu skaalaus täyteen kokoon). Syy: erillistä normaalipuskuria ei ole, ja toinen geometriakierros olisi kallis. Okkluusio kerrotaan värin päälle ennen sumua, ja kirkkaissa kohdissa se on heikompi (oikeasti se koskee vain hajavaloa). Häivytys 50–90 m:ssä, koska syvyystarkkuus loppuu.

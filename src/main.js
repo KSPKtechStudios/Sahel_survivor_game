@@ -920,7 +920,7 @@ function frame(now) {
     const wetland = Math.min(1, _s.mare + _s.oasis * 0.7);
     const hf = post.hfog;
     hf.density = inGame && state !== 'menu'
-      ? Math.max(env.humid * 0.008, env.w.rain * 0.026, dawn * (0.008 + wetland * 0.022) * dryK, night * 0.006 * dryK)
+      ? Math.max(env.humid * 0.006, env.w.rain * 0.026, dawn * (0.008 + wetland * 0.022) * dryK, night * 0.006 * dryK)
       : 0;
     hf.base = Math.max(CONFIG.waterLevel, _s.h - 1.5);
     hf.falloff = 0.1 + 0.06 * (1 - env.humid);

@@ -2,6 +2,23 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 38)
+**Tehtiin**
+- `render/post.js`:
+  - bloomin arvot (`bloomCfg`: threshold, knee, intensity, spread);
+  - CAS-terävöinti ja silmän mukautuminen `finalFS`:ssä (`_aeInFinal`);
+  - bloomin esisuodatus laskee mukautumisen tekstuurista;
+  - kontrastikäyrä säästää tummat sävyt;
+  - `ae.humidNight`.
+- `player/viewmodel.js`: `fill`, `rim` ja `amb` (pimeyden mukaan).
+- `render/environment.js`: `humidNightAmb` 2,2 ja `humidFogDark` 0,45.
+- `main.js`: valokeilat ja korkeussumu sademetsässä, asetus `sharpen`.
+- Asetus Terävöinti: `save.js` (v4), `menu.js` ja `index.html`.
+- Testattiin sademetsässä (paikka haetaan maastonäytteistä `rainforest` > 0,95, ja kosteus pakotetaan heti tavoitteeseen) päivällä ja yöllä kirves kädessä, ennen- ja jälkeen-kuvat (ennen-versio git worktreestä `shots/basewt`), sekä ESLint.
+
+**Seuraavaksi**
+- Käyttäjän palaute terävyydestä ja sademetsän valoisuudesta.
+
 ## 2026-10-12 (sessio 37)
 **Tehtiin**
 - `render/post.js`:
