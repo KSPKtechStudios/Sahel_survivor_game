@@ -3,7 +3,7 @@ import { listWorlds, createWorld, deleteWorld, saveSettings, QUALITY_PRESETS } f
 
 const QUALITY_NAMES = { low: 'Matala', medium: 'Keskitaso', high: 'Korkea', ultra: 'Ultra', custom: 'Oma' };
 // Asetukset, jotka kuuluvat grafiikan laatuun (niiden muutos = "oma").
-const GRAPHICS_KEYS = new Set(['viewDistance', 'shadows', 'renderScale', 'godRays', 'motionBlur', 'dof', 'lensFlare', 'foliage', 'ao', 'bloom', 'grade', 'vignette', 'sharpen']);
+const GRAPHICS_KEYS = new Set(['viewDistance', 'shadows', 'renderScale', 'godRays', 'motionBlur', 'dof', 'lensFlare', 'foliage', 'ao', 'bloom', 'grade', 'vignette']);
 import { seedFromString, randomSeed } from '../world/terrain.js';
 
 const $ = (id) => document.getElementById(id);
@@ -287,7 +287,7 @@ export class Menu {
     $('set-dof').addEventListener('change', (e) => { s.dof = e.target.checked; s.quality = 'custom'; this._syncQuality(); this._changed(); });
     $('set-flare').addEventListener('change', (e) => { s.lensFlare = e.target.checked; s.quality = 'custom'; this._syncQuality(); this._changed(); });
     // Sessio 37: bloom, värimäärittely, vinjetti ja ambienttiokkluusio.
-    for (const [id, key] of [['set-bloom', 'bloom'], ['set-grade', 'grade'], ['set-vig', 'vignette'], ['set-sharp', 'sharpen']]) {
+    for (const [id, key] of [['set-bloom', 'bloom'], ['set-grade', 'grade'], ['set-vig', 'vignette']]) {
       $(id).addEventListener('change', (e) => { s[key] = e.target.checked; s.quality = 'custom'; this._syncQuality(); this._changed(); });
     }
     $('set-ao').addEventListener('click', (e) => {
@@ -359,7 +359,6 @@ export class Menu {
     $('set-bloom').checked = s.bloom !== false;
     $('set-grade').checked = s.grade !== false;
     $('set-vig').checked = s.vignette !== false;
-    $('set-sharp').checked = s.sharpen !== false;
     this._syncQuality();
   }
 

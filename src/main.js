@@ -332,7 +332,6 @@ function applySettings(s) {
   post.bloom = s.bloom !== false;
   post.grade = s.grade !== false;
   post.vignette = s.vignette !== false;
-  post.sharpen = s.sharpen !== false ? 0.25 : 0; // sessio 38; sessio 39: kevyempi
   // Sessio 25: silmän mukautuminen on aina päällä (yön valotus riippuu siitä).
   env.autoExposure = post.autoExposure;
   // Sessio 24: ruohon ja aluskasvien tiheys sekä ruohon näkyvyyssäde.

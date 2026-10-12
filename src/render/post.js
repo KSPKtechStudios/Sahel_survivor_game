@@ -617,6 +617,13 @@ void main() {
   vec3 ddx = abs(Pr.z - P.z) < abs(P.z - Pl.z) ? Pr - P : P - Pl;
   vec3 ddy = abs(Pu.z - P.z) < abs(P.z - Pd.z) ? Pu - P : P - Pd;
   vec3 N = normalize(cross(ddx, ddy));
+  // Sessio 45: ohut kasvillisuus (korret, lehdet) jätetään pois: niiden
+  // syvyys poikkeaa molemmista naapureista (toinen derivaatta suuri), ja
+  // tuulessa liikkuessaan ne välkyttivät okkluusiota. Tasot ja isot muodot
+  // pitävät okkluusion.
+  float thin = (abs(Pr.z + Pl.z - 2.0 * P.z) + abs(Pu.z + Pd.z - 2.0 * P.z)) / z;
+  fade *= 1.0 - smoothstep(0.015, 0.06, thin);
+  if (fade <= 0.0) { gl_FragColor = vec4(1.0, z, 0.0, 1.0); return; }
   float R2 = uRadius * uRadius;
   float rnd = 6.2831853 * fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
   float bias = 0.01 + 0.0012 * z;
@@ -624,7 +631,8 @@ void main() {
   for (int i = 0; i < NS; i++) {
     float a = (float(i) + 0.5) / float(NS);
     float ang = a * 6.2831853 * TURNS + rnd;
-    vec2 uv = vUv + vec2(cos(ang), sin(ang)) * (ssR * a) * uHalfTexel;
+    // Näytteet vasta 35 %:n säteeltä: pienet yksityiskohdat eivät varjosta.
+    vec2 uv = vUv + vec2(cos(ang), sin(ang)) * (ssR * (0.35 + 0.65 * a)) * uHalfTexel;
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) continue;
     vec3 v = viewPos(uv) - P;
     float vv = dot(v, v);
@@ -736,9 +744,7 @@ uniform float uBloom;
 uniform vec4 uGrade;   // x kontrasti, y kylläisyys, z lämpö, w päällä
 uniform float uVig;
 uniform float uAspect;
-uniform float uSharp;  // sessio 38: terävöinti 0..1 (0 = pois)
 uniform float uHandAE; // sessio 39: käden mukautumisen eksponentti (alfa 1 = käsi)
-uniform vec2 uTexel;
 varying vec2 vUv;
 vec3 tm(vec3 c) {
   #ifdef TONE_MAPPING
@@ -755,19 +761,8 @@ void main() {
   // näkyy pimeys ja heijastukset, mutta ne eivät katoa mustaan.
   ae = mix(ae, pow(ae, uHandAE), clamp(h0.a, 0.0, 1.0));
   vec3 c = tm((h0.rgb + bl) * ae);
-  // Sessio 38: kontrastiin mukautuva terävöinti (AMD CAS -tyyli): reunat
-  // terävöityvät, tasaiset alueet ja kohina eivät (käyttäjä: kuva sumea).
-  if (uSharp > 0.0) {
-    vec3 n = tm((texture2D(tHDR, vUv + vec2(0.0, uTexel.y)).rgb + bl) * ae);
-    vec3 s = tm((texture2D(tHDR, vUv - vec2(0.0, uTexel.y)).rgb + bl) * ae);
-    vec3 e = tm((texture2D(tHDR, vUv + vec2(uTexel.x, 0.0)).rgb + bl) * ae);
-    vec3 w = tm((texture2D(tHDR, vUv - vec2(uTexel.x, 0.0)).rgb + bl) * ae);
-    vec3 mn = min(min(min(n, s), min(e, w)), c);
-    vec3 mx = max(max(max(n, s), max(e, w)), c);
-    vec3 amp = sqrt(clamp(min(mn, 1.0 - mx) / max(mx, vec3(1e-4)), 0.0, 1.0));
-    vec3 wt = -amp / mix(8.0, 5.0, uSharp);
-    c = clamp((c + (n + s + e + w) * wt) / (1.0 + 4.0 * wt), 0.0, 1.0);
-  }
+  // Sessio 45: terävöinti (sessio 38) poistettu kokonaan (käyttäjä: teki
+  // pelistä kamalan näköisen).
   if (uGrade.w > 0.5) {
     vec3 p = pow(c, vec3(1.0 / 2.2));
     // Kontrasti: S-käyrä keskisävyn (0,45) ympäri, ääripäät pehmeästi.
@@ -903,12 +898,11 @@ export class PostFX {
     // Sessio 38: korkeampi kynnys ja tiiviimpi, heikompi hehku (käyttäjä: kuva
     // näytti sumealta; kirkas taivas ja usva hehkuivat koko kuvan yli).
     this.bloomCfg = { threshold: 2.0, knee: 0.7, intensity: 0.2, clamp: 12, spread: 0.65 };
-    this.sharpen = 0.25; // sessio 38: terävöinti (0 = pois); sessio 39: 0,5 -> 0,25 (reunat)
     this.handAE = 0.3; // sessio 39: kädelle vain osa silmän mukautumisesta (eksponentti); sessio 40: 0,4 -> 0,3
     this.skyDim = 0.22; // sessio 40: taivas päivällä 22 % tummempi
     this.gradeCfg = { contrast: 1.1, saturation: 1.12, warmth: 1 };
     this.vigStrength = 0.24;
-    this.aoCfg = { radius: 0.85, intensity: 1.15, strength: 0.62, fade: 90 }; // sessio 40: 0,75 -> 0,62
+    this.aoCfg = { radius: 1.2, intensity: 1.0, strength: 0.5, fade: 70 }; // sessio 45: isommat muodot, kevyempi
     this.aoRT = makeRT(1, 1);
     this.aoRT2 = makeRT(1, 1);
     this._aoNS = 0;
@@ -932,7 +926,7 @@ export class PostFX {
     this.finalMat = mat(finalFS, {
       tHDR: { value: this.hdrRT.texture }, tBloom: { value: this.bloomMips[0].texture }, uBloom: { value: 0 },
       uGrade: { value: new THREE.Vector4(1, 1, 1, 0) }, uVig: { value: 0 }, uAspect: { value: 1 },
-      tLum: { value: null }, uAE: { value: new THREE.Vector4(0.3, 0, 0.6, 3) }, uSharp: { value: 0 }, uTexel: { value: new THREE.Vector2() },
+      tLum: { value: null }, uAE: { value: new THREE.Vector4(0.3, 0, 0.6, 3) },
       uHandAE: { value: 0.4 },
     });
 
@@ -982,7 +976,6 @@ export class PostFX {
     this.aoMat.uniforms.uTexel.value.set(1 / w, 1 / h);
     this.aoMat.uniforms.uHalfTexel.value.set(1 / hw, 1 / hh);
     this.finalMat.uniforms.uAspect.value = w / h;
-    this.finalMat.uniforms.uTexel.value.set(1 / w, 1 / h);
     this.compMat.uniforms.uVolTexel.value.set(1 / hw, 1 / hh);
     this.dofMat.uniforms.uTexel.value.set(1 / hw, 1 / hh);
     this.maskMat.uniforms.uAspect.value = w / h;
@@ -997,7 +990,7 @@ export class PostFX {
 
   // Viimeistelyvaihe käytössä (bloom, värimäärittely tai vinjetti).
   get finishing() {
-    return this.bloom || this.grade || this.vignette || this.sharpen > 0;
+    return this.bloom || this.grade || this.vignette;
   }
 
   // Piirrä maailma tehosteineen ruudulle. env: aurinko, sumu ja sää.
@@ -1212,10 +1205,10 @@ export class PostFX {
     this._pass(this.aoMat, this.aoRT);
     const bu = this.aoBlurMat.uniforms;
     bu.tAO.value = this.aoRT.texture;
-    bu.uDir.value.set(1 / this.aoRT.width, 0);
+    bu.uDir.value.set(2 / this.aoRT.width, 0); // sessio 45: leveämpi sumennus
     this._pass(this.aoBlurMat, this.aoRT2);
     bu.tAO.value = this.aoRT2.texture;
-    bu.uDir.value.set(0, 1 / this.aoRT.height);
+    bu.uDir.value.set(0, 2 / this.aoRT.height);
     this._pass(this.aoBlurMat, this.aoRT);
     cu.tAO.value = this.aoRT.texture;
     cu.uAOStr.value = this.aoCfg.strength;
@@ -1256,7 +1249,6 @@ export class PostFX {
     const g = this.gradeCfg;
     fu.uGrade.value.set(g.contrast, g.saturation, g.warmth, this.grade ? 1 : 0);
     fu.uVig.value = this.vignette ? this.vigStrength : 0;
-    fu.uSharp.value = this.sharpen;
     fu.uHandAE.value = this.handAE;
     if (!this._aeInFinal) fu.uAE.value.y = 0;
     this._pass(this.finalMat, null);

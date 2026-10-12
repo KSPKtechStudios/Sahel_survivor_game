@@ -2,6 +2,16 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 45): okkluusio ei välky kasvillisuudessa, terävöinti poistettu
+
+- **Ambienttiokkluusio (SSAO) ei enää välky ruohossa ja lehdissä:**
+  - ohuet korret ja lehdet jätetään okkluusiosta pois (tunnistetaan syvyyden äkillisestä vaihtelusta naapuripikseleihin);
+  - okkluusio lasketaan vain isommista muodoista (säde 1,2 m, näytteet vasta 35 %:n etäisyydeltä), joten pienet liikkuvat yksityiskohdat eivät varjosta;
+  - kevyempi (voimakkuus 0,5), lyhyempi kantama (70 m) ja leveämpi pehmennys.
+
+  Okkluusio on yhä oletuksena pois; sen saa päälle asetuksista.
+- **Terävöinti poistettu kokonaan:** asetusrivi, asetus ja koko tehoste. Vanha tallennettu arvo poistetaan asetuksista.
+
 ## 2026-10-12 (sessio 44): ruudunpäivitys takaisin ja kaukainen pikselimössö pois
 
 - **Session 43 muutos peruttu:** kaukomallit ja tarkan mallin raja ovat taas ennallaan (ruudunpäivitys putosi viidakossa).

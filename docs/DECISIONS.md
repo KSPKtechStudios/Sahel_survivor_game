@@ -2,6 +2,10 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 45)
+- **Okkluusiosta pois ohut geometria:** syvyyden toinen derivaatta suhteessa etäisyyteen (`thin`) häivyttää okkluusion välillä 0,015–0,06. Lisäksi näytteet alkavat 35 %:sta säteestä, säde 0,85 → 1,2, voimakkuus 0,62 → 0,5, kantama 90 → 70 m ja sumennusaskel 2 tekseliä. Syy: käyttäjän mukaan SSAO välkytti tiheää ruohoa ja lehtiä. Korret ja lehdet ovat pikselin levyisiä ja liikkuvat tuulessa, joten niiden okkluusio vaihtui ruudusta toiseen. Isot muodot (rungot, kivet, maaston kuopat) pitävät okkluusion.
+- **Terävöinti (CAS, sessio 38) poistettu kokonaan** (shader, uniformit, asetus, valikko). Syy: käyttäjä pyysi; tehoste korosti reunojen ja kasvillisuuden kohinaa.
+
 ## 2026-10-12 (sessio 44)
 - **Session 43 kaukomallit peruttu** (`trees.js`, `flora.js`, `palms.js`, `world.js` palautettu). Syy: ruudunpäivitys putosi viidakossa, jossa puita on paljon.
 - **Syväterävyys session 25 arvoihin** (kaukana alkaen max(tarkennus × 3 + 15, 32) m, enintään 0,4, säde 3), ja puolikkaan tarkkuuden kuva sekoittuu vasta voimakkuudesta 0,2 alkaen (oli 0,12). Syy: kaukainen maisema näkyi puolikkaan tarkkuuden kuvana pienellä sumennuksella, eli pikselöityneenä. Pikselitiheyteen ja MSAA:han ei koskettu, koska ne eivät olleet syy.

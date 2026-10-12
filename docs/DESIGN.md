@@ -217,6 +217,11 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 45 (käyttäjän kertoma, 2026-10-12)
+- **Edelleen ei hyvä** (kuva). Mikä tarkalleen näyttää yhä huonolta? (avoin kysymys)
+- **SSAO aiheuttaa tiheässä ruohossa ja lehdissä valtavasti rumaa välkkymistä** → säädettävä.
+- **Terävöinti-asetus on turha** ja tekee pelistä kamalan näköisen → saa poistaa kokonaan.
+
 ## Sessio 44 (käyttäjän kertoma, 2026-10-12)
 - **Session 43 muutos pudotti ruudunpäivitystä paljon, etenkin viidakossa** → peruttava.
 - **Kaukaiset puut ja horisontti näyttävät pikselimössöltä** (kuva, kuin 240p). Tämä johtuu jostain grafiikkapäivityksen yhteydessä tehdystä. Käyttäjä liitti toisen tekoälyn ehdotuksen: täysi renderöintitarkkuus (ei pienennettyjä renderöintikohteita), siisti reunanpehmennys ja kasvillisuuden mipmapit.

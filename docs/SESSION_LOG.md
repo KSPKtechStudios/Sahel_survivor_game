@@ -2,6 +2,15 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 45)
+**Tehtiin**
+- `render/post.js`: okkluusio ohittaa ohuen geometrian (korret, lehdet), isompi säde, kevyempi ja leveämpi pehmennys; terävöinti poistettu.
+- Terävöinnin asetus pois myös: `main.js`, `ui/menu.js`, `index.html`, `game/save.js` (vanha arvo poistetaan).
+- Testattiin: savanni klo 11, okkluusio pois / vanha / uusi (shader kääntyy, ei virheitä), ESLint.
+
+**Seuraavaksi**
+- Käyttäjä kertoo, mikä tarkalleen näyttää yhä huonolta ("edelleen ei hyvä"). Tarjolla: lisää session 37 jälkeen tulleita tehosteita oletuksena pois (hehku, värimäärittely, vinjetti, syväterävyys).
+
 ## 2026-10-12 (sessio 44)
 **Tehtiin**
 - Session 43 lähdemuutokset peruttu (FPS).
