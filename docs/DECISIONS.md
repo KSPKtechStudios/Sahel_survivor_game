@@ -2,6 +2,18 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 40)
+- **Ruoho: alpha-to-coverage ja terävöity alfa** (`(a − 0,5) / fwidth(a) + 0,5`), ei kovaa `discard`ia. Syy: ruohokenttä oli ainoa kasvillisuus ilman alpha-to-coveragea, ja kova raja välkkyi ja teki moiré-kuvioita. Maailma piirretään 4× MSAA -kuvaan, joten peittävyys pehmentää reunat. Muut leikatut materiaalit (lehdet, kitin kasvit) käyttävät jo alpha-to-coveragea (three terävöi alfan itse), ja niillä on peittävyyden säilyttävät mipmapit. SMAA:ta ei lisätty, koska MSAA ja alpha-to-coverage hoitavat kasvillisuuden reunat, eikä ylimääräistä vaihetta tarvita.
+- **Anisotropia 16** (three rajaa näytönohjaimen maksimiin): maaston pinnat, lehdet, ruoho ja metsänpohja, maan yksityiskohtatekstuuri ja kitin sekä skannattujen mallien tekstuurit.
+- **Terävöinti oletuksena pois** (asetusversio 5 kytkee sen kerran pois myös vanhoista asetuksista). Syy: käyttäjä koki reunat rumiksi kahdesti terävöinnin jälkeen.
+- **Taivas × (1 − 0,22 × päivänvalo) koosteessa.** Syy: silmän mukautumisen painotus ei yksin estänyt sademetsän pilvisen taivaan puhkeamista valkoiseksi; suora taivaan tummennus pitää maiseman valotuksen ennallaan.
+- **Syväterävyys:**
+  - kaukainen sumennus alkaa nyt tarkennus × 2,2 + 12 m (oli × 1,8 + 8 m);
+  - suurin sumennus 0,55 (oli 0,85), säde 4 (oli 5);
+  - lähisumennus 0,45 (oli 0,6).
+- **Käsi yöllä:** mukautumisen eksponentti 0,3 (oli 0,4), täytevalot noin 70 % entisestä.
+- **Okkluusion voimakkuus 0,62** (oli 0,75), koska puolikkaan tarkkuuden okkluusio voi lisätä kohinaa tiheään ruohoon.
+
 ## 2026-10-12 (sessio 39)
 - **Intro on index.html:n oma kerros, jonka käynnistää tavallinen (ei moduuli) skripti heti sivun alussa.** Peli latautuu taustalla, mutta `main.js` ei piirrä mitään, kun `window.sahelIntroActive` on tosi. Syy: video alkaa heti, eikä raskas piirto nyi sitä. Ääni yritetään ensin; jos selain estää, video alkaa äänettömänä ja vasen klikkaus avaa äänen. Virhe, tai jos toisto ei ala 9 sekunnissa, ohittaa intron. Syy: Playwrightin Chromium (ja jotkin Linux-selaimet) ei osaa H.264:ää, ja hidas yhteys ei saa jumittaa peliä.
 - **Video nimettiin `intro.mp4`:ksi ja ajettiin `-movflags +faststart -c copy`** (kuva ja ääni ennallaan). Syy: välilyönnit ja sulkeet ovat hankalia osoitteissa, ja moov-laatikko oli tiedoston lopussa, jolloin selain olisi ladannut 20 Mt ennen toistoa.

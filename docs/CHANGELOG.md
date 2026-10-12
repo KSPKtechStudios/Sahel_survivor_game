@@ -2,6 +2,16 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 40): kasvillisuuden reunat, taivas, syväterävyys ja käsi yöllä
+
+- **Ruoho ei enää välky:** ruohokenttä käyttää nyt alpha-to-coveragea. Korsien reunat pehmenevät reunanpehmennyksellä, eivätkä ne enää tee portaita tai moiré-kuvioita kauempana (ennen kova leikkausraja). Lehdillä ja muilla kasveilla tämä oli jo käytössä, samoin peittävyyden säilyttävät mipmapit (`LinearMipmapLinearFilter`).
+- **Anisotrooppinen suodatus suurimmaksi** (16 tai näytönohjaimen maksimi) maaston, lehtien, ruohon, metsänpohjan ja kasvimallien tekstuureille: viistossa näkyvät pinnat pysyvät terävinä eivätkä välky.
+- **Terävöinti oletuksena pois.** Se korosti lehtien reunoja. Asetuksista sen saa takaisin.
+- **Taivas päivällä noin 22 % tummempi,** ei puhkea valkoiseksi.
+- **Syväterävyys lievempi:** tausta sumenee vasta kauempana ja vähemmän.
+- **Ambienttiokkluusio hieman kevyempi.**
+- **Käsi ja työkalut yöllä hieman tummempia.**
+
 ## 2026-10-12 (sessio 39): intro, hillitympi päivänvalo, liike-epäterävyys ja syväterävyys, käsi yöllä
 
 - **Intro:** käyttäjän video soi pelin alussa ennen valikkoa ja latausta, ja peli latautuu taustalla. Ohitus: Esc, välilyönti tai hiiren oikea.

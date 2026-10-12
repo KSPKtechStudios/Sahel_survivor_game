@@ -13,7 +13,7 @@ function tex(file, srgb = true) {
   // Sessio 26: alfatestatut (lehdet, kukat) peittävyyden säilyttävin mipmapein.
   const t = file.endsWith('.png') ? loadAlphaTexture(`${DIR}/${file}`, { cutoff: 0.5, srgb }) : loader.load(`${DIR}/${file}`);
   if (srgb) t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 4;
+  t.anisotropy = 16; // sessio 40 (three rajaa maksimiin)
   // Sessio 28: toistuvat tekstuurit (lahopuun UV kiertää rungon pituudella
   // monta kertaa; ennen reunan pikselit venyivät pitkiksi raidoiksi).
   if (!file.endsWith('.png')) t.wrapS = t.wrapT = THREE.RepeatWrapping;

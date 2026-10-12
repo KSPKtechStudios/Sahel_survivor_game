@@ -2,6 +2,7 @@
 
 ## Heti (odottaa käyttäjää)
 - [x] Historia siirretty uuteen repoon `KSPKtechStudios/Sahel_survivor_game` ja pushattu (2026-10-12)
+- [ ] Käyttäjä testaa session 40: ruohon ja lehtien reunat kaukana (välkyntä ja moiré), taivas päivällä, syväterävyys, käsi yöllä. Jos reunat yhä välkkyvät: kerro missä (ruoho, puiden lehdet, kasvit) ja millä laatutasolla
 - [ ] Käyttäjä testaa session 39: intro (soiko äänen kanssa, Esc / välilyönti / hiiren oikea ohittaa), päivänvalo selkeällä säällä (sademetsä aurinkoa kohti), lehtien reunat, liike-epäterävyys (asetus Kevyt / Vahva), syväterävyys, käsi ja työkalu yöllä
 - [ ] Jos intro halutaan myös selaimille, jotka eivät osaa H.264:ää: WebM-versio (VP9 + Opus) rinnalle
 - [ ] Käyttäjä testaa session 38: onko kuva nyt terävä (asetus Terävöinti päälle ja pois), näkyvätkö työkalut ja käsi pimeässä ja varjossa, sademetsä yöllä ilman soihtua ja päivällä (ylivalotus)

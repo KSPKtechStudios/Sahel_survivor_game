@@ -516,10 +516,11 @@ export class ViewModel {
     const dark = THREE.MathUtils.clamp(1 - envLum / 0.7, 0, 1);
     // Sessio 39: selvästi miedommat (käyttäjä: yöllä liiankin valoisia; pimeyden
     // ja heijastusten pitää näkyä, vain pieni valo).
-    this.fill.intensity = 0.05 + 0.24 * dark;
+    // Sessio 40: vielä hieman miedommat (yöllä yhä vähän liian kirkkaat).
+    this.fill.intensity = 0.04 + 0.17 * dark;
     this.fill.color.setRGB(1, 0.94, 0.86).lerp(_fillNight, dark);
-    this.rim.intensity = 0.04 + 0.16 * dark;
-    this.amb.intensity = 0.015 + 0.07 * dark;
+    this.rim.intensity = 0.03 + 0.12 * dark;
+    this.amb.intensity = 0.01 + 0.045 * dark;
 
     // Esineen vaihto: käsi laskee alas, esine vaihtuu, käsi nousee.
     if (this.pending !== undefined) {

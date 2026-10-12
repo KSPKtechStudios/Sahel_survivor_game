@@ -10,7 +10,7 @@ export function scannedMaterial(tex, { dir = 'assets/models/rocks', roughness = 
   if (cache[tex]) return cache[tex];
   const map = loader.load(`${dir}/${tex}_diff.jpg`);
   map.colorSpace = THREE.SRGBColorSpace;
-  map.anisotropy = 4;
+  map.anisotropy = 16; // sessio 40 (three rajaa maksimiin)
   const normalMap = loader.load(`${dir}/${tex}_nrm.jpg`);
   const m = new THREE.MeshStandardMaterial({ map, normalMap, roughness, metalness: 0 });
   addWet(m, wet[0], wet[1]);

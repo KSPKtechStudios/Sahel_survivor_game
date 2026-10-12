@@ -217,6 +217,16 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 40 (käyttäjän kertoma, 2026-10-12)
+- **Taivas on yhä vähän ylivalottunut** (kuva sademetsästä taivaalle).
+- **Asiat näyttävät yhä rumilta.** Syväterävyyttä saa lieventää (nyt "överi").
+- **Käsi ja työkalut ovat pimeässä yössä yhä hieman liian kirkkaita** (vielä vähän tummemmaksi).
+- **Kasvillisuuden välkyntä ja moiré** (käyttäjän kuvaus, tiivistetty): lehdet ja ruoho välkkyvät ja tekevät moiré-kuvioita keskipitkillä ja pitkillä etäisyyksillä. Korjaukset:
+  1. anisotrooppinen suodatus maaston ja kasvillisuuden tekstuureille suurimmalla tuetulla arvolla;
+  2. mipmapit `LinearMipmapLinearFilter`-suodatuksella kaikille kasvillisuuden alfakartoille;
+  3. `alphaToCoverage` ruoho- ja lehtimateriaaleille (tai alphaTestin säätö tai SMAA);
+  4. aggressiivinen terävöinti hillitymmäksi tai pois.
+
 ## Sessio 39 (käyttäjän kertoma, 2026-10-12)
 - **Intro:** käyttäjän video (`sahel intro valmis (1).mp4`, nyt `assets/videos/intro.mp4`) pelin aivan alkuun ennen valikoita ja latausikkunoita. Ohitus: **Esc, välilyönti tai hiiren oikea**.
 - Käyttäjä haluaa repoon kansion videoille (cutscenet ja videoanimaatiot): `assets/videos/`.

@@ -53,7 +53,8 @@ export function loadSurfaces(renderer, onDone = null) {
     if (onDone) onDone();
   };
   const loader = new THREE.TextureLoader(manager);
-  const aniso = renderer ? Math.min(8, renderer.capabilities.getMaxAnisotropy()) : 4;
+  // Sessio 40: suurin anisotrooppinen suodatus (maasto ja lehdet viistossa).
+  const aniso = renderer ? Math.min(16, renderer.capabilities.getMaxAnisotropy()) : 8;
   new THREE.ImageLoader(manager).load('assets/textures/leaves.png', (img) => {
     // Sessio 26: reunavärit ja peittävyyden säilyttävät mipmapit (alphaMips.js).
     leafTexture.anisotropy = aniso;

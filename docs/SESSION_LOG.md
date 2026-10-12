@@ -2,6 +2,23 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 40)
+**Tehtiin**
+- `render/grassField.js`: alpha-to-coverage ja terävöity alfa.
+- Anisotropia 16: `alphaMips.js`, `surfaces.js`, `textures.js`, `kitMaterials.js` ja `scannedMaterials.js`.
+- `render/post.js`:
+  - taivaan tummennus `skyDim`;
+  - syväterävyys lievemmäksi;
+  - okkluusio 0,62;
+  - `handAE` 0,3.
+- `player/viewmodel.js`: täytevalot miedommiksi.
+- `game/save.js`: terävöinti oletuksena pois (asetusversio 5).
+- Huom.: työympäristön uudelleenkäynnistys oli palauttanut `origin`-remoten vanhaan repoon (`KSPKtech/sahel`). Se asetettiin takaisin osoitteeseen `KSPKtechStudios/Sahel_survivor_game`.
+- Testattiin: savanni klo 11 (ruohon reunat, vertailu session 37 kuvaan), sademetsä taivaalle päivällä ja yöllä, ESLint.
+
+**Seuraavaksi**
+- Käyttäjän palaute reunojen laadusta.
+
 ## 2026-10-12 (sessio 39)
 **Tehtiin**
 - PR #1 oli yhdistetty mainiin, ja käyttäjä lisäsi videon mainiin. Työhaara siirrettiin mainin päälle (suora eteenpäin siirto).

@@ -142,9 +142,10 @@ float coc(vec2 uv, float focus) {
   // Sessio 39 (käyttäjä: toimivammaksi ja huomattavammaksi): tarkennuksen
   // mukaan. Lähelle katsottaessa tausta sumenee selvästi; kauas katsottaessa
   // vain aivan kameran edessä oleva sumenee.
-  float farStart = focus * 1.8 + 8.0;
-  float farC = smoothstep(farStart, farStart * 3.0 + 60.0, z) * 0.85;
-  float nearC = focus > 6.0 ? (1.0 - smoothstep(min(focus * 0.3, 1.0), min(focus * 0.5, 2.5), z)) * 0.6 : 0.0;
+  // Sessio 40: lievennetty (käyttäjä: överi).
+  float farStart = focus * 2.2 + 12.0;
+  float farC = smoothstep(farStart, farStart * 4.0 + 80.0, z) * 0.55;
+  float nearC = focus > 6.0 ? (1.0 - smoothstep(min(focus * 0.3, 1.0), min(focus * 0.5, 2.5), z)) * 0.45 : 0.0;
   return max(farC, nearC);
 }
 void main() {
@@ -208,6 +209,7 @@ uniform sampler2D tVol;  // sessio 26: valokeilat (r = valaistu matka m, g = sä
 uniform vec3 uVolCol;    // auringon väri * voimakkuus * ilman tiheys
 uniform vec2 uVolTexel;
 uniform float uOutA;     // sessio 39: alfa HDR-kuvaan (0 = maailma; käsi kirjoittaa 1)
+uniform float uSkyK;     // sessio 40: taivaan valotus päivällä (ei puhkea valkoiseksi)
 uniform sampler2D tAO;   // sessio 37: ambienttiokkluusio (r = okkluusio, g = syvyys)
 uniform vec2 uAORes;
 uniform float uAOStr;
@@ -457,6 +459,8 @@ void main() {
     float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
     col *= mix(1.0, ao, uAOStr * (1.0 - 0.35 * smoothstep(0.4, 2.0, lum)));
   }
+
+  if (sky) col *= uSkyK;
 
   // Kangastus: kaukainen maa aivan horisontin alla heijastaa taivasta kuin
   // väreilevä vesi.
@@ -841,7 +845,7 @@ export class PostFX {
     }, { toneMapped: false });
     this.dofMat = mat(dofFS, {
       tColor: { value: null }, tDepth: { value: depthTexture }, tFocus: { value: null }, uTexel: { value: new THREE.Vector2() },
-      uNear: { value: 0.1 }, uFar: { value: 1500 }, uMaxR: { value: 5 },
+      uNear: { value: 0.1 }, uFar: { value: 1500 }, uMaxR: { value: 4 },
     }, { toneMapped: false });
     this.compMat = mat(compositeFS, {
       tColor: { value: null }, tDepth: { value: depthTexture }, tRays: { value: null }, tDof: { value: null },
@@ -857,7 +861,7 @@ export class PostFX {
       uHFog: { value: new THREE.Vector4(0, 0, 0.12, 0) }, uHFogColor: { value: new THREE.Color(0.7, 0.72, 0.74) },
       tLum: { value: null }, uAE: { value: new THREE.Vector4(0.3, 0, 0.6, 3) },
       tVol: { value: null }, uVolCol: { value: new THREE.Color(0, 0, 0) }, uVolTexel: { value: new THREE.Vector2(1, 1) },
-      tAO: { value: null }, uAORes: { value: new THREE.Vector2(1, 1) }, uAOStr: { value: 0 }, uOutA: { value: 1 },
+      tAO: { value: null }, uAORes: { value: new THREE.Vector2(1, 1) }, uAOStr: { value: 0 }, uOutA: { value: 1 }, uSkyK: { value: 1 },
     });
     // Sessio 26: volumetriset valokeilat (main.js asettaa ilman tiheyden).
     this.shafts = 0;
@@ -897,10 +901,11 @@ export class PostFX {
     // näytti sumealta; kirkas taivas ja usva hehkuivat koko kuvan yli).
     this.bloomCfg = { threshold: 2.0, knee: 0.7, intensity: 0.2, clamp: 12, spread: 0.65 };
     this.sharpen = 0.25; // sessio 38: terävöinti (0 = pois); sessio 39: 0,5 -> 0,25 (reunat)
-    this.handAE = 0.4; // sessio 39: kädelle vain osa silmän mukautumisesta (eksponentti)
+    this.handAE = 0.3; // sessio 39: kädelle vain osa silmän mukautumisesta (eksponentti); sessio 40: 0,4 -> 0,3
+    this.skyDim = 0.22; // sessio 40: taivas päivällä 22 % tummempi
     this.gradeCfg = { contrast: 1.1, saturation: 1.12, warmth: 1 };
     this.vigStrength = 0.24;
-    this.aoCfg = { radius: 0.85, intensity: 1.15, strength: 0.75, fade: 90 };
+    this.aoCfg = { radius: 0.85, intensity: 1.15, strength: 0.62, fade: 90 }; // sessio 40: 0,75 -> 0,62
     this.aoRT = makeRT(1, 1);
     this.aoRT2 = makeRT(1, 1);
     this._aoNS = 0;
@@ -1132,6 +1137,7 @@ export class PostFX {
     cu.uSunColor.value.copy(env.sky.uniforms.uSunColor.value).multiplyScalar(env.sky.uniforms.uSunVisible.value);
     // Sessio 39: auringon suuntaan hohtava sironta miedommaksi (0,9 -> 0,5,
     // sademetsässä vielä vähemmän): ennen koko kuva hukkui kultaiseen hehkuun.
+    cu.uSkyK.value = 1 - this.skyDim * env.daylight;
     cu.uInscatter.value = 0.5 * env.daylight * (1 - env.w.cloud * 0.6) * (1 - 0.4 * (env.humid || 0));
     cu.uFogNear.value = env.scene.fog.near;
     cu.uFogFar.value = env.scene.fog.far;
