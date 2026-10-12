@@ -103,6 +103,9 @@ export class Environment {
     this.timeScale = 24 / CONFIG.dayLengthSec;
     // Sessio 37: päivän hajavalon kerroin (kontrasti: varjot tummemmiksi).
     this.ambientDay = 0.6;
+    // Sessio 38: sademetsän yön lisähajavalo ja päivän usvan tummennus.
+    this.humidNightAmb = 0.8;
+    this.humidFogDark = 0.3;
 
     // Aurinko: kaksi varjokaskadia (tarkat varjot lähellä, karkeammat kauempana),
     // jotka sovitetaan kameran näkymään. Varjon reunat pehmenevät etäisyyden mukaan.
@@ -479,6 +482,9 @@ export class Environment {
 
     // Sumu
     const fogC = tinted(lerpC('fog', this.scene.fog.color));
+    // Sessio 38: latvuston alla usva on päivällä tummempaa (ennen kirkas usva
+    // ylivalotti sademetsän).
+    if (this.humid > 0.001) fogC.multiplyScalar(1 - this.humidFogDark * this.humid * this.daylight);
     u.uFogColor.value.copy(fogC);
     // Selkeällä/pilvisellä säällä näkyvyys = näköetäisyys, usvassa ja myrskyssä sään oma.
     let vis = Math.min(w.vis >= 290 ? this.maxVis : w.vis, this.maxVis);
@@ -520,8 +526,11 @@ export class Environment {
     // veroinen: varjot jäivät vaaleiksi ja kuva latteaksi). Pilvisellä säällä
     // hajavalo säilyy, koska silloin valo tulee koko taivaalta.
     const ambK = lerp(1, lerp(this.ambientDay, 0.9, Math.min(1, greyAmt * 1.2 + w.haze * 0.6)), this.daylight);
-    this.hemi.intensity = hemiI * ambK * (1 + (greyAmt * 0.25 + w.haze * 0.15) * this.daylight) * (1 - 0.2 * this.humid) * nightDark + this.flash * 1.6;
-    if (this.humid > 0.001) this.hemi.color.lerp(_c2.copy(CANOPY_GREEN).multiplyScalar(dayLum), 0.35 * this.humid);
+    // Sessio 38: sademetsässä yöllä enemmän hajavaloa (käyttäjä: ilman
+    // soihtua ei nähnyt mitään); päivällä latvusto varjostaa kuten ennen.
+    const humAmb = 1 - 0.2 * this.humid * this.daylight + this.humidNightAmb * this.humid * nightK;
+    this.hemi.intensity = hemiI * ambK * (1 + (greyAmt * 0.25 + w.haze * 0.15) * this.daylight) * humAmb * nightDark + this.flash * 1.6;
+    if (this.humid > 0.001) this.hemi.color.lerp(_c2.copy(CANOPY_GREEN).multiplyScalar(dayLum), 0.35 * this.humid * this.daylight);
 
     // Valon suunta (SunLight valaisee sijainnistaan origoa kohti).
     this.sun.position.copy(dir);

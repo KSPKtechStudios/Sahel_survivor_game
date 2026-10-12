@@ -654,16 +654,21 @@ const bloomPreFS = /* glsl */ `
 uniform sampler2D tInput;
 uniform vec2 uTexel;
 uniform vec4 uThresh; // x kynnys, y polvi, z valotus, w yläraja
+uniform sampler2D tLum; // sessio 38: silmän mukautuminen (kynnys sen jälkeen)
+uniform vec4 uAE;
 varying vec2 vUv;
+float gAE = 1.0;
 vec3 pre(vec3 c) {
-  vec3 e = min(c * uThresh.z, vec3(uThresh.w));
+  float z = uThresh.z * gAE;
+  vec3 e = min(c * z, vec3(uThresh.w));
   float br = max(e.r, max(e.g, e.b));
   float rq = clamp(br - uThresh.x + uThresh.y, 0.0, 2.0 * uThresh.y);
   rq = rq * rq / (4.0 * uThresh.y + 1e-4);
-  return e * (max(rq, br - uThresh.x) / max(br, 1e-4)) / uThresh.z;
+  return e * (max(rq, br - uThresh.x) / max(br, 1e-4)) / z;
 }
-float kw(vec3 c) { return 1.0 / (1.0 + dot(c, vec3(0.2126, 0.7152, 0.0722)) * uThresh.z); }
+float kw(vec3 c) { return 1.0 / (1.0 + dot(c, vec3(0.2126, 0.7152, 0.0722)) * uThresh.z * gAE); }
 void main() {
+  if (uAE.y > 0.0) gAE = clamp(pow(uAE.x / max(exp(texture2D(tLum, vec2(0.5)).r), 0.0001), uAE.y), uAE.z, uAE.w);
   vec3 a = pre(texture2D(tInput, vUv + uTexel * vec2(-1.0, -1.0)).rgb);
   vec3 b = pre(texture2D(tInput, vUv + uTexel * vec2(1.0, -1.0)).rgb);
   vec3 c = pre(texture2D(tInput, vUv + uTexel * vec2(-1.0, 1.0)).rgb);
@@ -712,28 +717,51 @@ void main() {
 const finalFS = /* glsl */ `
 uniform sampler2D tHDR;
 uniform sampler2D tBloom;
+uniform sampler2D tLum;  // sessio 38: silmän mukautuminen myös kädelle
+uniform vec4 uAE;
 uniform float uBloom;
 uniform vec4 uGrade;   // x kontrasti, y kylläisyys, z lämpö, w päällä
 uniform float uVig;
 uniform float uAspect;
+uniform float uSharp;  // sessio 38: terävöinti 0..1 (0 = pois)
+uniform vec2 uTexel;
 varying vec2 vUv;
-void main() {
-  vec3 c = texture2D(tHDR, vUv).rgb;
-  if (uBloom > 0.0) c += texture2D(tBloom, vUv).rgb * uBloom;
+vec3 tm(vec3 c) {
   #ifdef TONE_MAPPING
   c = toneMapping(c);
   #endif
-  c = clamp(c, 0.0, 1.0);
+  return clamp(c, 0.0, 1.0);
+}
+void main() {
+  float ae = 1.0;
+  if (uAE.y > 0.0) ae = clamp(pow(uAE.x / max(exp(texture2D(tLum, vec2(0.5)).r), 0.0001), uAE.y), uAE.z, uAE.w);
+  vec3 bl = uBloom > 0.0 ? texture2D(tBloom, vUv).rgb * uBloom : vec3(0.0);
+  vec3 c = tm((texture2D(tHDR, vUv).rgb + bl) * ae);
+  // Sessio 38: kontrastiin mukautuva terävöinti (AMD CAS -tyyli): reunat
+  // terävöityvät, tasaiset alueet ja kohina eivät (käyttäjä: kuva sumea).
+  if (uSharp > 0.0) {
+    vec3 n = tm((texture2D(tHDR, vUv + vec2(0.0, uTexel.y)).rgb + bl) * ae);
+    vec3 s = tm((texture2D(tHDR, vUv - vec2(0.0, uTexel.y)).rgb + bl) * ae);
+    vec3 e = tm((texture2D(tHDR, vUv + vec2(uTexel.x, 0.0)).rgb + bl) * ae);
+    vec3 w = tm((texture2D(tHDR, vUv - vec2(uTexel.x, 0.0)).rgb + bl) * ae);
+    vec3 mn = min(min(min(n, s), min(e, w)), c);
+    vec3 mx = max(max(max(n, s), max(e, w)), c);
+    vec3 amp = sqrt(clamp(min(mn, 1.0 - mx) / max(mx, vec3(1e-4)), 0.0, 1.0));
+    vec3 wt = -amp / mix(8.0, 5.0, uSharp);
+    c = clamp((c + (n + s + e + w) * wt) / (1.0 + 4.0 * wt), 0.0, 1.0);
+  }
   if (uGrade.w > 0.5) {
     vec3 p = pow(c, vec3(1.0 / 2.2));
     // Kontrasti: S-käyrä keskisävyn (0,45) ympäri, ääripäät pehmeästi.
+    // Sessio 38: tummimmat sävyt eivät tummu (yöt ja varjot pysyvät
+    // näkyvinä; ennen käyrä painoi pimeän sademetsän lähes mustaksi).
     vec3 q = clamp((p - 0.45) * uGrade.x + 0.45, 0.0, 1.0);
-    p = mix(p, q, smoothstep(0.0, 0.12, p) * (1.0 - smoothstep(0.88, 1.0, p)) * 0.5 + 0.5);
+    p = mix(p, q, smoothstep(0.03, 0.32, p) * (1.0 - smoothstep(0.88, 1.0, p)));
     float l = dot(p, vec3(0.2126, 0.7152, 0.0722));
     p = mix(vec3(l), p, uGrade.y);
     // Sävytys: valot lämpimiksi, varjot syviksi ja hieman vihreänruskeiksi.
     float hi = smoothstep(0.35, 0.95, l);
-    float sh = 1.0 - smoothstep(0.05, 0.45, l);
+    float sh = smoothstep(0.02, 0.12, l) * (1.0 - smoothstep(0.12, 0.45, l));
     p *= mix(vec3(1.0), vec3(1.0 + 0.04 * uGrade.z, 1.0 + 0.012 * uGrade.z, 1.0 - 0.05 * uGrade.z), hi);
     p *= mix(vec3(1.0), vec3(0.97, 0.985, 0.94), sh * uGrade.z);
     c = pow(clamp(p, 0.0, 1.0), vec3(2.2));
@@ -836,7 +864,7 @@ export class PostFX {
     // efektiä); yön yläraja matalampi (selkeä yö hieman tummemmaksi).
     // Sessio 37: päivällä matalampi tavoitekirkkaus (dayRef; käyttäjä: päivä
     // näytti ylivalottuneelta). Yöllä ennallaan.
-    this.ae = { ref: 0.3, dayRef: 0.25, strength: 0.82, min: 0.5, max: 2.8, nightMax: 1.9, darkTau: 1.7, brightTau: 0.5 };
+    this.ae = { ref: 0.3, dayRef: 0.25, strength: 0.82, min: 0.5, max: 2.8, nightMax: 1.9, humidNight: 0.9, darkTau: 1.7, brightTau: 0.5 };
     this.lumRT = [0, 1].map(() => makeRT(1, 1, { type: THREE.FloatType, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter }));
     this.lumIdx = 0;
     this.lumInit = true;
@@ -854,7 +882,10 @@ export class PostFX {
     this.bloom = true;
     this.grade = true;
     this.vignette = true;
-    this.bloomCfg = { threshold: 1.25, knee: 0.6, intensity: 0.32, clamp: 40 };
+    // Sessio 38: korkeampi kynnys ja tiiviimpi, heikompi hehku (käyttäjä: kuva
+    // näytti sumealta; kirkas taivas ja usva hehkuivat koko kuvan yli).
+    this.bloomCfg = { threshold: 2.0, knee: 0.7, intensity: 0.2, clamp: 40, spread: 0.65 };
+    this.sharpen = 0.5; // sessio 38: terävöinti (0 = pois)
     this.gradeCfg = { contrast: 1.1, saturation: 1.12, warmth: 1 };
     this.vigStrength = 0.24;
     this.aoCfg = { radius: 0.85, intensity: 1.15, strength: 0.75, fade: 90 };
@@ -872,6 +903,7 @@ export class PostFX {
     this.bloomMips = [0, 1, 2, 3, 4].map(() => makeRT(1, 1));
     this.bloomPreMat = mat(bloomPreFS, {
       tInput: { value: null }, uTexel: { value: new THREE.Vector2() }, uThresh: { value: new THREE.Vector4() },
+      tLum: { value: null }, uAE: { value: new THREE.Vector4() },
     }, { toneMapped: false });
     this.bloomDownMat = mat(bloomDownFS, { tInput: { value: null }, uTexel: { value: new THREE.Vector2() } }, { toneMapped: false });
     this.bloomUpMat = mat(bloomUpFS, { tInput: { value: null }, uTexel: { value: new THREE.Vector2() }, uWeight: { value: 1 } }, {
@@ -880,6 +912,7 @@ export class PostFX {
     this.finalMat = mat(finalFS, {
       tHDR: { value: this.hdrRT.texture }, tBloom: { value: this.bloomMips[0].texture }, uBloom: { value: 0 },
       uGrade: { value: new THREE.Vector4(1, 1, 1, 0) }, uVig: { value: 0 }, uAspect: { value: 1 },
+      tLum: { value: null }, uAE: { value: new THREE.Vector4(0.3, 0, 0.6, 3) }, uSharp: { value: 0 }, uTexel: { value: new THREE.Vector2() },
     });
 
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.compMat);
@@ -928,6 +961,7 @@ export class PostFX {
     this.aoMat.uniforms.uTexel.value.set(1 / w, 1 / h);
     this.aoMat.uniforms.uHalfTexel.value.set(1 / hw, 1 / hh);
     this.finalMat.uniforms.uAspect.value = w / h;
+    this.finalMat.uniforms.uTexel.value.set(1 / w, 1 / h);
     this.compMat.uniforms.uVolTexel.value.set(1 / hw, 1 / hh);
     this.dofMat.uniforms.uTexel.value.set(1 / hw, 1 / hh);
     this.maskMat.uniforms.uAspect.value = w / h;
@@ -942,7 +976,7 @@ export class PostFX {
 
   // Viimeistelyvaihe käytössä (bloom, värimäärittely tai vinjetti).
   get finishing() {
-    return this.bloom || this.grade || this.vignette;
+    return this.bloom || this.grade || this.vignette || this.sharpen > 0;
   }
 
   // Piirrä maailma tehosteineen ruudulle. env: aurinko, sumu ja sää.
@@ -1103,10 +1137,22 @@ export class PostFX {
       this.lumIdx = 1 - this.lumIdx;
       this.lumInit = false;
       cu.tLum.value = next.texture;
-      cu.uAE.value.set(THREE.MathUtils.lerp(this.ae.ref, this.ae.dayRef, env.daylight), this.ae.strength, this.ae.min, THREE.MathUtils.lerp(this.ae.nightMax, this.ae.max, env.daylight));
+      // Sessio 38: sademetsässä päivällä matalampi tavoite (latvuston alla
+      // kirkas usva ylivalotti) ja yöllä enemmän mukautumista (näkyvyys).
+      const hum = env.humid || 0;
+      const nightMax = this.ae.nightMax + this.ae.humidNight * hum;
+      cu.uAE.value.set(THREE.MathUtils.lerp(this.ae.ref, this.ae.dayRef - 0.05 * hum, env.daylight), this.ae.strength, this.ae.min, THREE.MathUtils.lerp(nightMax, this.ae.max, env.daylight));
     } else {
       cu.uAE.value.y = 0;
     }
+    // Sessio 38: viimeistelyvaiheessa mukautuminen tehdään vasta lopussa,
+    // jolloin se koskee myös kättä ja kädessä olevia esineitä (yöllä ne
+    // eivät jää mustiksi muun maailman kirkastuessa).
+    const fu = this.finalMat.uniforms;
+    fu.tLum.value = cu.tLum.value;
+    fu.uAE.value.copy(cu.uAE.value);
+    this._aeInFinal = this.finishing && cu.uAE.value.y > 0;
+    if (this._aeInFinal) cu.uAE.value.y = 0;
 
     const fin = this.finishing;
     this._pass(this.compMat, fin ? this.hdrRT : null);
@@ -1159,6 +1205,9 @@ export class PostFX {
       pu.tInput.value = this.hdrRT.texture;
       pu.uTexel.value.set(1 / this.w, 1 / this.h);
       pu.uThresh.value.set(b.threshold, b.knee, this.renderer.toneMappingExposure, b.clamp);
+      pu.tLum.value = fu.tLum.value;
+      pu.uAE.value.copy(fu.uAE.value);
+      if (!this._aeInFinal) pu.uAE.value.y = 0;
       this._pass(this.bloomPreMat, mips[0]);
       const du = this.bloomDownMat.uniforms;
       for (let i = 1; i < mips.length; i++) {
@@ -1171,7 +1220,7 @@ export class PostFX {
       for (let i = mips.length - 1; i > 0; i--) {
         uu.tInput.value = mips[i].texture;
         uu.uTexel.value.set(1 / mips[i].width, 1 / mips[i].height);
-        uu.uWeight.value = 0.85;
+        uu.uWeight.value = b.spread;
         this._pass(this.bloomUpMat, mips[i - 1]);
       }
       fu.uBloom.value = b.intensity / mips.length;
@@ -1181,6 +1230,9 @@ export class PostFX {
     const g = this.gradeCfg;
     fu.uGrade.value.set(g.contrast, g.saturation, g.warmth, this.grade ? 1 : 0);
     fu.uVig.value = this.vignette ? this.vigStrength : 0;
+    fu.uSharp.value = this.sharpen;
+    if (!this._aeInFinal) fu.uAE.value.y = 0;
     this._pass(this.finalMat, null);
   }
+
 }

@@ -85,15 +85,15 @@ export function saveWorldData(id, data) {
 // (grade) ja vinjetti. Matalalla laadulla raskaat (AO, bloom) pois, kevyt
 // värimäärittely ja vinjetti päällä.
 export const QUALITY_PRESETS = {
-  low: { viewDistance: 3, shadows: 'off', renderScale: 0.7, godRays: false, motionBlur: 'off', dof: false, lensFlare: false, foliage: 'low', ao: 'off', bloom: false, grade: true, vignette: true },
-  medium: { viewDistance: 4, shadows: 'normal', renderScale: 0.85, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'normal', ao: 'low', bloom: true, grade: true, vignette: true },
-  high: { viewDistance: 5, shadows: 'normal', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high', ao: 'high', bloom: true, grade: true, vignette: true },
-  ultra: { viewDistance: 7, shadows: 'high', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high', ao: 'high', bloom: true, grade: true, vignette: true },
+  low: { viewDistance: 3, shadows: 'off', renderScale: 0.7, godRays: false, motionBlur: 'off', dof: false, lensFlare: false, foliage: 'low', ao: 'off', bloom: false, grade: true, vignette: true, sharpen: true },
+  medium: { viewDistance: 4, shadows: 'normal', renderScale: 0.85, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'normal', ao: 'low', bloom: true, grade: true, vignette: true, sharpen: true },
+  high: { viewDistance: 5, shadows: 'normal', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high', ao: 'high', bloom: true, grade: true, vignette: true, sharpen: true },
+  ultra: { viewDistance: 7, shadows: 'high', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high', ao: 'high', bloom: true, grade: true, vignette: true, sharpen: true },
 };
 // Asetusten versio: vanhoihin tallennettuihin asetuksiin kytketään uudet
 // oletukset kerran (v2: DOF ja linssiheijastukset päälle; v3: AO, bloom,
-// värimäärittely ja vinjetti laatutason mukaan).
-const SETTINGS_VERSION = 3;
+// värimäärittely ja vinjetti laatutason mukaan; v4: terävöinti päälle).
+const SETTINGS_VERSION = 4;
 
 export const DEFAULT_SETTINGS = {
   quality: 'high',    // low | medium | high | ultra | custom
@@ -113,6 +113,7 @@ export const DEFAULT_SETTINGS = {
   bloom: true,        // kirkkaiden kohtien hehku (sessio 37)
   grade: true,        // värimäärittely: kontrasti, kylläisyys, lämmin sävy (sessio 37)
   vignette: true,     // kevyt reunojen tummennus (sessio 37)
+  sharpen: true,      // terävöinti (sessio 38)
   masterVolume: 1,    // äänenvoimakkuus 0..1
   musicVolume: 0.8,   // musiikki 0..1 (pelissä musiikki soi lisäksi hiljaa taustalla)
   sfxVolume: 1,       // äänitehosteet 0..1 (tuleville äänille)
@@ -128,6 +129,7 @@ export function loadSettings() {
     const p = QUALITY_PRESETS[s.quality] || QUALITY_PRESETS.medium;
     for (const k of ['ao', 'bloom', 'grade', 'vignette']) s[k] = p[k];
   }
+  if ((stored.v || 1) < 4) s.sharpen = true;
   s.v = SETTINGS_VERSION;
   return s;
 }

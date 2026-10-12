@@ -217,6 +217,15 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 38 (käyttäjän kertoma, 2026-10-12)
+- Grafiikkapäivitys näyttää tosi hyvältä, mutta sivuvaikutuksena **kaikki näyttää ärsyttävästi sumealta ja epätarkalta**.
+- **Sademetsässä on yöllä yhä aivan liian pimeää** (kuva): ilman soihtua ei näe eteensä ollenkaan, eikä se ole kiva.
+- **Sademetsä on päivällä yhä tosi ylivalottunut** (kuva). Käyttäjä arvelee, että syy liittyy jatkuvaan pilvisyyteen.
+- **Kädessä olevien työkalujen ja aseiden näkyvyys** (käyttäjän kuvaus, tiivistetty): varjossa ja pimeässä ne muuttuvat täysin mustiksi ja tunnistamattomiksi. Tarvitaan:
+  1. **kameraan kiinnitetty täyte- tai reunavalo**, joka valaisee vain kättä ja esineitä (ei ympäristöä) eikä luo varjoja;
+  2. **materiaalien ambient- tai emissiivinen pohjavalo** (tai karheuden ja metallisuuden säätö), joka estää täyden mustuuden mutta pitää tekstuurit terävinä;
+  3. tarvittaessa **oma piirtovaihe tai syvyystestaus**, ettei sumu tai maailman ambienttiokkluusio tummenna kädessä olevaa esinettä liikaa.
+
 ## Sessio 37 (käyttäjän kertoma, 2026-10-12): grafiikka ja valaistus
 - Päivänvalossa maasto ja grafiikka näyttävät **ylivalottuneilta, haaleilta, latteilta ja "halvoilta"**. Tavoite on rikas, elokuvamainen tunnelma (Valheim-tyyliin), enemmän kontrastia, ja pelin tyylin ja ulkonäön pitää olla viimeistellympi.
 - **Sävytys ja värimäärittely:** ACES Filmic -sävytys säädetyllä valotuksella; kontrastia ja värikylläisyyttä hieman lisää, niin että savannin maanläheiset sävyt (syvät lämpimät keltaiset, paahtuneet ruskeat, tummat vihreät) korostuvat.

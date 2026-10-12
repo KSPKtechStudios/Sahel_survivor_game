@@ -234,6 +234,16 @@ export class ViewModel {
     this.fire = new THREE.PointLight(0xff9a40, 0, 3, 2);
     this.fire.position.set(0.2, -0.3, -0.6);
     this.scene.add(this.hemi, this.light, this.light.target, this.fire);
+    // Sessio 38: kameraan kiinnitetyt täyte- ja reunavalo sekä hajavalon
+    // alaraja. Ne ovat vain tässä näkymässä (käsi ja esineet), eivät valaise
+    // maailmaa eivätkä luo varjoja. Voimakkuus kasvaa pimeässä, jotta esineet
+    // eivät muutu mustiksi varjossa tai yöllä.
+    this.fill = new THREE.DirectionalLight(0xfff0e0, 0);
+    this.fill.position.set(0.45, 0.55, 1);
+    this.rim = new THREE.DirectionalLight(0xc8d6ff, 0);
+    this.rim.position.set(-0.7, 0.9, -1.1);
+    this.amb = new THREE.AmbientLight(0xffffff, 0);
+    this.scene.add(this.fill, this.fill.target, this.rim, this.rim.target, this.amb);
 
     this.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, metalness: 0 });
     const itemMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0 });
@@ -501,6 +511,13 @@ export class ViewModel {
     _qi.copy(mainCamera.quaternion).invert();
     this.light.position.copy(env.lightDir).applyQuaternion(_qi).multiplyScalar(5);
     this.fire.intensity = fireLight;
+    // Täytevalot: pimeys arvioidaan maailman valojen kirkkaudesta.
+    const envLum = env.hemi.intensity * lumOf(env.hemi.color) + env.lightIntensity * lumOf(env.lightColor) * 0.6 + fireLight * 0.15;
+    const dark = THREE.MathUtils.clamp(1 - envLum / 0.7, 0, 1);
+    this.fill.intensity = 0.12 + 0.6 * dark;
+    this.fill.color.setRGB(1, 0.94, 0.86).lerp(_fillNight, dark);
+    this.rim.intensity = 0.08 + 0.35 * dark;
+    this.amb.intensity = 0.04 + 0.22 * dark;
 
     // Esineen vaihto: käsi laskee alas, esine vaihtuu, käsi nousee.
     if (this.pending !== undefined) {
@@ -718,6 +735,8 @@ export class ViewModel {
   }
 }
 const _tip = new THREE.Vector3();
+const _fillNight = new THREE.Color(0.78, 0.84, 1);
+const lumOf = (c) => c.r * 0.2126 + c.g * 0.7152 + c.b * 0.0722;
 
 // Sessio 29: pehmeät ja sulavat liikkeet (käyttäjä: ennen liian nopeita ja
 // teräviä). Animaation asento kulkee jousen läpi: liike käynnistyy ja

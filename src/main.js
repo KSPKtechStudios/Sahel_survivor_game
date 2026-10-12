@@ -332,6 +332,7 @@ function applySettings(s) {
   post.bloom = s.bloom !== false;
   post.grade = s.grade !== false;
   post.vignette = s.vignette !== false;
+  post.sharpen = s.sharpen !== false ? 0.5 : 0; // sessio 38
   // Sessio 25: silmän mukautuminen on aina päällä (yön valotus riippuu siitä).
   env.autoExposure = post.autoExposure;
   // Sessio 24: ruohon ja aluskasvien tiheys sekä ruohon näkyvyyssäde.
@@ -926,7 +927,7 @@ function frame(now) {
     hf.color.copy(scene.fog.color);
     // Sessio 26: valokeilojen ilman tiheys (sademetsän kostea ilma, aamu-usva, utu).
     post.shafts = inGame && state !== 'menu'
-      ? Math.min(1.2, env.humid * 1.1 + dawn * 0.6 * dryK + env.w.haze * 0.35 + env.w.rain * 0.3)
+      ? Math.min(1.2, env.humid * 0.8 + dawn * 0.6 * dryK + env.w.haze * 0.35 + env.w.rain * 0.3)
       : 0;
   }
   world.grass.update(camera.position, player.position, env);
