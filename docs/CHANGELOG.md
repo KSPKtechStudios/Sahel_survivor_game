@@ -2,6 +2,20 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 37): grafiikka- ja valaistuspäivitys
+
+- **Ambienttiokkluusio (SSAO):** kontaktivarjot ruohotuppaiden, puiden, kivien ja esineiden juurelle ja koloihin, joten mikään ei enää näytä leijuvalta. Okkluusio häipyy kaukana eikä tummenna usvaa tai taivasta. Asetus: Pois, Kevyt (8 näytettä) tai Laadukas (16 näytettä).
+- **Bloom (hehku):** vain voimakkaat kohokohdat hehkuvat, kuten aurinko, soihtujen ja nuotioiden liekit ja kirkkaat heijastukset. Koko kuva ei vaalene. Myös kädessä olevan soihdun liekki hehkuu, koska käsi piirretään nyt samaan HDR-kuvaan kuin maailma.
+- **Värimäärittely:** ACES-sävytyksen päälle hieman lisää kontrastia ja värikylläisyyttä. Valot ovat lämpimiä ja varjot syviä, ja niissä on hento ruskeanvihreä sävy (savannin maanläheiset värit). Lisäksi kevyt värisytys estää liukuvärien raidoittumisen.
+- **Vinjetti:** hyvin kevyt reunojen tummennus.
+- **Valaistus:**
+  - päivän hajavalo (ambient) noin 60 %:iin entisestä, joten varjot ovat selvästi tummempia ja dramaattisempia (pilvisellä säällä hajavalo säilyy);
+  - aurinko on hieman voimakkaampi;
+  - silmän mukautuminen valottaa päivällä vähemmän (ei ylivalottunutta vaikutelmaa);
+  - keskipäivän taivas on syvemmän sininen ja kaukausva vähemmän harmaa.
+- **Kultainen tunti:** aamuun (klo 7.2) ja iltaan (klo 16.9) uudet valon avainkohdat. Matala aurinko värjää maiseman oranssiksi, ja auringonlasku on punaisempi.
+- **Asetukset:** uudet säädöt Ambienttiokkluusio (Pois / Kevyt / Laadukas), Hehku (bloom), Värimäärittely ja Vinjetti. Laatutasot asettavat ne: Matalalla okkluusio ja bloom ovat pois, värimäärittely ja vinjetti päällä; Keskitasolla okkluusio kevyt; Korkealla ja Ultralla laadukas. Vanhat tallennetut asetukset saavat uudet arvot oman laatutasonsa mukaan.
+
 ## 2026-10-12 (sessio 36): isompi liekki tuulessa, leijuvat kipinät ja peukalo etusormen päälle
 
 - **Soihdun liekki on noin 30 % isompi** (korkeampi ja leveämpi).

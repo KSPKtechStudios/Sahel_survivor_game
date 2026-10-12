@@ -2,6 +2,15 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 37)
+- **Ei EffectComposeria: tehosteet omaan jälkikäsittelyketjuun** (`render/post.js`). Syy: pelissä oli jo oma HDR-ketju (syvyys, valonsäteet, DOF, liike-epäterävyys, silmän mukautuminen, korkeussumu), ja EffectComposer olisi tuonut päällekkäisiä renderöintikohteita ja sävytyksen kahteen kertaan.
+- **SSAO syvyyspuskurista puolikkaalla tarkkuudella** (Scalable Ambient Obscurance -tyyli, normaali naapurisyvyyksistä, 8 tai 16 näytettä spiraalina, reunat säilyttävä erotettava sumennus, syvyyden mukaan painotettu skaalaus täyteen kokoon). Syy: erillistä normaalipuskuria ei ole, ja toinen geometriakierros olisi kallis. Okkluusio kerrotaan värin päälle ennen sumua, ja kirkkaissa kohdissa se on heikompi (oikeasti se koskee vain hajavaloa). Häivytys 50–90 m:ssä, koska syvyystarkkuus loppuu.
+- **Käsi piirretään HDR-kuvaan (viimeistelyvaihe), ja sävytys, värimäärittely, vinjetti ja bloom tehdään yhdessä lopullisessa vaiheessa.** Syy: kädessä olevan soihdun liekin pitää hehkua, ja käden värien pitää vastata maailman värejä. Käsi ei edelleenkään sumene (DOF ja liike-epäterävyys tehdään ennen kättä). Jos bloom, värimäärittely ja vinjetti ovat kaikki pois, käytetään vanhaa kevyttä polkua.
+- **Bloom: pehmeä kynnys valotuksen jälkeen (1,25), Karis-keskiarvo, 5 tasoa (13 näytteen alasnäytteistys ja telttasuodin ylös).** Syy: vain voimakkaat kohokohdat hehkuvat. Kirkas taivas ei vaalenna kuvaa, eivätkä yksittäiset kiiltävät pikselit välky.
+- **Päivän hajavalo × 0,6 (`env.ambientDay`), aurinko +10 %, silmän mukautumisen päivätavoite 0,25 (oli 0,3).** Syy: vertailukuvissa varjot olivat lähes yhtä kirkkaita kuin aurinkoiset kohdat, ja kuva oli ylivalottunut. Pilvisellä säällä hajavalo säilyy, koska silloin valo tulee koko taivaalta.
+- **Varjot:** aurinko käytti jo kaskadivarjoja (SunLight, 2 kaskadia: tarkka lähellä, pehmeämpi kaukana), joten niitä ei vaihdettu. Varjoasetukset (Pois / Normaali / Tarkka) pysyvät ennallaan.
+- **Matala laatu:** okkluusio ja bloom pois, värimäärittely ja vinjetti päällä. Syy: värimäärittely on yksi kevyt koko ruudun vaihe ja korjaa suurimman osan "halvasta" vaikutelmasta.
+
 ## 2026-10-12 (sessio 36)
 - **Tuulen vaikutus liekkiin omalla kertoimellaan, puuskat sinikäyrien summana.** Syy: ennen tuuli meni samaan ilmavirtakertoimeen kuin liike (0,16), ja tavallisella tuulella kärki taipui vain noin 0,1 liekin korkeutta. Tuulen voimakkuus (0–1,5) välitetään myös shaderiin (`uWind`), jolloin lepatus voimistuu ja saa tuulen suunnan. Lepatuksen nopeutus kertyy vaiheeksi CPU:lla (`uFlow`), ettei kohina hyppää, kun tuulen voima vaihtelee.
 - **Liekin piilotus ei enää tyhjennä hiukkasia.** Liekkiä päivitetään piilotettunakin (ilman kärkeä), joten hiukkaset liikkuvat ja häipyvät elinikänsä loppuun. Pisteet ovat näkyvissä vain, kun niitä on. Syy: käyttäjä huomasi kipinöiden ja savun katoavan heti. Session 35 jäätyneet pisteet eivät palaa, koska päivitys jatkuu.

@@ -2,6 +2,28 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 37)
+**Tehtiin**
+- `render/post.js`:
+  - SSAO: `aoFS`, `aoBlurFS`, `aoAt` koosteessa;
+  - bloom: `bloomPreFS`, `bloomDownFS`, `bloomUpFS`;
+  - viimeistely: `finalFS` (ACES, värimäärittely, vinjetti, värisytys);
+  - HDR-kuva `hdrRT`, johon käsi piirretään (`render(…, overlay)`);
+  - silmän mukautumisen päivätavoite `ae.dayRef`.
+- `main.js`: käsi välitetään `post.render`ille, asetukset `ao`, `bloom`, `grade` ja `vignette`.
+- `render/environment.js`: avainkohdat (kultainen tunti klo 7.2 ja 16.9, aurinko voimakkaampi, keskipäivän taivas ja usva), päivän hajavalo `ambientDay` 0,6.
+- Asetukset: `game/save.js` (oletukset, laatutasot, versio 3), `ui/menu.js` ja `index.html` (uudet rivit).
+- Testattiin:
+  - vertailukuvat pelistä ennen ja jälkeen (klo 7, 10/11, 13 ja 17.6) samasta paikasta; ennen-kuvat otettiin git worktreestä `shots/basewt`, joka poistettiin;
+  - yö soihdun kanssa (bloom liekissä);
+  - piirtoaika tehosteiden eri yhdistelmillä (ohjelmistorenderöinnillä vain suuntaa antava);
+  - ESLint;
+  - pelin käynnistys, maailman luonti ja pelaaminen ilman virheitä (kuvausajot).
+- Skripti: `scratchpad/s37shots.mjs` (prefix, js ennen kuvia, kellonajat, suunnat, js lopuksi; `BASEURL` vaihtaa versiota).
+
+**Seuraavaksi**
+- Käyttäjän palaute kontrastista ja tehosteiden voimakkuudesta. Säätöarvot: `post.aoCfg`, `post.bloomCfg`, `post.gradeCfg`, `post.vigStrength`, `env.ambientDay`, `post.ae.dayRef`.
+
 ## 2026-10-12 (sessio 36)
 **Tehtiin**
 - `render/torchFlame.js`: tuulen kallistus ja puuskat, `uWind`- ja `uFlow`-uniformit (tuulilepatus, kiihtyvä kohina), liekki 0,52 leveä. Piilotus koskee vain liekkiä, ja `update(…, tip = null)` päivittää pelkät hiukkaset. Kova taipuma madaltaa liekkiä.
