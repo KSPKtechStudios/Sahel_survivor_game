@@ -2,6 +2,11 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 35)
+- **Liekki: sisäkkäiset kohinakuoret, ei sädemarssausta.** Syy: käyttäjän kuvaus pyysi kohinalla vääristettyä monikerroksista meshiä. Kuoret ovat kevyitä (4 × 24 × 30 verteksiä), ja katselukulmaan perustuva häivytys antaa tilavuuden tunnun joka suunnasta, toisin kuin ristikkäiset tasot. Taipuma on 2D-jousi (ilmavirta = tuuli − kärjen nopeus), ja ryhmän kierto on kameran käänteinen, joten liekin akseli on maailman ylös.
+- **Kipinät ja savu: omat ShaderMaterial-pisteet** (pehmeä pyöreä muoto, väri ja koko per piste). PointsMaterial piirsi neliöitä, ja niiden koko ja läpinäkyvyys eivät vaihdelleet. Pisteiden pikselikoko lasketaan piirtohetkellä kuten PointsMaterialissa.
+- **Peukalo nyrkissä:** kertoimet 0,9 / 0,5 / 0,3 (neljästä kuvatusta vaihtoehdosta paras: poikki sormien, ei alas eikä eteen).
+
 ## 2026-10-12 (repon siirto)
 - **Repo siirtyi osoitteeseen `KSPKtechStudios/Sahel_survivor_game`** (julkinen). Syy: vanha GitHub-tili (`KSPKtech`) jäädytettiin, eikä käyttäjä saanut sitä takaisin. Testauslinkit (CLAUDE.md, README) osoittavat nyt uuteen repoon. Koko historia (myös 32 aiemmin pushaamatonta committia) siirretään git bundle -tiedostona, koska samannimistä repoa ei voinut liittää samaan Claude-sessioon.
 

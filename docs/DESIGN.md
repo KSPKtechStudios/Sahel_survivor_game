@@ -217,6 +217,15 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 35 (käyttäjän kertoma, 2026-10-12)
+- **Liekki ei ole realistinen** (käyttäjän kuva), ja **peukalo taittuu yhä hieman liikaa alas** (kuva nyrkistä).
+- **Näytölle ilmestyi yhtäkkiä pari valkoista pikseliä** (kuva).
+- Käyttäjän kuvaus soihdun liekistä (tiivistetty): nykyinen liekki näyttää litteältä ja jäykältä. Tarvitaan dynaaminen, tilavuudellinen, tuuleen reagoiva tulishaderi ja partikkelijärjestelmä:
+  1. **Kohinalla vääristetty geometria (GLSL):** litteän liekin tilalle billboard tai monikerroksinen mesh omalla vertex- ja fragment-shaderilla; simplex- tai Perlin-kohina vääristää muotoa ajan mukaan (lepatus, nouseva veto).
+  2. **Dynaaminen tuulifysiikka:** globaali tuulivektori (suunta ja voima); liekin kärki ja partikkelit taipuvat tuulen ja pelaajan liikkeen mukaan.
+  3. **Kipinät ja savu:** kevyt partikkelijärjestelmä (`THREE.Points`): pienet hehkuvat kipinät ja tummat savukiehkurat liekin yläosasta; perivät tuulen, häipyvät eliniän mukaan, hehkuun additiivinen sekoitus.
+  4. **Väriliukuma ja häivytys:** voimakas valkokeltainen ydin, kirkkaan oranssi runko, tummanpunaiset tai savuiset reunat; pehmeä läpinäkyvyys, ei teräviä reunoja.
+
 ## Sessio 34 (käyttäjän kertoma, 2026-10-12)
 - **Käsi saisi gripata esineitä paremmin** (käyttäjän kuva nuijasta: sormet löysästi).
 - **Soihdun liekki on todella epärealistinen** soihtuun nähden (käyttäjän kuva). Toive: **hyperrealistinen liekki**, jossa on **fysiikat**, niin että se **heiluu tuulen mukana** ym.

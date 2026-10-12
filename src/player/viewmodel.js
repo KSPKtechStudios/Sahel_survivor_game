@@ -710,7 +710,7 @@ export class ViewModel {
       if (!vis) return;
       m.updateWorldMatrix(true, false);
       _tip.set(0, 0.425, 0).applyMatrix4(m.matrixWorld);
-      f.update(dt, this.time, _tip, cam, wind, Math.min(1, fk), 0.3 * m.scale.y / 0.85);
+      f.update(dt, this.time, _tip, cam, wind, Math.min(1, fk), 0.32 * m.scale.y / 0.85);
     });
   }
 }

@@ -2,6 +2,17 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 35): uusi soihdun liekki, peukalo ja valkoiset pisteet
+
+- **Soihdun liekki kirjoitettu uusiksi** käyttäjän kuvauksen mukaan:
+  - liekki on tilavuudellinen: neljä sisäkkäistä, pisaranmuotoista kuorta, joita 3D-simplex-kohina vääristää vertex-shaderissa, joten liekki lepattaa ja venyy ylöspäin;
+  - kuoret häipyvät reunoiltaan, joten liekki näyttää täyteläiseltä joka suunnasta;
+  - liekin akseli on aina ylös, ja kärki taipuu kaarelle tuulen ja soihdun liikkeen mukaan (jousi: laahaa ja heilahtaa takaisin);
+  - hehkuvia kipinöitä ja tummia, laajenevia savukiehkuroita, jotka kulkevat tuulen mukana ja häipyvät;
+  - väri kulkee valkokeltaisesta ytimestä oranssin kautta tummanpunaiseen reunaan, ja tyvessä on hento sininen.
+- **Valkoiset pisteet ruudulla korjattu:** ne olivat soihdun kipinöitä, jotka jäivät jumiin näkyviin, kun soihtu laitettiin pois. Nyt kipinät ja savu piilotetaan ja tyhjennetään liekin mukana.
+- **Nyrkin peukalo** taittuu vähemmän: se kulkee etu- ja keskisormen poikki eikä roiku alas.
+
 ## 2026-10-12 (sessio 34): tiukempi ote, uusi soihdun liekki ja rauhallisemmat iskut
 
 - **Ote:** sormet puristuvat kahvaan tiukemmin, kärjet kiertyvät pidemmälle ja peukalo kiertyy kahvan yli nyrkin tapaan. Kahvan paksuus luetaan nyt luotettavasti myös malleista, joissa otekohdalla on vähän pisteitä (soihtu).

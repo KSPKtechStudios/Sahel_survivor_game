@@ -2,6 +2,15 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 35)
+**Tehtiin**
+- Uusi `render/torchFlame.js`: 4 kohinakuorta (simplex-kohina vertex- ja fragment-shaderissa), taipuma jousella, kipinä- ja savupisteet omalla shaderilla, piilotus tyhjentää partikkelit (valkoiset pisteet).
+- `player/arms.js`: nyrkin peukalo 0,9 / 0,5 / 0,3.
+- Testattiin: peukalon 8 vaihtoehtoa kahdesta kulmasta, liekki paikallaan ja liikkeessä päivä- ja yötaustaa vasten (`vm.html?camv=…&bg=…`), pelin savutesti (soihtu käteen ja pois: kipinät tyhjenevät), ESLint.
+
+**Seuraavaksi**
+- Käyttäjän palaute liekistä.
+
 ## 2026-10-12 (repon siirto)
 **Tehtiin**
 - Käyttäjä yhdisti uuden GitHub-tilin; uusi tyhjä repo `KSPKtechStudios/Sahel_survivor_game`. Tähän sessioon sitä ei voinut liittää (samanniminen `kspktech/sahel` jo liitetty), joten koko historia paketoitiin git bundle -tiedostoksi (`sahel-historia.bundle`), joka viedään uuteen sessioon ja pushataan sieltä.

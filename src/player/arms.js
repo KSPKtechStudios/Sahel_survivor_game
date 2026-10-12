@@ -294,7 +294,8 @@ export class Arms {
     // Sessio 32: mallin nyrkkiasennossa peukalo taittui pitkälle alas
     // sormien yli; nyt se on vähemmän koukussa ja lepää etu- ja keskisormen
     // keskijäsenten päällä.
-    [1, 0.6, 0.5].forEach((k, j) => { lib.FIST[16 + j] = new THREE.Quaternion().slerp(lib.FIST[16 + j], k); });
+    // Sessio 35: peukalo vielä vähemmän koukkuun (käyttäjä: taittui yhä liikaa alas).
+    [0.9, 0.5, 0.3].forEach((k, j) => { lib.FIST[16 + j] = new THREE.Quaternion().slerp(lib.FIST[16 + j], k); });
     // Rento: puolivälissä avoimen ja kupin välillä; koukku (jousen jänne).
     lib.RELAX = lib.CUP.map((q) => new THREE.Quaternion().slerp(q, 0.75));
     lib.HOOK = lib.FIST.map((q, i) => (rNames[i].startsWith('Finger_5') ? lib.CUP[i].clone() : new THREE.Quaternion().slerp(q, 0.62)));
