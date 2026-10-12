@@ -2,6 +2,14 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 47): sademetsän tunnelma ja syvyys takaisin
+
+Kaikki muutokset koskevat vain sademetsää päivällä. Savanni, muut biomit ja yöt ovat ennallaan. Liike-epäterävyyttä, TAA:ta tai terävöintiä ei kytketty takaisin.
+- **Auringonvalo latvuston läpi:** suora aurinko on voimakkaampi ja lämpimämpi, joten valoläikät maassa ja lehdillä sekä valokeilat erottuvat selvästi varjosta.
+- **Syvemmät varjot:** hajavaloa on vähemmän, joten varjot eivät ole enää tasaisen haaleita.
+- **Värit:** hieman enemmän kontrastia ja kylläisyyttä (täyteläisemmät vihreät).
+- **Usva ja syvyys:** usva alkaa lähempää ja sävyttyy latvuston vihertävään valoon, joten keskietäisyyden ja kaukaiset puut häipyvät pehmeästi taustaan. Maata myötäilevää usvaa ja valokeilojen ilmaa on hieman enemmän.
+
 ## 2026-10-12 (sessio 46): lehvästöjen pikselimössö ja välkyntä, syväterävyys hieman takaisin
 
 - **Puiden latvukset siistimmiksi kaukana:**

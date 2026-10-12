@@ -217,6 +217,14 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 47 (käyttäjän kertoma, 2026-10-12)
+- Sessio 46 korjasi lehvästön. Nyt viimeinen grafiikkasäätö ennen seuraavia kehityskohteita: **pientä atmosfäärin parantelua. Varovasti, ulkonäköä ei saa taas pilata.**
+- Käyttäjän ohje (tiivistetty): **sademetsän tunnelma ja kontrasti takaisin**, ilman liike-epäterävyyttä, suttua tai terävöintiä.
+  1. **Kontrasti ja sävytys:** sademetsä näyttää lattealta ja haalealta, ja siitä puuttuu syvyys. Varjot syvemmiksi ja vihreät kylläisemmiksi, ei tasaista hajavaloa.
+  2. **Auringonvalo ja varjot:** lämmin suora auringonvalo latvuston läpi; lehdillä ja maassa vahva valon ja varjon kontrasti.
+  3. **Jälkikäsittely puhtaana:** liike-epäterävyyttä, TAA:ta tai terävöintiä ei kytketä takaisin. Vain valaistuksen, sumun tiheyden ja värimäärittelyn arvoja hienosäädetään.
+  4. **Sumu ja horisontin utu:** etäisyys ja horisontti näyttävät liian teräviltä ja latteilta. Sumu (`scene.fog`) taivaan sävyyn, ja kaukaiset puut ja tausta häivytetään pehmeästi horisonttiin (syvyys ja tunnelma).
+
 ## Sessio 46 (käyttäjän kertoma, 2026-10-12)
 - **Puiden lehvästöt näyttävät pikselimössöltä** (kuva savannilta) **ja välkkyvät kameraa liikutettaessa.** Ruoho toimii nyt; lehvät ovat suuri ongelma.
 - Käyttäjä: "sano jos et ymmärrä missä vika on", ettei krediittejä kulu turhaan.

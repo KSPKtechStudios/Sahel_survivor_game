@@ -904,6 +904,9 @@ export class PostFX {
     this.handAE = 0.3; // sessio 39: kädelle vain osa silmän mukautumisesta (eksponentti); sessio 40: 0,4 -> 0,3
     this.skyDim = 0.22; // sessio 40: taivas päivällä 22 % tummempi
     this.gradeCfg = { contrast: 1.1, saturation: 1.12, warmth: 1 };
+    // Sessio 47: sademetsässä päivällä hieman enemmän kontrastia ja
+    // kylläisyyttä (syvät varjot, täyteläiset vihreät).
+    this.gradeHumid = { contrast: 0.08, saturation: 0.12 };
     this.vigStrength = 0.24;
     this.aoCfg = { radius: 1.2, intensity: 1.0, strength: 0.5, fade: 70 }; // sessio 45: isommat muodot, kevyempi
     this.aoRT = makeRT(1, 1);
@@ -1000,6 +1003,7 @@ export class PostFX {
   // overlay = { scene, camera } (käsi): piirretään maailman päälle omalla
   // syvyydellään, viimeistelyvaiheessa samaan HDR-kuvaan (bloom ja sävytys).
   render(scene, camera, env, dt, overlay = null) {
+    this._gradeHum = (env.humid || 0) * (env.daylight || 0); // sessio 47 (_finish)
     const r = this.renderer;
     if (!this.active) {
       r.setRenderTarget(null);
@@ -1250,7 +1254,8 @@ export class PostFX {
       fu.uBloom.value = 0;
     }
     const g = this.gradeCfg;
-    fu.uGrade.value.set(g.contrast, g.saturation, g.warmth, this.grade ? 1 : 0);
+    const gh = this._gradeHum || 0;
+    fu.uGrade.value.set(g.contrast + this.gradeHumid.contrast * gh, g.saturation + this.gradeHumid.saturation * gh, g.warmth, this.grade ? 1 : 0);
     fu.uVig.value = this.vignette ? this.vigStrength : 0;
     fu.uHandAE.value = this.handAE;
     if (!this._aeInFinal) fu.uAE.value.y = 0;

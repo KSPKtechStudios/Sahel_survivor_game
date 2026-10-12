@@ -2,6 +2,24 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 47)
+- **Sademetsän päivän tunnelma.** Arvot ovat säädettävinä `Environment`-olion ominaisuuksina, ja kaikki on kerrottu kosteudella (`humid`) ja päivänvalolla (`daylight`), joten muut biomit ja yöt eivät muutu. Syy: käyttäjän ohje (latea ja haalea, ei syvyyttä) ja varoitus, ettei ulkonäköä saa pilata.
+
+  | Arvo | Ennen | Nyt |
+  |---|---|---|
+  | Auringon himmennys latvuston alla (`humidSunDim`; yöllä ennallaan 0,45) | 0,45 | 0,25 |
+  | Lämmin sävy (`humidSunWarm`, väri 1 / 0,8 / 0,55) | – | 0,2 |
+  | Hajavalon vähennys (`humidDayAmb`) | 0,2 | 0,4 |
+  | Usvan tummennus (`humidFogDark`) | 0,45 | 0,35 |
+  | Sävytys latvuston vihreään (`humidFogTint`) | – | 0,25 |
+  | Usvan alun siirto lähemmäs (`humidFogNear`) | – | 0,5 |
+  | Korkeussumu (`humidHaze`) | 0,006 | 0,008 |
+  | Valokeilat (`humidShafts`) | 0,6 | 0,75 |
+  | Värimäärittely (`post.gradeHumid`) | – | kontrasti +0,08, kylläisyys +0,12 |
+
+  Sumu (`scene.fog`) oli koko ajan päällä, mutta sessiossa 38 tummennettu usva häivytti taustan harmaaseen.
+- **Varjokartta hoitaa latvuston varjon**, joten auringon yleistä himmennystä voi pienentää. Ennen kaksinkertainen himmennys teki valoläikistä tuhruisia.
+
 ## 2026-10-12 (sessio 46)
 - **Lehvästön pikselimössön syy selvitettiin vertailemalla:**
   - sessio 36 (ennen grafiikkapäivitystä) ja nykyinen versio renderöitiin samasta kohdasta;

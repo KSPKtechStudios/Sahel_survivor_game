@@ -83,6 +83,7 @@ const _c = new THREE.Color();
 const _c2 = new THREE.Color();
 const _grey = new THREE.Color(0x9a9ca0);
 const _moonCol = new THREE.Color(0x8ea6d8);
+const _warmSun = new THREE.Color(1.0, 0.8, 0.55); // sessio 47: aurinko latvuston läpi
 // Sessio 21: kuun vaihe arvotaan joka yölle erikseen (ei säännöllistä kiertoa).
 // Yö vaihtuu keskipäivällä, jolloin kuu on horisontin alla.
 function moonHash(n) {
@@ -105,7 +106,16 @@ export class Environment {
     this.ambientDay = 0.6;
     // Sessio 38: sademetsän yön lisähajavalo ja päivän usvan tummennus.
     this.humidNightAmb = 3.0;
-    this.humidFogDark = 0.45;
+    this.humidFogDark = 0.35; // sessio 47: 0,45 -> 0,35 (usva haalistaa taustaa, ei tummu harmaaksi)
+    // Sessio 47: sademetsän tunnelma päivällä (käyttäjä: latea ja haalea,
+    // ei syvyyttä). Kaikki vain sademetsässä (kosteus) ja päivällä.
+    this.humidSunDim = 0.25;   // auringon himmennys latvuston alla (oli 0,45; varjokartta hoitaa latvuston varjon)
+    this.humidSunWarm = 0.2;   // auringon lämpimämpi sävy latvuston läpi
+    this.humidDayAmb = 0.4;    // hajavalon vähennys (oli 0,2): syvemmät varjot
+    this.humidFogTint = 0.25;  // usva kohti latvuston vihertävää hajavaloa
+    this.humidFogNear = 0.5;   // usva alkaa lähempää (syvyys keskietäisyydelle)
+    this.humidHaze = 0.008;    // korkeussumun tiheys (main.js; oli 0,006)
+    this.humidShafts = 0.75;   // valokeilojen ilma (main.js; oli 0,6)
 
     // Aurinko: kaksi varjokaskadia (tarkat varjot lähellä, karkeammat kauempana),
     // jotka sovitetaan kameran näkymään. Varjon reunat pehmenevät etäisyyden mukaan.
@@ -484,7 +494,11 @@ export class Environment {
     const fogC = tinted(lerpC('fog', this.scene.fog.color));
     // Sessio 38: latvuston alla usva on päivällä tummempaa (ennen kirkas usva
     // ylivalotti sademetsän).
-    if (this.humid > 0.001) fogC.multiplyScalar(1 - this.humidFogDark * this.humid * this.daylight);
+    if (this.humid > 0.001) {
+      // Sessio 47: usva sävyttyy latvuston vihertävään hajavaloon.
+      fogC.lerp(_c2.copy(CANOPY_GREEN).multiplyScalar(dayLum), this.humidFogTint * this.humid * this.daylight);
+      fogC.multiplyScalar(1 - this.humidFogDark * this.humid * this.daylight);
+    }
     u.uFogColor.value.copy(fogC);
     // Selkeällä/pilvisellä säällä näkyvyys = näköetäisyys, usvassa ja myrskyssä sään oma.
     let vis = Math.min(w.vis >= 290 ? this.maxVis : w.vis, this.maxVis);
@@ -495,7 +509,7 @@ export class Environment {
     // Sessio 28: selkeällä säällä sumu alkaa vasta noin kolmanneksen päästä
     // (käyttäjä: hieman vähemmän sumua, kauas ei silti näe täysin selkeästi).
     const clearK = Math.min(1, Math.max(0, (w.vis - 200) / 100)) * (1 - 0.6 * this.humid);
-    this.scene.fog.near = vis < 100 ? 0 : vis * (0.12 + 0.2 * clearK);
+    this.scene.fog.near = vis < 100 ? 0 : vis * (0.12 + 0.2 * clearK) * (1 - this.humidFogNear * this.humid * this.daylight);
 
     // Valot: päivällä aurinko, yöllä kuu.
     const sunUp = this.sunDir.y > 0;
@@ -510,7 +524,10 @@ export class Environment {
       this.sun.color.copy(_moonCol);
     }
     // Latvusto varjostaa sademetsässä.
-    intensity *= 1 - 0.45 * this.humid;
+    // Sessio 47: päivällä himmennys pienempi ja sävy lämpimämpi: auringon
+    // läikät ja valokeilat erottuvat varjosta (yö ennallaan).
+    intensity *= 1 - lerp(0.45, this.humidSunDim, this.daylight) * this.humid;
+    if (sunUp && this.humid > 0.001) this.sun.color.lerp(_warmSun, this.humidSunWarm * this.humid * this.daylight);
     this.sun.intensity = intensity;
     this.lightColor.copy(this.sun.color);
     this.lightIntensity = intensity;
@@ -528,7 +545,8 @@ export class Environment {
     const ambK = lerp(1, lerp(this.ambientDay, 0.9, Math.min(1, greyAmt * 1.2 + w.haze * 0.6)), this.daylight);
     // Sessio 38: sademetsässä yöllä enemmän hajavaloa (käyttäjä: ilman
     // soihtua ei nähnyt mitään); päivällä latvusto varjostaa kuten ennen.
-    const humAmb = 1 - 0.2 * this.humid * this.daylight + this.humidNightAmb * this.humid * nightK;
+    // Sessio 47: päivällä hajavaloa vähemmän (0,2 -> humidDayAmb): syvemmät varjot.
+    const humAmb = 1 - this.humidDayAmb * this.humid * this.daylight + this.humidNightAmb * this.humid * nightK;
     this.hemi.intensity = hemiI * ambK * (1 + (greyAmt * 0.25 + w.haze * 0.15) * this.daylight) * humAmb * nightDark + this.flash * 1.6;
     if (this.humid > 0.001) this.hemi.color.lerp(_c2.copy(CANOPY_GREEN).multiplyScalar(dayLum), 0.35 * this.humid * this.daylight);
 

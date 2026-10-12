@@ -1,6 +1,7 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 47: sademetsä päivällä (aamu, keskipäivä, iltapäivä): valoläikät ja -keilat, varjojen syvyys, vihreät, usva kaukana. Onko jokin liikaa (esim. usva tai lämmin sävy)?
 - [ ] Käyttäjä testaa session 46: puiden latvukset kaukana (pikselimössö, välkkyykö kameraa käännettäessä), lähellä olevat lehdet (näyttävätkö yhä terävältä), syväterävyys (sopiva?)
 - [ ] Jos latvukset välkkyvät yhä: kaukaisille puille harvemmat ja isommat lehtikortit tai impostorit (isompi työ, tarkista ruudunpäivitys)
 - [ ] Käyttäjä testaa session 45: Ambienttiokkluusio päälle asetuksista → välkkyykö ruoho ja lehdet yhä; terävöinti-asetusta ei enää ole

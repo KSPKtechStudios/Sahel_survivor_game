@@ -2,6 +2,17 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 47)
+**Tehtiin**
+- Sademetsän tunnelma, vain sademetsässä ja päivällä:
+  - `render/environment.js`: aurinko, lämmin sävy, hajavalo sekä usvan sävy, tummennus ja alku;
+  - `main.js`: korkeussumu ja valokeilat env-arvoista;
+  - `render/post.js`: värimäärittely (`gradeHumid`).
+- Testattiin: sademetsä (sademetsän kohta 28, 1616), klo 8.30, 11 ja 15.30, kaksi suuntaa. Vertailtiin sessiota 36, nykyistä ja uusia arvoja samassa latauksessa (vanhat ja uudet rinnakkain). ESLint.
+
+**Seuraavaksi**
+- Käyttäjän palaute. Jos jokin on liikaa, arvot ovat `env.humid*`-ominaisuuksina (`environment.js`:n konstruktorissa) ja `post.gradeHumid`.
+
 ## 2026-10-12 (sessio 46)
 **Tehtiin**
 - Selvitettiin lehvästön pikselimössö ja välkyntä: sessio 36 ja nykyinen versio vertailtiin samasta kohdasta. Latvukset olivat samanlaiset, eli vika ei tullut grafiikkapäivityksestä.
