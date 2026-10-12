@@ -145,8 +145,11 @@ float coc(vec2 uv, float focus) {
   // Sessio 44: takaisin session 25 arvoihin. Sessioiden 39-40 voimakkaampi
   // syväterävyys korvasi kaukaisen maiseman lähes kokonaan puolikkaan
   // tarkkuuden kuvalla, mikä näytti pikselimössöltä.
-  float farStart = max(focus * 3.0 + 15.0, 32.0);
-  float farC = smoothstep(farStart, farStart * 4.0 + 80.0, z) * 0.4;
+  // Sessio 46: hieman takaisin päin (käyttäjä: syväterävyys ei ollut
+  // pikselimössön syy, saa lisätä): alkaa aiemmin ja voimakkaampana kuin
+  // sessiossa 25, mutta lievempänä kuin sessioissa 39-40.
+  float farStart = max(focus * 2.5 + 12.0, 24.0);
+  float farC = smoothstep(farStart, farStart * 4.0 + 80.0, z) * 0.5;
   float nearC = focus > 8.0 ? (1.0 - smoothstep(0.5, 1.3, z)) * 0.45 : 0.0;
   return max(farC, nearC);
 }
@@ -843,7 +846,7 @@ export class PostFX {
     }, { toneMapped: false });
     this.dofMat = mat(dofFS, {
       tColor: { value: null }, tDepth: { value: depthTexture }, tFocus: { value: null }, uTexel: { value: new THREE.Vector2() },
-      uNear: { value: 0.1 }, uFar: { value: 1500 }, uMaxR: { value: 3 },
+      uNear: { value: 0.1 }, uFar: { value: 1500 }, uMaxR: { value: 3.5 },
     }, { toneMapped: false });
     this.compMat = mat(compositeFS, {
       tColor: { value: null }, tDepth: { value: depthTexture }, tRays: { value: null }, tDof: { value: null },
