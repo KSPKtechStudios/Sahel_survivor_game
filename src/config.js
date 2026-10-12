@@ -4,7 +4,7 @@ export const CONFIG = {
 
   // Maailma
   chunkSize: 64,          // metriä
-  chunkSegments: 32,      // maaston verkon tarkkuus / chunk (64 m / 32 = 2 m)
+  chunkSegments: 48,      // maaston verkon tarkkuus / chunk (64 m / 48 = 1,33 m; sessio 24, ennen 2 m)
   viewRadius: 5,          // montako chunkia näkyy joka suuntaan
   grassRadius: 2,         // ruohotupsut vain lähimpiin chunkeihin
   chunksPerFrame: 2,      // montako chunkia saa rakentaa yhden ruudun aikana
@@ -25,12 +25,12 @@ export const CONFIG = {
 
   // Kestävyys (stamina)
   staminaMax: 100,
-  staminaSprintPerSec: 14,
+  staminaSprintPerSec: 12,      // sessio 18: ennen 14
   staminaJump: 10,
   staminaRegenPerSec: 18,
   staminaRegenDelay: 1.0,
-  staminaSwimPerSec: 4.5,     // uidessa (liikkuessa)
-  staminaTreadPerSec: 1.5,    // uidessa paikallaan
+  staminaSwimPerSec: 3.9,     // uidessa (liikkuessa); sessio 18: ennen 4,5
+  staminaTreadPerSec: 1.3,    // uidessa paikallaan
 
   // Terveys
   healthMax: 100,
@@ -43,8 +43,8 @@ export const CONFIG = {
   crouchSpeed: 0.5,           // kerroin kävelynopeuteen
 
   // Reppu
-  hotbarSize: 8,
-  backpackSize: 24,
+  hotbarSize: 6,          // sessio 19: ennen 8
+  backpackSize: 30,       // 5 riviä × 6 (sessio 19: ennen 24)
 
   // Tallennus
   saveKey: 'sahel.save.v1',

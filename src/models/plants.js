@@ -1,7 +1,7 @@
 // Pensaat, saniaiset, tumbleweed ja ruohotupsut.
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
-import { V, paint, limb, flatNormals, strip, merge } from './util.js';
+import { leafCards, V, paint, limb, strip, merge } from './util.js';
 
 // Kuivunut pensas: ohuita oksia ja muutama kuiva lehtitupsu.
 export function makeBush(seed) {
@@ -23,11 +23,9 @@ export function makeBush(seed) {
       parts.push(paint(limb(mid.clone().lerp(tip, 0.5), side, 0.012, 0.005, 3), col, { rand }));
     }
     if (rand() < 0.45) {
-      let leaf = new THREE.IcosahedronGeometry(0.12 + rand() * 0.08, 0);
-      leaf.scale(1, 0.6, 1);
-      leaf.translate(tip.x, tip.y, tip.z);
-      leaf = flatNormals(leaf);
-      parts.push(paint(leaf, rand() < 0.5 ? 0xa48e58 : 0xb09a62, { rand, jitter: 0.15 }));
+      // Sessio 23: kuivat lehtiryppäät lehtikortteina.
+      const r = 0.12 + rand() * 0.08;
+      parts.push(leafCards(tip, V(r * 1.4, r, r * 1.4), 0, rand() < 0.5 ? 0xa48e58 : 0xb09a62, rand, 'acacia', 1.6, 0.32));
     }
   }
   return merge(parts);
@@ -134,32 +132,97 @@ export function makeGrassTuft(seed, palette = 'dry') {
 }
 
 // Bamburyhmä: tiheä nippu korkeita, nivelikkäitä varsia.
-export function makeBamboo(seed) {
+// Sessio 28: uusi malli (käyttäjä: bambun tekstuurit huonot). Pyöreät,
+// hieman kaartuvat varret; nivelet tummina renkaina ja niiden alla
+// vahamainen vaalea vyö; vanhemmat varret kellertäviä; tyvellä kuivia
+// tuppia. Yläosan nivelistä lähtee ohuita sivuoksia, joiden kärjessä on
+// viuhka kapeita, roikkuvia lehtiä.
+function bambooLeaves(parts, at, dir, rand, col) {
+  const P = [], N = [], C = [];
+  const n = 4 + Math.floor(rand() * 3);
+  const c = new THREE.Color(col);
+  for (let i = 0; i < n; i++) {
+    const a = Math.atan2(dir.z, dir.x) + (i - (n - 1) / 2) * 0.55 + (rand() - 0.5) * 0.3;
+    const L = 0.2 + rand() * 0.1, W = 0.028 + rand() * 0.01;
+    const d = V(Math.cos(a), -0.35 - rand() * 0.4, Math.sin(a)).normalize();
+    const side = V(-Math.sin(a), 0, Math.cos(a));
+    const tip = at.clone().addScaledVector(d, L).add(V(0, -L * 0.25, 0));
+    const mid = at.clone().addScaledVector(d, L * 0.45);
+    const k = 0.85 + rand() * 0.3;
+    const tri = (p, q, r) => {
+      for (const v of [p, q, r]) { P.push(v.x, v.y, v.z); N.push(0.2 * d.x, 0.95, 0.2 * d.z); C.push(c.r * k, c.g * k, c.b * k); }
+    };
+    const l = mid.clone().addScaledVector(side, W), rr = mid.clone().addScaledVector(side, -W);
+    tri(at, l, tip);
+    tri(at, tip, rr);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
+  parts.push(g);
+}
+
+export function makeBamboo(seed, q = 1) {
   const rand = mulberry32(seed);
   const parts = [];
-  const n = 9 + Math.floor(rand() * 6);
+  const n = 6 + Math.floor(rand() * 4);
+  const greens = [0x5f9032, 0x6c9c36, 0x4f8030, 0x8f9a3c, 0xa0a246];
   for (let i = 0; i < n; i++) {
     const a = rand() * Math.PI * 2;
     const r = rand() * 0.5;
-    const H = 5 + rand() * 4;
-    const lean = 0.08 + rand() * 0.12;
+    const H = 6 + rand() * 4;
+    const lean = 0.06 + rand() * 0.12;
+    const R = 0.045 + rand() * 0.025;
+    const old = rand() < 0.35;
+    const col = old ? greens[3 + Math.floor(rand() * 2)] : greens[Math.floor(rand() * 3)];
     const b = V(Math.cos(a) * r, -0.1, Math.sin(a) * r);
-    const t = V(b.x + Math.cos(a) * H * lean, H, b.z + Math.sin(a) * H * lean);
-    const segs = 3;
+    const dir = V(Math.cos(a), 0, Math.sin(a));
+    // Kaartuva varsi: sivusiirtymä kasvaa korkeuden mukana neliöllisesti.
+    const at = (t) => V(b.x + dir.x * H * lean * t * t, b.y + H * t, b.z + dir.z * H * lean * t * t);
+    if (!q) {
+      // Kaukoversio: varsi muutamana palana, lehtiviuhkat latvassa.
+      for (let s = 0; s < 4; s++) {
+        const t0 = s / 4, t1 = (s + 1) / 4;
+        parts.push(paint(limb(at(t0), at(t1), R * (1 - 0.45 * t0), R * (1 - 0.45 * t1), 5), col, { rand, jitter: 0.04 }));
+      }
+      for (let l = 0; l < 4; l++) bambooLeaves(parts, at(0.7 + l * 0.1), V(Math.cos(a + l * 1.9), 0, Math.sin(a + l * 1.9)), rand, 0x568e2e);
+      continue;
+    }
+    const segs = Math.round(H / 0.62);
     for (let s = 0; s < segs; s++) {
-      const p0 = b.clone().lerp(t, s / segs);
-      const p1 = b.clone().lerp(t, (s + 1) / segs);
-      parts.push(paint(limb(p0, p1, 0.055, 0.05, 4), s % 2 ? 0x7a9a3a : 0x6d8c34, { rand, jitter: 0.06 }));
+      const t0 = s / segs, t1 = (s + 1) / segs;
+      const p0 = at(t0), p1 = at(t1);
+      const r0 = R * (1 - 0.45 * t0), r1 = R * (1 - 0.45 * t1);
+      const seg = p1.clone().sub(p0), len = seg.length();
+      seg.divideScalar(len);
+      // Nivel tummana renkaana, sen yläpuolella vahamainen vaalea vyö
+      // (varren sävy vaalenee kohti seuraavaa niveltä).
+      const pr = p0.clone().addScaledVector(seg, 0.045);
+      parts.push(paint(limb(p0, pr, r0 * 1.1, r0 * 1.06, 6), col, { rand, jitter: 0.03, shade: () => 0.58 }));
+      const shade = (x, y, z) => {
+        const u = ((x - p0.x) * seg.x + (y - p0.y) * seg.y + (z - p0.z) * seg.z) / len;
+        return 1.12 - 0.22 * Math.pow(Math.min(1, u), 2.5);
+      };
+      parts.push(paint(limb(pr, p1, r0, r1, 6, false, 2), col, { rand, jitter: 0.04, shade }));
+      // Kuivat tupet tyven nivelissä.
+      if (s < 2 && rand() < 0.6) {
+        parts.push(paint(limb(p0, p0.clone().addScaledVector(seg, 0.22), r0 * 1.25, r0 * 1.05, 7, false, 1), 0x9a7a4a, { rand, jitter: 0.1 }));
+      }
+      // Sivuoksat ja lehtiviuhkat yläosan nivelissä.
+      if (t0 > 0.45 && rand() < 0.75) {
+        const ba = rand() * Math.PI * 2;
+        const bd = V(Math.cos(ba), 0.35 + rand() * 0.3, Math.sin(ba)).normalize();
+        const bl = 0.3 + rand() * 0.35;
+        const tip = p0.clone().addScaledVector(bd, bl);
+        parts.push(paint(limb(p0, tip, 0.01, 0.006, 3), col, { rand }));
+        bambooLeaves(parts, tip, V(bd.x, 0, bd.z), rand, old ? 0x6a8a30 : 0x4f8a2a);
+        bambooLeaves(parts, p0.clone().lerp(tip, 0.55), V(bd.z, 0, -bd.x), rand, 0x568e2e);
+      }
     }
-    // Lehtitupsut latvassa
-    for (let l = 0; l < 2; l++) {
-      const tp = b.clone().lerp(t, 0.7 + l * 0.12);
-      const la = rand() * Math.PI * 2;
-      const dir = V(Math.cos(la), 0, Math.sin(la));
-      const side = V(-Math.sin(la), 0, Math.cos(la));
-      const pts = [tp, tp.clone().addScaledVector(dir, 0.5).add(V(0, 0.1, 0)), tp.clone().addScaledVector(dir, 1.0).add(V(0, -0.15, 0))];
-      parts.push(strip(pts, [0.04, 0.16, 0.03], side, 0x5f8a30, rand));
-    }
+    // Latvan lehtiviuhkat.
+    const top = at(1);
+    for (let l = 0; l < 2; l++) bambooLeaves(parts, top, V(Math.cos(a + l * 2.5), 0, Math.sin(a + l * 2.5)), rand, 0x5a9230);
   }
   return merge(parts);
 }
@@ -173,18 +236,12 @@ export function makeThicket(seed) {
   for (let i = 0; i < n; i++) {
     const a = rand() * Math.PI * 2;
     const r = rand() * 0.9;
-    let g = new THREE.IcosahedronGeometry(0.55 + rand() * 0.35, 0);
+    rand(); // (ennen ytimen koko; arvontajärjestys säilyy)
     const jr = mulberry32(seed * 31 + i);
-    g.translate(0, 0, 0);
-    const pos = g.attributes.position;
-    for (let v = 0; v < pos.count; v++) {
-      const x = pos.getX(v), y = pos.getY(v), z = pos.getZ(v);
-      const kk = 0.85 + Math.abs(Math.sin(x * 9.1 + y * 7.3 + z * 5.7 + i)) * 0.3;
-      pos.setXYZ(v, x * kk, y * kk * 0.85, z * kk);
-    }
-    g.translate(Math.cos(a) * r, 0.45 + rand() * 0.5, Math.sin(a) * r);
-    g = flatNormals(g);
-    parts.push(paint(g, cols[Math.floor(rand() * 3)], { rand: jr, jitter: 0.14, shade: (x, y) => 0.55 + Math.min(0.45, y * 0.4) }));
+    const cy = 0.45 + rand() * 0.5;
+    const col = cols[Math.floor(rand() * 3)];
+    // Sessio 26: pelkät lehtikortit (kiinteä ydin poistettiin), tiheämmin.
+    parts.push(leafCards(V(Math.cos(a) * r, cy, Math.sin(a) * r), V(0.7, 0.58, 0.7), rand() * 3, col, jr, 'broad', 2.4, 0.66, 0.8));
   }
   for (let i = 0; i < 8; i++) {
     const a = rand() * Math.PI * 2;

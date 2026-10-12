@@ -1,13 +1,12 @@
 // Maailman generointi: korkeus, biomit ja vesi pisteessä (x, z).
 //
-// Maailma on valtava (säde WORLD.radius) ja se generoidaan siemenestä.
-// Rakenne on vyöhykkeellinen (käyttäjän luonnos, docs/DESIGN.md):
-//   keskellä spawn-alue (Sahelin savanni)
-//   -> tier 1: Sahel ja sen muunnelmat (dyynit, lateriitti, kausilammet, akasiametsät)
-//   -> tier 2: aavikko ja sademetsä
-//   -> ulkoreuna: vuoristo aavikon puolella, meri ja hiekkarannat sademetsän puolella.
-// Vyöhykkeiden rajat vääristetään kohinalla, joten ne ovat epäsäännöllisiä ja
-// joka siemenellä erilaisia.
+// Maailma on valtava saari (säde WORLD.radius), jota ympäröi meri, ja se
+// generoidaan siemenestä. Biomit (Sahelin savanni muunnelmineen, aavikko,
+// sademetsä, vuoristo ja sisämeret) ovat satunnaisia, noin 1,5 km:n alueita,
+// jotka voivat olla missä tahansa (sessio 9: vyöhykkeet poistettiin). Kosteus
+// vaihtelee loivasti, joten aavikon ja sademetsän välissä on yleensä savannia.
+// Alueiden rajat ovat kohinalla vääristettyjä ja pehmeitä. Aloituspaikka on
+// aina savannia.
 //
 // Vesi: merenpinta (WATER_LEVEL) on kaikkialla; sen alla oleva maa on vettä
 // (meri, kausilammet, keitaat). Lisäksi joet ja purot (sademetsä, harvoin
@@ -24,11 +23,11 @@ import { createNoise2D, fbm, smoothstep, mulberry32 } from '../noise.js';
 
 export const WORLD = {
   radius: 10000,  // metriä keskeltä reunaan
-  spawnR: 0.24,   // osuus säteestä
-  tier1R: 0.6,
-  rimR: 0.93,     // tästä alkaa vuoristoreuna
-  coastR: 0.885,  // meren puolella rannikko
+  coastR: 0.9,    // osuus säteestä: tästä alkaa saarta ympäröivä meri
+  spawnR: 700,    // m: aloitusalue on aina tasaista savannia
 };
+const BIOME_CELL = 1500;  // m: biomialueen keskikoko (vierekkäiset samat yhdistyvät)
+const BIOME_BAND = 260;   // m: rajan pehmeä siirtymä (etäisyysero)
 
 export const WATER_LEVEL = CONFIG.waterLevel;
 
@@ -63,8 +62,7 @@ export const WATER = { SEA: 1, LAKE: 2, RIVER: 3, STREAM: 4 };
 
 let SEED = 0;
 let N = null;
-let desertAngle = 0;
-let rainAngle = 0;
+const cellCache = new Map();
 const structCache = new Map();
 const lakeCache = new Map();
 const featCache = new Map();
@@ -92,14 +90,10 @@ export function setWorldSeed(seed) {
     river: n(22), rwarp: n(23), stream: n(24), swarp: n(25), lakeShape: n(26), coast: n(27),
     island: n(28), wet: n(29), hills2: n(30), feat: n(31), width: n(32),
   };
+  cellCache.clear();
   structCache.clear();
   lakeCache.clear();
   featCache.clear();
-  // Aavikko painottuu yhdelle puolelle ja sademetsä vastakkaiselle (kuten
-  // Sahara pohjoisessa ja Guinean metsät etelässä), suunta vaihtelee siemenen mukaan.
-  // Sademetsän takana on meri (kuten Guineanlahti), aavikon takana vuoret.
-  desertAngle = mulberry32(SEED ^ 0x5eed)() * Math.PI * 2;
-  rainAngle = desertAngle + Math.PI;
 }
 
 export function getWorldSeed() {
@@ -108,27 +102,110 @@ export function getWorldSeed() {
 
 setWorldSeed(CONFIG.seed);
 
-// --- Vyöhykkeet --------------------------------------------------------------
+// --- Biomialueet -------------------------------------------------------------
 
-// d = vääristetty etäisyys keskeltä (0..1 = reunaan), sea = meren puoleisuus.
+// Biomialue: värinäinen ruudukko (jokaisessa ruudussa yksi keskipiste ja tyyppi).
+// Tyypit: sahel (savanni muunnelmineen), desert, rain (sademetsä), mount, sea.
+function biomeCell(ix, iz) {
+  const key = ix * 131071 + iz;
+  let c = cellCache.get(key);
+  if (c) return c;
+  const rand = mulberry32((Math.imul(ix, 2246822519) ^ Math.imul(iz, 3266489917) ^ Math.imul(SEED + 19, 668265263)) >>> 0);
+  const x = (ix + 0.15 + rand() * 0.7) * BIOME_CELL;
+  const z = (iz + 0.15 + rand() * 0.7) * BIOME_CELL;
+  let type;
+  if (Math.hypot(x, z) < WORLD.spawnR + BIOME_CELL * 0.75) {
+    type = 'sahel'; // aloitusalue
+  } else {
+    const r = rand();
+    // Kosteus vaihtelee loivasti: kuiva -> aavikko, märkä -> sademetsä.
+    const hum = fbm(N.dr, x / 5200, z / 5200, 3) * 1.2 + (rand() - 0.5) * 0.5;
+    if (r < 0.13) type = 'mount';
+    else if (r < 0.21) type = 'sea';
+    else if (hum < -0.18) type = 'desert';
+    else if (hum > 0.2) type = 'rain';
+    else type = 'sahel';
+  }
+  c = { x, z, type };
+  cellCache.set(key, c);
+  return c;
+}
+
+// Biomien painot pisteessä (pehmeä Voronoi vääristetyillä rajoilla), meren
+// etumerkillinen etäisyys rannasta ja vuoriston "syvyys" (nousee sisäosiin).
+// Lähimmät 5×5 solua muistetaan (peräkkäiset näytteet osuvat yleensä samaan soluun).
+const T_SAHEL = 0, T_DESERT = 1, T_RAIN = 2, T_MOUNT = 3, T_SEA = 4;
+const TYPE_CODE = { sahel: T_SAHEL, desert: T_DESERT, rain: T_RAIN, mount: T_MOUNT, sea: T_SEA };
+const _wx = new Float64Array(25), _wz = new Float64Array(25), _wt = new Int8Array(25), _cd = new Float64Array(25);
+let _winX = NaN, _winZ = NaN, _winSeed = NaN;
 function zones(x, z, out) {
   const R = WORLD.radius;
-  const wx = x + fbm(N.zoneWarp, x / 2600, z / 2600, 3) * R * 0.1;
-  const wz = z + fbm(N.zoneWarp, x / 2600 + 31.7, z / 2600 - 12.3, 3) * R * 0.1;
-  const d = Math.hypot(wx, wz) / R;
-  // Ulkoreuna on rosoisempi, kuin rantaviiva.
-  const dEdge = d + fbm(N.edge, x / 700, z / 700, 4) * 0.035;
-  const os = Math.cos(Math.atan2(z, x) - rainAngle) + fbm(N.coast, x / 3200, z / 3200, 2) * 0.45;
-  out.d = d;
+  const wx = x + fbm(N.zoneWarp, x / 1100, z / 1100, 3) * 330;
+  const wz = z + fbm(N.zoneWarp, x / 1100 + 31.7, z / 1100 - 12.3, 3) * 330;
+  const cx = Math.floor(wx / BIOME_CELL), cz = Math.floor(wz / BIOME_CELL);
+  if (cx !== _winX || cz !== _winZ || SEED !== _winSeed) {
+    let n = 0;
+    for (let j = cz - 2; j <= cz + 2; j++) {
+      for (let i = cx - 2; i <= cx + 2; i++) {
+        const c = biomeCell(i, j);
+        _wx[n] = c.x; _wz[n] = c.z; _wt[n++] = TYPE_CODE[c.type];
+      }
+    }
+    _winX = cx; _winZ = cz; _winSeed = SEED;
+  }
+  let d1 = Infinity;
+  for (let k = 0; k < 25; k++) {
+    const dx = wx - _wx[k], dz = wz - _wz[k];
+    const d = Math.sqrt(dx * dx + dz * dz);
+    _cd[k] = d;
+    if (d < d1) d1 = d;
+  }
+  let sahel = 0, desert = 0, rain = 0, mount = 0;
+  let dSea = Infinity, dLand = Infinity, dMount = Infinity, dNoMount = Infinity, dDes = Infinity, dNoDes = Infinity;
+  for (let k = 0; k < 25; k++) {
+    const d = _cd[k];
+    const t = _wt[k];
+    if (t === T_MOUNT) { if (d < dMount) dMount = d; } else if (d < dNoMount) dNoMount = d;
+    if (t === T_DESERT) { if (d < dDes) dDes = d; } else if (d < dNoDes) dNoDes = d;
+    if (t === T_SEA) { if (d < dSea) dSea = d; continue; }
+    if (d < dLand) dLand = d;
+    let w = 1 - (d - d1) / BIOME_BAND;
+    if (w <= 0) continue;
+    w *= w;
+    if (t === T_SAHEL) sahel += w; else if (t === T_DESERT) desert += w; else if (t === T_RAIN) rain += w; else mount += w;
+  }
+  const land = sahel + desert + rain + mount;
+  if (land > 0) { sahel /= land; desert /= land; rain /= land; mount /= land; } else sahel = 1;
+  // Meren etäisyys rannasta metreinä (+ = merelle päin): sisämeret ja saarta
+  // ympäröivä meri. Reunan kohina lasketaan vain reunan lähellä.
+  const d0 = Math.sqrt(x * x + z * z) / R;
+  const nw = smoothstep(0.76, 0.8, d0);
+  const dEdge = nw > 0 ? d0 + nw * (fbm(N.edge, x / 700, z / 700, 4) * 0.012 + fbm(N.coast, x / 3000, z / 3000, 2) * 0.025) : d0;
+  const seaIn = dSea < Infinity ? (dLand - dSea) / 2 : -Infinity;
+  out.seaDist = Math.max(seaIn, (dEdge - WORLD.coastR) * R);
   out.dEdge = dEdge;
-  out.sea = smoothstep(0.05, 0.35, os);
+  out.d = d0;
+  out.zSahel = sahel; out.zDesert = desert; out.zRain = rain; out.zMount = mount;
+  // Vuoristo nousee kohti sisäosiaan, aavikon isot dyynit samoin.
+  out.mountCore = dMount < Infinity ? smoothstep(0, 1300, dNoMount - dMount) : 0;
+  out.desCore = dDes < Infinity ? smoothstep(0, 900, dNoDes - dDes) : 0;
   return out;
+}
+
+// Sessio 24: pehmeä itseisarvo ja minimi. Tavallinen |n| ja min() tekivät
+// maastoon teräviä V-uurteita ja harjanteita ("kulmikas" maasto).
+function sabs(v, k = 0.12) {
+  return Math.sqrt(v * v + k * k) - k;
+}
+function smin(a, b, k) {
+  const hh = Math.max(k - Math.abs(a - b), 0) / k;
+  return Math.min(a, b) - hh * hh * k * 0.25;
 }
 
 function ridged(nx, nz, octaves) {
   let s = 0, a = 1, f = 1, w = 0;
   for (let o = 0; o < octaves; o++) {
-    const r = 1 - Math.abs(N.mount(nx * f, nz * f));
+    const r = 1 - sabs(N.mount(nx * f, nz * f), 0.14);
     s += r * r * a; w += a; a *= 0.5; f *= 2.1;
   }
   return s / w;
@@ -139,27 +216,28 @@ function coastHeight(x, z, c) {
   const dune = N.dune(x / 45, z / 45) * 0.5 + 0.5;
   let h = 1.1 + dune * 0.8 * (1 - smoothstep(-0.004, 0.004, c));
   h -= 2.6 * smoothstep(-0.002, 0.009, c);     // ranta laskee veteen
-  h -= 15 * smoothstep(0.006, 0.07, c);         // merenpohja
+  // Merenpohja (sessio 10: syvenee nopeammin, n. 2 m jo 50 m rannasta,
+  // jotta laivoilla pääsee lähelle rantaa).
+  h -= 16 * smoothstep(0.005, 0.03, c);
   h += N.ripple(x / 14, z / 30) * 0.15;
   // Harvinaiset saaret avomerellä
   const isl = smoothstep(0.62, 0.84, fbm(N.island, x / 800, z / 800, 3)) * smoothstep(0.02, 0.05, c);
-  if (isl > 0) h += isl * 24 + Math.abs(N.detail(x / 26, z / 26)) * isl * 2;
+  if (isl > 0) h += isl * 24 + sabs(N.detail(x / 26, z / 26)) * isl * 2;
   return h;
 }
 
 // Maa ilman erikoismuodostumia ja vesistöjä.
 function sampleLand(x, z, out) {
   zones(x, z, out);
-  const { d, dEdge, sea } = out;
-  const c = dEdge - WORLD.coastR;
+  const c = out.seaDist / WORLD.radius; // rannikon profiili (0.01 = 100 m merelle päin)
 
-  // --- Vyöhykepainot
-  const rim = smoothstep(WORLD.rimR - 0.015, WORLD.rimR + 0.015, dEdge);
-  const t1 = (1 - smoothstep(WORLD.tier1R - 0.02, WORLD.tier1R + 0.02, d)) * (1 - rim);
-  const mountW = rim * (1 - sea);
-  const coastW = sea * smoothstep(-0.009, 0.002, c);
-  const t2 = Math.max(0, 1 - t1 - mountW - coastW);
-  const spawnW = 1 - smoothstep(WORLD.spawnR - 0.03, WORLD.spawnR + 0.03, d);
+  // --- Biomipainot: maan biomit kertaa (1 - rannikko)
+  const coastW = smoothstep(-90, 20, out.seaDist);
+  const landW = 1 - coastW;
+  const t1 = out.zSahel * landW;
+  const mountW = out.zMount * landW;
+  const t2 = (out.zDesert + out.zRain) * landW;
+  const spawnW = 1 - smoothstep(WORLD.spawnR - 200, WORLD.spawnR + 200, Math.hypot(x, z));
 
   // --- Tier 1: Sahel ja sen muunnelmat
   let savanna = 0, dunes = 0, laterite = 0, mare = 0, woodland = 0, plateau = 0, basin = 0;
@@ -167,9 +245,8 @@ function sampleLand(x, z, out) {
   if (t1 > 0.0005) {
     const wx = x + N.warp(x / 300, z / 300) * 60;
     const wz = z + N.warp(x / 300 + 17.3, z / 300 - 9.1) * 60;
-    // Dyynejä on enemmän kohti aavikkoa, spawn-alueella ei lainkaan.
-    const duneBias = (d - WORLD.spawnR) * 1.4;
-    const duneField = fbm(N.duneField, wx / 950, wz / 950, 3) + duneBias;
+    // Dyynit kuuluvat nyt aavikkoon (savannissa ei dyynikenttiä).
+    const duneField = -1;
     const latField = fbm(N.lat, wx / 560, wz / 560, 3);
     const mareField = fbm(N.mare, wx / 340, wz / 340, 3);
     const woodField = fbm(N.wood, wx / 420, wz / 420, 3);
@@ -188,35 +265,33 @@ function sampleLand(x, z, out) {
     const u = (x + z) * 0.7071;
     const v = (x - z) * 0.7071;
     if (dn > 0.001) {
-      const ridge = 1 - Math.abs(N.dune(u / 85 + N.warp(x / 140, z / 140) * 0.4, v / 190));
-      const duneH = ridge * ridge * 9 + (1 - Math.abs(N.dune(u / 32, v / 60))) * 1.6;
+      const ridge = 1 - sabs(N.dune(u / 85 + N.warp(x / 140, z / 140) * 0.4, v / 190), 0.12);
+      const duneH = ridge * ridge * 9 + (1 - sabs(N.dune(u / 32, v / 60), 0.15)) * 1.6;
       h += dn * (duneH + N.ripple(u / 2.2, v / 9) * 0.05);
     }
-    plateau = smoothstep(0.3, 0.36, latField) * (1 - spawnW * 0.4);
+    // Sessio 24: loivemmat tasankojen reunat (ennen jyrkkä porras).
+    plateau = smoothstep(0.26, 0.42, latField) * (1 - spawnW * 0.4);
     if (plateau > 0.001) h += plateau * (1 - dn) * (4.5 + (N.rock(x / 300, z / 300) * 0.5 + 0.5) * 3 + N.rock(x / 40, z / 40) * 0.6);
-    if (lt > 0.001) h += lt * Math.abs(N.rock(x / 9, z / 9)) * 0.35;
+    if (lt > 0.001) h += lt * sabs(N.rock(x / 16, z / 16), 0.2) * 0.3;
     // Kausilampien painanteet ulottuvat aina veden alle maaston korkeudesta riippumatta.
     basin = smoothstep(0.4, 0.62, mareField) * (1 - dn) * (1 - plateau) * t1;
     if (basin > 0.001) h += (-2.0 + N.detail(x / 30, z / 30) * 0.3 - h) * basin;
     hSahel = h;
   }
 
-  // --- Tier 2: aavikko ja sademetsä
+  // --- Aavikko ja sademetsä
   let desert = 0, rainforest = 0, oasis = 0, hDesert = 0, hRain = 0;
   if (t2 > 0.0005) {
-    const ang = Math.atan2(z, x);
-    const side = Math.cos(ang - desertAngle) * 0.6;
-    const n = fbm(N.dr, x / 5200, z / 5200, 3) * 0.8 + side;
-    const dW = smoothstep(-0.1, 0.1, n);
-    desert = t2 * dW;
-    rainforest = t2 * (1 - dW);
+    desert = out.zDesert * landW;
+    rainforest = out.zRain * landW;
     if (desert > 0.0005) {
-      // Valtavat dyynit (erg)
+      // Valtavat dyynit (erg); reunoilla matalammat, sisäosissa korkeat.
       const u = (x + z) * 0.7071;
       const v = (x - z) * 0.7071;
-      const r1 = 1 - Math.abs(N.bigDune(u / 230 + N.warp(x / 500, z / 500) * 0.5, v / 520));
-      const r2 = 1 - Math.abs(N.bigDune(u / 70 + 13, v / 140 - 7));
-      hDesert = 3 + r1 * r1 * 22 + r2 * r2 * 3.5 + fbm(N.base, x / 600, z / 600, 2) * 3 + N.ripple(u / 2.5, v / 10) * 0.06;
+      const r1 = 1 - sabs(N.bigDune(u / 230 + N.warp(x / 500, z / 500) * 0.5, v / 520), 0.1);
+      const r2 = 1 - sabs(N.bigDune(u / 70 + 13, v / 140 - 7), 0.14);
+      const big = 0.25 + 0.75 * out.desCore;
+      hDesert = 3 + r1 * r1 * 22 * big + r2 * r2 * 3.5 + fbm(N.base, x / 600, z / 600, 2) * 3 + N.ripple(u / 2.5, v / 10) * 0.06;
       // Keidas: harvinainen painanne, jossa on vettä ja vehreyttä.
       const of = fbm(N.oasis, x / 650, z / 650, 3);
       const ow = smoothstep(0.42, 0.56, of);
@@ -228,21 +303,17 @@ function sampleLand(x, z, out) {
       }
     }
     if (rainforest > 0.0005) {
-      // Kumpuileva, rosoinen maasto ja kuivien rotkojen uomat.
-      const gw = N.gully(x / 260 + N.warp(x / 500, z / 500) * 0.6, z / 260);
-      const gully = Math.pow(1 - Math.min(1, Math.abs(gw) * 3.2), 3);
-      hRain = 5.5 + fbm(N.hills, x / 320, z / 320, 4) * 11 + Math.abs(N.detail(x / 30, z / 30)) * 1.2 - gully * 4.6;
+      // Kumpuileva, rosoinen maasto. (Kuivat uomat tulevat nyt valumaverkosta.)
+      hRain = 5.5 + fbm(N.hills, x / 320, z / 320, 4) * 11 + sabs(N.detail(x / 30, z / 30), 0.18) * 1.2;
     }
   }
 
-  // --- Ulkoreuna: vuoristo ja maailman reuna
+  // --- Vuoristo (nousee kohti alueen sisäosia)
   let mountains = 0, hMount = 0, rise = 0;
   if (mountW > 0.0005) {
     mountains = mountW;
-    rise = smoothstep(WORLD.rimR - 0.01, WORLD.rimR + 0.05, dEdge);
-    hMount = 6 + ridged(x / 650, z / 650, 5) * 110 * rise + Math.abs(N.mount2(x / 60, z / 60)) * 3;
-    // Reunan takana nousee läpäisemätön seinämä.
-    if (dEdge > 1.0) hMount += (dEdge - 1.0) * 6000;
+    rise = out.mountCore;
+    hMount = 6 + ridged(x / 650, z / 650, 5) * 110 * rise + sabs(N.mount2(x / 60, z / 60), 0.18) * 3;
   }
 
   // --- Meri ja hiekkaranta
@@ -271,6 +342,7 @@ function sampleLand(x, z, out) {
   out.basin = basin;
   out.spawn = spawnW;
   out.t1 = t1;
+  out.rainLand = out.zRain; // sademetsän osuus ilman rannikkoa (joet jatkuvat mereen)
   out.coastW = coastW;
   out.c = c;
   out.rise = rise;
@@ -312,6 +384,8 @@ function featureInCell(ix, iz) {
     const R = 45 + rand() * 80;
     f = { type: 'mesa', x, z, R, H: 16 + rand() * 30, baseH: _fs.h, seed: (rand() * 997) | 0 };
   }
+  // Kalliot ja pöytävuoret eivät katkaise jokia.
+  if (f && nearChannel(x, z, f.R * 1.35 + 12)) f = null;
   featCache.set(key, f);
   return f;
 }
@@ -352,39 +426,313 @@ function sampleBase(x, z, out) {
   return out;
 }
 
-// --- Joet ja purot ---------------------------------------------------------------
-// Uoma kulkee kohinakentän nollakohtaa pitkin (domain warp tekee mutkat).
-// Etäisyys uomasta arvioidaan kentän arvosta ja gradientista. Veden pinta
-// seuraa maaston loivaa muotoa (smoothRef) selvästi maan pinnan alapuolella,
-// joten joet virtaavat laaksoissa. Maastoon kaivetaan uoma ja laakso; jos maa
-// olisi rannalla pinnan alapuolella (rotko), sitä täytetään loivasti.
+// --- Joet ja purot: valumaverkko ---------------------------------------------------
+// Saari jaetaan RIV_CELL-ruudukkoon, jonka jokaisessa ruudussa on yksi solmu
+// (väristetty keskipiste). Naapureita ovat neljä suoraa suuntaa ja jokaisen
+// ruudun yksi (arvottu) lävistäjä, joten reunat eivät koskaan risteä.
+// Tulvatäyttö merestä (priority flood) antaa jokaiselle maasolmulle alajuoksun
+// naapurin: vesi virtaa aina kohti merta, ja verkko on puu. Sivujoet yhtyvät
+// pääuomaan, mutta joet eivät risteä eivätkä muodosta silmukoita.
+//
+// Vesimäärä kertyy alajuoksulle alueen sademäärän mukaan (sademetsä ja vuoristo
+// märkiä, savanni kuiva, aavikolla vesi haihtuu), ja uoman leveys kasvaa
+// vesimäärän neliöjuurena. Veden pinta laskee alajuoksulle päin; harjanteen
+// kohdalla joki kaivaa rotkon. Uoma kulkee pehmeänä käyränä solmujen ohi
+// (kulmat pyöristetään), ja mutkat tulevat lisäksi koordinaatiston
+// vääristyksestä. Verkko lasketaan, kun jokia tarvitaan ensimmäisen kerran.
 
-const RIVER_S = 4000;  // jokiverkon mittakaava (m)
-const STREAM_S = 1400; // puroverkon mittakaava (m)
+const RIV_CELL = 250;                                    // solmuväli (m)
+const RIV_G = Math.ceil((WORLD.radius * 2) / RIV_CELL); // ruudukon koko
+const RIV_HALF = RIV_G / 2;
+const RIV_SEG = 6;                                       // käyrän murtoviivan palat
+const RIV_MIN_W = 0.45;                                  // tätä kapeampia uomia ei piirretä
+const RIV_WARP = 50;                                     // vääristyksen suurin siirtymä (m)
+let RIV = null;
 
-function channelField(noise, warp, S, x, z) {
-  const a = S * 0.17, b = S * 0.045;
-  const u = x / S + warp(x / a, z / a) * 0.1 + warp(x / b + 50, z / b) * 0.012;
-  const v = z / S + warp(x / a + 31, z / a - 17) * 0.1 + warp(x / b - 20, z / b + 70) * 0.012;
-  return noise(u, v);
+// Vääristetty koordinaatisto: q = p + w(p). Voimakkuus on mitoitettu niin,
+// että Jacobin determinantti pysyy positiivisena (vähintään n. 0,17): vääristys
+// ei taita tasoa, joten joet eivät voi risteytyä.
+function rivWarp(x, z, out) {
+  out.x = x + N.rwarp(x / 560, z / 560) * 40 + N.rwarp(x / 150 + 40, z / 150 - 25) * 6;
+  out.z = z + N.rwarp(x / 560 + 31, z / 560 - 17) * 40 + N.rwarp(x / 150 - 60, z / 150 + 12) * 6;
+  return out;
 }
 
-// Etäisyys uoman keskilinjasta metreinä (Infinity, jos kauempana kuin maxD).
-// Kentän gradientti (per metri) jää muuttujiin _cgx, _cgz.
-let _cgx = 0, _cgz = 0;
-function channelDist(noise, warp, S, x, z, maxD) {
-  const f0 = channelField(noise, warp, S, x, z);
-  // Gradientti on harvoin yli 9 / S, joten tätä kauempana uomaa ei voi olla.
-  if (Math.abs(f0) > (maxD * 9) / S) return Infinity;
-  const fx = channelField(noise, warp, S, x + 1, z) - f0;
-  const fz = channelField(noise, warp, S, x, z + 1) - f0;
-  _cgx = fx;
-  _cgz = fz;
-  const g = Math.max(Math.hypot(fx, fz), 1.1 / S);
-  return Math.abs(f0) / g;
+// Uoman puolileveys (m) vesimäärästä (yksikkö: yhden sademetsäruudun valuma).
+function rivWidth(F) {
+  return F > 0 ? Math.min(13, 1.05 * Math.sqrt(F)) : 0;
 }
 
-// Loiva vertailukorkeus (maaston suuret muodot) veden pinnaksi.
+function rivValley(w) {
+  return w * 2.5 + 9 * Math.min(1, w / 2);
+}
+
+const _rw = { x: 0, z: 0 };
+function riverNet() {
+  if (RIV && RIV.seed === SEED) return RIV;
+  const G = RIV_G, n = G * G;
+  const nx = new Float64Array(n), nz = new Float64Array(n);
+  const E = new Float32Array(n), run = new Float32Array(n), loss = new Float32Array(n);
+  const sea = new Uint8Array(n), diag = new Uint8Array(n);
+  const s = {};
+  for (let j = 0; j < G; j++) {
+    for (let i = 0; i < G; i++) {
+      const k = j * G + i;
+      const r = mulberry32((Math.imul(i + 1, 374761393) ^ Math.imul(j + 1, 668265263) ^ Math.imul(SEED + 41, 2246822519)) >>> 0);
+      const qx = (i - RIV_HALF + 0.5 + (r() - 0.5) * 0.44) * RIV_CELL;
+      const qz = (j - RIV_HALF + 0.5 + (r() - 0.5) * 0.44) * RIV_CELL;
+      nx[k] = qx;
+      nz[k] = qz;
+      diag[k] = r() < 0.5 ? 1 : 0;
+      // Todellinen paikka: käänteinen vääristys (riittävän tarkka arvio).
+      rivWarp(qx, qz, _rw);
+      const px = 2 * qx - _rw.x, pz = 2 * qz - _rw.z;
+      sampleLand(px, pz, s); // ilman erikoismuodostumia (ne väistävät jokia)
+      if (i === 0 || j === 0 || i === G - 1 || j === G - 1 || s.coastW > 0.5) {
+        sea[k] = 1;
+        E[k] = WATER_LEVEL;
+        continue;
+      }
+      E[k] = smoothRef(px, pz, s) + r() * 0.3;
+      const wet = smoothstep(0.4, 0.52, fbm(N.wet, px / 3200, pz / 3200, 2));
+      run[k] = s.rainforest + s.mountains * 0.6 + s.oasis * 0.3 + s.beach * 0.15
+        + s.t1 * (0.04 + 0.3 * wet) * (1 - s.spawn * 0.7);
+      loss[k] = s.desert * 0.08 + s.t1 * 0.015;
+    }
+  }
+
+  // Tulvatäyttö: matalin solmu ensin. Jokainen löydetty naapuri valuu solmuun,
+  // josta se löydettiin.
+  const down = new Int32Array(n).fill(-1);
+  const key = new Float32Array(n);
+  const seen = new Uint8Array(n);
+  const order = new Int32Array(n);
+  const heap = new Int32Array(n);
+  let hn = 0, no = 0;
+  const push = (k) => {
+    let c = hn++;
+    while (c > 0) {
+      const p = (c - 1) >> 1;
+      if (key[heap[p]] <= key[k]) break;
+      heap[c] = heap[p];
+      c = p;
+    }
+    heap[c] = k;
+  };
+  const pop = () => {
+    const top = heap[0];
+    const last = heap[--hn];
+    let c = 0;
+    for (;;) {
+      let l = 2 * c + 1;
+      if (l >= hn) break;
+      if (l + 1 < hn && key[heap[l + 1]] < key[heap[l]]) l++;
+      if (key[heap[l]] >= key[last]) break;
+      heap[c] = heap[l];
+      c = l;
+    }
+    heap[c] = last;
+    return top;
+  };
+  for (let k = 0; k < n; k++) {
+    if (!sea[k]) continue;
+    seen[k] = 1;
+    key[k] = E[k];
+    push(k);
+  }
+  const visit = (k, i, j) => {
+    if (i < 0 || j < 0 || i >= G || j >= G) return;
+    const m = j * G + i;
+    if (seen[m]) return;
+    seen[m] = 1;
+    down[m] = k;
+    key[m] = Math.max(E[m], key[k] + 0.001);
+    push(m);
+  };
+  while (hn > 0) {
+    const k = pop();
+    order[no++] = k;
+    const i = k % G, j = (k - i) / G;
+    visit(k, i + 1, j);
+    visit(k, i - 1, j);
+    visit(k, i, j + 1);
+    visit(k, i, j - 1);
+    // Lävistäjät: ruudun (i, j) lävistäjä on joko (i,j)-(i+1,j+1) tai (i+1,j)-(i,j+1).
+    if (i < G - 1 && j < G - 1 && diag[k] === 0) visit(k, i + 1, j + 1);
+    if (i > 0 && j < G - 1 && diag[k - 1] === 1) visit(k, i - 1, j + 1);
+    if (i < G - 1 && j > 0 && diag[k - G] === 1) visit(k, i + 1, j - 1);
+    if (i > 0 && j > 0 && diag[k - G - 1] === 0) visit(k, i - 1, j - 1);
+  }
+
+  // Vesimäärä ja veden pinta yläjuoksulta alajuoksulle.
+  const Fin = new Float32Array(n), Fout = new Float32Array(n), wlN = new Float32Array(n);
+  const mainUp = new Int32Array(n).fill(-1);
+  for (let k = 0; k < n; k++) {
+    if (sea[k]) { wlN[k] = WATER_LEVEL; continue; }
+    const low = 1 - smoothstep(WATER_LEVEL + 1, WATER_LEVEL + 4, E[k]);
+    wlN[k] = Math.max(WATER_LEVEL, E[k] - 2.0 * (1 - low) - 0.8 * low);
+  }
+  for (let t = no - 1; t >= 0; t--) {
+    const k = order[t], d = down[k];
+    if (d < 0) continue;
+    Fout[k] = (run[k] + Fin[k]) * (1 - loss[k]);
+    Fin[d] += Fout[k];
+    if (wlN[k] < wlN[d]) wlN[d] = wlN[k]; // pinta ei nouse alajuoksulle päin
+    if (mainUp[d] < 0 || Fout[k] > Fout[mainUp[d]]) mainUp[d] = k;
+  }
+
+  // Uoman palat: lähteestä keskikohtaan, pääuoman mutka solmun kohdalla
+  // (sisääntulevan reunan keskeltä lähtevän reunan keskelle) ja suu mereen.
+  // Sivujoet liittyvät pääuomaan kukin omassa kohdassaan loivassa kulmassa,
+  // joten liitokset ovat kahden uoman yhtymiä (ei usean joen solmukohtia).
+  const P = [];
+  // parent = pääuoman pala, johon sivujoki liittyy; jw = pääuoman leveys liitoskohdassa.
+  const addPiece = (ax, az, bx, bz, cx, cz, w0, w1, wl0, wl1, parent = -1, jw = 0) => {
+    P.push([ax, az, bx, bz, cx, cz, w0, w1, wl0, wl1, parent, jw]);
+  };
+  const ups = new Map();
+  for (let k = 0; k < n; k++) {
+    const d = down[k];
+    if (d < 0 || rivWidth(Fout[k]) < RIV_MIN_W) continue;
+    if (!ups.has(d)) ups.set(d, []);
+    ups.get(d).push(k);
+  }
+  for (let k = 0; k < n; k++) {
+    const d = down[k];
+    if (d < 0) continue;
+    const wk = rivWidth(Fout[k]);
+    if (wk < RIV_MIN_W) continue;
+    const mx = (nx[k] + nx[d]) / 2, mz = (nz[k] + nz[d]) / 2;
+    const wlM = (wlN[k] + wlN[d]) / 2;
+    const list = ups.get(k);
+    if (!list) {
+      addPiece(nx[k], nz[k], (nx[k] + mx) / 2, (nz[k] + mz) / 2, mx, mz, 0, wk, wlN[k], wlM);
+    } else {
+      const u1 = mainUp[k];
+      const kx = nx[k], kz = nz[k];
+      const ax = (nx[u1] + kx) / 2, az = (nz[u1] + kz) / 2;
+      const wlA = (wlN[u1] + wlN[k]) / 2;
+      const mainIdx = P.length;
+      const wA = rivWidth(Fout[u1]);
+      addPiece(ax, az, kx, kz, mx, mz, wA, wk, wlA, wlM);
+      // Sivujoet liittyvät eri kohtiin: yläjuoksun suunnasta tuleva liittyy
+      // aikaisemmin, jotta sivujoet eivät risteä keskenään eivätkä
+      // vastakkaisilta puolilta tulevat osu samaan kohtaan (näyttäisi risteykseltä).
+      const minors = [];
+      const upA = Math.atan2(az - kz, ax - kx);
+      for (const u of list) {
+        if (u === u1) continue;
+        const sx = (nx[u] + kx) / 2, sz = (nz[u] + kz) / 2;
+        let ang = Math.abs(Math.atan2(sz - kz, sx - kx) - upA);
+        if (ang > Math.PI) ang = Math.PI * 2 - ang;
+        minors.push({ u, sx, sz, ang });
+      }
+      minors.sort((p, q) => p.ang - q.ang);
+      {
+        const g = minors;
+        for (let gi = 0; gi < g.length; gi++) {
+          const { u, sx, sz } = g[gi];
+          const tau = 0.14 + (0.76 * (gi + 0.5)) / g.length;
+          const it = 1 - tau;
+          const jx = it * it * ax + 2 * tau * it * kx + tau * tau * mx;
+          const jz = it * it * az + 2 * tau * it * kz + tau * tau * mz;
+          let tx = it * (kx - ax) + tau * (mx - kx), tz = it * (kz - az) + tau * (mz - kz);
+          const tl = Math.hypot(tx, tz) || 1;
+          tx /= tl; tz /= tl;
+          let px = -tz, pz = tx;
+          if ((sx - jx) * px + (sz - jz) * pz < 0) { px = -px; pz = -pz; }
+          const L = Math.hypot(sx - jx, sz - jz);
+          const cx = jx - tx * L * 0.45 + px * L * 0.3, cz = jz - tz * L * 0.45 + pz * L * 0.3;
+          const wu = rivWidth(Fout[u]);
+          addPiece(sx, sz, cx, cz, jx, jz, wu, wu, (wlN[u] + wlN[k]) / 2, wlA + (wlM - wlA) * tau, mainIdx, wA + (wk - wA) * tau);
+        }
+      }
+    }
+    if (sea[d]) addPiece(mx, mz, (mx + nx[d]) / 2, (mz + nz[d]) / 2, nx[d], nz[d], wk, wk, wlM, wlN[d]);
+  }
+
+  // Murtoviivat, rajat ja hakemisto (ruudukon soluihin vääristetyssä
+  // koordinaatistossa; lisäksi karkea maski todellisessa koordinaatistossa).
+  const np = P.length;
+  const pts = new Float32Array(np * (RIV_SEG + 1) * 2);
+  const pw = new Float32Array(np * 5); // w0, w1, wl0, wl1, jyrkkyys
+  const pj = new Float32Array(np * 2); // sivujoelle: pääuoman pala ja sen leveys liitoksessa (muuten -1)
+  const box = new Float32Array(np * 4);
+  const counts = new Int32Array(n + 1);
+  const mask = new Uint8Array(n);
+  const cellsOf = (pi, fn) => {
+    const i0 = Math.max(0, Math.floor(box[pi * 4] / RIV_CELL + RIV_HALF));
+    const j0 = Math.max(0, Math.floor(box[pi * 4 + 1] / RIV_CELL + RIV_HALF));
+    const i1 = Math.min(G - 1, Math.floor(box[pi * 4 + 2] / RIV_CELL + RIV_HALF));
+    const j1 = Math.min(G - 1, Math.floor(box[pi * 4 + 3] / RIV_CELL + RIV_HALF));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) fn(j * G + i);
+  };
+  for (let pi = 0; pi < np; pi++) {
+    const [ax, az, bx, bz, cx, cz, w0, w1, wl0, wl1, parent, jw] = P[pi];
+    pj[pi * 2] = parent;
+    pj[pi * 2 + 1] = jw;
+    let minx = Infinity, minz = Infinity, maxx = -Infinity, maxz = -Infinity, len = 0;
+    for (let q = 0; q <= RIV_SEG; q++) {
+      const t = q / RIV_SEG, it = 1 - t;
+      const x = it * it * ax + 2 * t * it * bx + t * t * cx;
+      const z = it * it * az + 2 * t * it * bz + t * t * cz;
+      const o = (pi * (RIV_SEG + 1) + q) * 2;
+      pts[o] = x;
+      pts[o + 1] = z;
+      if (q > 0) len += Math.hypot(x - pts[o - 2], z - pts[o - 1]);
+      minx = Math.min(minx, x); maxx = Math.max(maxx, x);
+      minz = Math.min(minz, z); maxz = Math.max(maxz, z);
+    }
+    const V = rivValley(Math.max(w0, w1)) + 2;
+    box[pi * 4] = minx - V; box[pi * 4 + 1] = minz - V; box[pi * 4 + 2] = maxx + V; box[pi * 4 + 3] = maxz + V;
+    pw[pi * 5] = w0; pw[pi * 5 + 1] = w1; pw[pi * 5 + 2] = wl0; pw[pi * 5 + 3] = wl1;
+    pw[pi * 5 + 4] = smoothstep(0.08, 0.2, (wl0 - wl1) / Math.max(1, len));
+    cellsOf(pi, (c) => { counts[c + 1]++; });
+    // Maski: vääristyksen suurin siirtymä huomioiden.
+    const i0 = Math.max(0, Math.floor((minx - V - RIV_WARP) / RIV_CELL + RIV_HALF));
+    const j0 = Math.max(0, Math.floor((minz - V - RIV_WARP) / RIV_CELL + RIV_HALF));
+    const i1 = Math.min(G - 1, Math.floor((maxx + V + RIV_WARP) / RIV_CELL + RIV_HALF));
+    const j1 = Math.min(G - 1, Math.floor((maxz + V + RIV_WARP) / RIV_CELL + RIV_HALF));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) mask[j * G + i] = 1;
+  }
+  for (let c = 0; c < n; c++) counts[c + 1] += counts[c];
+  const list = new Int32Array(counts[n]);
+  const fill = counts.slice(0, n);
+  for (let pi = 0; pi < np; pi++) cellsOf(pi, (c) => { list[fill[c]++] = pi; });
+
+  RIV = { seed: SEED, start: counts, list, pts, pw, pj, box, mask, pieces: np };
+  return RIV;
+}
+
+// Lähin kohta palan pi murtoviivalla pisteestä (qx, qz) vääristetyssä
+// koordinaatistossa. Palauttaa etäisyyden; parametri (0..1) ja suunta jäävät
+// muuttujiin _pt, _pdx, _pdz.
+let _pt = 0, _pdx = 0, _pdz = 0;
+function pieceDist(R, pi, qx, qz) {
+  const pts = R.pts;
+  let best = Infinity;
+  const o0 = pi * (RIV_SEG + 1) * 2;
+  for (let q = 0; q < RIV_SEG; q++) {
+    const o = o0 + q * 2;
+    const ax = pts[o], az = pts[o + 1];
+    const ex = pts[o + 2] - ax, ez = pts[o + 3] - az;
+    const L2 = ex * ex + ez * ez;
+    let t = L2 > 0 ? ((qx - ax) * ex + (qz - az) * ez) / L2 : 0;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const dx = qx - ax - ex * t, dz = qz - az - ez * t;
+    const d2 = dx * dx + dz * dz;
+    if (d2 < best) {
+      best = d2;
+      _pt = (q + t) / RIV_SEG;
+      _pdx = ex;
+      _pdz = ez;
+    }
+  }
+  return Math.sqrt(best);
+}
+
+// Loiva vertailukorkeus (maaston suuret muodot): solmujen korkeus ja veden
+// pinnan yläraja notkoissa.
 function smoothRef(x, z, s) {
   let h = 0;
   if (s.t1 > 0.001) {
@@ -399,25 +747,9 @@ function smoothRef(x, z, s) {
   return h;
 }
 
-// Virtaus uoman suuntaan alamäkeen.
-const _fl = {};
-function setFlow(out, x, z, gx, gz, ref, speedMul) {
-  let tx = -gz, tz = gx;
-  const len = Math.hypot(tx, tz);
-  if (len < 1e-9) return;
-  tx /= len; tz /= len;
-  Object.assign(_fl, out);
-  const ahead = smoothRef(x + tx * 6, z + tz * 6, _fl);
-  const drop = (ref - ahead) / 6;
-  if (drop < 0) { tx = -tx; tz = -tz; }
-  const speed = Math.min(1.5, 0.3 + Math.abs(drop) * 12) * speedMul;
-  out.flowX = tx * speed;
-  out.flowZ = tz * speed;
-}
-
-// Kaiva uoma ja laakso. w = veden puolileveys, V = laakson puolileveys.
-function carveChannel(out, dc, w, V, wl, depth) {
-  const raw = out.h;
+// Kaivettu korkeus yhden uoman kohdalla. w = veden puolileveys, V = laakson
+// puolileveys. Rotkon kohdalla ranta täytetään loivasti pinnan yläpuolelle.
+function carveH(raw, dc, w, V, wl, depth) {
   let target;
   if (dc < w) {
     const u = dc / w;
@@ -425,96 +757,146 @@ function carveChannel(out, dc, w, V, wl, depth) {
   } else {
     target = wl + 0.15 + (dc - w) * 0.35;
   }
-  let h = Math.min(raw, target);
+  // Sessio 24: pehmeä minimi (uoman reunat pyöristyvät, ei taitekohtaa).
+  let h = smin(raw, target, 0.9);
   h = h + (raw - h) * smoothstep(V * 0.6, V, dc);
-  // Rotkon kohdalla ranta täytetään loivasti pinnan yläpuolelle (ei seinämiä).
-  // Lampien ja meren kohdalla ei täytetä.
   if (dc >= w && h < wl + 0.15 && raw > WATER_LEVEL) {
     h += (wl + 0.15 - h) * (1 - smoothstep(w + 3, Math.max(V, w + 9), dc));
   }
-  out.h = h;
+  return h;
 }
 
-const _sx = {}, _sz = {};
+const _rq = { x: 0, z: 0 };
+// Pisteen lähellä olevat uomat (enintään 8): pinnan korkeus lasketaan ensin
+// kaikille, sitten pinnat sovitetaan yhteen ja lopuksi uomat kaivetaan.
+const _cand = [];
+for (let i = 0; i < 8; i++) _cand.push({ o: 0, dc: 0, w: 0, V: 0, wl: 0, lim: 0, dx: 0, dz: 0 });
+
 function applyRivers(x, z, out) {
-  if (out.ocean > 0.9) return; // avomeren pohjassa ei jokia
-  const rf = out.rainforest, mt = out.mountains, cw = out.coastW, t1 = out.t1;
-  // Sahelissa jokia on harvoin: vain kosteammilla alueilla, ei dyyneillä eikä tasangoilla.
-  let sahelWet = 0;
-  if (t1 > 0.01) {
-    sahelWet = smoothstep(0.4, 0.52, fbm(N.wet, x / 3200, z / 3200, 2))
-      * (1 - smoothstep(0.1, 0.3, out.dunes / t1)) * (1 - smoothstep(0.05, 0.25, out.plateau)) * (1 - out.spawn * 0.8);
-  }
-  const notRock = 1 - Math.min(1, out.rock * 2 + out.mesa * 2);
-  const vary = 0.8 + 0.4 * (N.width(x / 420, z / 420) * 0.5 + 0.5);
-  const wR = ((rf + cw) * 8 + t1 * sahelWet * 3.6) * notRock * vary;
-  const wS = (rf * 2.9 + mt * 2.6) * notRock * vary;
-  if (wR < 0.3 && wS < 0.3) return;
-
-  const VR = wR * 2.4 + 12 * Math.min(1, wR / 3);
-  const VS = wS * 3 + 7 * Math.min(1, wS / 1.5);
-  const dR = wR > 0.3 ? channelDist(N.river, N.rwarp, RIVER_S, x, z, VR) : Infinity;
-  const rgx = _cgx, rgz = _cgz;
-  const dS = wS > 0.3 ? channelDist(N.stream, N.swarp, STREAM_S, x, z, VS) : Infinity;
-  const sgx = _cgx, sgz = _cgz;
-  if (dR >= VR && dS >= VS) return;
-
-  const ref = smoothRef(x, z, out);
-  // Alangoilla pinta lähestyy merenpintaa, muualla se on laakson pohjalla.
-  const low = 1 - smoothstep(WATER_LEVEL + 1, WATER_LEVEL + 4, ref);
+  if (out.ocean > 0.9) return;
+  const R = riverNet();
+  const ci0 = Math.floor(x / RIV_CELL + RIV_HALF), cj0 = Math.floor(z / RIV_CELL + RIV_HALF);
+  if (ci0 < 0 || cj0 < 0 || ci0 >= RIV_G || cj0 >= RIV_G || !R.mask[cj0 * RIV_G + ci0]) return;
+  rivWarp(x, z, _rq);
+  const qx = _rq.x, qz = _rq.z;
+  const ci = Math.floor(qx / RIV_CELL + RIV_HALF), cj = Math.floor(qz / RIV_CELL + RIV_HALF);
+  if (ci < 0 || cj < 0 || ci >= RIV_G || cj >= RIV_G) return;
+  const c = cj * RIV_G + ci;
+  const a = R.start[c], b = R.start[c + 1];
+  if (a === b) return;
   const raw = out.h;
-  if (dR < VR) {
-    const wl = Math.max(WATER_LEVEL, ref - 2.0 * (1 - low) - 0.8 * low);
-    // Kapenevan joen pohja nousee pinnan yläpuolelle: vesi loppuu pehmeästi
-    // ja uoma jatkuu kuivana.
-    const depth = (0.6 + wR * 0.2) * smoothstep(1.0, 3.0, wR) - 0.25 * (1 - smoothstep(1.0, 3.0, wR));
-    carveChannel(out, dR, wR, VR, wl, depth);
-    if (dR < wR + 1.5 && wl > out.wl && raw > WATER_LEVEL) {
-      out.wl = wl;
-      out.wtype = WATER.RIVER;
-      setFlow(out, x, z, rgx, rgz, ref, 1);
+  const notRock = 1 - Math.min(1, out.rock * 2 + out.mesa * 2);
+  let vary = -1, ref = NaN, n = 0;
+  for (let e = a; e < b && n < _cand.length; e++) {
+    const pi = R.list[e];
+    const bx = pi * 4;
+    if (qx < R.box[bx] || qz < R.box[bx + 1] || qx > R.box[bx + 2] || qz > R.box[bx + 3]) continue;
+    const dc = pieceDist(R, pi, qx, qz);
+    const t = _pt;
+    const pdx = _pdx, pdz = _pdz;
+    const o = pi * 5;
+    if (vary < 0) vary = 0.8 + 0.4 * (N.width(x / 420, z / 420) * 0.5 + 0.5);
+    let w = (R.pw[o] + (R.pw[o + 1] - R.pw[o]) * t) * notRock * vary;
+    // Vuoristossa jyrkillä osuuksilla uoma kuivuu.
+    if (out.mountains > 0.05) w *= 1 - out.mountains * R.pw[o + 4];
+    if (w < 0.3) continue;
+    const V = rivValley(w);
+    if (dc >= V) continue;
+    if (ref !== ref) ref = smoothRef(x, z, out);
+    // Pinta laskee alajuoksulle; notkoissa se seuraa maastoa (ei penkereitä).
+    let wl = Math.max(WATER_LEVEL, Math.min(R.pw[o + 2] + (R.pw[o + 3] - R.pw[o + 2]) * t, ref - 1.0));
+    // Pienet purot ja kuivat uomat kulkevat lähellä maan pintaa (matala oja).
+    // Sivujoen loppuosalla nosto liukuu pääuoman nostoon, jotta pinnat
+    // kohtaavat liitoksessa samalla korkeudella.
+    let wr = w;
+    const par = R.pj[pi * 2];
+    if (par >= 0) {
+      const bl = smoothstep(0.35, 1.0, t);
+      if (bl > 0) {
+        let wm = R.pj[pi * 2 + 1] * notRock * vary;
+        if (out.mountains > 0.05) wm *= 1 - out.mountains * R.pw[par * 5 + 4];
+        wr = w + (wm - w) * bl;
+      }
     }
-    out.chan = Math.max(out.chan, 1 - smoothstep(wR, VR, dR));
+    if (wr < 2) {
+      // Nosto enintään todellisen maanpinnan alle, eikä pieni puro kellu
+      // maan yläpuolella (loiva vertailukorkeus voi olla notkon yläpuolella).
+      const f = 1 - smoothstep(0.8, 2.0, wr);
+      wl += Math.max(0, Math.min(ref - 0.5, raw - 0.2) - wl) * f;
+      wl = Math.max(WATER_LEVEL, Math.min(wl, raw - 0.2 + (1 - f) * 8));
+    }
+    const k = _cand[n++];
+    k.o = o; k.dc = dc; k.w = w; k.V = V; k.wl = wl; k.dx = pdx; k.dz = pdz;
   }
-  if (dS < VS) {
-    // Sama taso kuin joilla, jotta risteyksiin ei tule porrasta.
-    const wl = Math.max(WATER_LEVEL, ref - 2.0 * (1 - low) - 0.8 * low);
-    let w = wS;
-    // Vuoristossa purot vain loivissa kohdissa (jyrkässä rinteessä uoma kuivuu).
-    if (mt > 0.05) {
-      Object.assign(_sx, out);
-      Object.assign(_sz, out);
-      const gx = smoothRef(x + 4, z, _sx) - ref;
-      const gz = smoothRef(x, z + 4, _sz) - ref;
-      const slope = Math.hypot(gx, gz) / 4;
-      w *= 1 - mt * smoothstep(0.08, 0.2, slope);
+  if (!n) return;
+  // Pintojen yhteensovitus: kapea uoma ei saa olla toisen (yhtä leveän tai
+  // leveämmän) uoman pintaa paljon korkeammalla sen laakson kohdalla, muuten
+  // liitoksiin ja vierekkäisiin uomiin syntyy pystysuora vesiseinä. Pinta
+  // laskee loivasti (0,3 m / m) kohti matalampaa uomaa, laakson rinnettä loivemmin.
+  for (let i = 0; i < n; i++) {
+    const A = _cand[i];
+    let lim = A.wl;
+    for (let j = 0; j < n; j++) {
+      const B = _cand[j];
+      if (j === i || B.wl >= lim || A.w > B.w + 1) continue;
+      lim = Math.min(lim, B.wl + Math.max(0, B.dc - B.w) * 0.3);
     }
-    if (w > 0.3) {
-      const V = w * 3 + 7 * Math.min(1, w / 1.5);
-      if (dS < V) {
-        const depth = (0.35 + w * 0.15) * smoothstep(1.0, 2.2, w) - 0.2 * (1 - smoothstep(1.0, 2.2, w));
-        carveChannel(out, dS, w, V, wl, depth);
-        if (dS < w + 1.5 && wl > out.wl && raw > WATER_LEVEL) {
-          out.wl = wl;
-          out.wtype = WATER.STREAM;
-          setFlow(out, x, z, sgx, sgz, ref, 1.2);
-        }
-        out.chan = Math.max(out.chan, 1 - smoothstep(w, V, dS));
+    A.lim = lim;
+  }
+  let hMin = raw, hMax = raw, bestN = Infinity;
+  for (let i = 0; i < n; i++) {
+    const k = _cand[i];
+    const w = k.w, wl = k.lim;
+    // Kapenevan uoman pohja nousee pinnan yläpuolelle: vesi loppuu pehmeästi
+    // ja uoma jatkuu kuivana.
+    const ds = smoothstep(0.9, 2.0, w);
+    const depth = (0.35 + w * 0.2) * ds - 0.2 * (1 - ds);
+    const h = carveH(raw, k.dc, w, k.V, wl, depth);
+    if (h < hMin) hMin = h;
+    if (h > hMax) hMax = h;
+    out.chan = Math.max(out.chan, 1 - smoothstep(w, k.V, k.dc));
+    if (k.dc < w + 1.5 && raw > WATER_LEVEL && wl > out.wl - 0.01 && k.dc / w < bestN) {
+      bestN = k.dc / w;
+      out.wl = Math.max(out.wl, wl);
+      out.wtype = w >= 4.5 ? WATER.RIVER : WATER.STREAM;
+      // Virtaus alajuoksulle päin; nopeus pinnan kaltevuudesta.
+      const len = Math.hypot(k.dx, k.dz) || 1;
+      const slope = Math.max(0, R.pw[k.o + 2] - R.pw[k.o + 3]) / (len * RIV_SEG);
+      const speed = Math.min(1.5, 0.3 + slope * 12) * (w >= 4.5 ? 1 : 1.2);
+      out.flowX = (k.dx / len) * speed;
+      out.flowZ = (k.dz / len) * speed;
+    }
+  }
+  out.h = hMin < raw ? hMin : hMax;
+}
+
+// Onko pisteen lähellä uoma (järvet eivät osu uomiin).
+function nearChannel(x, z, margin) {
+  const R = riverNet();
+  rivWarp(x, z, _rq);
+  const qx = _rq.x, qz = _rq.z;
+  const r = Math.ceil(margin / RIV_CELL);
+  const ci = Math.floor(qx / RIV_CELL + RIV_HALF), cj = Math.floor(qz / RIV_CELL + RIV_HALF);
+  for (let j = Math.max(0, cj - r); j <= Math.min(RIV_G - 1, cj + r); j++) {
+    for (let i = Math.max(0, ci - r); i <= Math.min(RIV_G - 1, ci + r); i++) {
+      const c = j * RIV_G + i;
+      for (let e = R.start[c]; e < R.start[c + 1]; e++) {
+        const pi = R.list[e];
+        const w = Math.max(R.pw[pi * 5], R.pw[pi * 5 + 1]);
+        // Myös pienet purot laaksoineen (järvi tai kallio niiden päällä jättäisi
+        // puron veden ilmaan).
+        if (w * 1.2 < 0.3) continue;
+        if (pieceDist(R, pi, qx, qz) < margin + rivValley(w * 1.2)) return true;
       }
     }
   }
+  return false;
 }
 
 // --- Järvet ja lammet (sademetsä, vuoristo) ---------------------------------------
 
 const LAKE_CELL = 380;
 const _lb = {};
-
-// Onko pisteen lähellä joki tai puro (järvet eivät osu uomiin).
-function nearChannel(x, z, margin) {
-  return channelDist(N.river, N.rwarp, RIVER_S, x, z, margin + 45) < margin + 45
-    || channelDist(N.stream, N.swarp, STREAM_S, x, z, margin + 28) < margin + 28;
-}
 
 function lakeInCell(ix, iz) {
   const key = ix * 131071 + iz;
@@ -577,7 +959,11 @@ function applyLakes(x, z, out) {
       let h = Math.min(out.h, target);
       // Pehmeä penger rannan takana (ei pystysuoria seinämiä)
       if (t >= 1 && h < L.wl + 0.15) h += (L.wl + 0.15 - h) * (1 - smoothstep(1.15, 1.4, t));
+      const hOld = out.h;
       out.h = h + (out.h - h) * smoothstep(1.3, 1.7, t);
+      // Uoman vesi laskee järven painanteen mukana (ei jää ilmaan).
+      const drop = hOld - out.h;
+      if (drop > 0 && (out.wtype === WATER.RIVER || out.wtype === WATER.STREAM)) out.wl = Math.max(WATER_LEVEL, out.wl - drop);
       if (t < 1.25 && L.wl > out.wl) {
         out.wl = L.wl;
         out.wtype = WATER.LAKE;
@@ -601,11 +987,12 @@ function sampleTerrainRaw(x, z, out) {
 export function sampleTerrain(x, z, out = {}) {
   sampleTerrainRaw(x, z, out);
   const st = structureInCell(Math.floor(x / STRUCT_CELL), Math.floor(z / STRUCT_CELL));
-  if (st) {
+  if (st && st.flat !== false) {
     const d = Math.hypot(x - st.x, z - st.z);
     const r = st.radius;
     if (d < r * 1.5) {
-      const w = 1 - smoothstep(r * 0.75, r * 1.5, d);
+      // Ei tasoitusta uomien kohdalla (muuten puro jäisi ilmaan tai hautautuisi).
+      const w = (1 - smoothstep(r * 0.75, r * 1.5, d)) * (1 - Math.min(1, out.chan * 2));
       out.h += (st.baseH - out.h) * w;
     }
   }
@@ -616,22 +1003,27 @@ export function sampleTerrain(x, z, out = {}) {
 // Maailma jaetaan soluihin; joka solussa voi olla yksi rakennelma. Kaikki on
 // siemenestä laskettua, joten sijainnit ja arkkujen sisällöt pysyvät samoina.
 
-export const STRUCT_CELL = 320;
-const STRUCT_CHANCE = 0.24;
-export const STRUCT_RADIUS = { stoneCircle: 8, camp: 10, ruinHouse: 7, ruinVillage: 21 };
+// Sessio 9: rakennelmia selvästi enemmän (n. 4 kertaa aiempi), jotta niitä
+// löytää satunnaisesti vaeltaessa. Sessio 11: vielä noin kaksinkertaisesti
+// (solu 180 m, 60 %), ja laivanhylkyjä näkee rannoilla satunnaisesti.
+export const STRUCT_CELL = 180;
+const STRUCT_CHANCE = 0.6;
+const SHIPWRECK_CHANCE = 0.35; // rantaviiva solussa -> laivanhylky
+export const STRUCT_RADIUS = { stoneCircle: 8, camp: 10, ruinHouse: 7, ruinVillage: 21, shipwreck: 11, runestone: 3, runeTablet: 2 };
 // Painot biomeittain; null = ei rakennelmaa. Talon ja kylän rauniot ovat
 // kaikissa biomeissa harvinaisia (n. 7–8 % soluista), muut ovat biomin omia.
+// Riimukivet ja -taulut (sessio 9) ovat kaikkialla siellä täällä.
 const STRUCT_TABLE = {
-  savanna: [['stoneCircle', 5], ['ruinHouse', 2], ['ruinVillage', 0.6]],
-  woodland: [['stoneCircle', 4], ['ruinHouse', 2.2], ['ruinVillage', 0.7]],
-  laterite: [['stoneCircle', 6], ['ruinHouse', 2], ['ruinVillage', 0.6]],
-  dunes: [['camp', 3], ['stoneCircle', 2], ['ruinHouse', 1.2], [null, 1]],
-  mare: [['ruinHouse', 1.5], ['ruinVillage', 0.6], [null, 5]],
-  desert: [['camp', 6.5], ['ruinHouse', 1.5], ['ruinVillage', 0.6]],
-  oasis: [['camp', 4], ['ruinVillage', 1.2], [null, 1]],
-  rainforest: [['ruinHouse', 2.2], ['ruinVillage', 0.8], [null, 7]],
-  mountains: [['ruinHouse', 2.2], ['ruinVillage', 0.8], [null, 7]],
-  beach: [['camp', 2], ['ruinHouse', 1.5], [null, 4]],
+  savanna: [['stoneCircle', 5], ['ruinHouse', 2], ['ruinVillage', 0.6], ['runestone', 1.2], ['runeTablet', 1.6]],
+  woodland: [['stoneCircle', 4], ['ruinHouse', 2.2], ['ruinVillage', 0.7], ['runestone', 1.1], ['runeTablet', 1.5]],
+  laterite: [['stoneCircle', 6], ['ruinHouse', 2], ['ruinVillage', 0.6], ['runestone', 1.4], ['runeTablet', 1.6]],
+  dunes: [['camp', 3], ['stoneCircle', 2], ['ruinHouse', 1.2], ['runestone', 0.8], ['runeTablet', 1], [null, 1]],
+  mare: [['ruinHouse', 1.5], ['ruinVillage', 0.6], ['runestone', 0.8], ['runeTablet', 1.2], [null, 5]],
+  desert: [['camp', 6.5], ['ruinHouse', 1.5], ['ruinVillage', 0.6], ['runestone', 1.4], ['runeTablet', 1.8]],
+  oasis: [['camp', 4], ['ruinVillage', 1.2], ['runestone', 0.6], ['runeTablet', 0.8], [null, 1]],
+  rainforest: [['ruinHouse', 2.2], ['ruinVillage', 0.8], ['runestone', 1.4], ['runeTablet', 1.6], [null, 4]],
+  mountains: [['ruinHouse', 2.2], ['ruinVillage', 0.8], ['runestone', 1.8], ['runeTablet', 1.6], [null, 4]],
+  beach: [['camp', 2], ['ruinHouse', 1.5], ['runeTablet', 0.8], [null, 3]],
   ocean: [[null, 1]],
 };
 
@@ -643,13 +1035,15 @@ export function structureInCell(ix, iz) {
   const rand = mulberry32((Math.imul(ix, 73856093) ^ Math.imul(iz, 19349663) ^ Math.imul(SEED + 7, 83492791)) >>> 0);
   if (rand() < STRUCT_CHANCE) {
     // Kokeile muutamaa paikkaa ja valitse tasaisin (ei vettä lähellä).
-    let best = null;
+    // Rannalta muistetaan märkä paikka laivanhylkyä varten.
+    let best = null, shore = null;
     for (let k = 0; k < 3; k++) {
       const x = (ix + 0.15 + rand() * 0.7) * STRUCT_CELL;
       const z = (iz + 0.15 + rand() * 0.7) * STRUCT_CELL;
       sampleTerrainRaw(x, z, _sraw);
       if (_sraw.h < _sraw.wl + 0.8 || _sraw.dEdge > 0.97 || _sraw.rock > 0.05 || _sraw.mesa > 0.05 || _sraw.chan > 0.01) continue;
       const h0 = _sraw.h;
+      const onBeach = _sraw.beach > 0.5;
       let rough = 0;
       let wet = false;
       for (let a = 0; a < 6; a++) {
@@ -657,12 +1051,57 @@ export function structureInCell(ix, iz) {
         rough += Math.abs(_sraw.h - h0);
         if (_sraw.h < _sraw.wl + 0.5 || _sraw.chan > 0.01) wet = true;
       }
-      if (wet) continue;
+      if (wet) {
+        if (onBeach && rough < 6 && !shore) shore = { x, z, h: h0 };
+        continue;
+      }
       sampleTerrainRaw(x, z, _sraw);
       if (!best || rough < best.rough) best = { x, z, rough, h: _sraw.h, biome: biomeOf(_sraw), spawn: _sraw.spawn };
     }
+    // Rannikolla vesiraja etsitään ruudukosta: kapea hiekkaranta (10-30 m)
+    // jää helposti satunnaisnäytteiden väliin. Vierekkäisten kuivan ja märän
+    // pisteen väliltä haetaan rantaviiva ja hylky asetetaan sen kuivalle puolelle.
+    if (!shore) {
+      sampleTerrainRaw((ix + 0.5) * STRUCT_CELL, (iz + 0.5) * STRUCT_CELL, _sraw);
+      if (_sraw.coastW > 0.2) {
+        const G = 7, cs = STRUCT_CELL / G, x0 = ix * STRUCT_CELL + cs / 2, z0 = iz * STRUCT_CELL + cs / 2;
+        const wet = new Int8Array(G * G);
+        for (let j = 0; j < G; j++) {
+          for (let i = 0; i < G; i++) {
+            sampleTerrainRaw(x0 + i * cs, z0 + j * cs, _sraw);
+            const sea = _sraw.ocean + _sraw.beach > 0.5;
+            wet[j * G + i] = !sea ? 0 : _sraw.h < _sraw.wl - 0.2 ? 2 : _sraw.h > _sraw.wl + 0.2 ? 1 : 0;
+          }
+        }
+        const o = Math.floor(rand() * G * G);
+        for (let q = 0; q < G * G && !shore; q++) {
+          const k = (q + o) % (G * G), i = k % G, j = (k / G) | 0;
+          if (wet[k] !== 1) continue;
+          for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const ni = i + di, nj = j + dj;
+            if (ni < 0 || nj < 0 || ni >= G || nj >= G || wet[nj * G + ni] !== 2) continue;
+            // Puolitushaku rantaviivaan, sitten 4 m kuivalle puolelle.
+            let ax = x0 + i * cs, az = z0 + j * cs, bx = x0 + ni * cs, bz = z0 + nj * cs;
+            for (let it = 0; it < 5; it++) {
+              const mx = (ax + bx) / 2, mz = (az + bz) / 2;
+              sampleTerrainRaw(mx, mz, _sraw);
+              if (_sraw.h > _sraw.wl) { ax = mx; az = mz; } else { bx = mx; bz = mz; }
+            }
+            const dl = Math.hypot(ax - bx, az - bz) || 1;
+            const sx = ax + ((ax - bx) / dl) * 4, sz = az + ((az - bz) / dl) * 4;
+            sampleTerrainRaw(sx, sz, _sraw);
+            if (_sraw.h > _sraw.wl + 0.1 && _sraw.h < _sraw.wl + 3 && _sraw.rock < 0.05) shore = { x: sx, z: sz, h: _sraw.h };
+            break;
+          }
+        }
+      }
+    }
     let type = null;
-    if (best && Math.hypot(best.x, best.z) > 60) {
+    // Rannalla laivanhylky vesirajaan (myös, jos solussa on kuivakin paikka).
+    if (shore && rand() < SHIPWRECK_CHANCE) {
+      best = { ...shore, biome: 'beach' };
+      type = 'shipwreck';
+    } else if (best && Math.hypot(best.x, best.z) > 60) {
       const table = STRUCT_TABLE[best.biome] || STRUCT_TABLE.savanna;
       let total = 0;
       for (const [, w] of table) total += w;
@@ -672,12 +1111,14 @@ export function structureInCell(ix, iz) {
     }
     if (type) {
       const seed = (rand() * 4294967296) >>> 0;
-      const chest = rand() < 0.45;
+      const chest = type !== 'runestone' && type !== 'runeTablet' && rand() < 0.45;
       const valuables = chest && rand() < 0.1;
       const style = best.biome === 'mountains' ? 'stone' : best.biome === 'rainforest' ? 'jungle' : 'mud';
       result = {
         id: `s${ix},${iz}`, ix, iz, type, x: best.x, z: best.z, rot: rand() * Math.PI * 2,
         radius: STRUCT_RADIUS[type], baseH: best.h, seed, chest, valuables, biome: best.biome, style,
+        // Laivanhylky makaa rannalla sellaisenaan (maastoa ei tasoiteta veden viereen).
+        flat: type !== 'shipwreck',
       };
     }
   }
@@ -895,6 +1336,25 @@ export function groundColor(x, z, s, slope, out) {
   return out;
 }
 
+// Sessio 23: maalajien painot maaston tekstuureille (materials.js):
+// out = [hiekka, kuiva maa, metsänpohja, kallio], summa 1. slope: 0..1.
+export function groundWeights(x, z, s, slope, out) {
+  const dryOasis = s.oasis > 0 ? smoothstep(1.4, 2.6, s.h) : 0;
+  let sand = s.dunes + s.desert + s.beach + s.ocean + s.oasis * dryOasis * 0.8;
+  let soil = s.savanna + s.laterite + s.woodland + s.mare * 0.75 + s.mountains * 0.35;
+  let forest = s.rainforest + s.oasis * (1 - dryOasis * 0.8) + s.mare * 0.25;
+  let rock = s.mountains * 0.65;
+  const sum = sand + soil + forest + rock || 1;
+  sand /= sum; soil /= sum; forest /= sum; rock /= sum;
+  // Peittävät kerrokset kuten väreissä: jyrkät rinteet, graniitti, pöytävuoret.
+  const over = (t) => { sand *= 1 - t; soil *= 1 - t; forest *= 1 - t; rock = rock * (1 - t) + t; };
+  over(smoothstep(0.35, 0.7, slope) * 0.85);
+  if (s.rock > 0) over(s.rock * (0.55 + 0.45 * slope));
+  if (s.mesa > 0) over(s.mesa * Math.min(1, 0.35 + slope * 1.5));
+  out[0] = sand; out[1] = soil; out[2] = forest; out[3] = rock;
+  return out;
+}
+
 // Kartan väri (sRGB 0..255).
 const _mapCache = {};
 export function mapColorRGB(x, z, out) {
@@ -996,4 +1456,9 @@ export function findWater(type, fromX = 0, fromZ = 0) {
     }
   }
   return null;
+}
+
+// Kehittäjille: valumaverkon sisäinen rakenne (kartat ja testit).
+export function riverNetDebug() {
+  return riverNet();
 }

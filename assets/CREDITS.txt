@@ -1,0 +1,51 @@
+Sahel – ulkopuoliset materiaalit
+================================
+
+Tekstuurit ja mallit ovat CC0-lisensoituja (public domain): ne saa käyttää
+vapaasti ilman mainintaa. Lähteet kirjataan silti tähän.
+
+Tekstuurit (assets/textures/), ambientCG (https://ambientcg.com), CC0:
+  sand    = Ground054      soil   = Ground072      forest = Ground078
+  rock    = Rock030        bark   = Bark014        planks = Planks012
+  moss    = Moss002        mossrock = Rock064 (sessio 24)
+  (1K-JPG; väri- ja normaalikartta, uudelleenpakattu JPEG:ksi)
+  leaves.png = LeafSet019, LeafSet024, LeafSet022 (koottu atlakseksi)
+  grass.png = Clauden piirtämä ruohoatlas (sessio 24, CC0)
+  forestfloor.png = koottu Quaterniuksen lehtikuvista (ks. alla)
+
+Mallit (assets/models/, src/models/scanned/), Poly Haven (https://polyhaven.com), CC0:
+  rocks/boulder_02..06 = namaqualand_boulder_02 .. namaqualand_boulder_06
+  (1k glTF, kevennetty gltf-transform + meshoptimizer)
+
+Mallit ja tekstuurit (assets/models/nature/, src/models/kit/), Quaternius
+Stylized Nature MegaKit, ilmainen versio (https://quaternius.com), CC0 (sessio 24):
+  Fern_1, Clover_1-2, Plant_1, Plant_1_Big, Mushroom_Common, Mushroom_Laetiporus,
+  Rock_Medium_1-3, Flower_3_Group, Flower_4_Group, DeadTree_1-3
+  (mittakaava pelin metreihin, kiinteät osat kevennetty meshoptimizerilla;
+  tekstuurit pienennetty)
+  Sessio 28: lahopuun kuori (deadbark.jpg, deadbark_nrm.jpg) vaihdettu: Poly Haven
+  bark_willow_02 (CC0, 1k), haalistettu harmaaksi.
+
+Kädet (assets/models/arms/), sessio 29: käyttäjän antama malli
+  FPS_Female_Arms.fbx ja sen tekstuurit (väri, karheus, normaali). Muunnettu
+  GLB:ksi (metrit, luiden lepokierrot nollattu), tekstuurit pienennetty
+  1024 px WebP-kuviksi ja karheus skaalattu mattapintaisemmaksi.
+
+Norsu (assets/models/elephant/elephant.glb), sessio 31: käyttäjän antama
+  malli low_poly_realistic_elephant_3d_model_free.glb (sellaisenaan, upotettu
+  tekstuuri). Luuranko ja painot rakennetaan pelissä latauksen yhteydessä.
+
+Puunuija ja soihtu (assets/models/items/club_*, torch_*; geometria
+  src/models/data/userItems.js), sessio 33: käyttäjän antamat mallit
+  wooden_club.glb ja torch.glb, muunnettu pelin muotoon (koko, suunta,
+  tekstuurit WebP).
+
+Ihon pintakuvio (assets/models/arms/skin_detail_*.webp), sessio 33:
+  ShareTextures.com, Human Skin 2 (custom CC0 -lisenssi: vapaa käyttö
+  myös kaupallisesti, muokkaus sallittu, tiedostoja ei jaeta sellaisenaan
+  muualla). Pienennetty, AO ja smoothness yhdistetty.
+
+Kivipuukko (assets/models/items/knife_*.webp), sessio 33: ambientCG.com
+  Wood051, Rope001 ja Rock030 (CC0), pienennetty 512 px.
+
+Fontit: ks. assets/fonts (OFL).

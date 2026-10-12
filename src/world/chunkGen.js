@@ -4,10 +4,11 @@
 import { CONFIG } from '../config.js';
 import { mulberry32, hashSeed } from '../noise.js';
 import {
-  sampleTerrain, heightAt, groundColor, getWorldSeed, BIOME_KEYS, insideStructure, mapColorRGB,
+  sampleTerrain, heightAt, groundColor, groundWeights, getWorldSeed, BIOME_KEYS, insideStructure, mapColorRGB,
 } from './terrain.js';
 import { OBJECT_TYPES, OBJECT_TYPE_KEYS, DECOR_TYPES } from './objectTypes.js';
 import { openFactor } from './waves.js';
+import { generateCover } from './groundCover.js';
 
 // Tiheyden avaimet: biomit sekä muodostumat (graniittikallio, pöytävuori).
 const DENSITY_KEYS = [...BIOME_KEYS, 'rock', 'mesa'];
@@ -16,6 +17,19 @@ const SEG = CONFIG.chunkSegments;
 const STEP = SIZE / SEG;
 export const OBJ_STRIDE = 8;   // typeIndex, candidate, x, y, z, rot, scale, variant
 export const DECOR_STRIDE = 8; // decorIndex, variant, x, y, z, rotY, sxz, sy
+
+// Piirretyn maastoverkon korkeus (kolmiot kuten world.js:n indeksissä:
+// lävistäjä kulmasta (i+1, j) kulmaan (i, j+1)). Analyyttinen korkeus voi olla
+// kuperalla maalla verkon yläpuolella, jolloin litteä lammikko leijui.
+function meshHeight(x, z) {
+  const gx = Math.floor(x / STEP), gz = Math.floor(z / STEP);
+  const fx = x / STEP - gx, fz = z / STEP - gz;
+  const X = gx * STEP, Z = gz * STEP;
+  const ha = heightAt(X, Z), hb = heightAt(X + STEP, Z), hc = heightAt(X, Z + STEP);
+  if (fx + fz <= 1) return ha + (hb - ha) * fx + (hc - ha) * fz;
+  const hd = heightAt(X + STEP, Z + STEP);
+  return hd + (hc - hd) * (1 - fx) + (hb - hd) * (1 - fz);
+}
 
 function slope(x, z, h) {
   const nx = h - heightAt(x + 1, z);
@@ -44,7 +58,9 @@ export function generateChunk(cx, cz, variantCounts) {
   const normals = new Float32Array(row * row * 3);
   const colors = new Float32Array(row * row * 3);
   const uvs = new Float32Array(row * row * 2);
+  const gw = new Float32Array(row * row * 4);
   const col = [0, 0, 0];
+  const gwv = [0, 0, 0, 0];
   const uvOx = Math.floor(x0 / 3) * 3;
   const uvOz = Math.floor(z0 / 3) * 3;
   let minH = Infinity;
@@ -73,6 +89,8 @@ export function generateChunk(cx, cz, variantCounts) {
       colors[v * 3] = col[0];
       colors[v * 3 + 1] = col[1];
       colors[v * 3 + 2] = col[2];
+      groundWeights(x, z, samples[v], 1 - ny, gwv);
+      gw[v * 4] = gwv[0]; gw[v * 4 + 1] = gwv[1]; gw[v * 4 + 2] = gwv[2]; gw[v * 4 + 3] = gwv[3];
       uvs[v * 2] = (x - uvOx) / 3;
       uvs[v * 2 + 1] = (z - uvOz) / 3;
       rain += samples[v].rainforest;
@@ -104,7 +122,10 @@ export function generateChunk(cx, cz, variantCounts) {
       if (!def.density.rock) p *= 1 - s.rock * 0.85;
       if (!def.density.mesa) p *= 1 - s.mesa * 0.75;
       if (r1 >= p / maxD) continue;
-      if (s.h < s.wl + 0.15) continue;
+      if (def.nearWater) {
+        // Vain vesirajassa (joet, järvet, lammet, meren ranta)
+        if (s.h < s.wl - 0.1 || s.h > s.wl + 1.0) continue;
+      } else if (s.h < s.wl + 0.15) continue;
       if (def.maxSlope < 1 && slope(x, z, s.h) > def.maxSlope) continue;
       if (insideStructure(x, z, def.kind === 'pickup' ? 0 : 2)) continue;
       const scale = def.scale[0] + r3 * (def.scale[1] - def.scale[0]);
@@ -113,6 +134,17 @@ export function generateChunk(cx, cz, variantCounts) {
   }
 
   // --- Koristeet (ruoho ym.)
+  // Sessio 24: koristeita on paljon (kerroksellinen maanpeite), joten ne
+  // käyttävät lähimmän verkon kärjen maastonäytettä ja piirretyn verkon
+  // korkeutta eivätkä laske maastoa erikseen jokaiselle ehdokkaalle.
+  const gridHeight = (lx, lz) => {
+    const fi = Math.min(SEG - 1e-4, Math.max(0, lx / STEP)), fj = Math.min(SEG - 1e-4, Math.max(0, lz / STEP));
+    const gi = Math.floor(fi), gj = Math.floor(fj);
+    const fx = fi - gi, fz = fj - gj;
+    const a = gj * row + gi, b = a + 1, c = a + row, d = c + 1;
+    const ha = positions[a * 3 + 1], hb = positions[b * 3 + 1], hc = positions[c * 3 + 1], hd = positions[d * 3 + 1];
+    return fx + fz <= 1 ? ha + (hb - ha) * fx + (hc - ha) * fz : hd + (hc - hd) * (1 - fx) + (hb - hd) * (1 - fz);
+  };
   const decor = [];
   DECOR_TYPES.forEach((type, ti) => {
     const def = OBJECT_TYPES[type];
@@ -123,30 +155,108 @@ export function generateChunk(cx, cz, variantCounts) {
       const x = x0 + rand() * SIZE;
       const z = z0 + rand() * SIZE;
       const r1 = rand(), r2 = rand(), r3 = rand(), r4 = rand();
-      sampleTerrain(x, z, s);
+      const vi = Math.min(SEG, Math.max(0, Math.round((z - z0) / STEP))) * row + Math.min(SEG, Math.max(0, Math.round((x - x0) / STEP)));
+      const sv = samples[vi];
       let p = 0;
-      for (const b of DENSITY_KEYS) p += (def.density[b] || 0) * s[b];
+      for (const b of DENSITY_KEYS) p += (def.density[b] || 0) * sv[b];
       if (r1 >= p / maxD) continue;
-      let y = s.h - 0.03;
+      const h = gridHeight(x - x0, z - z0);
+      let y = def.lift !== undefined ? h + def.lift : h - 0.03;
+      if (def.slopeCheck && 1 - normals[vi * 3 + 1] > def.maxSlope) continue;
       if (def.onWater) {
         // Kelluu tyynellä vedellä (ei joissa eikä meressä), 0.3..2.2 m syvyydessä.
-        const depth = s.wl - s.h;
-        if (depth < 0.3 || depth > 2.2 || s.wtype === 3 || s.wtype === 4 || s.ocean + s.beach > 0.2) continue;
-        y = s.wl + 0.005;
+        const depth = sv.wl - h;
+        if (depth < 0.3 || depth > 2.2 || sv.wtype === 3 || sv.wtype === 4 || sv.ocean + sv.beach > 0.2) continue;
+        y = sv.wl + 0.005;
       } else if (def.nearWater) {
-        if (s.h < s.wl - 0.35 || s.h > s.wl + 0.9) continue;
-      } else if (s.h < s.wl + 0.05) continue;
+        if (h < sv.wl - 0.35 || h > sv.wl + 0.9) continue;
+        // Sessio 27: kaislat eivät kasva hiekkarannoilla eivätkä meren rannassa.
+        if (def.notBeach && sv.beach + sv.ocean > 0.25) continue;
+      } else if (def.seabed) {
+        // Sessio 25: veden alla pohjassa (levät, pohjakivet).
+        const depth = sv.wl - h;
+        if (depth < def.seabed[0] || depth > def.seabed[1]) continue;
+        y = h - 0.02;
+      } else if (h < sv.wl + 0.05) continue;
       if (insideStructure(x, z, -1)) continue;
       const sc = def.scale[0] + r3 * (def.scale[1] - def.scale[0]);
-      decor.push(ti, Math.floor(r4 * nv), x, y, z, r2 * Math.PI * 2, sc, def.onWater ? sc : sc * (0.8 + s.mare * 0.5));
+      if (def.puddleWeight) {
+        // Lammikko lepää verkon matalimmassa kohdassa reunansa alueella; jos
+        // reuna ei ole tasainen, kohta hylätään (sessio 13: lammikot leijuivat).
+        // Mallin säde on enintään ~1,8 × skaala: tarkistetaan kaksi kehää.
+        let lo = meshHeight(x, z), hi = lo;
+        for (const R of [sc * 0.9, sc * 1.85]) {
+          for (let k = 0; k < 12; k++) {
+            const a = (k / 12) * Math.PI * 2;
+            const hk = meshHeight(x + Math.cos(a) * R, z + Math.sin(a) * R);
+            lo = Math.min(lo, hk);
+            hi = Math.max(hi, hk);
+          }
+        }
+        if (hi - lo > 0.12) continue;
+        y = lo + 0.015;
+      }
+      // Lammikon pysyvyys (1 = sademetsä, aina vettä; 0 = vain sateen jälkeen)
+      // kulkee y-skaalassa (litteä malli, pystyskaala ei näy).
+      const sy = def.puddleWeight ? 0.05 + 0.95 * Math.min(1, sv.rainforest + sv.oasis)
+        : def.onWater ? sc : sc * (0.8 + sv.mare * 0.5);
+      decor.push(ti, Math.floor(r4 * nv), x, y, z, r2 * Math.PI * 2, sc, sy);
     }
   });
 
+  // --- Sessio 27: sademetsän lammikot maaston kuoppiin (käyttäjä: aina
+  // matalimpiin kohtiin). Etsitään verkon paikalliset minimit; vedenpinta on
+  // kuopan reunan matalimmassa kohdassa, joten vesi täyttää notkon eikä
+  // reuna jää leijumaan.
+  {
+    const ti = DECOR_TYPES.indexOf('puddle');
+    if (ti >= 0) {
+      const prand = mulberry32(hashSeed(seed, cx, cz, 1700));
+      const nv = variantCounts.puddle || 1;
+      const H = (i, j) => positions[(j * row + i) * 3 + 1];
+      let placed = 0;
+      for (let j = 2; j <= SEG - 2 && placed < 6; j++) {
+        for (let i = 2; i <= SEG - 2 && placed < 6; i++) {
+          const sv = samples[j * row + i];
+          if (sv.rainforest < 0.45) continue;
+          const h = H(i, j);
+          if (h < sv.wl + 0.15) continue;
+          let isMin = true;
+          for (let dj = -2; dj <= 2 && isMin; dj++) {
+            for (let di = -2; di <= 2; di++) {
+              if ((di || dj) && H(i + di, j + dj) < h) { isMin = false; break; }
+            }
+          }
+          if (!isMin || prand() > 0.8) continue;
+          const x = x0 + i * STEP, z = z0 + j * STEP;
+          for (const R of [3.6, 2.7, 1.9]) {
+            let ringMin = Infinity;
+            for (let k = 0; k < 16; k++) {
+              const a = (k / 16) * Math.PI * 2;
+              ringMin = Math.min(ringMin, meshHeight(x + Math.cos(a) * R, z + Math.sin(a) * R));
+            }
+            const level = ringMin - 0.02;
+            const depth = level - meshHeight(x, z);
+            if (depth >= 0.05 && depth <= 0.8 && !insideStructure(x, z, -1)) {
+              decor.push(ti, Math.floor(prand() * nv), x, level, z, prand() * Math.PI * 2, R / 1.8, 1);
+              placed++;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // --- Sessio 24: tiheä ruohokenttä (render/grassField.js)
+  const { cover, coverCells } = generateCover(cx, cz, samples, positions, normals, gw);
+
   return {
     cx, cz, minH, rain: rain / (row * row),
-    positions, normals, colors, uvs,
+    positions, normals, colors, uvs, gw,
     objects: new Float32Array(objs),
     decor: new Float32Array(decor),
+    cover, coverCells,
     water,
   };
 }

@@ -1,6 +1,72 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [x] Historia siirretty uuteen repoon `KSPKtechStudios/Sahel_survivor_game` ja pushattu (2026-10-12)
+- [ ] Käyttäjä testaa session 38: onko kuva nyt terävä (asetus Terävöinti päälle ja pois), näkyvätkö työkalut ja käsi pimeässä ja varjossa, sademetsä yöllä ilman soihtua ja päivällä (ylivalotus)
+- [ ] Käyttäjä testaa session 37: grafiikka päivällä, kultaisella tunnilla (aamu ~7, ilta ~17) ja yöllä soihdun kanssa; asetukset Ambienttiokkluusio, Hehku, Värimäärittely ja Vinjetti sekä laatutasot (Matala, Keskitaso, Korkea, Ultra). Toimiiko heikommalla koneella, ja onko kontrasti nyt sopiva (liian tumma tai yhä liian vaalea)?
+- [ ] Käyttäjä testaa session 36: liekin koko, liekki tuulessa (tuulinen sää, myrsky), kipinät ja savu jäävät leijumaan kun soihdun vaihtaa pois, peukalo nyrkissä ja kahvoilla (soihtu, nuija, kirves, puukko)
+- [ ] Käyttäjä testaa session 35: soihdun liekki (paikallaan, kävellen, juosten, kääntyen, heilauttaen, tuulessa, sateessa, yöllä), kipinät ja savu, ei jumiin jääviä pisteitä soihdun vaihdon jälkeen, nyrkin peukalo
+- [ ] Käyttäjä testaa session 34: ote (nuija, kirves, soihtu, puukko), soihdun liekki (seiso, kävele, juokse, käänny nopeasti, heilauta; tuulisella säällä; sateessa), nuijan ja puukon iskut (pyöriikö käsi enää)
+- [ ] Käyttäjä testaa session 33: nuija ja soihtu (kädessä, toisessa kädessä, maassa, kuvake), käden iho (huokoset, ei muovinen), kivipuukko (terän kiilto valossa, kahva, sidos), norsu juomassa (vie norsu järven tai joen lähelle tai odota)
+- [ ] Käyttäjä testaa session 32: nuijan pystyiskut (ja moukari), kirveen iskut, nyrkki (peukalo, iskujen korkeus), lastut (hakkaa puuta, kaadettua runkoa, pensasta, termiittikekoa; kivestä ei tule), norsun jalat ja pään ja kärsän liike
+- [ ] Käyttäjä testaa session 31: norsu savannilla ([F3] → Olennot → Norsu, tai odota savannilla): kävely ja jalat, kärsä ja korvat, käytös kun menet lähelle (kyykyssä / juosten), lyönti (lähteekö pois), törmäys (tönäiseekö); jousi kahdella kädellä juostessa; puukon sivuttaisiskut; haamun viitta ja hihat sivuttaislennossa ja syöksyssä (yöllä sademetsässä, tai [F3] → Haamu)
+- [ ] Vastaus: voiko norsua metsästää, puolustaako se itseään, ja pitääkö siitä saada saalista? Pitäisikö savannilla olla isompia laumoja tai poikasia?
+- [ ] Norsun äänet (töräytys, askeleet), jos käyttäjä toimittaa tai haluaa
+- [ ] Käyttäjä testaa session 30: ote (sormet kahvan ympäri) kirveellä, viidakkoveitsellä, puukolla, kepillä ja nuijalla; soihtu ja kilpi vasemmassa; jousen ote ja nuoli käden päällä; juoksu kahdella kädellä (heiluuko vasen, täriseekö oikea); hakatun rungon palat
+- [ ] Käyttäjä testaa session 29: uudet kädet (ote kirveestä, viidakkoveitsestä, nuijasta, nyrkeistä; kilpi ja soihtu vasemmassa; jousi; hyppyisku kahdella kädellä; syöminen ja poiminta), iskujen ja torjunnan pehmeys (tuntuuko taistelun tahti samalta?), ihon mattapinta, juuret, tähdenlennot
+- [ ] Vastaus: pidetäänkö vaalea iho (käyttäjän tekstuuri) vai tummennetaanko sävyä (aiempi paikkamerkki: tumma iho, peli sijoittuu Burkina Fasoon)?
+- [ ] Animaatiot uudelle kädelle, jatko: pistot (thrust), nuijan murskaus ja osa viilloista vaativat yhä ranteen korjausta (esine kääntyy käden mukana). Jos ne näyttävät oudoilta, avainasennot kannattaa tehdä uudelleen käsivarren ehdoilla (käsi kaaressa olkapään ympäri)
+- [ ] Kädessä pidettävien pienten esineiden (kivi, ruoka, nahat) asento kämmenellä: nyt kupitettu käsi ja vanhat sijainnit; hienosäätö esine kerrallaan
+- [ ] Käyttäjä testaa session 28: haamun vartalo ja viitta, lahopuun kuori, bambu, kaatuneen puun pilkkominen (pysyykö siistinä), rungon latva, selkeän sään sumu
+- [ ] Käyttäjä testaa session 27: liaanit (kävele niihin, tuuli, kaada puu jossa on liaaneja), kaatuvan puun lehdet, kookokset ([E] ravista, lyö, kaada; kasvavat takaisin), haamun viitta (yöllä sademetsässä), baobab, sademetsän puut, pönkkäjuuret ja kannot, banaanit, lahopuun kaato, lammikot sademetsän notkoissa, kaislat jokien ja järvien rannoilla, leijuvat pisteet, silmän tottuminen (katso ylös latvuston aukkoon ja takaisin alas), yön kirkkaus, aavikon tuuli, jalanjäljet
+- [ ] Käyttäjä testaa session 26: latvukset alta (ei ytimiä), valokeilat sademetsässä aamulla aurinkoa kohti ja sivulta, sademetsän usva selkeällä, lehtien kiilto yöllä, leijuvat pikselit, palmut, kookospalmut, doumpalmut ja banaanit, simpukat rannalla ([E] poimii), jalanjäljet hiekassa, iskujen muunnelmat, musiikki ja äänet aavikolla ja savannilla
+- [ ] Jos aavikolla ei vieläkään kuulu musiikkia: [F3] näyttää musiikin tilan (ja "puuttuu: …", jos musiikkitiedosto puuttuu; musiikkipaketti puretaan samaan sahel-kansioon). Huom: yöllä biomien musiikki on tarkoituksella hiljaa
+- [ ] Suorituskyky: lehtikortteja on nyt enemmän (latvukset ilman ydintä) ja valokeilat lisäävät yhden puolikkaan resoluution passin. Jos FPS laskee: Asetukset → Kasvillisuus tai Valonsäteet pois
+- [x] Käyttäjän lisätoiveet (sessio 26): fysiikka liaaneille ja lehdille, kaislat vesistöjen varsille, baobab, juuret ja kannot, lahopuun kaato, haamun viitta ja kangasfysiikka (tehty sessiossa 27)
+- [ ] CGTraderin palmu (käyttäjän linkki): lisenssi "Royalty Free No AI" ja lataus vaatii kirjautumisen, joten en voi ladata sitä itse. Uudet palmut tehtiin itse; jos haluat silti sen mallin, lataa se ja lähetä tiedosto (.glb/.gltf/.obj), niin liitän sen
+- [ ] Käyttäjä testaa session 25: silmän mukautuminen (ilta, yö, soihtu päälle/pois), hämärän hajavalo, sateen ja sumun yö, lehtien läpikuultavuus sademetsässä, DOF ja liike-epäterävyys (Asetukset), merenpohja ja rannat, jalanjäljet hiekassa, roiskeet vedessä, iskujen muunnelmat, kello kädessä, kuu
+- [ ] Vastaus: onko yö nyt sopivan pimeä? (säätö: post.js `ae.max`, environment.js hämärän `hemiI`)
+- [ ] Käyttäjä testaa session 24 (stilisoitu realismi): pehmeä maasto (mäet, harjanteet, dyynit, vuoret), tiheä ruoho (savanni, kausilampi, keidas), sademetsän pohja (saniaiset, lehväkasvit, sienet, sammal), liaanit ja köynnökset, muinaiset pylväät, ruostuneet kilvet, juuret, rauniot, kuolleet puut, korkeussumu ja aamu-usva, itiöt, sade ja roiskeet
+- [ ] Suorituskyky omalla koneella: ruoho ja aluskasvit lisäävät piirtotyötä. Jos FPS laskee, kokeile Asetukset → Kasvillisuus: Normaali / Harva, ja kerro tulos
+- [ ] Sketchfabin mallit: lataukset vaativat käyttäjän API-avaimen (sketchfab.com → asetukset → Password & API). Jos haluat niitä, anna avain ympäristön salaisuudeksi, ja kerro mitä malleja toivot
+- [ ] Ulkoasu jatkuu: (palmut ja banaanit uusittu sessiossa 26) akasiat ja baobabit valmiilla malleilla tai paremmin teksturoituina, olennot, esineet kädessä, rakennelmat; pudonneet oksat maahan (nyt oksat ovat poimittavia keppejä)
+- [ ] Käyttäjä testaa session 23 (ulkoasu, osa 1): maaston tekstuurit, lehvästöt, pensaat, kaarna, kivet, skannatut lohkareet; myös suorituskyky omalla koneella (lehtikortit lisäävät piirtotyötä)
+- [x] Ulkoasu, osa 2: ruoho, metsänpohja, kuolleet puut, sammal, rauniot (sessio 24); palmut, olennot, esineet ja rakennelmat jatkuvat
+- [ ] Käyttäjä testaa session 22: tasot ([F3] → Esineet → Taso… / Metallit), puulajit (jalopuu, ydinpuu), baobabin kuorinta ja kaato, panssarit ja kilvet, rubiinin hehku ja voimat, jouset ja nuolet
+- [ ] Päätös: miten kupari, rauta ja rubiini hankitaan (malmit? sulatus? paja?) ja tarvitaanko metalliesineille oma valmistuspaikka
+- [ ] Päätös: jousien valmistus (nyt työstöpenkillä puulajeista ja jänteestä)
+- [ ] Panssarit näkyviin muille (esim. kuolleen pelaajan / tulevien hahmojen malleissa), jos tarpeen
+- [ ] Käyttäjä testaa session 21: nimen esiintulo, hyppyisku kirveellä ja nuijalla (tuntuma, vahinko), haamun äänet, parryn taintuminen ja tähdet, kuun reuna ja vaihtuva kuu, savipeikon nousu, esineiden katoaminen, kellon paikka ja digitaaliaika, keularoiskeet myrskyssä
+- [ ] Vastaus: pitäisikö hyppyiskun toimia myös hakulla tai keihäällä? Onko kriittinen isku sopivan vahva?
+- [ ] Käyttäjä testaa session 20: nopea siirtyminen (ei valkoista maailmaa), kuumuusväreily, linnunrata, termiittikeon nimi, yön hiljaisuus, Kello arkuista ja kellotaulu, toinen käsi ([F], soihtu vasemmassa), reppu (klikkaus, Ctrl+oikea jako, sykintä, vihreä tausta), pinot, valmistuksen latausaika
+- [ ] Käyttäjä testaa session 19: vihollisten kiertäminen ja perääntyminen, savipeikon vahvuus, linnun ääni, kirves, kasvien murskaus, uusi reppu (raahaus, Shift+klikkaus, jako, varustus, pudotus), valmistusikkuna, 6 pikapaikkaa, panssarin näyttö, minikartan kehys, opas [T]
+- [x] Panssarit (esineet, joilla `armor: { slot, value }`), jotta panssarin näyttö tulee käyttöön (sessio 22)
+- [ ] Käyttäjä testaa session 18: soihtu sateessa, kestävyyden kulutus, paraneminen, kirveen/nuijan sarja ja viidakkoveitsen tahti, puut ilman kirvestä ja kivet ("Liian kovaa!"), punainen hehku, kuumuusväreily, jousen jännitys, nimilappujen tarkkuus
+- [ ] Käyttäjä testaa session 17: nimilaput vain katsottaessa (etäisyys 14 m sopiva?), jousen plus-tähtäin ja jännityspalkki, nuolilaskuri, puuton paneeli
+- [ ] Käyttäjä testaa session 16: Philosopher-fontti, naulat, animaatioiden tuntuma (nopeus vs. pehmeys), loppuvan ruoan välke ja hehku
+- [ ] Käyttäjä testaa sessiot 14–15: ruokajärjestelmä (maksimit, kesto, kylläisyys), savulasipaneeli ja puukyltti, ruokaympyrät, kestävyys keskellä, terveyden numero
+- [ ] Vastaus: sopivatko lähtöeväät, ruokien arvot ja se, että ruoat säilyvät kuoltaessa? Pitäisikö syömisen estyä vasta kun sekä terveys että kestävyys ovat 100?
+- [ ] Savulasityyli muuhun käyttöliittymään (pikapalkki, minikartta, nimilaput, viestit, reppu), jos käyttäjä haluaa
+- [ ] Käyttäjä testaa session 13: fontti kaikkialla, nimilaput (olennot lähellä, puut ja pensaat katsottaessa), huomattu-merkki (silmä), pystypalkit vasemmassa alakulmassa, kaatuvan puun vahinko ja ketjukaato, soihtu vedessä ja sateessa, kuun vaiheet ja täysikuun viholliset, lammikot
+- [ ] Vastaus: silmä vai huutomerkki huomattu-merkiksi? Pitäisikö puiden ja pensaiden nimen näkyä aina (nyt vain katsottaessa)?
+- [ ] Vastaus: miten sammunut soihtu sytytetään (nyt nuotion vieressä)? (Kuun kierto: sessio 21 satunnainen vaihe joka yö.)
+- [ ] Käyttäjä testaa session 12e: linssiheijastukset (asetus), DOF oletuksena, äänten erottuvuus (väistö), iskuääni, [Shift]+[Q], soihdun valo ja sytytys, haamujen määrä
+- [ ] Vastaus: tarkoittiko [Shift]+[Q] koko pinoa (nyt) vai koko reppua?
+- [ ] Käyttäjä testaa session 12d: puun kaatumisääni, tyrskyt veneillä (myrskyssä), linssipisarat sateella aurinkoa kohti, veneiden nopeus, kaadetun palmun hakkaaminen, linnunrata, linnut ja huitaisut
+- [ ] Käyttäjä testaa session 12c: Haamun äänet (kuuluvatko nyt), ukkosen hämärä päivällä, haamut ukkosmyrskyssä, salaman isku maahan, aavikon tuuli ja myrskytuuli, heiton napsahdus, puun lyönnin ääni
+- [ ] Käyttäjä testaa session 12b: sumun pehmeys sateessa ja sademetsässä, lähisalamat (välähdys, salama, jyrähdys), Haamun äänet, puun äänen loppu, viidakon voimakkuus
+- [ ] Käyttäjä testaa session 12: taustaäänet (tuuli vuoristossa ja merellä, viidakko, sade, ukkonen), puun kaatumisääni, askeleet eri alustoilla, äänien voimakkuudet, sääkierto [O], kuiva vuoristo ja tumbleweedit siellä
+- [ ] Vastaus: saako tuuli kuulua hiekkamyrskyssä (Clauden lisäys)? Lisää äänitiedostoja (esim. lyönnit, eläimet, vesi, nuotio)?
+- [ ] **GitHub-tili jäädytetty väliaikaisesti (sessio 11):** session 11 commitit ovat vain paikallisesti haarassa `claude/sahel-game-dev-yi990s`. Kun tili toimii: pushaa haara, avaa / päivitä PR `main`-haaraan ja anna raw.githack-testauslinkki. (Myös claude.ai:n GitHub-yhteys pitää valtuuttaa uudelleen.)
+- [ ] Käyttäjä testaa session 11 (paikallisesta paketista): tulikärpäsparvet jokien varsilla ja akasioiden alla, pienemmät aallot (myrsky), ei vettä veneiden sisällä, uusi sade ja sadeverhot, savannin lammikot kuivuvat sateen jälkeen, säät biomeittain, rakennelmien ja hylkyjen määrä, linnunrata ja tähdenlennot, purje (saumat, vastavalo), hento kimallus, Haamu latvusten alla ja pako, jousi oikeassa kädessä ja nuolten jälki, iskujen tahti, tuulen nuoli
+- [ ] Käyttäjä testaa session 10: vesiseinät poissa (jokien yhtymäkohdat), tumbleweedit vain aavikolla ja laterittitasangolla, purjeiden nosto ja lasku, eläinten pyydystäminen (jousi ja juoksu), sademetsän tihku, märkyys ja lammikot, aavikon kuumuusväreily, pölypyörteet ja tulikärpäset, meren syvyys laivalla, Haamu öisin sademetsässä, pudotettujen esineiden hehku ja heitetyn esineen poimintaviive
+- [ ] Vastaus: tarkoittiko "mesabiomi" punaista laterittitasankoa (nyt tulkinta: laterittitasanko + aavikon pöytävuoret)?
+- [ ] Vastaus: Haamu vai Aave (nyt Haamu)? Sopivatko vahvuus (17 vahinkoa, 70 terveyttä), harvinaisuus, nuotion valo vastakeinona ja saalis (kaurikotilot, pronssirannerengas)?
+- [ ] Vastaus: tunnusmerkit muille biomeille: sopivatko tulikärpäset ja pölypyörteet? Mitä vuoristoon (esim. pilvet rinteillä, kylmä sininen sävy) ja merelle (esim. lokit, vaahtopäät)?
+- [ ] Käyttäjä testaa session 9: joet (eivät risteä), biomit missä tahansa, rakennelmien määrä ja laivanhylyt, iskujen tahti, keräily ja ruoka (myrkytys), työkalut ja vasara (työstöpenkki, rakentaminen), jousi ja arat eläimet, linnunrata, 10 + 10 min vuorokausi, säät biomeittain (sade, ukkonen, sumu), riimukivet, veneet ja purjehdus
+- [ ] Vastaus: kirjoittaako käyttäjä riimukivien tekstit itse, ja liittyvätkö ne tarinaan tai pulmiin? (Nyt 38 Clauden luonnosta)
+- [ ] Vastaus: veneet: kävely laivan kannella, lastiruuma, "lautta" omana veneenään? Ovatko hinnat sopivat?
+- [ ] Vastaus: tarvitaanko varastoarkkuja, metalleja (rauta, pronssi) tai seppää seuraavaksi työkalutasoksi?
 - [ ] Käyttäjä testaa jäähdytyksen, tönäisyt, veren ja kuolemaefektin, grafiikan esiasetukset ja sademetsän musiikin
 - [ ] Vastaus: oma kappale sademetsään? Miekka tai muita kevyitä aseita?
 - [ ] Käyttäjä kytkee GitHub Pagesin päälle (Settings → Pages → Deploy from a branch → main / root) ja luo julkaisun **Alpha v0.1** (tagi `alpha-v0.1` main-haarasta)
@@ -9,7 +75,7 @@
 - [ ] Käyttäjä testaa taistelun (iskusarjat nuijalla ja viidakkoveitsellä, torjunta, parry, tönäisyt), pahkasian, savipeikot yöllä, uinnin ja hukkumisen, kyykyn, karttamerkkien nimet sekä korjatut joet, aallot ja DOF:n
 - [ ] Vastaus: mihin liha, nahka ja savi; mistä viidakkoveitsi; mitä kuollessa tapahtuu (reppu, herätyspaikka)?
 - [ ] Käyttäjä kertoo, pyöriikö peli sujuvasti (varjokaskadit ja jälkikäsittely lisäävät näytönohjaimen työtä)
-- [ ] Vastaus: mitä meren takana on, voiko sukeltaa, kalat, juomavesi?
+- [ ] Vastaus: mitä meren takana on (myös veneellä virta vie takaisin), voiko sukeltaa, kalat, juomavesi?
 - [ ] Käyttäjä testaa kartan (minikartta + [M]), rakennelmat ja arkut, uudet biomit sekä animaatioiden sulavuuden ja antaa palautetta
 - [ ] Vastaus: mihin arvoesineitä käytetään?
 - [ ] Vastaus: onko kartta aina käytössä vai pitääkö se ensin valmistaa / löytää?
@@ -19,9 +85,19 @@
 - [ ] Ambient-äänet ja äänitehosteet (käyttäjä toimittaa; musiikki tehty sessiossa 7)
 
 ## Seuraavaksi (ehdotuksia)
-- [ ] Äänet osumiin, torjuntaan ja olentoihin (kun käyttäjä toimittaa äänet)
-- [ ] Lisää eläimiä (esim. antilooppi) ja vihollisia; viholliset raunioihin?
-- [ ] Ruoka: lihan paistaminen nuotiolla (jos käyttäjä haluaa)
+- [x] Kuun vaiheet (sessio 13)
+- [ ] Tähdenlentoparvet tiettyinä öinä (ehdotus)
+- [ ] Haamulle äänet (kuiske, kirkaisu ennen syöksyä), kun äänitehosteet lisätään
+- [ ] Kuumuusväreily myös ilman muuta jälkikäsittelyä (nyt vaatii valonsäteet, DOF tai liike-epäterävyyden)
+- [ ] Äänet osumiin, torjuntaan ja olentoihin (kun käyttäjä toimittaa äänet; sessiossa 12 tehty ympäristöäänet ja askeleet)
+- [ ] Lisää vihollisia (esim. hyeena, krokotiili) ja kaloja; viholliset raunioihin?
+- [ ] Varastoarkku rakennettavaksi (purjelaivan tarvikkeet mahtuvat nyt juuri ja juuri reppuun)
+- [ ] Laivan kannella käveleminen (liikkuva taso) ja lastiruuma
+- [ ] Sade ei saisi sataa katon läpi (rakennetun katon alla)
+- [ ] Opas menee kapealla näytöllä palkkien ja pikapalkin päälle: sijoittelu pienille näytöille
+- [ ] Makuualustan purku palauttaa aina pahkasian taljan (hinta on "mikä tahansa talja"): muista käytetty talja
+- [ ] Äänet: tuuli purjeissa, aallot rungossa, airot, sade ja ukkonen (kun käyttäjä toimittaa)
+- [ ] Riimukiviin pulma tai palkinto (esim. kaikki luetut kivet avaavat jotain), jos käyttäjä haluaa
 - [ ] Työkalujen ja aseiden kuluminen (avoin kysymys)
 - [ ] Oppaaseen lisää vaiheita, kun pelin suunta tarkentuu (esim. aavikon ja sademetsän resurssit, arkkujen etsiminen)
 - [ ] Kartalle rakennelmien merkintä automaattisesti, kun ne on nähty (jos halutaan)
@@ -43,6 +119,43 @@
 - [ ] Päätä lopullinen nimi (Sahel vai jokin muu)
 
 ## Valmis
+- [x] Linssiheijastukset (asetus), DOF oletuksena, linssipisarat vain myrskypurjehdukseen, haamuja harvemmin, väistö, iskuääni, Shift+Q, soihdun valo ja sytytys (2026-10-07, sessio 12e)
+- [x] Tyrskyt, sade vedessä, linssipisarat, hitaammat veneet, palmun hakkaaminen, linnunradan korjaus, puun äänen korjaus, linnut ja huitaisut (2026-10-07, sessio 12d)
+- [x] Haamun äänet kuuluviksi, ukkosen hämärä, haamuja myrskyssä, salaman isku maahan, aavikon tuuli, myrskytuuli, heiton ja puun lyönnin äänet (2026-10-07, sessio 12c)
+- [x] Pehmeämpi sumu (sadeverhot), lähisalamat äänineen, Haamun äänet, puun ja viidakon äänien hienosäätö (2026-10-07, sessio 12b)
+- [x] Äänitehosteet: tuuli, viidakko, sade, kaukainen ukkonen, puun kaatuminen; syntetisoidut askeleet (2026-10-07, sessio 12)
+- [x] Sääkierto [O] ei jää jumiin; vuoristo kuivaksi, tumbleweedit vuoristoon (sessio 12)
+- [x] Tulikärpäset parvina (joet, akasiat), ei merellä, rannalla, vuorilla eikä aavikolla (2026-10-07, sessio 11)
+- [x] Aallot pienemmiksi (myrsky edelleen rajumpi) (sessio 11)
+- [x] Vesi ei näy veneiden sisällä (sessio 11)
+- [x] Realistisempi sade: tiheät ohuet pisarat, sadeverhot, usva, roiskeet (sessio 11)
+- [x] Lammikot: sademetsässä aina, savannilla vain sateen jälkeen ja kuivuvat (sessio 11)
+- [x] Säät vain mahdollisissa biomeissa; uusi kuiva laterittitasankoilmasto (sessio 11)
+- [x] Rakennelmia n. 2 × enemmän, laivanhylkyjä n. 120 / maailma (sessio 11)
+- [x] Hienovarainen linnunrata ja tähdenlennot (sessio 11)
+- [x] Purjeen viuhkakaistat ja tumma varjopuoli korjattu (saumat varjostimessa, vastavalo) (sessio 11)
+- [x] Hento esineiden kimallus (sessio 11)
+- [x] Haamu latvusten alla, pakenee ylös vähillä voimilla (sessio 11)
+- [x] Jousi oikeaan käteen, nuolet ja lentojälki erottuvat (sessio 11)
+- [x] Iskujen tahti sujuvammaksi (hakkuu nopeampaa kuin taistelu) (sessio 11)
+- [x] Tuulen nuolen suunta veneen paneelissa (sessio 11)
+- [x] Vesiseinät korjattu (jokien yhtymäkohdat, purot rinteillä, järvet, rakennelmat) (2026-10-07, sessio 10)
+- [x] Tumbleweedit vain aavikolla ja laterittitasangolla; uppoavat veteen (sessio 10)
+- [x] Purjeet: raakapuu lasketaan käärittäessä, ei paksua "tankoa", pienempi lepatus (sessio 10)
+- [x] Arat eläimet vähemmän arkoja ja hitaampia, tarkkailevat ensin, väsyvät paetessa (sessio 10)
+- [x] Biomien tunnelma: sademetsän tihku, märkyys ja lammikot; aavikon kuumuusväreily ja kangastus; pölypyörteet; tulikärpäset (sessio 10)
+- [x] Meri syvenee rannasta nopeammin (sessio 10)
+- [x] Haamu: harvinainen yön vihollinen sademetsän latvuksissa (sessio 10)
+- [x] Pudotettujen esineiden hehku ja heitetyn esineen poimintaviive (sessio 10)
+- [x] Joet valumaverkkona (eivät risteä), biomit missä tahansa (alueet n. 1–2 km), saari meren ympäröimänä (2026-10-06–07, sessio 9)
+- [x] Rakennelmia n. 1 800 maailmassa, laivanhylyt rannoilla, riimukivet ja -taulut käännöksineen (sessio 9)
+- [x] Iskut harvemmaksi (pidemmät jäähdytykset, suurempi kestävyyden kulutus) (sessio 9)
+- [x] Keräily maasta ja pensaista, poimittavat sienet ja kukat, ravinto, syöminen, myrkytys, nuotioruoat ja rohdot (sessio 9)
+- [x] Kymmeniä esineitä ja työkaluja, valmistus käsin / työstöpenkillä / nuotiolla, vasara ja rakentaminen, soihtu (sessio 9)
+- [x] Jousi ja nuolet, arat eläimet (gaselli, helmikana, apina, aavikkokettu, kutojalinnut), hiipiminen (sessio 9)
+- [x] Linnunrata, vuorokausi 10 + 10 min todellisessa ajassa, säät biomeittain (sade, ukkonen ja salamat, sumu) (sessio 9)
+- [x] Veneet: soutuvene, purjevene, Santa Maria -tyylinen purjelaiva; purjeet tuulen mukaan, tuulen suunta kääntyy, veneet kartoilla (sessio 9)
+- [x] Lihan paistaminen nuotiolla ja lisää eläimiä (sessio 9)
 - [x] Jäähdytys, kombot vain kevyille aseille, lisää tönäisyä, veri ja kuolemaefekti, grafiikan esiasetukset, sademetsän musiikki, lyhyemmät häivytykset, varjokorjaus (2026-10-06, sessio 8)
 - [x] Musiikki (päävalikko, savanni, aavikko, meri) viiveillä ja häivytyksillä, ääniasetukset (2026-10-06, sessio 7)
 - [x] Kehittäjätyökalut [F3]: lentäminen, nopeus, kuolemattomuus, siirtyminen, olennot, esineet, sää, aika, koko kartta (2026-10-06, sessio 7)

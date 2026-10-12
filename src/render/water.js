@@ -269,7 +269,7 @@ void main() {
   // Rantavaahtoa lähinnä meressä; järvillä ja joissa vain häivähdys.
   shore *= mix(0.12, 1.0, smoothstep(0.15, 0.5, vData.y));
   shore *= smoothstep(0.35, 0.65, fn * 0.6 + fn2 * 0.4 + 0.15 * sin(uTime * 1.3 + p.x * 0.4 + p.y * 0.3));
-  float crestFoam = smoothstep(0.45, 0.85, vCrest) * smoothstep(0.35, 1.2, uWaveAmp) * vData.y * smoothstep(0.4, 0.7, fn2);
+  float crestFoam = smoothstep(0.45, 0.85, vCrest) * smoothstep(0.2, 0.6, uWaveAmp) * vData.y * smoothstep(0.4, 0.7, fn2);
   float rapids = smoothstep(1.3, 1.8, flowSpeed) * smoothstep(0.5, 0.75, fn2) * 0.25;
   // Jyrkkä pinta (pieni putous kahden vesistön välissä) kuohuu valkoisena.
   vec3 geoN = normalize(cross(dFdx(vWorld), dFdy(vWorld)));

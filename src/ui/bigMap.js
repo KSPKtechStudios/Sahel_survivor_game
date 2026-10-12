@@ -1,7 +1,7 @@
 // Iso kartta [M]: tutkittu alue paperikartalla. Vedä = liikuta, rulla =
 // zoomaa, klikkaus tyhjään = uusi merkki valitulla symbolilla ja sille nimi,
 // klikkaus merkin päälle = nimeä uudelleen tai poista, oikea klikkaus = poista.
-import { drawWaypoint, drawWaypointName, createPaperPattern, WAYPOINT_TYPES, WAYPOINT_NAME_MAX } from './explored.js';
+import { drawWaypoint, drawWaypointName, drawBoat, createPaperPattern, WAYPOINT_TYPES, WAYPOINT_NAME_MAX } from './explored.js';
 
 const MIN_MPP = 0.5;  // metriä / pikseli (lähin)
 const MAX_MPP = 24;   // kaukaisin
@@ -291,6 +291,16 @@ export class BigMap {
     });
     if (this.editing >= 0) this._placeEditor();
 
+    // Veneet
+    if (this.boats) {
+      for (const b of this.boats.list) {
+        if (b === this.boats.riding || b.sinking >= 0) continue;
+        const x = sx(b.x), y = sy(b.z);
+        if (x < -20 || y < -20 || x > w + 20 || y > h + 20) continue;
+        drawBoat(ctx, x, y, Math.sin(b.yaw), Math.cos(b.yaw), b.type === 'ship' ? 20 : b.type === 'sailboat' ? 15 : 12, b.type !== 'rowboat');
+      }
+    }
+
     // Pelaaja
     const p = this.player.position;
     ctx.save();
@@ -325,7 +335,7 @@ export class BigMap {
     ctx.beginPath();
     ctx.moveTo(bx, by - 6); ctx.lineTo(bx, by); ctx.lineTo(bx + bw, by); ctx.lineTo(bx + bw, by - 6);
     ctx.stroke();
-    ctx.font = '700 14px Alegreya, Georgia, serif';
+    ctx.font = "700 14px 'Philosopher', sans-serif";
     ctx.textAlign = 'left';
     ctx.textBaseline = 'bottom';
     ctx.fillStyle = '#4a2f15';

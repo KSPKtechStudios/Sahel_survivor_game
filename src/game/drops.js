@@ -1,19 +1,53 @@
 // Maahan pudonneet esineet. Kun jotain hajoaa, saaliit lennähtävät maahan
 // fyysisinä esineinä. Ne poimitaan [E]:llä tai ne imaistaan automaattisesti,
-// kun pelaaja kävelee niiden yli.
+// kun pelaaja kävelee niiden yli. Esineillä on pieni hehku, jotta ne erottaa
+// maasta. Heitettyä esinettä ei poimita automaattisesti heti takaisin:
+// pelaaja heitti sen tarkoituksella (ks. throwItem).
 import * as THREE from 'three';
+import { attachGlow } from '../render/itemGlow.js';
 import { heightAt, waterAt, WATER } from '../world/terrain.js';
 import { waveHeight, openFactor } from '../world/waves.js';
 import { ITEMS } from './items.js';
 import { events } from './events.js';
 
 const PICK_RADIUS = 1.5;    // automaattinen poiminta
+const THROW_BLOCK = 10;     // s: heitettyä esinettä ei poimita automaattisesti
+const THROW_AWAY = 3;       // m: ja vasta kun pelaaja on välillä käynyt kauempana
+
+// Kiillon tekstuuri: pieni pehmeä ydin ja neljä ohutta sädettä (sessio 11:
+// hento kiilto, ei isoa hehkua).
+function glowTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d');
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 14);
+  gr.addColorStop(0, 'rgba(255,250,235,1)');
+  gr.addColorStop(0.35, 'rgba(255,240,205,0.35)');
+  gr.addColorStop(1, 'rgba(255,230,190,0)');
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 64, 64);
+  g.globalCompositeOperation = 'lighter';
+  for (const [w, h] of [[30, 1.6], [1.6, 30]]) {
+    const lg = w > h ? g.createLinearGradient(32 - w, 0, 32 + w, 0) : g.createLinearGradient(0, 32 - h, 0, 32 + h);
+    lg.addColorStop(0, 'rgba(255,245,220,0)');
+    lg.addColorStop(0.5, 'rgba(255,245,220,0.55)');
+    lg.addColorStop(1, 'rgba(255,245,220,0)');
+    g.fillStyle = lg;
+    g.fillRect(32 - w, 32 - h, w * 2, h * 2);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
 // Kuinka korkealla maasta esine lepää (mallin paksuus makuuasennossa).
 const REST_Y = {
   stick: 0.025, stone: 0.07, fiber: 0.03, wood: 0.09, stone_axe: 0.03, stone_pick: 0.03, campfire: 0.05, gold_nugget: 0.02, cowrie: 0.02, bronze_bracelet: 0.02,
   wooden_club: 0.06, machete: 0.016, shield: 0.06, raw_meat: 0.03, hide: 0.01, clay: 0.03,
 };
 const MAX_DROPS = 250;
+// Sessio 21: maassa oleva esine katoaa 10 minuutissa (kutistuu pois).
+const DESPAWN = 600;
+const DESPAWN_FADE = 0.5;
 const LIE = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
 const _q = new THREE.Quaternion();
 const _axis = new THREE.Vector3();
@@ -39,6 +73,10 @@ export class Drops {
       emissive: 0xffc040,
       emissiveIntensity: 0.25,
     });
+    // Hehku (kasvot aina kameraan päin, lisäävä sekoitus)
+    const map = glowTexture();
+    this.glowMat = new THREE.SpriteMaterial({ map, color: 0xfff0d0, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.18 });
+    this.glowMatValuable = new THREE.SpriteMaterial({ map, color: 0xffd070, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.3 });
     this.fullWarned = 0;
     this.waves = { amp: 0, windX: 1, windZ: 0, t: 0 };
     this.onWater = null; // (laji, x, y, z, voima) roiskeet ja väreily
@@ -59,7 +97,8 @@ export class Drops {
 
   _add(item, count, pos, vel, resting) {
     if (this.list.length >= MAX_DROPS) this._remove(this.list[0]);
-    const mesh = new THREE.Mesh(this.geos[item], ITEMS[item].valuable ? this.valuableMaterial : this.material);
+    const geo0 = this.geos[item];
+    const mesh = new THREE.Mesh(geo0, ITEMS[item].valuable ? this.valuableMaterial : (geo0 && geo0.userData.material) || this.material);
     mesh.castShadow = true;
     mesh.position.copy(pos);
     const yaw = Math.random() * Math.PI * 2;
@@ -67,10 +106,21 @@ export class Drops {
     if (resting) mesh.quaternion.copy(rest);
     else mesh.quaternion.setFromEuler(new THREE.Euler(Math.random() * 6, Math.random() * 6, Math.random() * 6));
     this.scene.add(mesh);
+    // Hehku esineen ympärille (koko mallin mukaan)
+    const geo = this.geos[item];
+    if (!geo.boundingSphere) geo.computeBoundingSphere();
+    const glow = new THREE.Sprite(ITEMS[item].valuable ? this.glowMatValuable : this.glowMat);
+    const gs = Math.min(0.6, Math.max(0.3, 0.25 + geo.boundingSphere.radius * 0.7));
+    glow.scale.setScalar(gs);
+    glow.renderOrder = 3;
+    glow.userData.base = gs;
+    glow.userData.phase = Math.random() * 100;
+    mesh.add(glow);
+    attachGlow(mesh); // rubiini hehkuu (sessio 22)
     const d = {
       item, count, mesh, vel, rest,
       spin: resting ? new THREE.Vector3() : new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(10),
-      resting, age: resting ? 10 : 0, magnet: null, blockedUntil: 0,
+      resting, age: resting ? 10 : 0, left: DESPAWN, magnet: null, blockedUntil: 0, thrown: false, leftZone: true, glow,
       // Vesi: w = viimeisin näyte, floating = kelluu pinnalla, wet = osui veteen
       w: null, wTimer: 0, floating: false, wet: false, flowX: 0, flowZ: 0, bob: Math.random() * 6,
     };
@@ -93,12 +143,28 @@ export class Drops {
   update(dt, elapsed, player, inventory) {
     this.material.emissiveIntensity = 0.05 + (Math.sin(elapsed * 3) * 0.5 + 0.5) * 0.08;
     this.valuableMaterial.emissiveIntensity = 0.2 + (Math.sin(elapsed * 4) * 0.5 + 0.5) * 0.35;
+    this.glowMat.opacity = 0.14 + (Math.sin(elapsed * 2.4) * 0.5 + 0.5) * 0.06;
+    this.glowMatValuable.opacity = 0.24 + (Math.sin(elapsed * 3.2) * 0.5 + 0.5) * 0.12;
     const chest = _v.copy(player.position);
     chest.y += 1.0;
     for (let i = this.list.length - 1; i >= 0; i--) {
       const d = this.list[i];
       d.age += dt;
+      if (!d.magnet) {
+        d.left -= dt;
+        if (d.left <= 0) {
+          const k = Math.min(1, -d.left / DESPAWN_FADE);
+          d.mesh.scale.setScalar(Math.max(0.001, 1 - k * k));
+          if (k >= 1) { this._remove(d); continue; }
+        }
+      }
       const p = d.mesh.position;
+      // Kiilto välähtää silloin tällöin pikkuisen isompana (oma tahti).
+      if (d.glow) {
+        const gu = d.glow.userData;
+        const gl = Math.pow(Math.max(0, Math.sin(elapsed * 0.9 + gu.phase)), 40);
+        d.glow.scale.setScalar(gu.base * (1 + 0.8 * gl));
+      }
 
       if (d.magnet) {
         d.magnet.t += dt / 0.2;
@@ -198,12 +264,15 @@ export class Drops {
         if (d.age < 12) p.y += (heightAt(p.x, p.z) + (REST_Y[d.item] ?? 0.05) - p.y) * Math.min(1, dt * 8);
       }
 
-      // Automaattinen poiminta, kun pelaaja kävelee yli
-      if (d.age > 0.6 && elapsed > d.blockedUntil) {
+      // Automaattinen poiminta, kun pelaaja kävelee yli. Heitetty esine
+      // odottaa, kunnes pelaaja on käynyt kauempana (ei poimita heti takaisin).
+      if (d.age > 0.6) {
         const dx = p.x - player.position.x;
         const dz = p.z - player.position.z;
         const dy = p.y - player.position.y;
-        if (dx * dx + dz * dz < PICK_RADIUS * PICK_RADIUS && dy > -1 && dy < 2.2) this.pick(d);
+        const d2 = dx * dx + dz * dz;
+        if (!d.leftZone && elapsed > d.blockedUntil && d2 > THROW_AWAY * THROW_AWAY) d.leftZone = true;
+        if (elapsed > d.blockedUntil && d.leftZone && d2 < PICK_RADIUS * PICK_RADIUS && dy > -1 && dy < 2.2) this.pick(d);
       }
     }
   }
@@ -253,7 +322,9 @@ export class Drops {
     if (!ITEMS[item] || count <= 0) return null;
     const vel = new THREE.Vector3().copy(dir).multiplyScalar(7.5).add(new THREE.Vector3(0, 2.2, 0));
     const d = this._add(item, count, pos.clone(), vel, false);
-    d.blockedUntil = elapsed + 1.5;
+    d.blockedUntil = elapsed + THROW_BLOCK;
+    d.thrown = true;
+    d.leftZone = false;
     return d;
   }
 
@@ -281,7 +352,8 @@ export class Drops {
   serialize() {
     return this.list
       .filter((d) => !d.magnet)
-      .map((d) => ({ item: d.item, count: d.count, x: +d.mesh.position.x.toFixed(2), y: +d.mesh.position.y.toFixed(2), z: +d.mesh.position.z.toFixed(2) }));
+      .filter((d) => d.left > 0)
+      .map((d) => ({ item: d.item, count: d.count, x: +d.mesh.position.x.toFixed(2), y: +d.mesh.position.y.toFixed(2), z: +d.mesh.position.z.toFixed(2), t: Math.round(d.left) }));
   }
 
   load(list) {
@@ -289,7 +361,8 @@ export class Drops {
     if (!Array.isArray(list)) return;
     for (const s of list) {
       if (s && ITEMS[s.item] && s.count > 0 && Number.isFinite(s.x) && Number.isFinite(s.z)) {
-        this._add(s.item, s.count, new THREE.Vector3(s.x, s.y, s.z), new THREE.Vector3(), true);
+        const d = this._add(s.item, s.count, new THREE.Vector3(s.x, s.y, s.z), new THREE.Vector3(), true);
+        if (Number.isFinite(s.t)) d.left = Math.max(1, Math.min(DESPAWN, s.t));
       }
     }
   }

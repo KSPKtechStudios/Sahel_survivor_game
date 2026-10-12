@@ -2,7 +2,7 @@
 // maasto piirtyy (explored.js). Kartta kääntyy pelaajan mukana, joten
 // katsesuunta on aina ylöspäin. Alla biomin nimi.
 import { sampleTerrain, placeName } from '../world/terrain.js';
-import { drawWaypointName, drawWaypoint, createPaperPattern } from './explored.js';
+import { drawWaypointName, drawWaypoint, drawBoat, createPaperPattern } from './explored.js';
 
 const RANGE = 110; // metriä keskeltä reunaan
 const GRID = 128;  // ruudukon väli metreinä
@@ -21,9 +21,34 @@ export class Minimap {
     this.biomeTimer = 0;
     this.lastBiome = null;
     this._s = {};
+    this._buildRing();
   }
 
-  update(dt, player) {
+  // Kompassirengas (sessio 19): asteikko 10° välein ja ilmansuunnat P, I, E, L.
+  // Rengas kääntyy kartan mukana; kirjaimet pysyvät pystyssä.
+  _buildRing() {
+    const svg = document.getElementById('minimap-ring');
+    if (!svg) return;
+    const C = 102;
+    let h = `<circle class="band" cx="${C}" cy="${C}" r="94"/><circle class="edge" cx="${C}" cy="${C}" r="88.5"/><circle class="edge out" cx="${C}" cy="${C}" r="100.5"/><g class="rot">`;
+    for (let a = 0; a < 360; a += 10) {
+      if (a % 90 === 0) continue;
+      const big = a % 30 === 0;
+      const r0 = big ? 90.5 : 93.5, r1 = big ? 98 : 96;
+      const s = Math.sin((a * Math.PI) / 180), c = -Math.cos((a * Math.PI) / 180);
+      h += `<line class="tick${big ? ' big' : ''}" x1="${(C + s * r0).toFixed(2)}" y1="${(C + c * r0).toFixed(2)}" x2="${(C + s * r1).toFixed(2)}" y2="${(C + c * r1).toFixed(2)}"/>`;
+    }
+    const L = [['P', 0, 'n'], ['I', 90, ''], ['E', 180, ''], ['L', 270, '']];
+    for (const [t, a, cls] of L) {
+      const s = Math.sin((a * Math.PI) / 180), c = -Math.cos((a * Math.PI) / 180);
+      h += `<text class="${cls}" data-a="${a}" x="${(C + s * 94).toFixed(2)}" y="${(C + c * 94).toFixed(2)}">${t}</text>`;
+    }
+    svg.innerHTML = h + '</g>';
+    this.ringRot = svg.querySelector('.rot');
+    this.ringTexts = [...svg.querySelectorAll('text')];
+  }
+
+  update(dt, player, boats = null) {
     const px = player.position.x;
     const pz = player.position.z;
     const yaw = player.yaw;
@@ -76,6 +101,20 @@ export class Minimap {
       drawWaypoint(ctx, w.type, R + sx, R + sy, size);
       if (d <= max && w.name) drawWaypointName(ctx, w.name, R + sx, R + sy + 8, 11);
     }
+    // Veneet (ei sitä, jossa ollaan)
+    if (boats) {
+      for (const b of boats.list) {
+        if (b === boats.riding || b.sinking >= 0) continue;
+        const dx = (b.x - px) * k, dz = (b.z - pz) * k;
+        let sx = dx * c - dz * s, sy = dx * s + dz * c;
+        const d = Math.hypot(sx, sy);
+        const max = R - 12;
+        if (d > max) { sx *= max / d; sy *= max / d; }
+        ctx.globalAlpha = d > max ? 0.75 : 1;
+        const hx = Math.sin(b.yaw - yaw), hy = Math.cos(b.yaw - yaw);
+        drawBoat(ctx, R + sx, R + sy, hx, hy, b.type === 'ship' ? 16 : b.type === 'sailboat' ? 12 : 10, b.type !== 'rowboat');
+      }
+    }
     ctx.globalAlpha = 1;
 
     // Reunan varjo
@@ -86,16 +125,12 @@ export class Minimap {
     ctx.fillRect(0, 0, W, W);
     ctx.restore();
 
-    // Pohjoinen (P) reunalla
-    const nx = R + Math.sin(yaw) * (R - 11), ny = R - Math.cos(yaw) * (R - 11);
-    ctx.font = '700 12px Alegreya, Georgia, serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = 'rgba(255, 244, 220, 0.85)';
-    ctx.strokeText('P', nx, ny);
-    ctx.fillStyle = '#7a2a16';
-    ctx.fillText('P', nx, ny);
+    // Kompassirengas kääntyy kartan mukana (kirjaimet pysyvät pystyssä).
+    if (this.ringRot) {
+      const deg = (yaw * 180) / Math.PI;
+      this.ringRot.setAttribute('transform', `rotate(${deg.toFixed(2)} 102 102)`);
+      for (const t of this.ringTexts) t.setAttribute('transform', `rotate(${(-deg).toFixed(2)} ${t.getAttribute('x')} ${t.getAttribute('y')})`);
+    }
 
     // Pelaajan nuoli
     ctx.save();

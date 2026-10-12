@@ -79,12 +79,21 @@ export function saveWorldData(id, data) {
 // --- Asetukset ---------------------------------------------------------------------
 
 // Grafiikan esiasetukset. Kun yksittäistä asetusta muutetaan, laaduksi tulee "oma".
+// Sessio 12e: syväterävyys ja linssiheijastukset oletuksena päällä
+// (matalalla pois, koska jälkikäsittely on silloin pois).
+// Sessio 37: ambienttiokkluusio (ao: off | low | high), bloom, värimäärittely
+// (grade) ja vinjetti. Matalalla laadulla raskaat (AO, bloom) pois, kevyt
+// värimäärittely ja vinjetti päällä.
 export const QUALITY_PRESETS = {
-  low: { viewDistance: 3, shadows: 'off', renderScale: 0.7, godRays: false, motionBlur: 'off', dof: false },
-  medium: { viewDistance: 4, shadows: 'normal', renderScale: 0.85, godRays: true, motionBlur: 'off', dof: false },
-  high: { viewDistance: 5, shadows: 'normal', renderScale: 1, godRays: true, motionBlur: 'off', dof: false },
-  ultra: { viewDistance: 7, shadows: 'high', renderScale: 1, godRays: true, motionBlur: 'off', dof: false },
+  low: { viewDistance: 3, shadows: 'off', renderScale: 0.7, godRays: false, motionBlur: 'off', dof: false, lensFlare: false, foliage: 'low', ao: 'off', bloom: false, grade: true, vignette: true, sharpen: true },
+  medium: { viewDistance: 4, shadows: 'normal', renderScale: 0.85, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'normal', ao: 'low', bloom: true, grade: true, vignette: true, sharpen: true },
+  high: { viewDistance: 5, shadows: 'normal', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high', ao: 'high', bloom: true, grade: true, vignette: true, sharpen: true },
+  ultra: { viewDistance: 7, shadows: 'high', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high', ao: 'high', bloom: true, grade: true, vignette: true, sharpen: true },
 };
+// Asetusten versio: vanhoihin tallennettuihin asetuksiin kytketään uudet
+// oletukset kerran (v2: DOF ja linssiheijastukset päälle; v3: AO, bloom,
+// värimäärittely ja vinjetti laatutason mukaan; v4: terävöinti päälle).
+const SETTINGS_VERSION = 4;
 
 export const DEFAULT_SETTINGS = {
   quality: 'high',    // low | medium | high | ultra | custom
@@ -97,14 +106,32 @@ export const DEFAULT_SETTINGS = {
   showFps: false,
   godRays: true,      // valonsäteet ja ilmakehän hehku
   motionBlur: 'off',  // off | low | high
-  dof: false,         // syväterävyys
+  dof: true,          // syväterävyys (sessio 12e: oletuksena päällä)
+  lensFlare: true,    // linssiheijastukset aurinkoon katsottaessa (sessio 12e)
+  foliage: 'high',    // ruohon ja aluskasvien tiheys: low | normal | high (sessio 24)
+  ao: 'high',         // ambienttiokkluusio: off | low | high (sessio 37)
+  bloom: true,        // kirkkaiden kohtien hehku (sessio 37)
+  grade: true,        // värimäärittely: kontrasti, kylläisyys, lämmin sävy (sessio 37)
+  vignette: true,     // kevyt reunojen tummennus (sessio 37)
+  sharpen: true,      // terävöinti (sessio 38)
   masterVolume: 1,    // äänenvoimakkuus 0..1
   musicVolume: 0.8,   // musiikki 0..1 (pelissä musiikki soi lisäksi hiljaa taustalla)
   sfxVolume: 1,       // äänitehosteet 0..1 (tuleville äänille)
 };
 
 export function loadSettings() {
-  return { ...DEFAULT_SETTINGS, ...(read(SETTINGS_KEY) || {}) };
+  const stored = read(SETTINGS_KEY) || {};
+  const s = { ...DEFAULT_SETTINGS, ...stored };
+  if ((stored.v || 1) < 2) {
+    if (s.quality !== 'low') { s.dof = true; s.lensFlare = true; }
+  }
+  if ((stored.v || 1) < 3) {
+    const p = QUALITY_PRESETS[s.quality] || QUALITY_PRESETS.medium;
+    for (const k of ['ao', 'bloom', 'grade', 'vignette']) s[k] = p[k];
+  }
+  if ((stored.v || 1) < 4) s.sharpen = true;
+  s.v = SETTINGS_VERSION;
+  return s;
 }
 
 export function saveSettings(s) {

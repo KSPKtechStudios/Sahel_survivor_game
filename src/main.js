@@ -1,23 +1,34 @@
 // Sahel: käynnistys, tilat (päävalikko / lataus / peli / tauko / reppu) ja pääsilmukka.
 import * as THREE from 'three';
+import { loadSurfaces, addSurfaceDetail, leafTexture, surfaceUniforms } from './render/surfaces.js';
+import { updateGlow } from './render/itemGlow.js';
 import { CONFIG } from './config.js';
 import { createGroundDetailTexture } from './render/textures.js';
-import { createSharedMaterials } from './render/materials.js';
+import { createSharedMaterials, wetUniforms, addWet, addTranslucency, sunUniforms } from './render/materials.js';
+import { grassUniforms } from './render/grassField.js';
 import { Sky } from './render/sky.js';
 import { Environment, WEATHER_KEYS } from './render/environment.js';
 import { Dust, Bursts } from './render/particles.js';
+import { Ambient } from './render/ambient.js';
 import { Debris } from './render/debris.js';
+import { Footprints } from './render/footprints.js';
+import { Vines } from './render/vines.js';
+import { Coconuts } from './game/coconuts.js';
 import { createWaterMaterial, updateWaterMaterial } from './render/water.js';
 import { Ripples } from './render/ripples.js';
 import { Splashes } from './render/splash.js';
 import { FireFx } from './render/fire.js';
 import { Blood } from './render/blood.js';
+import { Rain } from './render/rain.js';
 import { PostFX } from './render/post.js';
 import { Music, BIOME_MUSIC } from './audio/music.js';
+import { Sfx } from './audio/sfx.js';
 import { createModelLibrary } from './models/models.js';
 import { World } from './world/world.js';
+import { OBJECT_TYPES } from './world/objectTypes.js';
+import { ITEMS } from './game/items.js';
 import { Tumbleweeds } from './world/tumbleweeds.js';
-import { findSpawn, setWorldSeed, seedFromString, sampleTerrain, heightAt, displayBiome } from './world/terrain.js';
+import { findSpawn, setWorldSeed, seedFromString, sampleTerrain, heightAt, displayBiome, waterAt } from './world/terrain.js';
 import { Player } from './player/player.js';
 import { Input } from './player/input.js';
 import { ViewModel } from './player/viewmodel.js';
@@ -31,23 +42,33 @@ import { Ruins } from './game/ruins.js';
 import { Interaction } from './game/interaction.js';
 import { Mobs } from './game/mobs.js';
 import { Combat } from './game/combat.js';
+import { Survival } from './game/survival.js';
+import { Archery } from './game/archery.js';
+import { BuildSystem } from './game/building.js';
+import { Boats } from './game/boats.js';
+import { PIECES } from './game/pieces.js';
 import { events } from './game/events.js';
 import { loadWorldData, saveWorldData, loadSettings } from './game/save.js';
 import { renderItemIcons } from './ui/icons.js';
 import { Hud, RESPAWN_WAIT } from './ui/hud.js';
+import { Nameplates } from './ui/nameplates.js';
 import { Minimap } from './ui/minimap.js';
 import { ExploredMap } from './ui/explored.js';
 import { BigMap } from './ui/bigMap.js';
 import { GuideUI } from './ui/guideUI.js';
 import { InventoryUI } from './ui/inventoryUI.js';
+import { BuildMenu } from './ui/buildMenu.js';
+import { RunePanel } from './ui/runePanel.js';
+import { BoatHud } from './ui/boatHud.js';
 import { Menu } from './ui/menu.js';
 import { DevTools } from './ui/devtools.js';
 
 const $ = (id) => document.getElementById(id);
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
 const MENU_SEED = seedFromString('sahel-valikko');
-// Maisemallinen paikka valikon taustalle (dyynit, akasiat ja lateriitti näkyvissä).
-const MENU_SPOT = { x: -2650, z: -495, yaw: 2.3, time: 17.1 };
+// Maisemallinen paikka valikon taustalle (savannia, akasioita ja kallioita
+// auringonlaskussa). Sessio 9: siirretty uuden biomijaon mukaan.
+const MENU_SPOT = { x: -2296, z: 582, yaw: 1.6, time: 17.1 };
 
 // --- Renderöijä ja kamera ----------------------------------------------------
 const canvas = $('game');
@@ -63,7 +84,9 @@ const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerH
 
 // --- Järjestelmät -------------------------------------------------------------
 const materials = createSharedMaterials(createGroundDetailTexture());
-const activeMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
+// Hakattavat ja kaatuvat puut: sama kaarna kuin seisovissa (sessio 23).
+const activeMaterial = addTranslucency(addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, map: leafTexture, alphaTest: 0.42, alphaToCoverage: true, side: THREE.DoubleSide }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 0.3, 0), 0.38);
+loadSurfaces(renderer);
 const models = createModelLibrary();
 const sky = new Sky(scene);
 materials.water = createWaterMaterial(sky);
@@ -71,10 +94,17 @@ const env = new Environment(scene, renderer, sky);
 const world = new World(scene, materials, models);
 const tumbleweeds = new Tumbleweeds(scene, models.tumbleweed, materials.solid);
 const dust = new Dust(scene);
+const ambient = new Ambient(scene, world);
 const bursts = new Bursts(scene);
 const debris = new Debris(scene);
 const drops = new Drops(scene, models.items);
+// Sessio 27: kookospähkinät palmuissa (ravistus, kaato, uudelleenkasvu).
+const coconuts = new Coconuts(scene, world, models, drops);
+const gameHours = () => env.day * 24 + env.time;
 const fallen = new FallenTrees({ scene, world, models, material: activeMaterial, debris, drops, bursts });
+// Sessio 27: liaanien fysiikka (tuuli, pelaaja, kaatuvat puut).
+const vines = new Vines(scene, world, models);
+fallen.vines = vines;
 const breakables = new Breakables({ world, models, debris, drops, fallen, material: activeMaterial });
 const structures = new Structures(scene, models, world);
 const ruins = new Ruins({ scene, world, drops, bursts });
@@ -83,9 +113,32 @@ const post = new PostFX(renderer);
 const splashes = new Splashes(scene);
 const fire = new FireFx(scene);
 const blood = new Blood(scene);
+const rain = new Rain(scene, renderer);
+env.onStrike = (angle, dist, near) => {
+  rain.strike(camera, angle, dist, near);
+  // Lähisalama: jyrähdys heti (sfx alustetaan alempana) ja isku maahan:
+  // hiekkaa ja multaa pöllähtää ja pieni tulipallo leimahtaa (sessio 12c).
+  if (near) {
+    const x = camera.position.x + Math.cos(angle) * dist, z = camera.position.z + Math.sin(angle) * dist;
+    sfx.thunderClap(x, z, dist, { x: camera.position.x, z: camera.position.z, yaw: player.yaw });
+    const wq = waterAt(x, z, {});
+    if (wq.wl <= wq.h + 0.05) {
+      const p = new THREE.Vector3(x, wq.h + 0.3, z);
+      // Sora ja multa lentävät, pölypilvi leviää hitaasti.
+      bursts.spawn(p, 0xd9c49a, 40, 9, { size: 0.4, life: 1.3, gravity: 9, lit: true });
+      bursts.spawn(p, 0x8a6a48, 30, 7, { size: 0.35, life: 1.2, gravity: 9, lit: true });
+      bursts.spawn(p, 0xc8b493, 16, 2.6, { size: 3.6, life: 2.6, gravity: -0.4, opacity: 0.55, lit: true });
+      rain.impact(p);
+    }
+  }
+};
 const music = new Music();
 // Selain sallii äänen vasta käyttäjän ensimmäisen klikkauksen tai näppäimen jälkeen.
-for (const ev of ['pointerdown', 'keydown']) window.addEventListener(ev, () => music.unlock(), { capture: true });
+const sfx = new Sfx();
+// Pelin fontti ladataan heti (kartat piirtävät tekstiä kankaalle).
+if (document.fonts) document.fonts.load("700 16px 'Philosopher'").catch(() => {});
+const lightningEl = document.getElementById('lightning');
+for (const ev of ['pointerdown', 'keydown']) window.addEventListener(ev, () => { music.unlock(); sfx.unlock(); }, { capture: true });
 
 const inventory = new Inventory();
 const guide = new Guide();
@@ -93,17 +146,126 @@ const player = new Player(camera);
 const input = new Input(canvas);
 const viewmodel = new ViewModel(models.items);
 const mobs = new Mobs({ scene, world, drops, debris, bursts, player, env, structures, fire, blood });
-const interaction = new Interaction({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs });
+// Kaatuvat puut: osumat pelaajaan ja olentoihin, ketjukaato (sessio 13).
+fallen.player = player;
+fallen.mobs = mobs;
+fallen.knockTree = (obj, dir, depth) => breakables.fellTree(obj, dir, depth);
+// Kaatuva puu murskaa alleen jääviä kasveja (sessio 19).
+fallen.crushPlant = (obj, power, from) => {
+  const def = OBJECT_TYPES[obj.type];
+  const at = new THREE.Vector3(obj.x, obj.y + 0.4, obj.z);
+  if (def.kind === 'bush') breakables.hit(obj, at, from.clone(), (def.harvest ? def.harvest.hp : 1) * (0.4 + 0.8 * power));
+  else {
+    debris.chips(at, 0x6a7a3a, 4, null, 0.6);
+    world.removeObject(obj);
+  }
+};
+const boats = new Boats({ scene, camera, player, env, drops, waves: player.waves });
+boats.fx = {
+  ripple: (x, z, r, s) => ripples.disturb(x, z, r, s),
+  splash: (x, y, z, power, opts) => splashes.spawn(x, y, z, power, opts),
+};
+const interaction = new Interaction({ camera, player, world, tumbleweeds, inventory, viewmodel, structures, debris, drops, fallen, breakables, ruins, mobs, boats });
+interaction.coconuts = coconuts;
+interaction.clock = gameHours;
+fallen.coconuts = coconuts;
+fallen.clock = gameHours;
+interaction.boardBoat = (b) => boats.board(b);
 const combat = new Combat({ camera, player, inventory, viewmodel, interaction, mobs, debris, bursts });
 mobs.combat = combat;
+const survival = new Survival(player);
+const archery = new Archery({ scene, camera, player, inventory, viewmodel, mobs, world, drops, debris });
+const build = new BuildSystem({ camera, player, inventory, structures, world, viewmodel, drops, boats });
 
 const icons = renderItemIcons(models.items);
-const hud = new Hud(inventory, icons);
+const pieceIcons = renderItemIcons(models.build);
+const hud = new Hud(inventory, icons, survival);
+const nameplates = new Nameplates(document.getElementById('hud'));
+nameplates.world = world;
+const boatHud = new BoatHud();
 const explored = new ExploredMap(world.gen);
 const minimap = new Minimap(explored);
 const bigMap = new BigMap(explored, player);
-new GuideUI(guide);
-const invUI = new InventoryUI(inventory, icons);
+bigMap.boats = boats;
+const guideUI = new GuideUI(guide);
+const invUI = new InventoryUI(inventory, icons, {
+  stations: () => structures.stationsNear(player.position.x, player.position.z),
+  use: (i) => useSlot(i),
+  // Repusta ulos raahattu pino pudotetaan pelaajan eteen (sessio 19).
+  drop: (i, n) => {
+    const s = inventory.slots[i];
+    if (!s) return false;
+    camera.getWorldDirection(_throwDir);
+    const pos = camera.position.clone().addScaledVector(_throwDir, 0.6);
+    pos.y -= 0.3;
+    drops.throwItem(s.id, n, pos, _throwDir, elapsed);
+    sfx.click();
+    inventory.removeFromSlot(i, n);
+    return true;
+  },
+});
+const buildMenu = new BuildMenu({
+  inventory, itemIcons: icons, pieceIcons,
+  hasBench: () => !!structures.nearest('workbench', player.position.x, player.position.z, 20),
+  onSelect: (type) => {
+    build.select(type);
+    events.emit('message', { text: `${PIECES[type].name}: [Hiiri 1] rakenna, [R] käännä` });
+    closeBuildMenu();
+  },
+});
+document.getElementById('buildmenu').addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  if (state === 'build') closeBuildMenu();
+});
+
+// Syö / käytä repun paikan esine (ruoka ja rohdot).
+function useSlot(i) {
+  const s = inventory.slots[i];
+  if (!s || player.dead) return;
+  if (survival.eat(s.id)) {
+    inventory.removeFromSlot(i, 1);
+    viewmodel.eat();
+    events.emit('notify', { item: s.id, count: -1 });
+  }
+}
+interaction.useItem = useSlot;
+
+// Riimukivet: [E] kääntää tekstin suomeksi.
+const runePanel = new RunePanel();
+interaction.readRune = (a) => {
+  runePanel.toggle(ruins.translate(a), a.st.id, a.rune.world);
+  viewmodel.pickup();
+};
+
+// Makuualusta: yöllä nukutaan aamuun, aina asetetaan herätyspaikaksi.
+let sleepT = 0;
+interaction.usePiece = (st) => {
+  structures.bed = st;
+  const night = env.time >= 20 || env.time < 5.5;
+  if (!night) {
+    events.emit('message', { text: 'Herätyspaikka asetettu. Nukkua voi vain yöllä.' });
+    return;
+  }
+  const foes = mobs.list.some((m) => (m.type === 'clay' || m.type === 'haamu') && m.state !== 'dead' && m.pos.distanceTo(player.position) < (m.type === 'haamu' ? 40 : 25));
+  if (foes) {
+    events.emit('message', { text: 'Et voi nukkua: vihollisia on lähellä' });
+    return;
+  }
+  sleepT = 1.6;
+  combat.reset();
+};
+
+function openBuildMenu() {
+  if (state !== 'playing') return;
+  wantBuild = true;
+  input.unlock();
+}
+function closeBuildMenu() {
+  buildMenu.hide();
+  input.lock();
+  setTimeout(() => { if (state === 'build' && !input.locked) setState('paused'); }, 600);
+}
+build.openMenu = openBuildMenu;
 
 // --- Vesi: roiskeet ja väreily ----------------------------------------------------
 // Pelaaja, pudotetut esineet ja heitot kutsuvat tätä osuessaan veteen.
@@ -164,7 +326,22 @@ function applySettings(s) {
   post.godRays = s.godRays !== false;
   post.motionBlur = s.motionBlur === 'high' ? 2 : s.motionBlur === 'low' ? 1 : 0;
   post.dof = !!s.dof;
+  post.lensFlare = s.lensFlare !== false;
+  // Sessio 37: ambienttiokkluusio, bloom, värimäärittely ja vinjetti.
+  post.ao = s.ao === 'high' ? 2 : s.ao === 'low' ? 1 : 0;
+  post.bloom = s.bloom !== false;
+  post.grade = s.grade !== false;
+  post.vignette = s.vignette !== false;
+  post.sharpen = s.sharpen !== false ? 0.5 : 0; // sessio 38
+  // Sessio 25: silmän mukautuminen on aina päällä (yön valotus riippuu siitä).
+  env.autoExposure = post.autoExposure;
+  // Sessio 24: ruohon ja aluskasvien tiheys sekä ruohon näkyvyyssäde.
+  const fol = { low: [0.35, 0.4, 34], normal: [0.65, 0.7, 40], high: [1, 1, 46] }[s.foliage] || [1, 1, 46];
+  world.grass.setDensity(fol[0]);
+  world.setDecorDensity(fol[1]);
+  grassUniforms.uFadeR.value = fol[2];
   music.setVolumes(s.masterVolume ?? 1, s.musicVolume ?? 0.8);
+  sfx.setVolumes(s.masterVolume ?? 1, s.sfxVolume ?? 1);
 }
 applySettings(settings);
 
@@ -173,14 +350,19 @@ let state = 'boot'; // boot | menu | loading | ready | playing | paused | invent
 let currentWorld = null;
 let wantInventory = false;
 let wantMap = false;
+let wantBuild = false;
 let wantDev = false;
 const menuCam = { x: 0, z: 0, t: 0 };
 
 function setState(s) {
   state = s;
-  const inGame = s === 'playing' || s === 'paused' || s === 'inventory' || s === 'map' || s === 'dev';
+  const inGame = s === 'playing' || s === 'paused' || s === 'inventory' || s === 'map' || s === 'dev' || s === 'build';
   $('hud').classList.toggle('hidden', !inGame);
+  // Repun ollessa auki pikapalkki ja minikartta piiloon (reppu näyttää ne).
+  $('hud').classList.toggle('inv', s === 'inventory');
   if (s !== 'inventory') invUI.hide();
+  if (s !== 'build') buildMenu.hide();
+  if (s === 'menu' || s === 'loading') runePanel.hide();
   if (s !== 'map') bigMap.hide();
   if (s !== 'dev') devtools.hide();
   if (s === 'playing') {
@@ -204,23 +386,37 @@ function fmtTime(h) {
 
 function clearWorldState(seed) {
   setWorldSeed(seed);
+  env.moonSeed = seed;
   world.reset(seed);
   structures.clear();
   ruins.clear();
   drops.clear();
   fallen.clear();
+  vines.clear();
+  coconuts.clear();
   debris.clear();
   tumbleweeds.clear();
+  ambient.clear();
   explored.clear();
   splashes.clear();
   fire.clear();
   blood.clear();
+  footprints.clear();
   mobs.clear();
+  boats.clear();
   combat.reset();
+  archery.clear();
+  build.select(null);
+  survival.reset();
+  structures.held = null;
 }
 
+let nightSilence = false;
+// Vain uusin lataus on voimassa (sessio 20): uusi siirto peruu edellisen.
+let buildGen = 0;
 function buildAround(x, z, onProgress) {
-  return world.ensureLoaded(x, z, onProgress, nextFrame);
+  const gen = ++buildGen;
+  return world.ensureLoaded(x, z, onProgress, nextFrame, () => gen !== buildGen);
 }
 
 // Päävalikko: tausta on oikea pelimaailma auringonlaskussa.
@@ -270,6 +466,7 @@ async function startWorld(meta) {
   player.crouching = false;
   inventory.load(data ? data.inventory : { slots: [] });
   guide.load(data ? data.guide : { step: 0, stats: {} });
+  survival.load(data ? data.survival : null);
   world.load(data ? data.world : null);
   if (data && data.env) env.load(data.env);
   else { env.setTime(CONFIG.startHour); env.setWeather('clear', true); env.day = 1; }
@@ -281,9 +478,12 @@ async function startWorld(meta) {
   }
   player.stamina = CONFIG.staminaMax;
   await buildAround(player.position.x, player.position.z, (p) => menu.setLoading(p));
+  env.snapClimate();
   structures.load(data ? data.structures : []);
+  boats.load(data ? data.boats : null);
   drops.load(data ? data.drops : []);
   fallen.load(data ? data.fallen : []);
+  coconuts.load(data ? data.coconuts : []);
   ruins.load(data ? data.ruins : []);
   explored.load(data ? data.map : null);
   mobs.prepare();
@@ -299,11 +499,14 @@ function persist() {
     player: player.serialize(),
     inventory: inventory.serialize(),
     guide: guide.serialize(),
+    survival: survival.serialize(),
     env: env.serialize(),
     world: world.serialize(),
     structures: structures.serialize(),
+    boats: boats.serialize(),
     drops: drops.serialize(),
     fallen: fallen.serialize(),
+    coconuts: coconuts.serialize(),
     ruins: ruins.serialize(),
     map: explored.serialize(),
   });
@@ -334,7 +537,11 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) persi
 // --- Hiiren lukitus ja näppäimet ---------------------------------------------------
 document.addEventListener('pointerlockchange', () => {
   if (input.locked) {
-    if (state === 'ready' || state === 'paused' || state === 'inventory' || state === 'map' || state === 'dev') setState('playing');
+    if (state === 'ready' || state === 'paused' || state === 'inventory' || state === 'map' || state === 'dev' || state === 'build') setState('playing');
+  } else if (wantBuild) {
+    wantBuild = false;
+    setState('build');
+    buildMenu.show(build.selected);
   } else if (wantDev) {
     wantDev = false;
     setState('dev');
@@ -353,7 +560,7 @@ document.addEventListener('pointerlockchange', () => {
   }
 });
 document.addEventListener('pointerlockerror', () => {
-  if (state === 'inventory' || state === 'map' || state === 'dev') setState('paused');
+  if (state === 'inventory' || state === 'map' || state === 'dev' || state === 'build') setState('paused');
 });
 canvas.addEventListener('click', () => { if (state === 'playing' && !input.locked) input.lock(); });
 
@@ -377,13 +584,30 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
     wantInventory = true;
     input.unlock();
+  } else if (state === 'build' && (e.code === 'Escape' || e.code === 'Tab')) {
+    e.preventDefault();
+    closeBuildMenu();
   } else if (state === 'inventory' && (e.code === 'Tab' || e.code === 'KeyI' || e.code === 'Escape')) {
     e.preventDefault();
     invUI.hide();
     input.lock();
     setTimeout(() => { if (state === 'inventory' && !input.locked) setState('paused'); }, 600);
+  } else if (state === 'playing' && e.code === 'KeyF') {
+    // Toinen käsi (sessio 20): kädessä oleva kilpi tai soihtu siirtyy toiseen
+    // käteen; uudelleen painettuna takaisin. Muulla esineellä [F] laskee
+    // toisen käden esineen pois.
+    const i = inventory.selected;
+    const s = inventory.slots[i];
+    if (s && inventory.canEquip(s.id) && ITEMS[s.id].offhand) inventory.toggleEquip(i);
+    else {
+      const o = inventory.offhand();
+      if (o) inventory.toggleEquip(inventory.slots.indexOf(o));
+    }
+  } else if (state === 'playing' && e.code === 'KeyT') {
+    // Opas piilossa oletuksena; [T] näyttää / piilottaa (sessio 19).
+    guideUI.toggle();
   } else if (state === 'playing' && e.code === 'KeyQ') {
-    throwSelected();
+    throwSelected(e.shiftKey);
   } else if (state === 'playing' && e.code === 'KeyM') {
     e.preventDefault();
     wantMap = true;
@@ -402,9 +626,10 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-// Heitä valittu esine [Q] (yksi kerrallaan) katseen suuntaan.
+// Heitä valittu esine [Q] (yksi kerrallaan) katseen suuntaan; [Shift]+[Q]
+// heittää koko pinon kerralla (sessio 12e).
 const _throwDir = new THREE.Vector3();
-function throwSelected() {
+function throwSelected(all = false) {
   const sel = inventory.selectedItem;
   if (!sel || viewmodel.busy) return;
   const id = sel.id;
@@ -412,11 +637,13 @@ function throwSelected() {
   viewmodel.swing('punch', () => {
     const now = inventory.slots[slot];
     if (!now || now.id !== id) return;
+    const n = all ? now.count : 1;
     camera.getWorldDirection(_throwDir);
     const pos = camera.position.clone().addScaledVector(_throwDir, 0.5);
     pos.y -= 0.2;
-    drops.throwItem(id, 1, pos, _throwDir, elapsed);
-    inventory.removeFromSlot(slot, 1);
+    drops.throwItem(id, n, pos, _throwDir, elapsed);
+    sfx.click();
+    inventory.removeFromSlot(slot, n);
   });
 }
 
@@ -425,8 +652,12 @@ let respawning = false;
 async function respawnPlayer() {
   if (respawning) return;
   respawning = true;
-  const sp = findSpawn();
+  // Herätyspaikka: makuualusta, jos sellainen on rakennettu.
+  const bed = structures.bed;
+  const sp = bed ? { x: bed.x + 1.2 * Math.cos(bed.rot), z: bed.z - 1.2 * Math.sin(bed.rot) } : findSpawn();
   combat.reset();
+  archery.reset();
+  survival.clearEffects();
   player.respawn(sp.x, sp.z);
   player.yaw = Math.PI * 0.75;
   player.pitch = 0;
@@ -440,20 +671,26 @@ async function respawnPlayer() {
 }
 events.on('playerDied', () => {
   combat.reset();
+  boats.detach();
   persist();
 });
 
 // --- Kehittäjätyökalut [F3] -----------------------------------------------------------------
 // Siirtyminen: maailma rakennetaan uuden paikan ympärille ennen kuin jatketaan.
 async function teleportTo(x, z, look = null) {
+  boats.detach();
   player.teleport(x, z);
+  env.snapClimate();
   player.velocity.set(0, 0, 0);
   if (look) player.yaw = Math.atan2(-(look.x - x), -(look.z - z));
-  await buildAround(x, z);
+  const done = await buildAround(x, z);
+  if (!done) return; // uudempi siirto ohitti tämän
+  player.teleport(x, z); // maasto on nyt ladattu: korkeus varmasti oikein
+  if (look) player.yaw = Math.atan2(-(look.x - x), -(look.z - z));
   player.update(0, input, world);
 }
 const devtools = new DevTools({
-  player, env, world, mobs, inventory, explored, ruins, drops, fps: null, teleport: teleportTo, fmtTime, music,
+  player, env, world, mobs, inventory, explored, ruins, drops, fps: null, teleport: teleportTo, fmtTime, music, boats,
 });
 
 // --- Koko ------------------------------------------------------------------------------
@@ -476,6 +713,104 @@ events.on('impact', ({ x, z, strength }) => {
 });
 events.on('hitFeedback', ({ strength }) => { shake = Math.max(shake, strength * 0.12); });
 
+// --- Äänitehosteet (sessio 12) ---------------------------------------------------------------
+// Taustaäänet käyttäjän ohjeen mukaan: tuuli ukkosella (missä ukkonen on
+// mahdollinen) sekä aina vuoristossa ja merellä; viidakon ääni sademetsässä;
+// sade aina kun sataa (myös sademetsän tihku, hiljaa); kaukainen ukkonen
+// ukkosmyrskyssä; aavikon tuuli (hiljaa, myrskyssä kovaa) ja raju myrskytuuli
+// (sessio 12c). Kaikki voivat soida päällekkäin.
+let birdT = 4;
+const _camDir = new THREE.Vector3();
+const _sunP = new THREE.Vector3();
+const _sm = (a, b, x) => Math.max(0, Math.min(1, (x - a) / (b - a)));
+function updateSfx(game, rainAmt, realDt) {
+  if (game) {
+    const dry = Math.min(1, env.climate.desert + env.climate.dry + env.climate.mountain);
+    const thunder = env.w.thunder * (1 - dry);
+    const sand = _sm(0.45, 0.9, env.w.dust);
+    const open = Math.max(_sm(0.2, 0.7, _s.mountains || 0), _sm(0.2, 0.7, _s.ocean || 0));
+    // Sessio 26: avoimilla savanneilla hiljainen tuuli (ennen täysin hiljaista).
+    const plains = _sm(0.3, 0.8, (_s.savanna || 0) + (_s.laterite || 0) + (_s.woodland || 0) * 0.6 + (_s.mare || 0) * 0.6);
+    sfx.setLevels({
+      wind: Math.max(thunder, open * (0.6 + 0.4 * Math.min(1, env.w.wind)), plains * (0.22 + 0.25 * Math.min(1, env.w.wind))),
+      jungle: _sm(0.3, 0.7, _s.rainforest || 0),
+      rain: _sm(0.05, 0.12, rainAmt) * Math.pow(Math.min(1, rainAmt), 1.2),
+      thunder,
+      // Aavikon tuuli: aina kuuluvissa (sessio 26: ennen 0,1, käyttäjälle
+      // aavikko kuulosti äänettömältä), hiekkamyrskyssä kovaa.
+      desertWind: Math.max((0.24 + 0.16 * Math.min(1, env.w.wind)) * _sm(0.3, 0.7, (_s.desert || 0) + (_s.dunes || 0)), sand),
+      // Raju tuuli: merellä ukkosella ja hiekkamyrskyssä puuskittain.
+      stormWind: Math.max(thunder * _sm(0.2, 0.7, _s.ocean || 0), sand * Math.max(0, Math.sin(elapsed * 0.21) * Math.sin(elapsed * 0.077 + 1)) * 1.6),
+    });
+    // Linnut (sessio 12d): välillä viidakossa, savannilla harvemmin; päivällä
+    // eikä kovassa sateessa.
+    birdT -= realDt;
+    if (birdT <= 0) {
+      const jungle = (_s.rainforest || 0) > 0.5;
+      const sav = (_s.savanna || 0) + (_s.woodland || 0) > 0.5;
+      birdT = jungle ? 6 + Math.random() * 12 : 18 + Math.random() * 30;
+      if ((jungle || sav) && env.daylight > 0.3 && rainAmt < 0.5) sfx.bird({ x: player.position.x, z: player.position.z, yaw: player.yaw });
+    }
+  } else {
+    sfx.setLevels({});
+  }
+  sfx.update(realDt);
+}
+
+// Askeleet: materiaali jalkojen alta.
+function stepMaterial() {
+  if (player.inWater === 1) return 'water';
+  if (player.onPlatform) return 'wood';
+  const s = _s;
+  if ((s.rock || 0) > 0.4 || (s.mountains || 0) > 0.6) return 'rock';
+  if ((s.beach || 0) + (s.desert || 0) + (s.dunes || 0) > 0.5) return 'sand';
+  if ((s.rainforest || 0) > 0.5) return 'leaves';
+  if ((s.laterite || 0) > 0.5) return 'gravel';
+  return 'grass';
+}
+// Sessio 25: jalanjäljet hiekkaan ja pieni roiske joka askeleella matalassa vedessä.
+const footprints = new Footprints(scene);
+player.onFootstep = (k) => {
+  const mat = stepMaterial();
+  sfx.step(mat, k);
+  const p = player.position;
+  if (player.inWater === 1) {
+    const w = waterAt(p.x, p.z, _fw);
+    waterFx('step', p.x, w.wl + 0.02, p.z, 0.6 + k * 0.5);
+  } else if (mat === 'sand' && player.onGround) {
+    footprints.add(p.x, p.z, player.yaw, (player.stepN & 1) ? 1 : -1, heightAt, Math.min(1, 0.6 + k * 0.35));
+  }
+};
+const _fw = {};
+events.on('swing', ({ heavy, quiet }) => sfx.whoosh(heavy, quiet));
+events.on('punch', ({ heavy }) => sfx.punch(heavy));
+events.on('crit', () => sfx.crit());
+// Keularoiskeet linssille (sessio 21): myrskyssä, kun keula iskeytyy aaltoon
+// ja pelaaja katsoo eteenpäin, vettä lentää ruutuun.
+let splashCd = 0;
+events.on('bowSpray', ({ boat, k }) => {
+  if (splashCd > 0 || state !== 'playing') return;
+  if (env.w.thunder < 0.3 && k < 1.6) return;
+  camera.getWorldDirection(_camDir);
+  const hl = Math.hypot(_camDir.x, _camDir.z) || 1;
+  const fwd = (_camDir.x * Math.sin(boat.yaw) + _camDir.z * Math.cos(boat.yaw)) / hl;
+  if (fwd < 0.35 || _camDir.y > 0.75) return;
+  if (Math.random() > Math.min(1, (k - 0.35) / 1.1)) return;
+  splashCd = 0.45 + Math.random() * 0.7;
+  const side = Math.random() < 0.5 ? -1 : 1;
+  post.addSplash(0.5 + side * (0.08 + Math.random() * 0.32), 0.12 + Math.random() * 0.42, (0.4 + Math.min(0.6, k * 0.3)) * (0.55 + 0.45 * fwd));
+});
+// Tärkeät tehosteet painavat myös musiikkia hetkeksi hiljemmaksi (väistö).
+sfx.onDuck = (to, hold) => music.duck(Math.max(0.45, to), hold);
+events.on('woodHit', ({ x, z }) => sfx.chop(x, z, { x: player.position.x, z: player.position.z, yaw: player.yaw }));
+events.on('haamuSound', ({ kind, x, z }) => {
+  sfx.ghost(kind, x, z, { x: player.position.x, z: player.position.z, yaw: player.yaw });
+});
+events.on('treeFell', ({ x, z, fallTime, size }) => {
+  if (x === undefined) return;
+  sfx.treeFall(x, z, fallTime, size, { x: player.position.x, z: player.position.z, yaw: player.yaw });
+});
+
 // --- Pääsilmukka --------------------------------------------------------------------------
 let last = performance.now();
 let elapsed = 0;
@@ -483,6 +818,10 @@ let saveTimer = CONFIG.autosaveSec;
 let edgeMsgTimer = 0;
 let drawTimer = 0;
 let menuShadowTimer = 0;
+// Soihtu: kirkkaampi ja kantavampi kuin ennen, lämmin, elävästi lepattava
+// liekki (structures.js: torch).
+const torchFire = { x: 0, y: 0, z: 0, seed: 7, light: 1.7, fireY: 0, torch: true };
+let torchFlameK = 1, torchCough = 0;
 const fps = { frames: 0, t: 0, value: 0 };
 const _s = {};
 
@@ -496,8 +835,11 @@ function handleHotbar() {
     events.emit('inventory');
   }
   if (input.pressed.has('KeyO')) {
-    const i = WEATHER_KEYS.indexOf(env.targetKey);
-    env.setWeather(WEATHER_KEYS[(i + 1) % WEATHER_KEYS.length], true);
+    // Kierto vain tässä biomissa mahdollisten säiden läpi (mahdoton sää ei
+    // tarttunut hallitsevaan vyöhykkeeseen, joten kierto jäi jumiin).
+    const keys = WEATHER_KEYS.filter((k) => k !== 'menu' && env.weatherPossibleHere(k));
+    const i = keys.indexOf(env.targetKey);
+    env.setWeather(keys[(i + 1) % keys.length], true);
     events.emit('message', { text: `Sää: ${env.weatherName}` });
   }
   if (input.pressed.has('KeyL')) {
@@ -523,8 +865,8 @@ function frame(now) {
   const rawDt = (now - last) / 1000;
   const dt = Math.min(0.05, rawDt);
   last = now;
-  const inGame = state === 'playing' || state === 'inventory' || state === 'paused' || state === 'ready' || state === 'map' || state === 'dev';
-  const running = state === 'playing' || state === 'inventory' || state === 'map' || state === 'dev';
+  const inGame = state === 'playing' || state === 'inventory' || state === 'paused' || state === 'ready' || state === 'map' || state === 'dev' || state === 'build';
+  const running = state === 'playing' || state === 'inventory' || state === 'map' || state === 'dev' || state === 'build';
   const simDt = running || state === 'menu' ? dt : 0;
   elapsed += simDt;
   input.enabled = state === 'playing';
@@ -532,7 +874,11 @@ function frame(now) {
   if (state === 'playing') handleHotbar();
 
   if (state === 'menu') updateMenuCamera(dt);
-  else if (inGame) player.update(running ? dt : 0, input, world);
+  else if (inGame) {
+    // Vene liikkuu ennen pelaajaa (kyydissä pelaajan paikka tulee veneeltä).
+    boats.update(running ? dt : 0, input, elapsed);
+    player.update(running ? dt : 0, input, world);
+  }
 
   if (state !== 'boot') world.update(player.position.x, player.position.z, simDt);
   sampleTerrain(player.position.x, player.position.z, _s);
@@ -540,13 +886,75 @@ function frame(now) {
   const musicMode = state === 'menu' ? 'menu' : currentWorld && state !== 'boot' && (state !== 'loading' || respawning) ? 'game' : 'none';
   music.setMode(musicMode);
   // Häivytykset todellisessa ajassa (eivät hidastu, vaikka ruudunpäivitys olisi hidas).
-  music.update(Math.min(0.25, rawDt), musicMode === 'game' ? BIOME_MUSIC[displayBiome(_s)] || null : null);
+  // Sessio 20: yöllä biomien musiikki hiljenee (vain luonto ja pelaaja);
+  // palaa aamulla. Hystereesi, ettei hämärässä vaihtele.
+  if (env.daylight < 0.2) nightSilence = true;
+  else if (env.daylight > 0.35) nightSilence = false;
+  music.update(Math.min(0.25, rawDt), musicMode === 'game' && !nightSilence ? BIOME_MUSIC[displayBiome(_s)] || null : null);
   env.setLocalHumidity(_s.rainforest);
+  env.setClimate(_s);
   // Sademetsä: hidas eteneminen ja lyhyt piirtoetäisyys (näkyvyys on muutenkin lyhyt).
   player.speedMul = 1 - 0.3 * _s.rainforest;
   if (env.humid > 0.6) world.setDetailRange(2.2);
   else if (env.humid < 0.4) world.setDetailRange(Infinity);
-  env.update(simDt, player.position, elapsed);
+  // Vuorokausi ja sään vaihtuminen todellisessa ajassa (10 min päivä + 10 min yö).
+  env.update(simDt, player.position, elapsed, running || state === 'menu' ? Math.min(0.25, rawDt) : 0);
+  // Sade ja sadepisaroiden väreet vedessä. Sademetsässä tihuttaa aina.
+  const rainAmt = inGame && state !== 'menu' ? Math.max(env.w.rain, env.humid * 0.24) : 0;
+  wetUniforms.uWet.value = inGame && state !== 'menu' ? env.wet : 0;
+  wetUniforms.uWetSky.value.copy(scene.fog.color);
+  wetUniforms.uRain.value = rainAmt;
+  wetUniforms.uPuddle.value = inGame && state !== 'menu' ? env.puddleWet : 0;
+  // Sessio 24: ruohokenttä (näkyvät osaruudut, pelaaja taivuttaa heinää).
+  grassUniforms.uGrassWet.value = wetUniforms.uWet.value;
+  surfaceUniforms.uMoss.value = 0.3 + 0.7 * env.humid;
+  // Sessio 25: lehtien läpikuultavuus (auringon suunta ja voimakkuus).
+  sunUniforms.uTrSunDir.value.copy(env.sunDir);
+  sunUniforms.uTrSunCol.value.copy(env.sun.color).multiplyScalar(Math.min(1.3, env.sun.intensity / 2.6) * env.daylight);
+  // Sessio 24: maata myötäilevä korkeussumu: sademetsä, sade ja aamu-usva
+  // (laaksoissa ja kosteikoilla tiheämpi; ei aavikolla).
+  {
+    const t = env.time, dryK = 1 - Math.min(1, env.climate.desert + env.climate.dry * 0.6);
+    const dawn = _sm(4.3, 5.6, t) * (1 - _sm(7.6, 9.2, t));
+    const night = 1 - env.daylight;
+    const wetland = Math.min(1, _s.mare + _s.oasis * 0.7);
+    const hf = post.hfog;
+    hf.density = inGame && state !== 'menu'
+      ? Math.max(env.humid * 0.006, env.w.rain * 0.026, dawn * (0.008 + wetland * 0.022) * dryK, night * 0.006 * dryK)
+      : 0;
+    hf.base = Math.max(CONFIG.waterLevel, _s.h - 1.5);
+    hf.falloff = 0.1 + 0.06 * (1 - env.humid);
+    hf.color.copy(scene.fog.color);
+    // Sessio 26: valokeilojen ilman tiheys (sademetsän kostea ilma, aamu-usva, utu).
+    post.shafts = inGame && state !== 'menu'
+      ? Math.min(1.2, env.humid * 0.8 + dawn * 0.6 * dryK + env.w.haze * 0.35 + env.w.rain * 0.3)
+      : 0;
+  }
+  world.grass.update(camera.position, player.position, env);
+  updateSfx(musicMode === 'game' && state !== 'loading', rainAmt, Math.min(0.25, rawDt));
+  // Vesipisarat linssillä (sessio 12e): vain purjehdittaessa myrskyssä
+  // (tyrskyt ja sade), ja hyvin hillitysti.
+  const sailingStorm = inGame && state !== 'menu' && player.riding && env.w.thunder > 0.4;
+  const lensT = sailingStorm ? 0.25 * _sm(0.4, 0.8, env.w.thunder) : 0;
+  splashCd = Math.max(0, splashCd - rawDt);
+  post.lens += (lensT - post.lens) * Math.min(1, Math.min(0.25, rawDt) * 1.5);
+  // Linssiheijastus: auringon paikka kuvassa; heikkenee pilvisellä, auringon
+  // laskiessa ja kuvan reunoilla.
+  _sunP.copy(camera.position).addScaledVector(env.sunDir, 1000).project(camera);
+  const sunFront = _sunP.z < 1 && Math.abs(_sunP.x) < 1.25 && Math.abs(_sunP.y) < 1.25;
+  const edge = 1 - _sm(0.85, 1.25, Math.max(Math.abs(_sunP.x), Math.abs(_sunP.y)));
+  post.flare = sunFront ? edge * (1 - 0.92 * env.w.cloud) * (1 - env.w.dust) * _sm(-0.03, 0.08, env.sunDir.y) : 0;
+  post.sunUV.set(_sunP.x * 0.5 + 0.5, _sunP.y * 0.5 + 0.5);
+  // Lähisalaman välähdys koko näytölle.
+  lightningEl.style.opacity = env.flashK > 1 && env.flash > 0 ? Math.min(0.75, env.flash * 0.3).toFixed(3) : '0';
+  rain.fogFar = scene.fog.far;
+  rain.update(simDt, camera, rainAmt, env.windDir, 0.2 + 0.8 * env.daylight, Math.min(0.25, rawDt), scene.fog.color);
+  if (rainAmt > 0.1 && simDt > 0) {
+    for (let i = 0, n = Math.floor(rainAmt * 6 + Math.random()); i < n; i++) {
+      const a = Math.random() * Math.PI * 2, r = Math.random() * 14;
+      ripples.disturb(player.position.x + Math.cos(a) * r, player.position.z + Math.sin(a) * r, 0.18, 0.05 + rainAmt * 0.05);
+    }
+  }
   // Vesi: aallot, väreily ja roiskeet
   const waves = player.waves;
   waves.amp = env.waveAmp;
@@ -561,10 +969,94 @@ function frame(now) {
   splashes.update(simDt, env.lightColor, materials.water.uniforms.uAmbient.value);
   fire.update(simDt, materials.water.uniforms.uAmbient.value);
   blood.update(simDt, 0.35 + 0.65 * env.daylight);
+  footprints.update(simDt, env.sun.position, env.hemi.intensity / Math.max(0.05, env.sun.intensity) * 0.9);
+  if (inGame) {
+    vines.update(simDt, player.position);
+    coconuts.update(simDt, player.position, gameHours());
+  }
   tumbleweeds.update(simDt, player.position, env.w.wind, env.windDir);
-  if (state === 'playing' && !player.dead) interaction.update(simDt, input);
-  else { structures.showGhost(null); interaction.prompt = null; }
+  if (state === 'playing' && !player.dead) {
+    const wasRiding = boats.riding;
+    interaction.update(simDt, input);
+    // Veneessä: [E] nousee maihin, kun katse ei osu mihinkään muuhun
+    // (ei samalla painalluksella, jolla juuri noustiin kyytiin).
+    if (boats.riding && !interaction.target) {
+      interaction.prompt = boats.prompt;
+      if (wasRiding && input.pressed.has('KeyE') && input.enabled) boats.disembark();
+    }
+    // Vasara: rakennushaamu ja kehote (vasaran kehote korvaa muut).
+    if (build.update(simDt, input) && build.prompt) interaction.prompt = build.prompt;
+  } else { structures.showGhost(null); interaction.prompt = null; }
   combat.update(simDt, input, elapsed, state === 'playing');
+  archery.update(simDt, input, state === 'playing');
+  if (running) survival.update(dt);
+  // Jousen tähtäys: näkökenttä kapenee jännittäessä.
+  const wantFov = settings.fov - 9 * archery.zoom;
+  if (Math.abs(camera.fov - wantFov) > 0.01) {
+    camera.fov += (wantFov - camera.fov) * Math.min(1, dt * 12);
+    camera.updateProjectionMatrix();
+  }
+  // Kädessä oleva soihtu valaisee ympäristön (jaettu tulivalo).
+  // Soihtu pääkädessä tai toisessa kädessä (sessio 20).
+  const offItem = inventory.offhand();
+  const offTorch = offItem && offItem.id === 'torch' ? offItem : null;
+  const mainTorch = inventory.selectedItem && inventory.selectedItem.id === 'torch' ? inventory.selectedItem : null;
+  const torchSlot = inGame && !player.dead ? mainTorch || offTorch : null;
+  const torchLeft = !!torchSlot && torchSlot === offTorch && !mainTorch;
+  viewmodel.setOffhand(offItem ? (offItem.id === 'torch' ? 'torch' : 'shield') : null, offItem && offItem.id);
+  // Soihtu (sessio 13): sammuu veden alla, syttyy uudelleen nuotion vieressä;
+  // sateessa palaa heikosti ja "yskien".
+  if (torchSlot && simDt > 0) {
+    const under = player.inWater === 2 || (player.surface > -Infinity && camera.position.y - 0.25 < player.surface);
+    if (!torchSlot.unlit && under) {
+      torchSlot.unlit = true;
+      events.emit('message', { text: 'Soihtu sammui vedessä. Sytytä se nuotiolla.' });
+      splashes.spawn(torchFire.x, player.surface > -Infinity ? player.surface : camera.position.y, torchFire.z, 0.2, { spread: 0.3 });
+    } else if (torchSlot.unlit && !under && structures.nearestFire < 3.2) {
+      torchSlot.unlit = false;
+      events.emit('message', { text: 'Soihtu syttyi.' });
+    }
+  }
+  const rainOnTorch = Math.max(0, env.w.rain - 0.15);
+  if (torchSlot && !torchSlot.unlit && rainOnTorch > 0) {
+    // Yskivä liekki sateessa: heikompi ja välillä notkahtava, mutta ei koskaan
+    // sammu (sessio 18: ennen notkahdus vei liekin lähes näkymättömiin).
+    torchCough = Math.max(0, torchCough - simDt);
+    if (torchCough <= 0 && Math.random() < simDt * 1.4 * rainOnTorch) torchCough = 0.15 + Math.random() * 0.3;
+    const base = 1 - Math.min(0.35, rainOnTorch * 0.45);
+    const target = base * (0.85 + 0.15 * Math.sin(elapsed * 2.3) * Math.sin(elapsed * 5.1)) * (torchCough > 0 ? 0.62 : 1);
+    torchFlameK += (target - torchFlameK) * Math.min(1, simDt * 10);
+  } else {
+    torchFlameK += ((torchSlot && !torchSlot.unlit ? 1 : 0) - torchFlameK) * Math.min(1, simDt * 6);
+  }
+  viewmodel.torchFlame = torchSlot && torchSlot.unlit ? 0 : torchFlameK;
+  const torchHeld = !!torchSlot && !torchSlot.unlit;
+  torchFire.light = 1.7 * Math.max(0.35, torchFlameK);
+  if (torchHeld) {
+    // Valo soihdun liekin kohdalla (oikea käsi, hieman edessä ja yläpuolella),
+    // ei vartalon keskellä (sessio 12e: soihdulla näki huonosti).
+    camera.getWorldDirection(_camDir);
+    const rx = -_camDir.z, rz = _camDir.x, rl = Math.hypot(rx, rz) || 1;
+    const side = torchLeft ? -0.32 : 0.32; // toisen käden soihtu vasemmalla
+    torchFire.x = camera.position.x + _camDir.x * 0.45 + (rx / rl) * side;
+    torchFire.y = camera.position.y + 0.12;
+    torchFire.z = camera.position.z + _camDir.z * 0.45 + (rz / rl) * side;
+  }
+  structures.held = torchHeld ? torchFire : null;
+  // Nukkuminen: ruutu pimenee, aika siirtyy aamuun.
+  if (sleepT > 0) {
+    const was = sleepT;
+    sleepT = Math.max(0, sleepT - dt);
+    $('flash').style.background = 'rgba(0, 0, 0, 1)';
+    $('flash').style.opacity = (Math.min(1, Math.sin((1 - sleepT / 1.6) * Math.PI) * 1.6)).toFixed(3);
+    if (was > 0.8 && sleepT <= 0.8) {
+      env.setTime(6);
+      if (env.time < 6.5) env.day += 1;
+      events.emit('message', { text: 'Nukuit aamuun' });
+      persist();
+    }
+    if (sleepT <= 0) { $('flash').style.background = ''; $('flash').style.opacity = '0'; }
+  }
   mobs.update(running ? dt : 0, elapsed);
   // Kuollut pelaaja herää välilyönnillä tai klikkauksella.
   if (state === 'playing' && player.dead && player.deathT > RESPAWN_WAIT && (input.pressed.has('Space') || input.clicked.has(0))) {
@@ -574,10 +1066,12 @@ function frame(now) {
   structures.update(simDt, elapsed, player.position);
   ruins.update(running || state === 'menu' ? dt : 0, player.position);
   drops.update(running ? dt : 0, elapsed, player, inventory);
+  updateGlow(elapsed);
   fallen.update(running || state === 'menu' ? dt : 0);
   debris.update(running ? dt : 0);
   bursts.update(simDt);
   dust.update(elapsed, camera.position, env);
+  ambient.update(simDt, elapsed, camera.position, env, env.w.rain);
   sky.update(camera.position);
 
   if (inGame) {
@@ -587,24 +1081,30 @@ function frame(now) {
       camera.position.y += (Math.random() - 0.5) * shake * 0.12;
       shake *= Math.exp(-dt * 6);
     }
-    const fireNear = Math.max(0, 1 - structures.nearestFire / 7) * (1.2 - env.daylight);
+    const torchLit = torchSlot && !torchSlot.unlit ? 0.9 * torchFlameK : 0;
+    const fireNear = Math.max(torchLit, Math.max(0, 1 - structures.nearestFire / 7)) * (1.2 - env.daylight);
     viewmodel.setItem(inventory.selectedItem ? inventory.selectedItem.id : null);
     viewmodel.update(simDt, player, input, env, camera, fireNear * 1.5);
     guide.update(simDt);
-    hud.update(dt, { prompt: interaction.prompt, player, env, visible: state === 'playing', cooldown: combat.cooldownFrac });
+    runePanel.update(dt, player.position);
+    hud.update(dt, { prompt: interaction.prompt, player, env, visible: state === 'playing', cooldown: combat.cooldownFrac, archery });
+    nameplates.update(camera, mobs, interaction.prompt, state === 'playing');
+    boatHud.update(boats, state === 'playing' && !player.dead);
     explored.update(dt, player.position.x, player.position.z);
-    minimap.update(dt, player);
+    minimap.update(dt, player, boats);
     bigMap.update();
     devtools.update(dt);
     if (player.atEdge && state === 'playing') {
       edgeMsgTimer -= dt;
       if (edgeMsgTimer <= 0) {
-        events.emit('message', { text: player.inWater ? 'Virta on liian voimakas' : 'Maailman reuna' });
+        events.emit('message', { text: player.inWater || player.riding ? 'Virta on liian voimakas' : 'Maailman reuna' });
         edgeMsgTimer = 3;
       }
     }
   } else {
     hud.update(dt, { prompt: null, player, env, visible: false });
+    nameplates.update(camera, mobs, null, false);
+    boatHud.update(boats, false);
   }
 
   // Valikossa aurinko on paikallaan: varjokartta päivitetään harvoin, jotta
@@ -618,13 +1118,9 @@ function frame(now) {
   drawTimer -= dt;
   if (state !== 'paused' || drawTimer <= 0) {
     drawTimer = 0.25;
-    // Maailma tehosteineen, sitten käsi päälle (ei tehosteita).
-    post.render(scene, camera, env, state === 'paused' ? 0 : dt);
-    if (inGame) {
-      renderer.setRenderTarget(null);
-      renderer.clearDepth();
-      renderer.render(viewmodel.scene, viewmodel.camera);
-    }
+    // Maailma tehosteineen, sitten käsi päälle (ei sumennuksia; sessio 37:
+    // bloom ja sävytys koskevat myös kättä).
+    post.render(scene, camera, env, state === 'paused' ? 0 : dt, inGame ? viewmodel : null);
   }
   input.endFrame();
 
@@ -652,6 +1148,7 @@ enterMenu(true);
 window.sahel = {
   THREE, renderer, scene, camera, env, world, player, input, inventory, invUI, guide, structures, tumbleweeds,
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
-  ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, blood,
+  ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, sfx, blood,
   startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
+  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient, vines,
 };

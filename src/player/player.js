@@ -39,12 +39,18 @@ export class Player {
     // Terveys ja taistelu
     this.health = CONFIG.healthMax;
     this.healthDelay = 0;
+    // Maksimit tulevat syödyistä ruoista (game/survival.js, sessio 14).
+    this.maxHealth = CONFIG.healthMax;
+    this.maxStamina = CONFIG.staminaMax;
     this.dead = false;
     this.deathCause = '';
     this.deathT = 0;
     this.knock = new THREE.Vector3(); // tönäisy (vaimenee itsestään)
     this.moveMul = 1;                 // taistelu: torjunta ja isku hidastavat
     this.staminaRegenMul = 1;
+    // Ravinto ja tilavaikutukset (survival.js): palautumisen kertoimet
+    this.survivalHealthMul = 1;
+    this.survivalStaminaMul = 1;
     this.hurtKick = 0;                // kameran nytkähdys osumasta
     this.hurtRoll = 0;
     // Kyykky ja hukkuminen
@@ -53,6 +59,10 @@ export class Player {
     this.drowning = 0;                // 0..1 (HUD:n sininen reunus)
     this.drownTimer = 0;
     this.swimTime = 0;
+    // Veneessä (game/boats.js asettaa paikan, silmien korkeuden ja kallistuksen)
+    this.riding = null;
+    this.rideEye = CONFIG.eyeHeight;
+    this.rideRoll = 0;
     // Kehittäjätyökalut [F3]
     this.flying = false;
     this.god = false;                 // ei vahinkoa, kestävyys ei kulu
@@ -65,6 +75,7 @@ export class Player {
 
   useStamina(amount) {
     if (this.god) return true;
+    amount *= 0.88; // sessio 18: kaikki kertakulutus (iskut, hypyt) hieman pienempi
     if (this.stamina < amount * 0.5) return false;
     this.stamina = Math.max(0, this.stamina - amount);
     this.staminaDelay = CONFIG.staminaRegenDelay;
@@ -142,6 +153,11 @@ export class Player {
 
     if (this.flying && alive) {
       this._fly(dt, input);
+      this._post(dt, alive);
+      return;
+    }
+    if (this.riding) {
+      this._ride();
       this._post(dt, alive);
       return;
     }
@@ -230,7 +246,13 @@ export class Player {
 
     // --- Maa ja vesi (meri, järvet ja joet omalla korkeudellaan)
     waterAt(p.x, p.z, _wq);
-    const ground = _wq.h;
+    let ground = _wq.h;
+    // Rakennetut lattiat: päälle voi astua (askel enintään 0,5 m).
+    for (const pf of world.platforms) {
+      if (p.x < pf.x0 - 0.1 || p.x > pf.x1 + 0.1 || p.z < pf.z0 - 0.1 || p.z > pf.z1 + 0.1) continue;
+      if (pf.y > ground && p.y >= pf.y - 0.5) ground = pf.y;
+    }
+    this.onPlatform = ground > _wq.h + 0.05; // askeleiden ääni: puulattia
     const still = _wq.wl - ground;
     const W = this.waves;
     const amp = W.amp * openFactor(_wq.type, still, _wq.ocean, _wq.lakeR);
@@ -239,7 +261,12 @@ export class Player {
     const prevFeet = p.y - this.velocity.y * dt;
     // Vedessä ollaan vasta, kun jalat ovat pinnan alla (ei ilmassa veden yllä).
     const feetUnder = p.y < surface + 0.05;
+    const wasIn = this.inWater;
     this.inWater = !feetUnder || depth <= 0.1 ? 0 : depth > 1.25 ? 2 : 1;
+    // Sessio 25: veteen kävellessä ensimmäinen askel roiskaisee.
+    if (!wasIn && this.inWater && this.onGround && Math.hypot(this.velocity.x, this.velocity.z) > 1) {
+      this.onWater?.('step', p.x, surface, p.z, 1.4);
+    }
     this.surface = depth > 0 ? surface : -Infinity;
     this.waterDepth = Math.max(0, depth);
     // Veteen hyppääminen tai putoaminen: roiske kokoa vastaavasti.
@@ -262,6 +289,8 @@ export class Player {
       this.onGround = false;
     } else if (p.y <= ground) {
       if (!this.onGround && this.velocity.y < -6) this.landDip = Math.min(0.18, -this.velocity.y * 0.015);
+      // Alastulo hypystä tai pudotuksesta: askeleen ääni (voimakkaampi).
+      if (!this.onGround && this.velocity.y < -3.5 && !this.riding) this.onFootstep?.(Math.min(1.6, -this.velocity.y / 6));
       p.y = ground;
       this.velocity.y = 0;
       this.onGround = true;
@@ -318,6 +347,19 @@ export class Player {
     this.sprinting = false;
   }
 
+  // Veneessä: paikka tulee veneeltä (game/boats.js), ei painovoimaa eikä uintia.
+  _ride() {
+    this.velocity.set(0, 0, 0);
+    this.knock.set(0, 0, 0);
+    this.onGround = true;
+    this.inWater = 0;
+    this.surface = -Infinity;
+    this.waterDepth = 0;
+    this.crouching = false;
+    this.sprinting = false;
+    this.atEdge = !!this.riding.atEdge;
+  }
+
   // Kestävyys, terveys, uinnin kulutus ja kamera (joka ruudulla lopuksi).
   _post(dt, alive) {
     const p = this.position;
@@ -347,12 +389,12 @@ export class Player {
     }
 
     // --- Kestävyyden ja terveyden palautuminen
-    if (this.god && alive) { this.stamina = CONFIG.staminaMax; this.health = CONFIG.healthMax; }
+    if (this.god && alive) { this.stamina = this.maxStamina; this.health = this.maxHealth; }
     if (this.staminaDelay > 0) this.staminaDelay -= dt;
-    else this.stamina = Math.min(CONFIG.staminaMax, this.stamina + CONFIG.staminaRegenPerSec * this.staminaRegenMul * dt);
+    else this.stamina = Math.min(this.maxStamina, this.stamina + CONFIG.staminaRegenPerSec * this.staminaRegenMul * this.survivalStaminaMul * dt);
     if (alive) {
       if (this.healthDelay > 0) this.healthDelay -= dt;
-      else if (this.health < CONFIG.healthMax) this.health = Math.min(CONFIG.healthMax, this.health + CONFIG.healthRegenPerSec * dt);
+      else if (this.health < this.maxHealth) this.health = Math.min(this.maxHealth, this.health + CONFIG.healthRegenPerSec * this.survivalHealthMul * dt);
     } else {
       this.deathT += dt;
     }
@@ -363,12 +405,20 @@ export class Player {
     const bobTarget = this.onGround && hs > 0.5 ? Math.min(1, hs / CONFIG.walkSpeed) : 0;
     this.bobAmount += (bobTarget - this.bobAmount) * Math.min(1, dt * 8);
     this.bobPhase += hs * dt * 1.9;
+    // Askel joka puolikkaalla heiluntajaksolla (pää alimmillaan = jalka maahan).
+    const stepN = Math.floor((this.bobPhase + Math.PI * 0.75) / Math.PI);
+    if (stepN !== this.stepN) {
+      this.stepN = stepN;
+      if ((this.onGround || this.inWater === 1) && hs > 1 && !this.riding && !this.flying && !this.dead) {
+        this.onFootstep?.(this.sprinting ? 1.25 : this.crouching ? 0.35 : 0.8);
+      }
+    }
     this.landDip *= Math.exp(-dt * 8);
 
     // Kyykky laskee silmien korkeutta pehmeästi; kuollessa kamera kaatuu maahan.
     this.crouchBlend += ((this.crouching ? 1 : 0) - this.crouchBlend) * Math.min(1, dt * 10);
-    let eyeH = CONFIG.eyeHeight + (CONFIG.crouchEyeHeight - CONFIG.eyeHeight) * this.crouchBlend;
-    let roll = 0;
+    let eyeH = this.riding ? this.rideEye : CONFIG.eyeHeight + (CONFIG.crouchEyeHeight - CONFIG.eyeHeight) * this.crouchBlend;
+    let roll = this.riding ? this.rideRoll : 0;
     if (this.dead) {
       const k = 1 - Math.exp(-this.deathT * 3);
       eyeH += (0.32 - eyeH) * (this.inWater === 2 ? 0.25 : k);

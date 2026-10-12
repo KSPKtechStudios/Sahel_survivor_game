@@ -1,8 +1,11 @@
 // Esinemallit (kädessä, maassa ja kuvakkeissa). Kahva origossa, esine +Y-suuntaan.
+import { userClub } from './userItems.js';
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
 import { V, displace, paint, limb, flatNormals, merge, prep } from './util.js';
 import { makeStone } from './rocks.js';
+import { createItemModels2 } from './items2.js';
+import { createItemModels3 } from './items3.js';
 
 // Nuotion runko (kivikehä + tukit). Liekit lisätään erikseen.
 export function makeCampfireBase(seed = 3) {
@@ -155,30 +158,32 @@ function itemBracelet() {
   return merge(parts);
 }
 
-// Puunuija: suora varsi ja raskas nuppi (kuin knobkerrie), kahvassa kuitusidos.
-function itemClub() {
-  const rand = mulberry32(31);
+// Taskukello (sessio 20): messinkikuori, vaalea taulu, viisarit, nuppi ja rengas.
+function itemClock() {
+  const rand = mulberry32(53);
   const parts = [];
-  parts.push(paint(limb(V(0, -0.16, 0), V(0.004, 0.46, 0.002), 0.019, 0.026, 7, true), 0x6a4a2e, { rand }));
-  let knob = new THREE.IcosahedronGeometry(0.068, 1);
-  displace(knob, (x, y, z) => {
-    const n = 0.86 + rand() * 0.28;
-    return [x * (n - 1), y * (n - 1) + Math.max(0, y) * 0.25, z * (n - 1)];
-  });
-  knob.translate(0.004, 0.52, 0.002);
-  parts.push(paint(flatNormals(knob), 0x5e3f25, { rand, jitter: 0.12 }));
-  // Muutama oksan tynkä nupissa
-  for (let i = 0; i < 3; i++) {
-    const a = rand() * Math.PI * 2;
-    const y = 0.5 + rand() * 0.06;
-    parts.push(paint(limb(V(Math.cos(a) * 0.05, y, Math.sin(a) * 0.05), V(Math.cos(a) * 0.085, y + 0.015, Math.sin(a) * 0.085), 0.014, 0.008, 4, true), 0x523620, { rand }));
-  }
-  // Kahvan sidos
-  for (let i = 0; i < 4; i++) {
-    const g = new THREE.CylinderGeometry(0.0225, 0.0225, 0.022, 8);
-    g.translate(0, -0.12 + i * 0.03, 0);
-    parts.push(paint(g, i % 2 ? 0xb39a68 : 0x9c8456, { rand, jitter: 0.1 }));
-  }
+  const body = new THREE.CylinderGeometry(0.065, 0.065, 0.022, 20);
+  body.rotateX(Math.PI / 2);
+  body.translate(0, 0.07, 0);
+  parts.push(paint(body, 0xb48a3c, { rand, jitter: 0.06 }));
+  const face = new THREE.CylinderGeometry(0.054, 0.054, 0.004, 20);
+  face.rotateX(Math.PI / 2);
+  face.translate(0, 0.07, 0.0115);
+  parts.push(paint(face, 0xefe2c4, { rand, jitter: 0.02 }));
+  const hand = (len, w, a) => {
+    const g = new THREE.BoxGeometry(w, len, 0.003);
+    g.translate(0, len / 2, 0);
+    g.rotateZ(a);
+    g.translate(0, 0.07, 0.0145);
+    return paint(g, 0x2a1a0e, { rand });
+  };
+  parts.push(hand(0.03, 0.006, -0.9), hand(0.044, 0.004, 0.5));
+  const crown = new THREE.CylinderGeometry(0.008, 0.008, 0.014, 8);
+  crown.translate(0, 0.142, 0);
+  parts.push(paint(crown, 0xc89a48, { rand }));
+  const ring = new THREE.TorusGeometry(0.013, 0.0035, 6, 12);
+  ring.translate(0, 0.158, 0);
+  parts.push(paint(ring, 0xc89a48, { rand }));
   return merge(parts);
 }
 
@@ -313,11 +318,14 @@ export function createItemModels() {
     gold_nugget: itemNugget(),
     cowrie: itemCowrie(),
     bronze_bracelet: itemBracelet(),
-    wooden_club: itemClub(),
+    clock: itemClock(),
+    wooden_club: userClub(), // sessio 33: käyttäjän malli (ennen itemClub)
     machete: itemMachete(),
     shield: itemShield(),
     raw_meat: itemMeat(),
     hide: itemHide(),
     clay: itemClay(),
+    ...createItemModels2(),
+    ...createItemModels3(),
   };
 }

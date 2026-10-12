@@ -1,9 +1,9 @@
 // Kehittäjätyökalut [F3]: tiedot, siirtyminen, olentojen ja esineiden
 // kutsuminen, lentäminen, nopeus, kuolemattomuus, kartan paljastus, sää ja aika.
 // Paneeli on ruudun oikeassa reunassa; maailma jatkaa kulkuaan sen takana.
-import { CONFIG } from '../config.js';
-import { ITEMS } from '../game/items.js';
+import { ITEMS, TIERS } from '../game/items.js';
 import { STRUCT_NAMES } from '../game/ruins.js';
+import { BOATS } from '../game/boats.js';
 import { WEATHER, WEATHER_KEYS } from '../render/environment.js';
 import { findSpawn, findBiome, findWater, placeName, sampleTerrain, structuresNear, WATER } from '../world/terrain.js';
 
@@ -16,7 +16,7 @@ const el = (tag, cls, text) => {
 
 export class DevTools {
   // ctx: { player, env, world, mobs, inventory, explored, ruins, drops, fps,
-  //        teleport(x, z, look) -> Promise, music, fmtTime }
+  //        teleport(x, z, look) -> Promise, music, fmtTime, boats }
   constructor(ctx) {
     this.ctx = ctx;
     this.root = document.getElementById('devtools');
@@ -85,7 +85,7 @@ export class DevTools {
     row = this._row(sec);
     this._range(row, 'Nopeus', 0.5, 10, 0.5, () => player.speedBoost, (v) => { player.speedBoost = v; }, (v) => `${v}×`);
     row = this._row(sec);
-    this._button(row, 'Paranna', () => { player.health = CONFIG.healthMax; player.stamina = CONFIG.staminaMax; player.drowning = 0; return 'Terveys ja kestävyys täynnä'; });
+    this._button(row, 'Paranna', () => { player.health = player.maxHealth; player.stamina = player.maxStamina; player.drowning = 0; return 'Terveys ja kestävyys täynnä'; });
     this._button(row, 'Kuole (testi)', () => { player.hurt(9999, { cause: '' }); if (!player.dead) player.die(''); return 'Kuolit'; });
 
     // Siirry
@@ -138,9 +138,38 @@ export class DevTools {
     row = this._row(sec);
     this._button(row, 'Pahkasika', () => (mobs.spawnInFront('warthog', 10) ? 'Pahkasika kutsuttu' : 'Paikkaa ei löytynyt'));
     this._button(row, 'Savipeikko', () => (mobs.spawnInFront('clay', 8) ? `Savipeikko kutsuttu${env.daylight > 0.18 ? ' (päivällä se syttyy pian palamaan)' : ''}` : 'Paikkaa ei löytynyt'));
+    this._button(row, 'Haamu', () => (mobs.spawnInFront('haamu', 14) ? `Haamu kutsuttu${env.daylight > 0.15 ? ' (päivällä se haihtuu heti)' : ''}` : 'Paikkaa ei löytynyt'));
+    this._button(row, 'Norsu', () => (mobs.spawnInFront('elephant', 16) ? 'Norsu kutsuttu' : 'Paikkaa ei löytynyt (tai malli latautuu vielä)'));
     this._button(row, 'Poista olennot', () => { mobs.clear(); return 'Olennot poistettu'; });
     row = this._row(sec);
+    for (const [type, name] of [['gazelle', 'Gaselli'], ['guineafowl', 'Helmikana'], ['monkey', 'Apina'], ['fennec', 'Aavikkokettu'], ['bird', 'Lintu']]) {
+      this._button(row, name, () => (mobs.spawnInFront(type, 14) ? `${name} kutsuttu (arka: hiivi [Ctrl] tai käytä jousta)` : 'Paikkaa ei löytynyt'));
+    }
+    row = this._row(sec);
     this._toggle(row, 'Olentoja syntyy', () => mobs.enabled, (v) => { mobs.enabled = v; });
+
+    // Veneet: kutsutaan lähimpään sopivaan veteen ja noustaan kyytiin.
+    sec = this._section(card, 'Veneet');
+    row = this._row(sec);
+    for (const [type, name] of [['rowboat', 'Soutuvene'], ['sailboat', 'Purjevene'], ['ship', 'Purjelaiva']]) {
+      this._button(row, name, async () => {
+        const boats = this.ctx.boats;
+        this.status('Etsitään vettä…');
+        await new Promise((res) => setTimeout(res, 20));
+        const spot = this._boatSpot(type);
+        if (!spot) return 'Sopivaa vettä ei löytynyt';
+        this.status('Siirrytään…');
+        await this.ctx.teleport(spot.x, spot.z);
+        const b = boats.add(type, spot.x, spot.z, spot.yaw);
+        boats.board(b);
+        return `${name}: kyydissä (${Math.round(spot.x)}, ${Math.round(spot.z)})`;
+      });
+    }
+    this._button(row, 'Venetarvikkeet', () => {
+      if (inventory.count('hammer') === 0) inventory.add('hammer', 1);
+      for (const [id, n] of [['wood', 160], ['rope', 40], ['gum', 24], ['leather', 24], ['stone', 30]]) inventory.add(id, n);
+      return 'Vasara ja purjelaivan tarvikkeet (työstöpenkki tarvitaan rannalle)';
+    });
 
     // Esineet
     sec = this._section(card, 'Esineet');
@@ -161,12 +190,37 @@ export class DevTools {
     });
     row = this._row(sec);
     this._button(row, 'Aseet', () => {
-      for (const id of ['wooden_club', 'machete', 'shield']) if (inventory.count(id) === 0) inventory.add(id, 1);
-      return 'Puunuija, viidakkoveitsi ja puukilpi (varusta kilpi hiiren oikealla)';
+      for (const id of ['wooden_club', 'machete', 'shield', 'spear', 'bow']) if (inventory.count(id) === 0) inventory.add(id, 1);
+      inventory.add('arrow_flint', 20);
+      return 'Nuija, viidakkoveitsi, kilpi, keihäs, jousi ja 20 nuolta';
     });
     this._button(row, 'Materiaalit', () => {
-      for (const id of ['stick', 'stone', 'fiber', 'wood']) inventory.add(id, 20);
-      return '+20 risua, kiveä, kuitua ja puuta';
+      for (const id of ['stick', 'stone', 'fiber', 'wood', 'flint', 'rope', 'clay', 'reed', 'gum']) inventory.add(id, 20);
+      return '+20 kutakin perusmateriaalia';
+    });
+    // Sessio 22: metallit ja rubiini (hankintatapa vielä avoin) sekä tasot.
+    this._button(row, 'Metallit', () => {
+      for (const [id, n] of [['copper_ingot', 30], ['iron_ingot', 40], ['ruby', 10], ['hardwood', 20], ['heartwood', 20], ['leather', 20], ['sinew', 12]]) inventory.add(id, n);
+      return 'Kupari, rauta, rubiini, jalo- ja ydinpuu, nahka, jänne';
+    });
+    this._button(row, 'Taso…', () => {
+      const tier = (this._tierPick = ((this._tierPick ?? -1) + 1) % TIERS.length);
+      let n = 0;
+      for (const [id, d] of Object.entries(ITEMS)) {
+        if (d.tier !== tier || !(d.tool || d.weapon || d.bow || d.shield || d.armor)) continue;
+        if (inventory.count(id) === 0 && inventory.add(id, 1) === 0) n++;
+      }
+      return `${TIERS[tier]}: ${n} esinettä (paina uudelleen: seuraava taso)`;
+    });
+    this._button(row, 'Rakentaminen', () => {
+      if (inventory.count('hammer') === 0) inventory.add('hammer', 1);
+      for (const id of ['wood', 'stick', 'stone', 'fiber', 'reed', 'clay']) inventory.add(id, 30);
+      return 'Vasara ja rakennusmateriaalit';
+    });
+    this._button(row, 'Ruokaa', () => {
+      inventory.add('cooked_meat', 5);
+      inventory.add('herbal_remedy', 2);
+      return '+5 paistettua lihaa, +2 yrttirohtoa';
     });
 
     // Maailma
@@ -175,7 +229,7 @@ export class DevTools {
     row.appendChild(el('span', 'dev-label', 'Sää'));
     this.weatherBtns = [];
     for (const k of WEATHER_KEYS) {
-      const b = this._button(row, WEATHER[k].name, () => { env.setWeather(k, true); this._refresh(); return `Sää: ${WEATHER[k].name}`; });
+      const b = this._button(row, WEATHER[k].name, () => { env.setWeather(k, true); this._refresh(); return `Sää: ${WEATHER[k].name}${env.weatherPossibleHere(k) ? '' : ' (ei mahdollinen tässä biomissa)'}`; });
       b.dataset.key = k;
       this.weatherBtns.push(b);
     }
@@ -209,6 +263,35 @@ export class DevTools {
     const r = el('div', `dev-row ${cls}`);
     parent.appendChild(r);
     return r;
+  }
+
+  // Lähin paikka, johon vene mahtuu (ensin pelaajan ympäriltä, sitten
+  // lähimmän meren tai järven luota).
+  _boatSpot(type) {
+    const { player, boats } = this.ctx;
+    const s = {};
+    const search = (cx, cz, R) => {
+      for (let r = 0; r <= R; r += 6) {
+        const n = Math.max(1, Math.floor((2 * Math.PI * r) / 8));
+        for (let i = 0; i < n; i++) {
+          const a = (i / n) * Math.PI * 2;
+          const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r;
+          sampleTerrain(x, z, s);
+          if (s.wl - s.h < BOATS[type].draft + 0.4) continue;
+          for (const yaw of [a, a + Math.PI / 2, a - Math.PI / 2, a + Math.PI]) {
+            if (boats.clearance(type, x, z, yaw) > 0.3) return { x, z, yaw };
+          }
+        }
+      }
+      return null;
+    };
+    const p = player.position;
+    let spot = search(p.x, p.z, 260);
+    if (!spot) {
+      const w = findWater(type === 'ship' ? 'sea' : WATER.LAKE, p.x, p.z) || findWater('sea', p.x, p.z);
+      if (w) spot = search(w.wx, w.wz, 400);
+    }
+    return spot;
   }
 
   _button(parent, label, fn) {
@@ -281,7 +364,7 @@ export class DevTools {
     const s = sampleTerrain(p.x, p.z, this._s);
     const lines = [
       `X ${p.x.toFixed(1)}   Z ${p.z.toFixed(1)}   Y ${p.y.toFixed(1)} m   (maa ${s.h.toFixed(1)}, vesi ${s.wl.toFixed(1)})`,
-      `${placeName(s)} · päivä ${env.day}, klo ${this.ctx.fmtTime(env.time)} · ${env.weatherName}`,
+      `${placeName(s)} · päivä ${env.day}, klo ${this.ctx.fmtTime(env.time)} · ${env.weatherName} · ${env.moonName}`,
       `${Math.round(fps ? fps.value : 0)} FPS · chunkit ${world.chunks.size} · olennot ${mobs.list.length} · maassa ${drops.list.length} esinettä`,
       `Terveys ${Math.ceil(player.health)} · kestävyys ${Math.round(player.stamina)}${player.flying ? ' · lentää' : ''}${player.god ? ' · kuolematon' : ''}`,
     ];

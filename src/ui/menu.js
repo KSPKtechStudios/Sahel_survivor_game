@@ -3,7 +3,7 @@ import { listWorlds, createWorld, deleteWorld, saveSettings, QUALITY_PRESETS } f
 
 const QUALITY_NAMES = { low: 'Matala', medium: 'Keskitaso', high: 'Korkea', ultra: 'Ultra', custom: 'Oma' };
 // Asetukset, jotka kuuluvat grafiikan laatuun (niiden muutos = "oma").
-const GRAPHICS_KEYS = new Set(['viewDistance', 'shadows', 'renderScale', 'godRays', 'motionBlur', 'dof']);
+const GRAPHICS_KEYS = new Set(['viewDistance', 'shadows', 'renderScale', 'godRays', 'motionBlur', 'dof', 'lensFlare', 'foliage', 'ao', 'bloom', 'grade', 'vignette', 'sharpen']);
 import { seedFromString, randomSeed } from '../world/terrain.js';
 
 const $ = (id) => document.getElementById(id);
@@ -285,6 +285,19 @@ export class Menu {
     $('set-fps').addEventListener('change', (e) => { s.showFps = e.target.checked; this._changed(); });
     $('set-rays').addEventListener('change', (e) => { s.godRays = e.target.checked; s.quality = 'custom'; this._syncQuality(); this._changed(); });
     $('set-dof').addEventListener('change', (e) => { s.dof = e.target.checked; s.quality = 'custom'; this._syncQuality(); this._changed(); });
+    $('set-flare').addEventListener('change', (e) => { s.lensFlare = e.target.checked; s.quality = 'custom'; this._syncQuality(); this._changed(); });
+    // Sessio 37: bloom, värimäärittely, vinjetti ja ambienttiokkluusio.
+    for (const [id, key] of [['set-bloom', 'bloom'], ['set-grade', 'grade'], ['set-vig', 'vignette'], ['set-sharp', 'sharpen']]) {
+      $(id).addEventListener('change', (e) => { s[key] = e.target.checked; s.quality = 'custom'; this._syncQuality(); this._changed(); });
+    }
+    $('set-ao').addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      s.ao = b.dataset.v;
+      s.quality = 'custom';
+      this._syncSettings();
+      this._changed();
+    });
     $('set-quality').addEventListener('click', (e) => {
       const b = e.target.closest('button');
       if (!b) return;
@@ -297,6 +310,14 @@ export class Menu {
       const b = e.target.closest('button');
       if (!b) return;
       s.motionBlur = b.dataset.v;
+      s.quality = 'custom';
+      this._syncSettings();
+      this._changed();
+    });
+    $('set-foliage').addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      s.foliage = b.dataset.v;
       s.quality = 'custom';
       this._syncSettings();
       this._changed();
@@ -330,8 +351,15 @@ export class Menu {
     $('set-fps').checked = !!s.showFps;
     for (const b of $('set-shadows').children) b.classList.toggle('on', b.dataset.v === s.shadows);
     for (const b of $('set-mblur').children) b.classList.toggle('on', b.dataset.v === s.motionBlur);
+    for (const b of $('set-foliage').children) b.classList.toggle('on', b.dataset.v === (s.foliage || 'high'));
     $('set-rays').checked = !!s.godRays;
     $('set-dof').checked = !!s.dof;
+    $('set-flare').checked = s.lensFlare !== false;
+    for (const b of $('set-ao').children) b.classList.toggle('on', b.dataset.v === (s.ao || 'off'));
+    $('set-bloom').checked = s.bloom !== false;
+    $('set-grade').checked = s.grade !== false;
+    $('set-vig').checked = s.vignette !== false;
+    $('set-sharp').checked = s.sharpen !== false;
     this._syncQuality();
   }
 

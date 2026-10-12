@@ -39,15 +39,15 @@ Kirjoita muistiinpanot samalla kun työskentelet, älä vasta lopuksi.
 Lopuksi annetaan aina linkki, jolla käyttäjä voi kokeilla pelin PR:n haarassa ilman asennusta. Muoto:
 
 ```
-https://raw.githack.com/KSPKtech/sahel/<haaran-nimi>/<polku-peli-tiedostoon>.html
+https://raw.githack.com/KSPKtechStudios/Sahel_survivor_game/<haaran-nimi>/<polku-peli-tiedostoon>.html
 ```
 
-Esimerkki: `https://raw.githack.com/KSPKtech/sahel/feat/liikkuminen/index.html`
+Esimerkki: `https://raw.githack.com/KSPKtechStudios/Sahel_survivor_game/feat/liikkuminen/index.html`
 
 Säännöt:
 - Käytä haaran nimeä sellaisenaan (kauttaviivat sallittuja). Linkin pitää osoittaa pelin aloitustiedostoon (esim. `index.html`), ei hakemistoon.
 - Tarkista ennen linkin antamista, että haara on pushattu ja tiedosto löytyy sieltä (`git ls-remote origin <haara>`).
 - Anna myös PR:n linkki. Kerro linkin vieressä yhdellä rivillä, mitä siinä kannattaa testata.
-- Selain voi välimuistittaa vanhaa versiota muutaman minuutin. Jos tarvitaan täsmälleen tietty versio, anna lisäksi kiinteä linkki muodossa `https://rawcdn.githack.com/KSPKtech/sahel/<commit-sha>/<tiedosto>.html`.
+- Selain voi välimuistittaa vanhaa versiota muutaman minuutin. Jos tarvitaan täsmälleen tietty versio, anna lisäksi kiinteä linkki muodossa `https://rawcdn.githack.com/KSPKtechStudios/Sahel_survivor_game/<commit-sha>/<tiedosto>.html`.
 - **Rajoite:** raw.githack toimii vain julkisille repoille. Jos linkki ei aukea (404), tarkista ensin onko repo yksityinen, ja kerro asiasta käyttäjälle sen sijaan että kokeilet kiertoteitä.
 - Jos peli ei (vielä) ole selaimessa pelattava (ei HTML-tiedostoa), sano se suoraan ja kerro miten testataan; älä keksi linkkiä.

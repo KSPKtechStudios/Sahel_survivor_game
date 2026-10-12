@@ -106,7 +106,8 @@ export class Bursts {
     this.tex = createSoftDotTexture(32);
   }
 
-  spawn(pos, color, count = 14, spread = 1.5) {
+  // opts: size (m), life (s), gravity, opacity (sessio 12c: salaman isku).
+  spawn(pos, color, count = 14, spread = 1.5, { size = 0.09, life = 0.7, gravity = 6, opacity = 1, lit = false } = {}) {
     const geo = new THREE.BufferGeometry();
     const p = new Float32Array(count * 3);
     const v = [];
@@ -119,16 +120,19 @@ export class Bursts {
     geo.setAttribute('position', new THREE.BufferAttribute(p, 3));
     const mat = new THREE.PointsMaterial({
       color,
-      size: 0.09,
+      size,
       map: this.tex,
       transparent: true,
       depthWrite: false,
       sizeAttenuation: true,
+      // lit = salaman valaisema: sumu ja hämärä eivät himmennä.
+      fog: !lit,
+      toneMapped: !lit,
     });
     const pts = new THREE.Points(geo, mat);
     pts.frustumCulled = false;
     this.scene.add(pts);
-    this.list.push({ pts, v, t: 0 });
+    this.list.push({ pts, v, t: 0, life, gravity, opacity });
   }
 
   update(dt) {
@@ -137,14 +141,14 @@ export class Bursts {
       b.t += dt;
       const arr = b.pts.geometry.attributes.position.array;
       for (let k = 0; k < b.v.length; k++) {
-        b.v[k].y -= 6 * dt;
+        b.v[k].y -= b.gravity * dt;
         arr[k * 3] += b.v[k].x * dt;
         arr[k * 3 + 1] += b.v[k].y * dt;
         arr[k * 3 + 2] += b.v[k].z * dt;
       }
       b.pts.geometry.attributes.position.needsUpdate = true;
-      b.pts.material.opacity = Math.max(0, 1 - b.t / 0.7);
-      if (b.t > 0.7) {
+      b.pts.material.opacity = Math.max(0, 1 - b.t / b.life) * b.opacity;
+      if (b.t > b.life) {
         this.scene.remove(b.pts);
         b.pts.geometry.dispose();
         b.pts.material.dispose();

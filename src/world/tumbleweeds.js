@@ -1,11 +1,19 @@
 // Tuulen mukana vierivät tumbleweedit. Niitä on vain pelaajan lähellä:
 // uusia syntyy tuulen yläpuolelle ja kaukana olevat poistetaan.
+// Sessio 10: vain aavikolla (dyynit, pöytävuoret) ja punaisella
+// laterittitasangolla; veteen vierinyt uppoaa, ja kasvillisuuteen
+// (muut biomit) vierinyt jää kiinni ja katoaa.
 import * as THREE from 'three';
 import { sampleTerrain, waterAt } from './terrain.js';
 
 const _wq = {};
 
 const MAX = 10;
+// Kuiva, karu maa: aavikko, dyynit, laterittitasanko ja vuoristo (sessio 12;
+// ei keitaita).
+function habitat(s) {
+  return s.desert + s.dunes + s.laterite + s.mountains + s.mesa * 0.5 - s.oasis * 2;
+}
 const _axis = new THREE.Vector3();
 const _q = new THREE.Quaternion();
 
@@ -61,6 +69,23 @@ export class Tumbleweeds {
         tw.mesh.quaternion.premultiply(_q);
       }
 
+      // Vesi ja biomi tarkistetaan harvakseltaan: vedessä uppoaa, muualla
+      // (kasvillisuuteen) juuttuu ja katoaa.
+      if (tw.sink > 0) {
+        tw.sink += dt;
+        p.y -= dt * 0.6;
+        tw.mesh.scale.setScalar(tw.scale * Math.max(0.05, 1 - tw.sink / 1.6));
+        tw.vx *= Math.exp(-dt * 3);
+        tw.vz *= Math.exp(-dt * 3);
+        if (tw.sink > 1.6) { this._remove(i); continue; }
+      } else {
+        tw.check -= dt;
+        if (tw.check <= 0) {
+          tw.check = 0.4;
+          const s = sampleTerrain(p.x, p.z, this._s);
+          if (s.wl > s.h + 0.05 || habitat(s) < 0.15) tw.sink = 0.001;
+        }
+      }
       const dx = p.x - player.x;
       const dz = p.z - player.z;
       if (dx * dx + dz * dz > 110 * 110) this._remove(i);
@@ -74,9 +99,7 @@ export class Tumbleweeds {
     const x = player.x - windDir.x * dist - windDir.y * side;
     const z = player.z - windDir.y * dist + windDir.x * side;
     const s = sampleTerrain(x, z, this._s);
-    if (s.h < s.wl + 0.2 || s.plateau > 0.5 || s.rainforest > 0.3 || s.ocean > 0.3) return;
-    // Vain kuivilla alueilla (ei sademetsässä eikä vuorilla)
-    if (s.rainforest + s.mountains > 0.4) return;
+    if (s.h < s.wl + 0.2 || s.plateau > 0.5 || habitat(s) < 0.5) return;
     const mesh = new THREE.Mesh(this.geometry, this.material);
     const scale = 0.8 + Math.random() * 0.5;
     mesh.scale.setScalar(scale);
@@ -93,6 +116,9 @@ export class Tumbleweeds {
       phase: 0,
       seed: Math.random() * 10,
       speedMul: 0.75 + Math.random() * 0.5,
+      scale,
+      sink: 0,
+      check: 0.4,
       type: 'tumbleweed',
     });
   }
