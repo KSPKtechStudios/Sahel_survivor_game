@@ -3,7 +3,7 @@
 Muoto: päivä, päätös, syy.
 
 ## 2026-10-12 (repon siirto)
-- **Repo siirtyi osoitteeseen `KSPKtechStudios/Sahel`** (julkinen). Syy: vanha GitHub-tili (`KSPKtech`) jäädytettiin, eikä käyttäjä saanut sitä takaisin. Testauslinkit (CLAUDE.md, README) osoittavat nyt uuteen repoon. Koko historia (myös 32 aiemmin pushaamatonta committia) siirretään git bundle -tiedostona, koska samannimistä repoa ei voinut liittää samaan Claude-sessioon.
+- **Repo siirtyi osoitteeseen `KSPKtechStudios/Sahel_survivor_game`** (julkinen). Syy: vanha GitHub-tili (`KSPKtech`) jäädytettiin, eikä käyttäjä saanut sitä takaisin. Testauslinkit (CLAUDE.md, README) osoittavat nyt uuteen repoon. Koko historia (myös 32 aiemmin pushaamatonta committia) siirretään git bundle -tiedostona, koska samannimistä repoa ei voinut liittää samaan Claude-sessioon.
 
 ## 2026-10-12 (sessio 34)
 - **Otteen puristus:** sormen nivelen keskilinja saa olla puoli sormen sädettä kahvan pinnan sisällä (`GRIP_SQUEEZE` 0,5), nivelten maksimit 1,7 / 1,7 / 1,5, ja peukalon tyvi on täysin nyrkkiasennossa. Syy: kolmesta kuvatusta vaihtoehdosta tämä näytti tiukimmalta luonnottomuuksitta.

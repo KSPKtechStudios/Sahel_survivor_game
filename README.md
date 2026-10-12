@@ -6,7 +6,7 @@ Valheim- ja Minecraft-tyyppinen selviytymispeli, joka sijoittuu Burkina Fason Sa
 
 **Versio:** Alpha v0.1 (ensimmäinen julkinen alfaversio).
 
-**Pelaa selaimessa:** https://raw.githack.com/KSPKtechStudios/Sahel/main/index.html (tai GitHub Pages: https://kspktechstudios.github.io/Sahel/, jos se on otettu käyttöön repon asetuksista)
+**Pelaa selaimessa:** https://raw.githack.com/KSPKtechStudios/Sahel_survivor_game/main/index.html (tai GitHub Pages: https://kspktechstudios.github.io/Sahel_survivor_game/, jos se on otettu käyttöön repon asetuksista)
 
 ## Pelaa
 
@@ -24,7 +24,7 @@ python -m http.server 8080
 
 ja mene osoitteeseen `http://localhost:8080/`. (Suoraan tiedostona `file://` avaaminen ei toimi, koska selain estää ES-moduulit.)
 
-Haarojen testauslinkit: `https://raw.githack.com/KSPKtechStudios/Sahel/<haara>/index.html`
+Haarojen testauslinkit: `https://raw.githack.com/KSPKtechStudios/Sahel_survivor_game/<haara>/index.html`
 
 ### Ohjaimet
 
