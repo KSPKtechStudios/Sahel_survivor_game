@@ -519,7 +519,7 @@ export class ViewModel {
     const envLum = skyLum + env.lightIntensity * lumOf(env.lightColor) * 0.6 + fireLight * 0.15;
     const dark = THREE.MathUtils.clamp(1 - envLum / 0.7, 0, 1);
     vmRim.uRimCol.value.copy(env.hemi.color).multiplyScalar(1 / Math.max(0.05, lumOf(env.hemi.color)))
-      .lerp(_rimNight, dark).multiplyScalar(0.03 + 0.26 * dark);
+      .lerp(_rimNight, dark).multiplyScalar(0.01 + 0.05 * dark); // sessio 42: hyvin hienovarainen (ennen "radioaktiivinen")
     this.scene.environmentIntensity = Math.min(0.5, skyLum * 0.8);
 
     // Esineen vaihto: käsi laskee alas, esine vaihtuu, käsi nousee.
@@ -754,7 +754,7 @@ function addRim(m) {
       .replace('#include <common>', '#include <common>\nuniform vec3 uRimCol;')
       .replace('#include <opaque_fragment>', `{
   float vmF = 1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
-  outgoingLight += uRimCol * pow(vmF, 3.0) * (0.35 + 0.65 * diffuseColor.rgb);
+  outgoingLight += uRimCol * pow(vmF, 4.0) * diffuseColor.rgb;
 }
 #include <opaque_fragment>`);
   };

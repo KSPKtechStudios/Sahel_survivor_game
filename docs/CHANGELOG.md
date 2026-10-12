@@ -2,6 +2,12 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 42): takapakki – ei suttua, ei välkyntää, luonnollinen käsi
+
+- **Käsi yöllä:** reunavalo on nyt hyvin hienovarainen. Käsi näkyy luonnollisen tummana eikä enää hehku.
+- **Ei suttua liikkeessä:** liike-epäterävyys palautettiin session 25 voimakkuuteen, ja se on nyt oletuksena pois (myös vanhoista asetuksista kerran). Pelissä ei ole TAA:ta eikä muuta ajallista kertymää.
+- **Vähemmän kohinaa kasvillisuudessa:** ambienttiokkluusio on oletuksena pois kaikilla laatutasoilla (sen kohina eli tuulessa liikkuvassa ruohossa). Asetuksista sen saa takaisin. Terävöinti on pois, ja ruohon alpha-to-coverage, mipmapit ja anisotropia (sessio 40) ovat ennallaan.
+
 ## 2026-10-12 (sessio 41): käden valaistus yöllä reunavalolla
 
 - **Tasaiset täytevalot pois.** Käden ja esineiden materiaaleissa on nyt reunavalo (Fresnel): pimeässä vain ääriviivat erottuvat viileässä kuunvalossa, ja pinnan keskiosa jää varjoon. Päivällä reunavalo on lähes huomaamaton.

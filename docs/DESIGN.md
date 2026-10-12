@@ -217,6 +217,14 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 42 (käyttäjän kertoma, 2026-10-12): takapakki grafiikkaan
+- Käsi näytti yöllä **"radioaktiiviselta"** (kuva): reunavalo oli aivan liian voimakas.
+- Käyttäjä: grafiikkaa parannettiin liian massiivisesti, ja peli näyttää nyt aika kaamealta. Pitää ottaa takapakkia.
+- Käyttäjän ohje (tiivistetty):
+  1. **Haamukuvat ja suttu liikkeessä pois:** kameraa liikutettaessa koko kuvaan tulee sumea vana. Rikkinäinen TAA tai liike-epäterävyys pois, tilalle puhdas reunanpehmennys (esim. SMAA).
+  2. **Kasvillisuuden välkyntä:** paikallaan ruoho ja lehdet välkkyvät, kohisevat ja tekevät moiré-kuvioita. Anisotrooppinen suodatus, lineaariset mipmapit ja `alphaToCoverage` kasvillisuudelle.
+  3. **Jälkikäsittelyn siivous:** pois aggressiivinen ajallinen kertymä ja ristiriitaiset terävöinnit.
+
 ## Sessio 41 (käyttäjän kertoma, 2026-10-12)
 - **Käsi on yöllä hieman liian valoisa.** Käyttäjän ohje (tiivistetty):
   1. **Reunavalo / Fresnel:** tasainen täytevalo pois. Tilalle hienovarainen reunavalo, joka korostaa vain käden ja esineen ääriviivoja tummaa taustaa vasten, ja ydin jää varjoon.

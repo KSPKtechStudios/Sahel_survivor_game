@@ -2,6 +2,7 @@
 
 ## Heti (odottaa käyttäjää)
 - [x] Historia siirretty uuteen repoon `KSPKtechStudios/Sahel_survivor_game` ja pushattu (2026-10-12)
+- [ ] Käyttäjä testaa session 42: ei suttua kameraa kääntäessä, kasvillisuus paikallaan (välkkyykö yhä), käsi yöllä luonnollinen. Jos ruoho välkkyy yhä, tarkista ettei Ambienttiokkluusio ole päällä asetuksissa
 - [ ] Käyttäjä testaa session 41: käsi ja työkalut yöllä (vain ääriviivat ja heijastukset erottuvat), päivällä ennallaan
 - [ ] Käyttäjä testaa session 40: ruohon ja lehtien reunat kaukana (välkyntä ja moiré), taivas päivällä, syväterävyys, käsi yöllä. Jos reunat yhä välkkyvät: kerro missä (ruoho, puiden lehdet, kasvit) ja millä laatutasolla
 - [ ] Käyttäjä testaa session 39: intro (soiko äänen kanssa, Esc / välilyönti / hiiren oikea ohittaa), päivänvalo selkeällä säällä (sademetsä aurinkoa kohti), lehtien reunat, liike-epäterävyys (asetus Kevyt / Vahva), syväterävyys, käsi ja työkalu yöllä

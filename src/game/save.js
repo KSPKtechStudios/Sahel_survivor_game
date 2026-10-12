@@ -86,15 +86,16 @@ export function saveWorldData(id, data) {
 // värimäärittely ja vinjetti päällä.
 export const QUALITY_PRESETS = {
   low: { viewDistance: 3, shadows: 'off', renderScale: 0.7, godRays: false, motionBlur: 'off', dof: false, lensFlare: false, foliage: 'low', ao: 'off', bloom: false, grade: true, vignette: true, sharpen: false },
-  medium: { viewDistance: 4, shadows: 'normal', renderScale: 0.85, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'normal', ao: 'low', bloom: true, grade: true, vignette: true, sharpen: false },
-  high: { viewDistance: 5, shadows: 'normal', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high', ao: 'high', bloom: true, grade: true, vignette: true, sharpen: false },
-  ultra: { viewDistance: 7, shadows: 'high', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high', ao: 'high', bloom: true, grade: true, vignette: true, sharpen: false },
+  medium: { viewDistance: 4, shadows: 'normal', renderScale: 0.85, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'normal', ao: 'off', bloom: true, grade: true, vignette: true, sharpen: false },
+  high: { viewDistance: 5, shadows: 'normal', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high', ao: 'off', bloom: true, grade: true, vignette: true, sharpen: false },
+  ultra: { viewDistance: 7, shadows: 'high', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high', ao: 'off', bloom: true, grade: true, vignette: true, sharpen: false },
 };
 // Asetusten versio: vanhoihin tallennettuihin asetuksiin kytketään uudet
 // oletukset kerran (v2: DOF ja linssiheijastukset päälle; v3: AO, bloom,
 // värimäärittely ja vinjetti laatutason mukaan; v4: terävöinti päälle;
-// v5: terävöinti pois, käyttäjä voi kytkeä sen itse).
-const SETTINGS_VERSION = 5;
+// v5: terävöinti pois, käyttäjä voi kytkeä sen itse; v6: liike-epäterävyys
+// ja ambienttiokkluusio pois, sessio 42 takapakki).
+const SETTINGS_VERSION = 6;
 
 export const DEFAULT_SETTINGS = {
   quality: 'high',    // low | medium | high | ultra | custom
@@ -110,7 +111,7 @@ export const DEFAULT_SETTINGS = {
   dof: true,          // syväterävyys (sessio 12e: oletuksena päällä)
   lensFlare: true,    // linssiheijastukset aurinkoon katsottaessa (sessio 12e)
   foliage: 'high',    // ruohon ja aluskasvien tiheys: low | normal | high (sessio 24)
-  ao: 'high',         // ambienttiokkluusio: off | low | high (sessio 37)
+  ao: 'off',          // ambienttiokkluusio: off | low | high (sessio 37; sessio 42: oletuksena pois, kohina kasvillisuudessa)
   bloom: true,        // kirkkaiden kohtien hehku (sessio 37)
   grade: true,        // värimäärittely: kontrasti, kylläisyys, lämmin sävy (sessio 37)
   vignette: true,     // kevyt reunojen tummennus (sessio 37)
@@ -131,6 +132,7 @@ export function loadSettings() {
     for (const k of ['ao', 'bloom', 'grade', 'vignette']) s[k] = p[k];
   }
   if ((stored.v || 1) < 5) s.sharpen = false;
+  if ((stored.v || 1) < 6) { s.motionBlur = 'off'; s.ao = 'off'; s.sharpen = false; }
   s.v = SETTINGS_VERSION;
   return s;
 }

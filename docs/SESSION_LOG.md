@@ -2,6 +2,14 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 42)
+**Tehtiin**
+- Takapakki: `player/viewmodel.js` (reunavalo hienovaraiseksi), `render/post.js` (liike-epäterävyys session 25 arvoihin), `game/save.js` (okkluusio ja liike-epäterävyys oletuksena pois, asetusversio 6).
+- Testattiin: käsi ja kirves yöllä (`vm.html?night=1`), ESLint.
+
+**Seuraavaksi**
+- Käyttäjän palaute. Jos jokin tehoste on yhä häiritsevä, harkitse sen poistamista kokonaan.
+
 ## 2026-10-12 (sessio 41)
 **Tehtiin**
 - `player/viewmodel.js`: täytevalot pois; `addRim` (Fresnel), `vmMaterial` (materiaalikopiot), `skyEnvTexture` (heijastukset).

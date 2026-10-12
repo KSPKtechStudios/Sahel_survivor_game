@@ -435,7 +435,7 @@ void main() {
     vec2 prevUv = pp.xy / pp.w * 0.5 + 0.5;
     vec2 vel = (vUv - prevUv) * uMBScale;
     float len = length(vel);
-    if (len > 0.12) vel *= 0.12 / len;
+    if (len > 0.08) vel *= 0.08 / len;
     if (len > 0.0006) {
       col = vec3(0.0);
       const int M = 13;
@@ -1111,8 +1111,8 @@ export class PostFX {
     // --- Liike-epäterävyys: nopeus edellisen ruudun kamerasta.
     if (this.motionBlur > 0 && this.hasPrev && dt > 0) {
       // Sessio 25: runsaampi (käyttäjän toive).
-      // Sessio 39: voimakkaampi (käyttäjän toive).
-      const strength = this.motionBlur === 2 ? 2.6 : 1.4;
+      // Sessio 42: takaisin session 25 voimakkuuteen (sessio 39 sotki liikkeessä).
+      const strength = this.motionBlur === 2 ? 1.7 : 0.9;
       cu.uMBScale.value = Math.min(4, strength * (1 / 60) / Math.max(dt, 1 / 240));
       cu.uPrevViewProj.value.copy(this.prevViewProj);
     } else {

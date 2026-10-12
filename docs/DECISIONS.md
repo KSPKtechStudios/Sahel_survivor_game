@@ -2,6 +2,11 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 42)
+- **Takapakki:** liike-epäterävyys 0,9 / 1,7 ja suurin siirtymä 0,08 (session 25 arvot), oletuksena pois. Okkluusio on oletuksena pois kaikilla laatutasoilla, ja asetusversio 6 kytkee liike-epäterävyyden, okkluusion ja terävöinnin kerran pois myös vanhoista asetuksista. Syy: käyttäjän mukaan peli näytti liikkeessä sotkuiselta ja kasvillisuus kohisi.
+- **Ei SMAA:ta eikä TAA:ta.** Maailma ja käsi piirretään jo 4× MSAA:lla, ja kasvillisuus käyttää alpha-to-coveragea, mikä on SMAA:ta terävämpi ilman ajallista suttua. Kuvassa näkyvä suttu tuli liike-epäterävyydestä, ei reunanpehmennyksestä.
+- **Käden reunavalo:** 0,01 + 0,05 × pimeys (oli 0,03 + 0,26 × pimeys), potenssi 4 ja vain pinnan värin mukaan (ennen vähintään 35 %, jolloin vaalea iho hehkui).
+
 ## 2026-10-12 (sessio 41)
 - **Käden valaistus:**
   - täyte-, reuna- ja AmbientLight-valot (sessiot 38–40) poistettiin;
