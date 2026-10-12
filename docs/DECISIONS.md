@@ -2,6 +2,10 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 44)
+- **Session 43 kaukomallit peruttu** (`trees.js`, `flora.js`, `palms.js`, `world.js` palautettu). Syy: ruudunpäivitys putosi viidakossa, jossa puita on paljon.
+- **Syväterävyys session 25 arvoihin** (kaukana alkaen max(tarkennus × 3 + 15, 32) m, enintään 0,4, säde 3), ja puolikkaan tarkkuuden kuva sekoittuu vasta voimakkuudesta 0,2 alkaen (oli 0,12). Syy: kaukainen maisema näkyi puolikkaan tarkkuuden kuvana pienellä sumennuksella, eli pikselöityneenä. Pikselitiheyteen ja MSAA:han ei koskettu, koska ne eivät olleet syy.
+
 ## 2026-10-12 (sessio 43)
 - **Kaukomallien laatu ylös:** lehtikorttien tiheys 0,3 → 0,85 ja koko 2,0 → 1,35 (`blob` sekä `trees.js`:ssä että `flora.js`:ssä), palmujen lehdykät 9 → 16 ja leveys × 2,2 → × 1,5, tarkan mallin raja `LOD_NEAR` 1,6 → 2,4 chunkia. Syy: käyttäjän mukaan kaukaiset puut näyttivät PS1-grafiikalta. Instanssipoolit kasvavat itse, ja kaukomallit eivät heitä varjoja, joten kustannus on kohtuullinen (enemmän kolmioita kaukana).
 

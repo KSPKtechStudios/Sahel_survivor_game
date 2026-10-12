@@ -142,10 +142,12 @@ float coc(vec2 uv, float focus) {
   // Sessio 39 (käyttäjä: toimivammaksi ja huomattavammaksi): tarkennuksen
   // mukaan. Lähelle katsottaessa tausta sumenee selvästi; kauas katsottaessa
   // vain aivan kameran edessä oleva sumenee.
-  // Sessio 40: lievennetty (käyttäjä: överi).
-  float farStart = focus * 2.2 + 12.0;
-  float farC = smoothstep(farStart, farStart * 4.0 + 80.0, z) * 0.55;
-  float nearC = focus > 6.0 ? (1.0 - smoothstep(min(focus * 0.3, 1.0), min(focus * 0.5, 2.5), z)) * 0.45 : 0.0;
+  // Sessio 44: takaisin session 25 arvoihin. Sessioiden 39-40 voimakkaampi
+  // syväterävyys korvasi kaukaisen maiseman lähes kokonaan puolikkaan
+  // tarkkuuden kuvalla, mikä näytti pikselimössöltä.
+  float farStart = max(focus * 3.0 + 15.0, 32.0);
+  float farC = smoothstep(farStart, farStart * 4.0 + 80.0, z) * 0.4;
+  float nearC = focus > 8.0 ? (1.0 - smoothstep(0.5, 1.3, z)) * 0.45 : 0.0;
   return max(farC, nearC);
 }
 void main() {
@@ -406,7 +408,8 @@ vec3 sceneAt(vec2 uv) {
   vec3 c = texture2D(tColor, uv).rgb;
   if (uUseDof > 0.5) {
     vec4 d = texture2D(tDof, uv);
-    c = mix(c, d.rgb, smoothstep(0.12, 0.6, d.a));
+    // Puolikkaan tarkkuuden sumennus vain selvästi sumeisiin kohtiin (sessio 44).
+    c = mix(c, d.rgb, smoothstep(0.2, 0.6, d.a));
   }
   return c;
 }
@@ -845,7 +848,7 @@ export class PostFX {
     }, { toneMapped: false });
     this.dofMat = mat(dofFS, {
       tColor: { value: null }, tDepth: { value: depthTexture }, tFocus: { value: null }, uTexel: { value: new THREE.Vector2() },
-      uNear: { value: 0.1 }, uFar: { value: 1500 }, uMaxR: { value: 4 },
+      uNear: { value: 0.1 }, uFar: { value: 1500 }, uMaxR: { value: 3 },
     }, { toneMapped: false });
     this.compMat = mat(compositeFS, {
       tColor: { value: null }, tDepth: { value: depthTexture }, tRays: { value: null }, tDof: { value: null },

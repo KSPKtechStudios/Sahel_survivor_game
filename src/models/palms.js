@@ -97,9 +97,9 @@ function pinnateFrond(m, crown, a, elev, len, droop, rand, q, o = {}) {
     );
   }
   // Lehdykät
-  const nL = q ? (o.leaflets ?? 26) : 16; // sessio 43: kaukana 9 -> 16
+  const nL = q ? (o.leaflets ?? 26) : 9;
   const maxL = o.leafLen ?? len * 0.32;
-  const lw = (o.leafW ?? 0.045) * (q ? 1 : 1.5); // sessio 43: 2,2 -> 1,5
+  const lw = (o.leafW ?? 0.045) * (q ? 1 : 2.2);
   const vAng = old ? -0.9 : (o.vAngle ?? 0.35);
   const at = (t) => {
     const f = t * segs, i = Math.min(segs - 1, Math.floor(f)), r = f - i;

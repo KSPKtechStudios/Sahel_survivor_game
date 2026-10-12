@@ -2,7 +2,8 @@
 
 ## Heti (odottaa käyttäjää)
 - [x] Historia siirretty uuteen repoon `KSPKtechStudios/Sahel_survivor_game` ja pushattu (2026-10-12)
-- [ ] Käyttäjä testaa session 43: kaukaiset puut (eivät enää kulmikkaita), ruudunpäivitysnopeus (enemmän kolmioita)
+- [ ] Käyttäjä testaa session 44: ruudunpäivitys viidakossa (palautunut?), kaukaiset puut ja horisontti (ei pikselimössöä). Jos mössöä näkyy yhä, kokeile Syväterävyys pois päältä ja kerro, muuttuuko
+- [x] ~~Session 43 kaukomallit~~ (peruttu sessiossa 44: FPS)
 - [ ] Käyttäjä testaa session 42: ei suttua kameraa kääntäessä, kasvillisuus paikallaan (välkkyykö yhä), käsi yöllä luonnollinen. Jos ruoho välkkyy yhä, tarkista ettei Ambienttiokkluusio ole päällä asetuksissa
 - [ ] Käyttäjä testaa session 41: käsi ja työkalut yöllä (vain ääriviivat ja heijastukset erottuvat), päivällä ennallaan
 - [ ] Käyttäjä testaa session 40: ruohon ja lehtien reunat kaukana (välkyntä ja moiré), taivas päivällä, syväterävyys, käsi yöllä. Jos reunat yhä välkkyvät: kerro missä (ruoho, puiden lehdet, kasvit) ja millä laatutasolla

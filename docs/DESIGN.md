@@ -217,6 +217,10 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 44 (käyttäjän kertoma, 2026-10-12)
+- **Session 43 muutos pudotti ruudunpäivitystä paljon, etenkin viidakossa** → peruttava.
+- **Kaukaiset puut ja horisontti näyttävät pikselimössöltä** (kuva, kuin 240p). Tämä johtuu jostain grafiikkapäivityksen yhteydessä tehdystä. Käyttäjä liitti toisen tekoälyn ehdotuksen: täysi renderöintitarkkuus (ei pienennettyjä renderöintikohteita), siisti reunanpehmennys ja kasvillisuuden mipmapit.
+
 ## Sessio 43 (käyttäjän kertoma, 2026-10-12)
 - **Kaukana puut näyttävät kuin suoraan PS1-peleistä** (kuva).
 

@@ -2,6 +2,12 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 44): ruudunpäivitys takaisin ja kaukainen pikselimössö pois
+
+- **Session 43 muutos peruttu:** kaukomallit ja tarkan mallin raja ovat taas ennallaan (ruudunpäivitys putosi viidakossa).
+- **Kaukainen pikselimössö korjattu:** syy oli syväterävyys. Se lasketaan puolikkaalla tarkkuudella, ja sessioiden 39–40 voimakkaampi syväterävyys korvasi kaukaisen maiseman lähes kokonaan tällä pienemmällä kuvalla. Syväterävyys on nyt palautettu session 25 arvoihin, ja puolikkaan tarkkuuden sumennus sekoittuu kuvaan vain selvästi sumeissa kohdissa.
+- Renderöintitarkkuus ja reunanpehmennys tarkistettiin: pikselitiheys on ennallaan (`min(devicePixelRatio, 1,5)` × Tarkkuus-asetus), ja maailma piirretään 4× MSAA:lla. Niitä ei ole muutettu.
+
 ## 2026-10-12 (sessio 43): kaukaiset puut siistimmiksi
 
 - **Kaukomallit paremmiksi:**

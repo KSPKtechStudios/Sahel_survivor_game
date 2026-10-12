@@ -2,6 +2,16 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 44)
+**Tehtiin**
+- Session 43 lähdemuutokset peruttu (FPS).
+- `render/post.js`: syväterävyys session 25 arvoihin; puolikkaan tarkkuuden sumennus sekoittuu vasta 0,2:sta alkaen.
+- Tarkistettu: pikselitiheys ja MSAA ennallaan (eivät syy).
+- Testattiin: savanni klo 11 (renderöityy, ei virheitä), ESLint. Käyttäjän kuvan kaltaista kaukaista auringonlaskunäkymää ei kuvattu.
+
+**Seuraavaksi**
+- Käyttäjän palaute. Jos kaukana näkyy yhä mössöä, kokeile syväterävyyden laskemista täydellä tarkkuudella tai poista se oletuksena.
+
 ## 2026-10-12 (sessio 43)
 **Tehtiin**
 - Kaukomallit: `models/trees.js` ja `models/flora.js` (`blob`), `models/palms.js` (lehdykät), `world/world.js` (`LOD_NEAR` 2,4).
