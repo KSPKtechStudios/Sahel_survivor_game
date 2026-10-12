@@ -21,7 +21,7 @@ import { GrassField } from '../render/grassField.js';
 
 const SIZE = CONFIG.chunkSize;
 const SEG = CONFIG.chunkSegments;
-const LOD_NEAR = 1.6; // chunkia: tätä lähempänä tarkka malli + varjo
+const LOD_NEAR = 2.4; // chunkia: tätä lähempänä tarkka malli + varjo (sessio 43: 1,6 -> 2,4)
 const APPLY_BUDGET_MS = 4; // valmiiden chunkkien rakentaminen / ruutu
 
 const _m = new THREE.Matrix4();

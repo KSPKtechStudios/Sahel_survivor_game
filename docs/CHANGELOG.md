@@ -2,6 +2,13 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 43): kaukaiset puut siistimmiksi
+
+- **Kaukomallit paremmiksi:**
+  - kaukaisten puiden lehvästöissä on noin 2,8 kertaa enemmän ja pienempiä lehtikortteja (ennen harvat ja isot, joten latvukset olivat kulmikkaita möhkäleitä);
+  - palmujen lehdissä on 16 lehdykkää (oli 9), ja ne ovat kapeampia.
+- **Tarkka malli ulottuu kauemmas:** noin 150 metriin (oli noin 100), joten vaihto ei näy niin lähellä, ja lähimmillä puilla on varjo pidemmälle.
+
 ## 2026-10-12 (sessio 42): takapakki – ei suttua, ei välkyntää, luonnollinen käsi
 
 - **Käsi yöllä:** reunavalo on nyt hyvin hienovarainen. Käsi näkyy luonnollisen tummana eikä enää hehku.

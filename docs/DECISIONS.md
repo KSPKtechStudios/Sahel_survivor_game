@@ -2,6 +2,9 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 43)
+- **Kaukomallien laatu ylös:** lehtikorttien tiheys 0,3 → 0,85 ja koko 2,0 → 1,35 (`blob` sekä `trees.js`:ssä että `flora.js`:ssä), palmujen lehdykät 9 → 16 ja leveys × 2,2 → × 1,5, tarkan mallin raja `LOD_NEAR` 1,6 → 2,4 chunkia. Syy: käyttäjän mukaan kaukaiset puut näyttivät PS1-grafiikalta. Instanssipoolit kasvavat itse, ja kaukomallit eivät heitä varjoja, joten kustannus on kohtuullinen (enemmän kolmioita kaukana).
+
 ## 2026-10-12 (sessio 42)
 - **Takapakki:** liike-epäterävyys 0,9 / 1,7 ja suurin siirtymä 0,08 (session 25 arvot), oletuksena pois. Okkluusio on oletuksena pois kaikilla laatutasoilla, ja asetusversio 6 kytkee liike-epäterävyyden, okkluusion ja terävöinnin kerran pois myös vanhoista asetuksista. Syy: käyttäjän mukaan peli näytti liikkeessä sotkuiselta ja kasvillisuus kohisi.
 - **Ei SMAA:ta eikä TAA:ta.** Maailma ja käsi piirretään jo 4× MSAA:lla, ja kasvillisuus käyttää alpha-to-coveragea, mikä on SMAA:ta terävämpi ilman ajallista suttua. Kuvassa näkyvä suttu tuli liike-epäterävyydestä, ei reunanpehmennyksestä.

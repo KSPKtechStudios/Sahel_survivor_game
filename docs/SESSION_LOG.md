@@ -2,6 +2,14 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 43)
+**Tehtiin**
+- Kaukomallit: `models/trees.js` ja `models/flora.js` (`blob`), `models/palms.js` (lehdykät), `world/world.js` (`LOD_NEAR` 2,4).
+- Testattiin: savanni klo 11, suurennos kaukaisista puista ennen ja jälkeen (latvukset täyteläisempiä), ESLint.
+
+**Seuraavaksi**
+- Käyttäjän palaute. Jos ruudunpäivitys kärsii, `LOD_NEAR` takaisin pienemmäksi.
+
 ## 2026-10-12 (sessio 42)
 **Tehtiin**
 - Takapakki: `player/viewmodel.js` (reunavalo hienovaraiseksi), `render/post.js` (liike-epäterävyys session 25 arvoihin), `game/save.js` (okkluusio ja liike-epäterävyys oletuksena pois, asetusversio 6).

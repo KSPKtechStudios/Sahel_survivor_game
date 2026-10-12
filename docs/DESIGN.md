@@ -217,6 +217,9 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 43 (käyttäjän kertoma, 2026-10-12)
+- **Kaukana puut näyttävät kuin suoraan PS1-peleistä** (kuva).
+
 ## Sessio 42 (käyttäjän kertoma, 2026-10-12): takapakki grafiikkaan
 - Käsi näytti yöllä **"radioaktiiviselta"** (kuva): reunavalo oli aivan liian voimakas.
 - Käyttäjä: grafiikkaa parannettiin liian massiivisesti, ja peli näyttää nyt aika kaamealta. Pitää ottaa takapakkia.

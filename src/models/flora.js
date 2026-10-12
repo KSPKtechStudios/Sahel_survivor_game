@@ -34,7 +34,8 @@ function blob(center, scale, detail, hex, jr, shadeCut = null, rotY = 0, kind = 
   // näkyi alta katsottuna rumana möhkäleenä). Kortteja tiheämmin, myös alapinnalla.
   void shadeCut;
   const r = jr();
-  return leafCards(center, scale, rotY, hex, r, kind, detail ? 1.75 : 0.3, detail ? 1.05 : 2.0, 0.85);
+  // Sessio 43: kaukoversio tiheämpi ja pienemmin kortein (ennen 0,3 / 2,0: kulmikkaat "PS1"-möhkäleet).
+  return leafCards(center, scale, rotY, hex, r, kind, detail ? 1.75 : 0.85, detail ? 1.05 : 1.35, 0.85);
 }
 
 // --- Karitepuu (shea): matala, kyhmyinen runko ja tiheä pyöreä latvus ----------------
