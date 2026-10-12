@@ -13,8 +13,8 @@ Uusin merkintä ylimpänä.
   - `handAE` 0,3.
 - `player/viewmodel.js`: täytevalot miedommiksi.
 - `game/save.js`: terävöinti oletuksena pois (asetusversio 5).
-- Huom.: työympäristön uudelleenkäynnistys oli palauttanut `origin`-remoten vanhaan repoon (`KSPKtech/sahel`). Se asetettiin takaisin osoitteeseen `KSPKtechStudios/Sahel_survivor_game`.
-- Testattiin: savanni klo 11 (ruohon reunat, vertailu session 37 kuvaan), sademetsä taivaalle päivällä ja yöllä, ESLint.
+- Huom.: työympäristö palauttaa `origin`-remoten toistuvasti vanhaan repoon (`KSPKtech/sahel`, jäädytetty). Uudelle repolle tehtiin oma remote `studios` (`KSPKtechStudios/Sahel_survivor_game`), ja haara seuraa sitä: **pushaa aina `studios`iin, ei `origin`iin**.
+- Testattiin: savanni klo 11 (ruohon reunat, vertailu session 37 kuvaan: korret pehmeämmät, taivas tummempi), sademetsä taivaalle päivällä (taivas ei puhkea) ja yöllä (nuija ja käsi hämäriä mutta erottuvat), ESLint.
 
 **Seuraavaksi**
 - Käyttäjän palaute reunojen laadusta.

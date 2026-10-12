@@ -3,6 +3,7 @@
 Muoto: päivä, päätös, syy.
 
 ## 2026-10-12 (sessio 40)
+- **Pushaus remoteen `studios`** (`KSPKtechStudios/Sahel_survivor_game`). Syy: työympäristö kirjoittaa `origin`-remoten toistuvasti vanhaan, jäädytettyyn repoon.
 - **Ruoho: alpha-to-coverage ja terävöity alfa** (`(a − 0,5) / fwidth(a) + 0,5`), ei kovaa `discard`ia. Syy: ruohokenttä oli ainoa kasvillisuus ilman alpha-to-coveragea, ja kova raja välkkyi ja teki moiré-kuvioita. Maailma piirretään 4× MSAA -kuvaan, joten peittävyys pehmentää reunat. Muut leikatut materiaalit (lehdet, kitin kasvit) käyttävät jo alpha-to-coveragea (three terävöi alfan itse), ja niillä on peittävyyden säilyttävät mipmapit. SMAA:ta ei lisätty, koska MSAA ja alpha-to-coverage hoitavat kasvillisuuden reunat, eikä ylimääräistä vaihetta tarvita.
 - **Anisotropia 16** (three rajaa näytönohjaimen maksimiin): maaston pinnat, lehdet, ruoho ja metsänpohja, maan yksityiskohtatekstuuri ja kitin sekä skannattujen mallien tekstuurit.
 - **Terävöinti oletuksena pois** (asetusversio 5 kytkee sen kerran pois myös vanhoista asetuksista). Syy: käyttäjä koki reunat rumiksi kahdesti terävöinnin jälkeen.
