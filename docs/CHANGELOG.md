@@ -2,6 +2,12 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 41): käden valaistus yöllä reunavalolla
+
+- **Tasaiset täytevalot pois.** Käden ja esineiden materiaaleissa on nyt reunavalo (Fresnel): pimeässä vain ääriviivat erottuvat viileässä kuunvalossa, ja pinnan keskiosa jää varjoon. Päivällä reunavalo on lähes huomaamaton.
+- **Himmeä taivasheijastus:** kädessä olevat esineet heijastavat taivasta (ympäristökartta, jonka voimakkuus seuraa taivaan kirkkautta). Terät ja kiviosat poimivat heijastuksen yöllä, ja puiset kahvat ovat hieman sileämpiä (kädessä kuluneita).
+- **Maassa olevat esineet eivät muutu:** kädellä on omat kopiot materiaaleista.
+
 ## 2026-10-12 (sessio 40): kasvillisuuden reunat, taivas, syväterävyys ja käsi yöllä
 
 - **Ruoho ei enää välky:** ruohokenttä käyttää nyt alpha-to-coveragea. Korsien reunat pehmenevät reunanpehmennyksellä, eivätkä ne enää tee portaita tai moiré-kuvioita kauempana (ennen kova leikkausraja). Lehdillä ja muilla kasveilla tämä oli jo käytössä, samoin peittävyyden säilyttävät mipmapit (`LinearMipmapLinearFilter`).

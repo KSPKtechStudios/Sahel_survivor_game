@@ -217,6 +217,11 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 41 (käyttäjän kertoma, 2026-10-12)
+- **Käsi on yöllä hieman liian valoisa.** Käyttäjän ohje (tiivistetty):
+  1. **Reunavalo / Fresnel:** tasainen täytevalo pois. Tilalle hienovarainen reunavalo, joka korostaa vain käden ja esineen ääriviivoja tummaa taustaa vasten, ja ydin jää varjoon.
+  2. **Heijastukset:** kädessä olevilla esineillä (terät, puiset kahvat) sopivat karheus- ja metallisuusarvot, jotta ne poimivat himmeän ympäristön tai taivaan heijastuksen pimeässä ilman keinotekoisia valoja.
+
 ## Sessio 40 (käyttäjän kertoma, 2026-10-12)
 - **Taivas on yhä vähän ylivalottunut** (kuva sademetsästä taivaalle).
 - **Asiat näyttävät yhä rumilta.** Syväterävyyttä saa lieventää (nyt "överi").

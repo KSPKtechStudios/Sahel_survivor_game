@@ -234,16 +234,11 @@ export class ViewModel {
     this.fire = new THREE.PointLight(0xff9a40, 0, 3, 2);
     this.fire.position.set(0.2, -0.3, -0.6);
     this.scene.add(this.hemi, this.light, this.light.target, this.fire);
-    // Sessio 38: kameraan kiinnitetyt täyte- ja reunavalo sekä hajavalon
-    // alaraja. Ne ovat vain tässä näkymässä (käsi ja esineet), eivät valaise
-    // maailmaa eivätkä luo varjoja. Voimakkuus kasvaa pimeässä, jotta esineet
-    // eivät muutu mustiksi varjossa tai yöllä.
-    this.fill = new THREE.DirectionalLight(0xfff0e0, 0);
-    this.fill.position.set(0.45, 0.55, 1);
-    this.rim = new THREE.DirectionalLight(0xc8d6ff, 0);
-    this.rim.position.set(-0.7, 0.9, -1.1);
-    this.amb = new THREE.AmbientLight(0xffffff, 0);
-    this.scene.add(this.fill, this.fill.target, this.rim, this.rim.target, this.amb);
+    // Sessio 41: tasaiset täytevalot (sessiot 38-40) poistettu. Tilalle
+    // reunavalo (Fresnel) käden ja esineiden materiaaleihin (vmRim) sekä
+    // himmeä taivasheijastus (ympäristökartta): yöllä vain ääriviivat ja
+    // kiiltävät pinnat erottuvat, ydin jää varjoon.
+    this.scene.environment = skyEnvTexture();
 
     this.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, metalness: 0 });
     const itemMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0 });
@@ -364,6 +359,7 @@ export class ViewModel {
     // Sessio 29: oikeat kädet (skinnattu malli). Proseduraaliset kädet
     // näkyvät vain, kunnes malli on ladattu (tai jos lataus epäonnistuu).
     this.arms = new Arms();
+    addRim(this.arms.material); // sessio 41: vain käden oma materiaali
     this.rig.add(this.arms.group);
     this.fistT = 0;       // nyrkki pysyy puristettuna hetken lyönnin jälkeen
 
@@ -393,6 +389,11 @@ export class ViewModel {
     this.sprintBlend = 0;
     this.airBlend = 0;
     this.crouchBlend = 0;
+    // Sessio 41: esineille omat materiaalit reunavalolla.
+    this.scene.traverse((o) => {
+      if (!o.isMesh || o.isSkinnedMesh) return;
+      o.material = Array.isArray(o.material) ? o.material.map(vmMaterial) : vmMaterial(o.material);
+    });
   }
 
   get busy() {
@@ -511,16 +512,15 @@ export class ViewModel {
     _qi.copy(mainCamera.quaternion).invert();
     this.light.position.copy(env.lightDir).applyQuaternion(_qi).multiplyScalar(5);
     this.fire.intensity = fireLight;
-    // Täytevalot: pimeys arvioidaan maailman valojen kirkkaudesta.
-    const envLum = env.hemi.intensity * lumOf(env.hemi.color) + env.lightIntensity * lumOf(env.lightColor) * 0.6 + fireLight * 0.15;
+    // Sessio 41: reunavalo ja taivasheijastus. Pimeys arvioidaan maailman
+    // valojen kirkkaudesta; reunavalo on viileä kuunvalo ja voimistuu
+    // pimeässä, heijastus seuraa taivaan (hajavalon) kirkkautta.
+    const skyLum = env.hemi.intensity * lumOf(env.hemi.color);
+    const envLum = skyLum + env.lightIntensity * lumOf(env.lightColor) * 0.6 + fireLight * 0.15;
     const dark = THREE.MathUtils.clamp(1 - envLum / 0.7, 0, 1);
-    // Sessio 39: selvästi miedommat (käyttäjä: yöllä liiankin valoisia; pimeyden
-    // ja heijastusten pitää näkyä, vain pieni valo).
-    // Sessio 40: vielä hieman miedommat (yöllä yhä vähän liian kirkkaat).
-    this.fill.intensity = 0.04 + 0.17 * dark;
-    this.fill.color.setRGB(1, 0.94, 0.86).lerp(_fillNight, dark);
-    this.rim.intensity = 0.03 + 0.12 * dark;
-    this.amb.intensity = 0.01 + 0.045 * dark;
+    vmRim.uRimCol.value.copy(env.hemi.color).multiplyScalar(1 / Math.max(0.05, lumOf(env.hemi.color)))
+      .lerp(_rimNight, dark).multiplyScalar(0.03 + 0.26 * dark);
+    this.scene.environmentIntensity = Math.min(0.5, skyLum * 0.8);
 
     // Esineen vaihto: käsi laskee alas, esine vaihtuu, käsi nousee.
     if (this.pending !== undefined) {
@@ -738,8 +738,67 @@ export class ViewModel {
   }
 }
 const _tip = new THREE.Vector3();
-const _fillNight = new THREE.Color(0.78, 0.84, 1);
+const _rimNight = new THREE.Color(0.7, 0.8, 1);
 const lumOf = (c) => c.r * 0.2126 + c.g * 0.7152 + c.b * 0.0722;
+
+// Sessio 41: reunavalo (Fresnel) käden ja esineiden materiaaleihin: valo
+// ääriviivoilla, ei pinnan keskellä (ammattimainen FPS-kädenvalaistus).
+const vmRim = { uRimCol: { value: new THREE.Color(0, 0, 0) } };
+function addRim(m) {
+  const prev = m.onBeforeCompile;
+  const baseKey = m.customProgramCacheKey();
+  m.onBeforeCompile = (sh, r) => {
+    if (prev) prev.call(m, sh, r);
+    sh.uniforms.uRimCol = vmRim.uRimCol;
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform vec3 uRimCol;')
+      .replace('#include <opaque_fragment>', `{
+  float vmF = 1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
+  outgoingLight += uRimCol * pow(vmF, 3.0) * (0.35 + 0.65 * diffuseColor.rgb);
+}
+#include <opaque_fragment>`);
+  };
+  m.customProgramCacheKey = () => baseKey + '|vmRim';
+  m.needsUpdate = true;
+  return m;
+}
+
+// Kädessä olevien esineiden materiaalit: oma kopio (maassa olevat esineet
+// käyttävät alkuperäistä), reunavalo, ja puu ja kahvat hieman sileämmiksi,
+// jotta ne poimivat himmeän taivasheijastuksen.
+const _vmMats = new Map();
+function vmMaterial(mat) {
+  if (!mat || !(mat.isMeshStandardMaterial || mat.isMeshLambertMaterial)) return mat;
+  let c = _vmMats.get(mat);
+  if (!c) {
+    c = mat.clone();
+    c.onBeforeCompile = mat.onBeforeCompile;
+    if (Object.prototype.hasOwnProperty.call(mat, 'customProgramCacheKey')) c.customProgramCacheKey = mat.customProgramCacheKey;
+    if (c.isMeshStandardMaterial && !c.metalness) c.roughness = Math.min(c.roughness, 0.62);
+    addRim(c);
+    _vmMats.set(mat, c);
+  }
+  return c;
+}
+
+// Yksinkertainen taivas-maa-liukuma ympäristökartaksi (heijastukset).
+function skyEnvTexture() {
+  const w = 64, h = 32, d = new Uint8Array(w * h * 4);
+  for (let y = 0; y < h; y++) {
+    const t = y / (h - 1); // 0 = alas, 1 = ylös
+    const sky = Math.max(0, (t - 0.5) * 2), ground = Math.max(0, (0.5 - t) * 2);
+    const r = 150 + 90 * sky - 90 * ground, g = 160 + 85 * sky - 100 * ground, b = 175 + 80 * sky - 120 * ground;
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      d[i] = r; d[i + 1] = g; d[i + 2] = b; d[i + 3] = 255;
+    }
+  }
+  const tex = new THREE.DataTexture(d, w, h);
+  tex.mapping = THREE.EquirectangularReflectionMapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.needsUpdate = true;
+  return tex;
+}
 
 // Sessio 29: pehmeät ja sulavat liikkeet (käyttäjä: ennen liian nopeita ja
 // teräviä). Animaation asento kulkee jousen läpi: liike käynnistyy ja

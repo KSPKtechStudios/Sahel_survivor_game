@@ -2,6 +2,16 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 41)
+**Tehtiin**
+- `player/viewmodel.js`: täytevalot pois; `addRim` (Fresnel), `vmMaterial` (materiaalikopiot), `skyEnvTexture` (heijastukset).
+- Testisivu `shots/s29/vm.html?night=1` (yön valaistus).
+- Testattiin: kirves, puukko ja nuija yöllä (ääriviivat ja terien heijastus erottuvat, ydin tumma), puukko päivällä (ennallaan), ESLint.
+- Push remoteen `studios` (ks. sessio 40).
+
+**Seuraavaksi**
+- Käyttäjän palaute.
+
 ## 2026-10-12 (sessio 40)
 **Tehtiin**
 - `render/grassField.js`: alpha-to-coverage ja terävöity alfa.

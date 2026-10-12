@@ -2,6 +2,15 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 41)
+- **Käden valaistus:**
+  - täyte-, reuna- ja AmbientLight-valot (sessiot 38–40) poistettiin;
+  - Fresnel-reunavalo shaderiin (`addRim`, väri ja voimakkuus `vmRim` pimeyden mukaan, 0,03 + 0,26 × pimeys);
+  - viewmodel-näkymään taivas–maa-liukuma ympäristökartaksi (`environmentIntensity` = taivaan kirkkaus × 0,8, enintään 0,5).
+
+  Syy: käyttäjän ohje, ja tasainen valo teki kädestä yöllä joko liian kirkkaan tai mustan.
+- **Kädessä olevien esineiden materiaalit kopioidaan** (`vmMaterial`), ja `onBeforeCompile` ja välimuistiavain siirretään käsin, koska `Material.copy` ei kopioi niitä. Syy: samoja materiaaleja käytetään maassa olevissa esineissä. Puun karheus enintään 0,62 (metallittomat), jotta heijastus näkyy. Käden oma materiaali muokataan suoraan (vain kädellä).
+
 ## 2026-10-12 (sessio 40)
 - **Pushaus remoteen `studios`** (`KSPKtechStudios/Sahel_survivor_game`). Syy: työympäristö kirjoittaa `origin`-remoten toistuvasti vanhaan, jäädytettyyn repoon.
 - **Ruoho: alpha-to-coverage ja terävöity alfa** (`(a − 0,5) / fwidth(a) + 0,5`), ei kovaa `discard`ia. Syy: ruohokenttä oli ainoa kasvillisuus ilman alpha-to-coveragea, ja kova raja välkkyi ja teki moiré-kuvioita. Maailma piirretään 4× MSAA -kuvaan, joten peittävyys pehmentää reunat. Muut leikatut materiaalit (lehdet, kitin kasvit) käyttävät jo alpha-to-coveragea (three terävöi alfan itse), ja niillä on peittävyyden säilyttävät mipmapit. SMAA:ta ei lisätty, koska MSAA ja alpha-to-coverage hoitavat kasvillisuuden reunat, eikä ylimääräistä vaihetta tarvita.
