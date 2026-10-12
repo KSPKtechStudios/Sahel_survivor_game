@@ -3,7 +3,7 @@
 // Väliaikaisia malleja: jokainen malli on BufferGeometry (position, normal,
 // color). Kun grafiikkaa jalostetaan, nämä voi korvata glTF-malleilla samoilla
 // nimillä (ks. docs/DECISIONS.md).
-import { makeAcacia, makeBaobab, makeJungleTree, makeCanopyTree } from './trees.js';
+import { makeAcacia, makeBaobab, makeJungleTree, makeCanopyTree, makeEmergentTree, makeSapling } from './trees.js';
 // Sessio 26: uudet palmut ja banaanit.
 import { makePalm, makeCoconutPalm, makeDoumPalm, makeBanana } from './palms.js';
 import { makeBush, makeTumbleweed, makeGrassTuft, makeBamboo, makeThicket, makeEuphorbia, makeReeds } from './plants.js';
@@ -137,11 +137,16 @@ const VARIANTS = {
   seabedRocks: [makeSeabedRocks, 3, 811],
   shoreRocks: [makeShoreRocks, 3, 821],
   beachStones: [makeBeachStones, 4, 831],
+  // Sessio 48: sademetsän jättiläispuu (ylin latvuskerros), trooppiset
+  // aluskasvit (Poly Haven, CC0) ja taimet (keskikerros).
+  emergent: [makeEmergentTree, 3, 1001],
+  tropicalPlant: kit(['Calathea_A', 'Calathea_B', 'Calathea_C', 'Fern2_A', 'Fern2_B', 'Fern2_C', 'Fern2_D'], 1101, true),
+  sapling: [makeSapling, 4, 1201],
 };
 // Mallit, joilla on kevyt kaukoversio (ilman varjoa).
-const HAS_FAR = new Set(['bamboo', 'banana', 'acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);
+const HAS_FAR = new Set(['emergent', 'bamboo', 'banana', 'acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);
 // Mallit, joista tehdään tiheärunkoinen versio hakkaamista varten.
-const HAS_HI = new Set(['acacia', 'jungle', 'palm', 'canopy', 'shea', 'doum', 'coconut', 'baobab']);
+const HAS_HI = new Set(['emergent', 'acacia', 'jungle', 'palm', 'canopy', 'shea', 'doum', 'coconut', 'baobab']);
 
 function seedsFor(model) {
   const [, n, base] = VARIANTS[model];

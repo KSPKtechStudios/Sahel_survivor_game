@@ -2,6 +2,30 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 48)
+**Tehtiin**
+- Ambienssi (`audio/sfx.js`): tasot mitattu (EBU R128), viidakkoääni kuuluviin.
+- Jättiläispuu (`models/trees.js` `makeEmergentTree`), taimi (`makeSapling`) ja trooppiset kasvit (Poly Haven calathea ja fern_02 → `models/kit/tropicalKit.js`, muunnin scratchpadissa: gltf-transform + meshoptimizer).
+  - Uudet tyypit `objectTypes.js`:n loppuun: `emergent`, `tropicalPlant`, `sapling`.
+  - Materiaalit `kitMaterials.js`:ssä.
+- Hyönteiset (`render/insects.js`, `ambient.js`:n kautta).
+- Herkuleskuoriainen:
+  - malli `models/beetle.js`;
+  - tekoäly ja animaatio `game/mobs.js` (`_thinkBeetle`, `_animBeetle`, `_trySpawnBeetle`);
+  - sarvi-esine `items.js` ja `items2.js`;
+  - F3-painike.
+- Käyttäjän referenssikuva kirjattu DESIGN.md:hen.
+- Testattiin:
+  - kuoriaisen testisivu `shots/s48/beetle.html` (kävely, uhittelu, lento, kuolema);
+  - pelissä sademetsä vanha ja uusi rinnakkain (vaakasuoraan ja ylöspäin) sekä suorituskyky (kolmiot ja piirtokutsut);
+  - kuoriaisen syntyminen ja lento;
+  - pelin lataus ilman virheitä, ESLint.
+- Kokeiltiin ja hylättiin: Poly Havenin anthurium ja pachira (raskaita, ja kevennys rikkoi UV:t), ks. DECISIONS.
+
+**Seuraavaksi**
+- Käyttäjän palaute: ruudunpäivitys sademetsässä, latvuston peitto, tiheikkö, hyönteiset ja kuoriainen.
+- Avoimet kysymykset: kuoriaisen koko ja käytös, sarven käyttö, hidastaako tiheikkö liikkumista.
+
 ## 2026-10-12 (sessio 47)
 **Tehtiin**
 - Sademetsän tunnelma, vain sademetsässä ja päivällä:

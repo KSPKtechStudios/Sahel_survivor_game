@@ -1,6 +1,18 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 48:
+  - sademetsän ambienssi (kuuluuko);
+  - latvuskatto ylös katsoessa ja valoläikät maassa;
+  - tiheikkö (calathea, saniaiset, taimet) ja jättiläispuut, myös sen kaataminen;
+  - mäkäräparvet ja perhoset;
+  - herkuleskuoriainen: odota sademetsässä (öisin useammin) tai [F3] → Olennot → Herkuleskuoriainen;
+  - ruudunpäivitys sademetsässä.
+- [ ] Vastaus:
+  - herkuleskuoriaisen koko (nyt 20 cm) ja käytös (ei hyökkää);
+  - mihin sen sarvea käytetään;
+  - pitäisikö tiheikön hidastaa liikkumista?
+- [ ] Jos sademetsä on vielä liian avoin: jättiläispuiden tiheyttä ylös (`objectTypes.js`, `emergent.density.rainforest`), mutta ruudunpäivitys on tarkistettava.
 - [ ] Käyttäjä testaa session 47: sademetsä päivällä (aamu, keskipäivä, iltapäivä): valoläikät ja -keilat, varjojen syvyys, vihreät, usva kaukana. Onko jokin liikaa (esim. usva tai lämmin sävy)?
 - [ ] Käyttäjä testaa session 46: puiden latvukset kaukana (pikselimössö, välkkyykö kameraa käännettäessä), lähellä olevat lehdet (näyttävätkö yhä terävältä), syväterävyys (sopiva?)
 - [ ] Jos latvukset välkkyvät yhä: kaukaisille puille harvemmat ja isommat lehtikortit tai impostorit (isompi työ, tarkista ruudunpäivitys)

@@ -9,6 +9,7 @@ import { CONFIG } from '../config.js';
 import { createSoftDotTexture } from './textures.js';
 import { waterAt, sampleTerrain } from '../world/terrain.js';
 import { smoothstep } from '../noise.js';
+import { Insects } from './insects.js';
 
 const FLY_MAX = 320;     // tulikärpäsiä yhteensä
 const SWARMS = 12;       // parvia enintään (lähimmät)
@@ -363,6 +364,8 @@ export class Ambient {
     this.devils = new DustDevils(scene, map);
     this.spores = new Motes(scene, map, { count: 700, box: 26, size: 0.05, color: 0xfff1c8, drift: [0.05, 0.035, 0.03], twinkle: 1, additive: true });
     this.mist = new Motes(scene, map, { count: 1400, box: 22, size: 0.035, color: 0xd8dee6, drift: [0.2, -0.45, 0.1], twinkle: 0.2, additive: false });
+    // Sessio 48: sademetsän hyönteiset (mäkäräparvet ja perhoset).
+    this.insects = new Insects(scene, map);
   }
 
   update(dt, elapsed, camPos, env, rain = 0) {
@@ -376,10 +379,12 @@ export class Ambient {
     this.mist.uniforms.uColor.value.copy(env.scene.fog.color).multiplyScalar(1.1);
     this.mist.uniforms.uDrift.value.set(env.windDir.x * (0.3 + env.w.wind), -0.45, env.windDir.y * (0.3 + env.w.wind));
     this.mist.set(Math.min(1, rain * 1.2) * 0.55, elapsed, camPos);
+    this.insects.update(dt, elapsed, camPos, env, rain);
   }
 
   clear() {
     this.devils.clear();
     this.fireflies.clear();
+    this.insects.clear();
   }
 }

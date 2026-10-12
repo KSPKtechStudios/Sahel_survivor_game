@@ -2,6 +2,24 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 48): sademetsä tiheämmäksi ja eläväisemmäksi
+
+- **Ambienssiäänet kuuluvat taas:**
+  - viidakon taustaääni oli koko ajan päällä, mutta sademetsän musiikki peitti sen;
+  - ääntä on nyt noin 5 dB enemmän, ja hyönteisten sirinä ja linnut (yläpää) eivät enää leikkaudu pois.
+- **Latvuskatto:** uusi **jättiläispuu** (16–24 m, isot pönkkäjuuret, leveä sateenvarjolatvus ja liaanit) muodostaa ylimmän lehtikaton nykyisten puiden yläpuolelle. Puu varjostaa metsänpohjan, ja auringonvalo pääsee maahan vain latvusten raoista. Rungon varrella on lehtiryppäitä myös 6–14 m:n korkeudella. Jättiläispuun voi kaataa kuparikirveellä tai paremmalla, ja siitä saa ydinpuuta, jalopuuta, puuta ja risuja.
+- **Tiheikkö:**
+  - uusia trooppisia aluskasveja (calathea ja saniainen, Poly Haven, CC0);
+  - **taimia** (1,8–4,2 m) keskikerrokseen; niistä saa hakattua risuja ja kuitua.
+- **Hyönteiset:**
+  - mäkäräparvet pörräävät ilmassa;
+  - perhoset (sininen morfo, oranssi, keltainen, mustavalkoinen) lentävät päivällä sademetsässä.
+- **Uusi olento: herkuleskuoriainen:**
+  - oma 3D-malli: oliivinkeltaiset täplikkäät peitinsiivet, pitkä etuselän sarvi, pään sarvi ja kuusi jalkaa;
+  - kulkee verkkaisesti sademetsän pohjalla, öisin useammin;
+  - liian lähelle tulevalle se nostaa sarvensa; lyötynä tai ahdisteltuna se avaa siipensä ja lentää pöristen pois;
+  - pudottaa herkuleskuoriaisen sarven.
+
 ## 2026-10-12 (sessio 47): sademetsän tunnelma ja syvyys takaisin
 
 Kaikki muutokset koskevat vain sademetsää päivällä. Savanni, muut biomit ja yöt ovat ennallaan. Liike-epäterävyyttä, TAA:ta tai terävöintiä ei kytketty takaisin.

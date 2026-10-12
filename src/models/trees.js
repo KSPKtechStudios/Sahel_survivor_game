@@ -397,6 +397,133 @@ export function makeCanopyTree(seed, q = 1) {
   return geo;
 }
 
+// --- Sessio 48: sademetsän jättiläispuu (ylin latvuskerros) ----------------------------
+// Käyttäjä: sademetsässä pitää olla kunnon lehtikatto, jonka läpi päivänvalo
+// paistaa maahan vain pieninä säteinä. Korkea (16–24 m), vaalea runko,
+// isot pönkkäjuuret ja leveä, litteä sateenvarjolatvus (säde n. 7–10 m)
+// nykyisten 7–12 m:n puiden yläpuolella. Varjokartta tekee alle hämärän.
+export function makeEmergentTree(seed, q = 1) {
+  const rand = mulberry32(seed);
+  let k = 0;
+  const jr = () => partRand(seed, k++);
+  const parts = [];
+  const vines = [];
+  const bark = [0x9a9282, 0x8a8474, 0xa49a88][seed % 3];
+  const leaves = [0x2c5420, 0x335c24, 0x284c1c, 0x3a6428];
+  const H = 16 + rand() * 6;
+  const r0 = 0.85, r1 = 0.42;
+  const base = V(0, -0.3, 0);
+  const top = V((rand() - 0.5) * 0.6, H * 0.86, (rand() - 0.5) * 0.6);
+  const cutY = 2.6;
+  parts.push(...trunkParts(base, top, r0, r1, cutY, q, bark, jr, 10));
+  if (q) parts.push(paint(limb(top, V(top.x, H + 0.8, top.z), r1, 0.08, 8, true, 2), bark, { rand: partRand(seed, 603) }));
+  // Isot pönkkäjuuret
+  const nf = 5 + Math.floor(rand() * 2);
+  for (let i = 0; i < nf; i++) {
+    const a = (i / nf) * Math.PI * 2 + rand() * 0.5;
+    const hgt = 2.2 + rand() * 1.4;
+    const out = 1.8 + rand() * 1.2;
+    const j = jr();
+    if (q) parts.push(buttress(a, r0, hgt, out, 0.2, bark, j));
+  }
+  // Pääoksat: lähtevät latvan alta vinosti ulos ja ylös.
+  const nb = 6 + Math.floor(rand() * 3);
+  const tips = [];
+  for (let i = 0; i < nb; i++) {
+    const a = (i / nb) * Math.PI * 2 + rand() * 0.5;
+    const hb = top.y * (0.8 + rand() * 0.14);
+    const b0 = V(top.x * (hb / top.y), hb, top.z * (hb / top.y));
+    const len = 5.0 + rand() * 3.0;
+    const mid = V(b0.x + Math.cos(a) * len * 0.5, hb + 1.4 + rand() * 0.8, b0.z + Math.sin(a) * len * 0.5);
+    const tip = V(b0.x + Math.cos(a) * len, hb + 2.0 + rand() * 1.4, b0.z + Math.sin(a) * len);
+    const j = jr();
+    if (q) {
+      parts.push(paint(limb(b0, mid, 0.3, 0.2, 8), bark, { rand: j }));
+      parts.push(paint(limb(mid, tip, 0.2, 0.1, 7), bark, { rand: j }));
+    }
+    tips.push({ tip, mid, a });
+    const lj = jr();
+    if (q && lj() < 0.5) vines.push(lianaSpec(mid.clone().lerp(tip, 0.4), lj));
+  }
+  const crowns = [{ p: V(top.x, H + 0.4, top.z), s: V(3.2, 1.2, 3.2) }];
+  const sj = partRand(seed, 779);
+  for (const { tip, mid, a } of tips) {
+    if (q) {
+      crowns.push({ p: V(tip.x, tip.y + 0.3, tip.z), s: V(2.4 + sj() * 0.6, 0.9, 2.4 + sj() * 0.6) });
+      crowns.push({ p: V(mid.x, mid.y + 0.6, mid.z), s: V(2.0 + sj() * 0.5, 0.8, 2.0 + sj() * 0.5), sub: true });
+      subCrowns(parts, crowns, tip, V(Math.cos(a), 0, Math.sin(a)), q, bark, sj, { len: 2.4, rise: 0.4, r: 0.1, cs: 1.9, flat: 0.5 });
+    } else {
+      crowns.push({ p: V((tip.x + mid.x) / 2, tip.y, (tip.z + mid.z) / 2), s: V(3.6 + rand(), 1.2, 3.6 + rand()) });
+    }
+  }
+  crowns.forEach((c, i) => {
+    const rot = rand() * Math.PI;
+    if (q) {
+      // Isommat, harvemmat kortit kuin alemmilla puilla: latvus on korkealla
+      // (alhaalta katsottuna sama peitto, n. puolet vähemmän kolmioita).
+      parts.push(leafCards(c.p, c.s, rot, leaves[i % leaves.length], jr(), 'broad', c.sub ? 0.55 : 0.6, 1.8, 0.9));
+      return;
+    }
+    // Kaukomalli: vähän, isoja kortteja (ei varjoa).
+    parts.push(leafCards(c.p, c.s, rot, leaves[i % leaves.length], jr(), 'broad', 0.16, 2.7, 0.85));
+  });
+  // Keskikerros (käyttäjän referenssikuva: lehvästöä kaikilla korkeuksilla):
+  // rungon varrella lyhyitä sivuoksia ja päällyskasviryppäitä 6–14 m:ssä.
+  const ej = partRand(seed, 905);
+  const ne = 4 + Math.floor(ej() * 3);
+  for (let i = 0; i < ne; i++) {
+    const y = 6 + ej() * 8;
+    const t = (y - base.y) / (top.y - base.y);
+    const at = base.clone().lerp(top, t);
+    const rr = r0 + (r1 - r0) * t;
+    const a = ej() * Math.PI * 2;
+    const len = 0.8 + ej() * 1.4;
+    const end = V(at.x + Math.cos(a) * (rr + len), y + 0.5 + ej() * 0.6, at.z + Math.sin(a) * (rr + len));
+    if (q) {
+      parts.push(paint(limb(V(at.x + Math.cos(a) * rr * 0.8, y, at.z + Math.sin(a) * rr * 0.8), end, 0.08, 0.04, 5), bark, { rand: ej }));
+      parts.push(leafCards(end, V(1.1 + ej() * 0.5, 0.7, 1.1 + ej() * 0.5), ej() * 3, leaves[i % leaves.length], partRand(seed, 950 + i), 'broad', 1.3, 0.9, 0.8));
+    } else if (i < 2) {
+      parts.push(blob(end, V(1.4, 0.8, 1.4), 0, leaves[i % leaves.length], () => partRand(seed, 960 + i), end.y - 0.3, 0));
+    }
+  }
+  if (q) {
+    const vr = partRand(seed, 901);
+    if (vr() < 0.6) parts.push(...climbingVine(base, top, r0, vr, q));
+  }
+  const geo = treeMeta(merge(parts), {
+    kind: 'emergent', base: base.toArray(), top: top.toArray(), r0, r1, cutY,
+    height: H + 1.5, fallLen: H - cutY + 2, logR: 0.7,
+  });
+  geo.userData.vines = vines;
+  return geo;
+}
+
+// --- Sessio 48: sademetsän taimi (keskikerros, 1,8–4,2 m) ---------------------------------
+// Ohut, hieman kalteva runko ja muutama lehtiryppäs eri korkeuksilla
+// (referenssikuva: lehvästöä kaikilla korkeuksilla). Kevyt: n. 100 korttia.
+export function makeSapling(seed, q = 1) {
+  void q;
+  const rand = mulberry32(seed);
+  const parts = [];
+  const bark = [0x6a5a48, 0x5c5040, 0x74644e][seed % 3];
+  const leaves = [0x2e5a22, 0x3a6a28, 0x44752c];
+  const H = 1.8 + rand() * 2.4;
+  const top = V((rand() - 0.5) * 0.5, H, (rand() - 0.5) * 0.5);
+  parts.push(paint(limb(V(0, -0.1, 0), top, 0.06, 0.025, 6), bark, { rand: partRand(seed, 1) }));
+  const n = 3 + Math.floor(rand() * 3);
+  for (let i = 0; i < n; i++) {
+    const t = 0.45 + (i / n) * 0.55;
+    const at = V(top.x * t, H * t, top.z * t);
+    const a = rand() * Math.PI * 2, len = 0.3 + rand() * 0.6;
+    const end = V(at.x + Math.cos(a) * len, at.y + 0.2 + rand() * 0.3, at.z + Math.sin(a) * len);
+    parts.push(paint(limb(at, end, 0.025, 0.012, 4), bark, { rand: partRand(seed, 10 + i) }));
+    const sc = 0.55 + rand() * 0.35;
+    parts.push(leafCards(end, V(sc, sc * 0.6, sc), rand() * 3, leaves[i % 3], partRand(seed, 20 + i), 'broad', 1.5, 0.75, 0.8));
+  }
+  parts.push(leafCards(V(top.x, H + 0.15, top.z), V(0.7, 0.45, 0.7), rand() * 3, leaves[0], partRand(seed, 40), 'broad', 1.5, 0.75, 0.8));
+  return merge(parts);
+}
+
 // --- Kuollut puu (aavikko): vaalea, lehdetön ja kiemurainen ----------------------------
 
 export function makeDeadTree(seed, q = 1) {

@@ -72,6 +72,17 @@ const BUILD = {
     return addWet(addAO(new THREE.MeshStandardMaterial({ map, normalMap: nrm, roughness: 0.95, metalness: 0 })), 0.8, 0.4);
   },
 };
+// Sessio 48: Poly Havenin trooppiset kasvit (oikea lehtigeometria, ei
+// alfaleikkausta): tuuli, läpikuultavuus ja märkyys kuten lehdillä.
+function tropicalLeaf(file, wind = 0.3) {
+  return () => addTranslucency(addWet(addAO(addWind(new THREE.MeshStandardMaterial({
+    map: tex(file), side: THREE.DoubleSide, roughness: 0.75, metalness: 0,
+  }), wind, 0.6), true), 0.35, 0), 0.3, false);
+}
+Object.assign(BUILD, {
+  calathea: tropicalLeaf('calathea.jpg'),
+  fern2: tropicalLeaf('fern2.jpg', 0.4),
+});
 const matCache = {};
 
 export function kitMaterial(key) {

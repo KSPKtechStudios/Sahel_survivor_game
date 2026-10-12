@@ -140,6 +140,7 @@ export class DevTools {
     this._button(row, 'Savipeikko', () => (mobs.spawnInFront('clay', 8) ? `Savipeikko kutsuttu${env.daylight > 0.18 ? ' (päivällä se syttyy pian palamaan)' : ''}` : 'Paikkaa ei löytynyt'));
     this._button(row, 'Haamu', () => (mobs.spawnInFront('haamu', 14) ? `Haamu kutsuttu${env.daylight > 0.15 ? ' (päivällä se haihtuu heti)' : ''}` : 'Paikkaa ei löytynyt'));
     this._button(row, 'Norsu', () => (mobs.spawnInFront('elephant', 16) ? 'Norsu kutsuttu' : 'Paikkaa ei löytynyt (tai malli latautuu vielä)'));
+    this._button(row, 'Herkuleskuoriainen', () => (mobs.spawnInFront('beetle', 2.5) ? 'Herkuleskuoriainen kutsuttu' : 'Paikkaa ei löytynyt'));
     this._button(row, 'Poista olennot', () => { mobs.clear(); return 'Olennot poistettu'; });
     row = this._row(sec);
     for (const [type, name] of [['gazelle', 'Gaselli'], ['guineafowl', 'Helmikana'], ['monkey', 'Apina'], ['fennec', 'Aavikkokettu'], ['bird', 'Lintu']]) {

@@ -415,6 +415,30 @@ export const OBJECT_TYPES = {
     density: { rainforest: 3.5, oasis: 0.6, mare: 0.4, woodland: 0.3 },
     scale: [0.8, 1.4], maxSlope: 0.5, collider: 0, hit: { y: 0.3, r: 1.3 }, drawDist: 3,
   },
+  // --- Sessio 48: sademetsän latvuskatto ja tiheikkö (listan lopussa, jotta
+  // vanhojen esineiden siemenet ja sijainnit eivät muutu).
+  // Jättiläispuu: ylin latvuskerros (16–24 m), varjostaa metsänpohjan.
+  emergent: {
+    name: 'Jättiläispuu', model: 'emergent', kind: 'tree', material: 'vegetation', castShadow: true,
+    density: { rainforest: 6 },
+    scale: [0.9, 1.15], maxSlope: 0.45, collider: 0.95, hit: { y: 1.8, r: 1.2 }, drawDist: 99,
+    harvest: { tool: 'axe', hp: 18, minTier: 3, needMsg: 'Tarvitset kirveen' }, noChain: true,
+    log: { name: 'Kaatunut jättiläispuu', hp: 12, drops: [['heartwood', 4], ['hardwood', 4], ['wood', 3], ['stick', 3]] },
+  },
+  // Trooppiset aluskasvit (Poly Haven, CC0): calathea ja saniainen.
+  tropicalPlant: {
+    name: 'Trooppinen kasvi', model: 'tropicalPlant', kind: 'decor', material: 'bush', castShadow: false, decorative: true,
+    density: { rainforest: 100, oasis: 8 },
+    scale: [0.8, 1.25], maxSlope: 0.45, slopeCheck: true, collider: 0, hit: null, decorDist: 44,
+  },
+  // Taimi: nuori puu keskikerrokseen (1,8–4,2 m). Läpi pääsee kulkemaan;
+  // hakkaamalla risuja ja kuitua.
+  sapling: {
+    name: 'Taimi', model: 'sapling', kind: 'bush', material: 'vegetation', castShadow: false,
+    density: { rainforest: 30 },
+    scale: [0.85, 1.25], maxSlope: 0.6, collider: 0, hit: { y: 1.0, r: 0.5 }, drawDist: 1,
+    harvest: { tool: null, hp: 2, drops: [['stick', 2], ['fiber', 1]] },
+  },
 };
 
 export const OBJECT_TYPE_KEYS = Object.keys(OBJECT_TYPES);

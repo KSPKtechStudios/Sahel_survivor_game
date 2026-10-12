@@ -2,6 +2,37 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 48)
+- **Ambienssi:** viidakkoäänen taso 0,22 → 0,4 ja alipäästö 4,2 → 8 kHz. Syy, mitattu EBU R128:lla:
+  - tiedosto on −20,9 LUFS, ja sen yläpää (yli 4,2 kHz, hyönteiset ja linnut) −27,5 LUFS;
+  - pelissä ääni oli noin −34 LUFS, kun sademetsän musiikki soi −28 LUFS:ssä;
+  - koodissa ääni soi oikein (testattu selaimessa).
+- **Uudet tyypit objektilistan loppuun** (`emergent`, `tropicalPlant`, `sapling`). Syy: tyyppien järjestys vaikuttaa siemeniin, joten olemassa olevien maailmojen puut eivät siirry. Vanhojen tyyppien tiheyksiä ei muutettu samasta syystä.
+- **Latvuskatto jättiläispuilla (6 / chunk)** eikä tiheämmillä nykyisillä puilla. Syy:
+  - muutama iso latvus 16–24 m:ssä peittää enemmän kuin monta pientä;
+  - kustannus pysyy kohtuullisena: kaukomallit kevyinä ja isommat lehtikortit korkealla;
+  - varjokartta tekee metsänpohjasta hämärän.
+- **Poly Havenin kasvit:** calathea ja saniainen, kevennettynä noin 800–1 100 kolmioon (lähteessä 800–5 900). Anthurium ja pachira jätettiin pois:
+  - anthurium on punakukkainen huonekasvi;
+  - kummankin lehdissä on saumoja joka puolella, joten ne eivät keventyneet (pachira 4 300–7 700 kolmiota);
+  - kun saumoja ei lukittu, UV:t osuivat väärille alueille (ruskeat läikät).
+
+  Keskikerroksen täyttää kevyt proseduraalinen taimi (noin 100 lehtikorttia).
+- **Herkuleskuoriainen:**
+  - koko noin 20 cm sarvineen (todellinen koiras enintään noin 17 cm, hieman suurennettu, jotta erottuu);
+  - ei hyökkää, koska todellinenkin on ihmiselle vaaraton; uhittelee sarvillaan ja lentää lyötynä pois;
+  - pudottaa uuden esineen, herkuleskuoriaisen sarven, jonka käyttö on avoin.
+
+  Syy: käyttäjä ei määritellyt käytöstä, joten valittiin luonnonmukainen ja kirjattiin kysymykset DESIGN.md:hen.
+- **Hyönteiset kahtena piirtokutsuna:** mäkärät Points-pisteinä (9 parvea × 34), perhoset InstancedMeshinä (siivet lepattavat shaderissa). Syy: halpa, ei vaikuta ruudunpäivitykseen.
+- **Suorituskyky (sademetsä, näköetäisyys 4, kasvillisuus korkea, varjot mukaan lukien):**
+  - piirtokutsut 293 → 318 (+8 %), kolmiot 3,84 M → 4,6 M (+20 %);
+  - ensimmäinen versio oli +30 %, joten jättiläispuun lehtikortit harvennettiin ja suurennettiin: lähimalli 7 800 → 5 300 kolmiota, kaukomalli 1 200 → 650;
+  - trooppisia kasveja 140 → 100 / chunk, taimet näkyvät 1 chunkin päähän;
+  - kasvu tulee lähinnä jättiläispuiden latvuksista ja niiden varjoista.
+
+  Session 43 muutos (joka pudotti ruudunpäivitystä) kasvatti kaikkien puiden kaukomalleja noin 2,8-kertaisiksi, mikä on paljon suurempi muutos. Säätövara: `emergent.density.rainforest` (6).
+
 ## 2026-10-12 (sessio 47)
 - **Sademetsän päivän tunnelma.** Arvot ovat säädettävinä `Environment`-olion ominaisuuksina, ja kaikki on kerrottu kosteudella (`humid`) ja päivänvalolla (`daylight`), joten muut biomit ja yöt eivät muutu. Syy: käyttäjän ohje (latea ja haalea, ei syvyyttä) ja varoitus, ettei ulkonäköä saa pilata.
 

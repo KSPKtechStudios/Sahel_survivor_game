@@ -224,6 +224,11 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
   3. **Enemmän puita tai ainakin oksia puille:** kunnon lehtikatto (latvusto), jonka läpi päivänvalo paistaa maahan vain pieninä säteinä lehvästöjen raoista.
   4. **Hyönteisiä:** partikkeleina tai todella pieninä 3D-malleina; niitä sademetsissä piisaa.
   5. **Uusi mobi: herkuleskuoriainen.** Niin suuri ötökkä, että sille voi tehdä oman 3D-mallin.
+- **Käyttäjän referenssikuva ("hieno kuva"):** Aasian sademetsä (peda.net, shutterstock 72433876):
+  - paljon korkeita, hoikkia ja sammaleisia runkoja, joissa köynnöksiä ja kiipeäviä saniaisia;
+  - vihreää lehvästöä kaikilla korkeuksilla maasta latvoihin (keskikerros täynnä);
+  - umpinainen latvuskatto, jonka läpi valo hehkuu vihertävänä;
+  - maa täynnä saniaisia ja taimia.
 - Avoimet kysymykset:
   - Pitääkö herkuleskuoriaisen olla todellisen kokoinen (noin 17 cm) vai pelin vuoksi suurempi?
   - Hyökkääkö se? Mitä siitä saa?

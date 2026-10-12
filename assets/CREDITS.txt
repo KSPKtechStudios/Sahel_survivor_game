@@ -26,6 +26,13 @@ Stylized Nature MegaKit, ilmainen versio (https://quaternius.com), CC0 (sessio 2
   Sessio 28: lahopuun kuori (deadbark.jpg, deadbark_nrm.jpg) vaihdettu: Poly Haven
   bark_willow_02 (CC0, 1k), haalistettu harmaaksi.
 
+Trooppiset aluskasvit (assets/models/nature/calathea.jpg, fern2.jpg;
+  src/models/kit/tropicalKit.js), sessio 48: Poly Haven
+  (https://polyhaven.com), CC0: calathea_orbifolia_01, fern_02
+  (1k glTF; muunnelmat erotettu, kevennetty gltf-transform + meshoptimizer
+  lähi- ja kaukomalliksi, mittakaava suurennettu luonnonkasvien kokoon,
+  tekstuurit pienennetty 512 px JPEG:ksi)
+
 Kädet (assets/models/arms/), sessio 29: käyttäjän antama malli
   FPS_Female_Arms.fbx ja sen tekstuurit (väri, karheus, normaali). Muunnettu
   GLB:ksi (metrit, luiden lepokierrot nollattu), tekstuurit pienennetty

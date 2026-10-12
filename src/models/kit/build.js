@@ -4,7 +4,11 @@
 // (render/kitMaterials.js). Vertex-värit = tekstuurin keskiväri × varjostus,
 // jotta sirpaleet ja muut värejä käyttävät järjestelmät toimivat.
 import * as THREE from 'three';
-import { KIT } from './natureKit.js';
+import { KIT as NATURE } from './natureKit.js';
+import { TROPICAL } from './tropicalKit.js';
+
+// Sessio 48: Poly Havenin trooppiset aluskasvit samaan kirjastoon.
+const KIT = { ...NATURE, ...TROPICAL };
 
 // Tekstuurien keskivärit (lineaarinen RGB), kun malli hajoaa sirpaleiksi.
 const AVG = {
@@ -13,6 +17,9 @@ const AVG = {
   mushrooms: [0.45, 0.3, 0.18],
   rocks: [0.1, 0.12, 0.07],
   deadbark: [0.2, 0.19, 0.17],
+  // Sessio 48 (Poly Haven)
+  calathea: [0.08, 0.16, 0.05],
+  fern2: [0.09, 0.17, 0.04],
 };
 
 function decode(b64, Type) {

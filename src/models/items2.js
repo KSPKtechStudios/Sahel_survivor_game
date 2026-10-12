@@ -172,6 +172,22 @@ export function itemPelt(col, seed) {
   return merge([paint(flatNormals(g), col, { rand, jitter: 0.15 }), paint(flatNormals(bottom), 0xc9a98a, { rand, jitter: 0.08 })]);
 }
 
+// Sessio 48: herkuleskuoriaisen sarvi (etuselän pitkä sarvi irrallaan).
+export function itemBeetleHorn() {
+  const rand = mulberry32(106);
+  // Noin 11 cm (sama kuin kuoriaisen etuselän sarvi pelissä).
+  const pts = [V(0, 0, 0), V(0.007, 0.034, 0), V(0.009, 0.068, 0), V(0.005, 0.096, 0), V(-0.007, 0.113, 0)];
+  const parts = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const r0 = 0.009 - i * 0.0018, r1 = 0.009 - (i + 1) * 0.0018;
+    parts.push(paint(limb(pts[i], pts[i + 1], Math.max(0.002, r0), Math.max(0.0015, r1), 7, i === pts.length - 2), 0x0d0b0a, { rand, jitter: 0.05 }));
+    if (i > 0) parts.push(sphere(Math.max(0.002, r0), 1, 1, 1, pts[i].x, pts[i].y, pts[i].z, 0x0d0b0a, rand, 7, 4, 0.05));
+  }
+  // Kullanruskea karvoitus sarven sisäkaaressa
+  for (let i = 1; i < 4; i++) parts.push(sphere(0.004, 0.6, 1.8, 0.6, pts[i].x - 0.005, pts[i].y, 0, 0x8f5f2a, rand, 6, 4, 0.1));
+  return merge(parts);
+}
+
 export function itemLeather() {
   const rand = mulberry32(71);
   const a = new THREE.BoxGeometry(0.22, 0.012, 0.16);
@@ -576,6 +592,7 @@ export function createItemModels2() {
     sinew: itemSinew(),
     gazelle_pelt: itemPelt(0xc8a070, 102),
     monkey_pelt: itemPelt(0x8a8478, 103),
+    beetle_horn: itemBeetleHorn(),
     fox_pelt: itemPelt(0xe0c08a, 104),
     leather: itemLeather(),
     shea_butter: itemSheaButter(),
