@@ -104,7 +104,7 @@ export class Environment {
     // Sessio 37: päivän hajavalon kerroin (kontrasti: varjot tummemmiksi).
     this.ambientDay = 0.6;
     // Sessio 38: sademetsän yön lisähajavalo ja päivän usvan tummennus.
-    this.humidNightAmb = 0.8;
+    this.humidNightAmb = 2.2;
     this.humidFogDark = 0.3;
 
     // Aurinko: kaksi varjokaskadia (tarkat varjot lähellä, karkeammat kauempana),

@@ -864,7 +864,7 @@ export class PostFX {
     // efektiä); yön yläraja matalampi (selkeä yö hieman tummemmaksi).
     // Sessio 37: päivällä matalampi tavoitekirkkaus (dayRef; käyttäjä: päivä
     // näytti ylivalottuneelta). Yöllä ennallaan.
-    this.ae = { ref: 0.3, dayRef: 0.25, strength: 0.82, min: 0.5, max: 2.8, nightMax: 1.9, humidNight: 0.9, darkTau: 1.7, brightTau: 0.5 };
+    this.ae = { ref: 0.3, dayRef: 0.25, strength: 0.82, min: 0.5, max: 2.8, nightMax: 1.9, humidNight: 1.5, darkTau: 1.7, brightTau: 0.5 };
     this.lumRT = [0, 1].map(() => makeRT(1, 1, { type: THREE.FloatType, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter }));
     this.lumIdx = 0;
     this.lumInit = true;
