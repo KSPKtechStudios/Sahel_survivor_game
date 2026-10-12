@@ -2,6 +2,14 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (repon siirto)
+**Tehtiin**
+- Käyttäjä yhdisti uuden GitHub-tilin; uusi tyhjä repo `KSPKtechStudios/Sahel`. Tähän sessioon sitä ei voinut liittää (samanniminen `kspktech/sahel` jo liitetty), joten koko historia paketoitiin git bundle -tiedostoksi (`sahel-historia.bundle`), joka viedään uuteen sessioon ja pushataan sieltä.
+- Testauslinkkien osoite päivitetty uuteen repoon (CLAUDE.md, README).
+
+**Seuraavaksi**
+- Uudessa sessiossa (lähteenä `KSPKtechStudios/Sahel`): tuo bundle, pushaa haarat `main` ja `claude/sahel-game-dev-yi990s`, avaa PR mainiin ja anna testauslinkki.
+
 ## 2026-10-12 (sessio 34)
 **Tehtiin**
 - Ote: `player/arms.js` (`GRIP_SQUEEZE`, `FLEX_MAX`, peukalo), `player/viewmodel.js` (`measureSocket` kolmioiden reunoista).

@@ -1,6 +1,7 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Siirrä historia uuteen repoon `KSPKtechStudios/Sahel` (git bundle uudessa sessiossa), pushaa, avaa PR ja anna testauslinkki
 - [ ] Käyttäjä testaa session 34: ote (nuija, kirves, soihtu, puukko), soihdun liekki (seiso, kävele, juokse, käänny nopeasti, heilauta; tuulisella säällä; sateessa), nuijan ja puukon iskut (pyöriikö käsi enää)
 - [ ] Käyttäjä testaa session 33: nuija ja soihtu (kädessä, toisessa kädessä, maassa, kuvake), käden iho (huokoset, ei muovinen), kivipuukko (terän kiilto valossa, kahva, sidos), norsu juomassa (vie norsu järven tai joen lähelle tai odota)
 - [ ] Käyttäjä testaa session 32: nuijan pystyiskut (ja moukari), kirveen iskut, nyrkki (peukalo, iskujen korkeus), lastut (hakkaa puuta, kaadettua runkoa, pensasta, termiittikekoa; kivestä ei tule), norsun jalat ja pään ja kärsän liike
