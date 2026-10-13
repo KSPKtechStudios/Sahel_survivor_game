@@ -2,6 +2,22 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-13 (sessio 51): gorilla
+
+- **Uusi olento: gorilla** sademetsään (sinun mallisi ja animaationsa: seisominen, laukka, rintaan lyönti ja lyönti; kävely on hidastettu laukka). Gorilloja on enintään kaksi kerralla, joskus pareittain, ja päivällä useammin.
+- **Rauhallinen ja vähän arka:**
+  - syö ja vaeltaa;
+  - kun huomaa pelaajan (alle 11 m), pysähtyy katsomaan;
+  - jos pelaaja tulee lähemmäs kuin noin 6 m, väistää kävellen poispäin, ja jos pelaaja juoksee perään, juoksee pois.
+  - Kyykyssä hiipien sen ohi pääsee lähempää.
+- **Suuttuu vain uhattuna:**
+  - kun sitä lyö, ampuu tai sytyttää palamaan;
+  - kun pelaaja hyppää tai laskeutuu aivan sen viereen, juoksee suoraan sitä kohti (tavallinen kävely ei säikytä) tai huitoo aseella lähellä;
+  - säikyttely kertyy, ja ennen suuttumista gorilla varoittaa nousemalla ja lyömällä rintaansa.
+- **Vihaisena:** karjuu (sinun äänesi), lyö rintaansa, ryntää kimppuun ja lyö kovaa. Viha laantuu noin 22 sekunnissa tai kun pelaaja pakenee kauas, ja vähillä voimilla gorilla pakenee. Siitä saa lihaa, taljan ja luita.
+- [F3] → Olennot → **Gorilla** kutsuu gorillan eteen.
+- Tekijät-paneeliin lisätty gorillan malli (CC BY 4.0).
+
 ## 2026-10-13 (sessio 50): taustaäänet verkkoversioon, kuoriainen NPC:ksi, hyttyset
 
 - **Taustaäänet kuuluvat taas verkossa pelattaessa** (sademetsän ambienssi, tuuli, sade, kaukainen ukkonen). Ne eivät olleet kuuluneet githack-linkin kautta lainkaan: palvelu ohjaa mp3-tiedostot toiselle palvelimelle, ja ilman CORS-merkintää selain syötti niiden tilalle hiljaisuutta. Musiikki kuului, koska se soi eri reittiä. Lisäksi sademetsän ambienssia on hieman enemmän.

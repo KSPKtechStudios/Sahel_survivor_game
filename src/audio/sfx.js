@@ -51,6 +51,8 @@ const ONESHOTS = {
   fly: 'assets/sfx/fly-buzz.mp3',
   // Sessio 50: hyttysen ininä (käyttäjän tuoma; normalisoitu, mono).
   mosquito: 'assets/sfx/mosquito-buzz.mp3',
+  // Sessio 51: gorillan karjaisu (käyttäjän tuoma; leikattu 3,2 s).
+  gorillaRoar: 'assets/sfx/gorilla-roar.mp3',
 };
 // Huitominen: tasattu huipputason mukaan (tiedostojen huiput −1,6 / −6,8 dB),
 // jolloin huitaisu on n. −24 dB ja olentoon osuessa n. −31 dB.
@@ -60,6 +62,8 @@ const BIRD_LEVEL = 0.22;
 const FLY_LEVEL = 1.0;
 // Hyttynen korvan vieressä (tiedosto n. −16 dB keskimäärin): n. −25 dB.
 const MOSQUITO_LEVEL = 0.35;
+// Gorillan karjaisu: kova lähellä, kuuluu kauas viidakossa.
+const GORILLA_ROAR_LEVEL = 0.8;
 // Puun kaatuminen: räsähdyksen kohta tiedostossa (s) ja voimakkuus 10 m:stä.
 // Räsähdyksen jälkeen ääni häivytetään pois (TREE_TAIL s), ettei maassa
 // makaava puu jää rätisemään.
@@ -453,6 +457,12 @@ export class Sfx {
     g.connect(this.bus);
     src.start(ctx.currentTime + 0.01, offset, dur);
     return true;
+  }
+
+  // Sessio 51: gorilla karjuu suuttuessaan (huomaa pelaajan ja hyökkää).
+  gorillaRoar(x, z, listener) {
+    this._oneShot('gorillaRoar', GORILLA_ROAR_LEVEL, x, z, listener, 14, 0, 130, 0.95 + Math.random() * 0.1);
+    if (Math.hypot(x - listener.x, z - listener.z) < 50) this.duck(0.55, 1.6);
   }
 
   // Sessio 50: hyttynen pörrää pään ympärillä. Pätkä satunnaisesta kohdasta;

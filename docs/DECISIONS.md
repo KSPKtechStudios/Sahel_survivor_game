@@ -2,6 +2,23 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-13 (sessio 51)
+- **Gorillan malli:**
+  - Valmiit animaatiot (idle, run, stomp, attack) soitetaan `THREE.AnimationMixer`illa; jokaisella gorillalla on oma luurankokopio (`SkeletonUtils.clone`).
+  - Juoksussa ei ole juuren liikettä, joten pelin liike ohjaa paikkaa. Kävely on laukka hidastettuna (oma kävelyanimaatio puuttuu), ja lyönti venytetään valmistelun ja iskun ajalle (0,2 s → 0,74 s).
+  - Suunta (+Z) lasketaan pään ja lantion luista latauksessa, ja koko on 1,5 m.
+  - Tiedosto kevennetty 1,29 → 0,49 Mt (resample, JPEG-tekstuuri).
+- **Säikähdysmittari** (`m.startle`) eikä välitön reaktio, jotta yksittäinen vahinko (esim. ohimenevä hyppy 3 m:n päässä) ei suututa:
+  - hyppy alle 2,2 m:n päässä +1,1 (suuttuu heti), 2,2–3,5 m:n päässä +0,55;
+  - laskeutuminen viereen +0,6;
+  - isku lähellä +0,45;
+  - ryntäys päin yli 5,5 m/s alle 4,5 m:n päässä kertyy ajan mukana (kävely 4,2 m/s ei säikytä, juoksu 7,2 m/s säikyttää);
+  - mittari laskee 0,2 / s, ja puolivälissä (yli 0,45) gorilla varoittaa rintaan lyönnillä.
+
+  Syy: käyttäjän mukaan viidakosta ei saa tulla liian vaikea.
+- **Karjaisu vain uuden suuttumisen alussa**, ei jokaisella iskulla: käyttäjän mukaan karjaisu kuuluu, kun gorilla huomaa pelaajan ja hyökkää.
+- **Väistötila on `avoid` eikä `retreat`**, koska `retreat` on muilla olennoilla vihamielinen tila (nimilapun punainen silmä).
+
 ## 2026-10-13 (sessio 50)
 - **Taustaäänten audio-elementeille `crossOrigin = 'anonymous'`.**
   - Syy: raw.githack ohjaa mp3:t (301) raw.githubusercontent.comiin, eli eri alkuperään. Web Audio (`createMediaElementSource`) saa ilman CORS-pyyntöä vain hiljaisuutta.

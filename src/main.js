@@ -809,6 +809,8 @@ events.on('woodHit', ({ x, z }) => sfx.chop(x, z, { x: player.position.x, z: pla
 events.on('haamuSound', ({ kind, x, z }) => {
   sfx.ghost(kind, x, z, { x: player.position.x, z: player.position.z, yaw: player.yaw });
 });
+// Sessio 51: gorilla karjuu suuttuessaan.
+events.on('gorillaRoar', ({ x, z }) => sfx.gorillaRoar(x, z, { x: player.position.x, z: player.position.z, yaw: player.yaw }));
 events.on('treeFell', ({ x, z, fallTime, size }) => {
   if (x === undefined) return;
   sfx.treeFall(x, z, fallTime, size, { x: player.position.x, z: player.position.z, yaw: player.yaw });

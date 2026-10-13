@@ -217,6 +217,16 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 51 (käyttäjän kertoma, 2026-10-13): gorilla
+- **Uusi mobi: gorilla** (käyttäjän 3D-malli animaatioineen ja karjaisuääni).
+- **Karjaisu** kuuluu aina, kun gorilla huomaa pelaajan ja hyökkää kimppuun.
+- **Käytös (tärkeä):**
+  - ei hyökkää heti pelaajan kimppuun, vaan jopa hieman pelkää tätä, jotta viidakosta ei tule aivan liian vaikea maasto;
+  - hyökkää vain, jos kokee olonsa uhatuksi: pelaaja lyö sitä jollakin, hyppää yhtäkkiä sen viereen tai tekee todella äkkinäisiä liikkeitä. Silloin se suuttuu.
+- Avoimet kysymykset:
+  - Mitä gorillasta saa (nyt lihaa, taljaa ja luita)?
+  - Kuinka kauan se pysyy vihaisena (nyt noin 22 s) ja kuinka kovaa se lyö (nyt 20)?
+
 ## Sessio 50 (käyttäjän kertoma, 2026-10-13)
 - **Sademetsän ambienssi ei taaskaan kuulu**, ei edes musiikki pois päältä.
 - **Herkuleskuoriainen:**

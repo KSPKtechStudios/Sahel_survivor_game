@@ -2,6 +2,19 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-13 (sessio 51)
+**Tehtiin**
+- Gorilla:
+  - malli `models/gorilla.js` (käyttäjän GLB kevennettynä: `assets/models/gorilla/gorilla.glb`);
+  - tekoäly ja animaatio `game/mobs.js`: `_thinkGorilla` (säikähdysmittari, väistö, varoitus, karjaisu, hyökkäys, rauhoittuminen), `_gorillaAnger`, `_animGorilla`, `_trySpawnGorilla`;
+  - pelaajan äkkinäiset liikkeet tunnistetaan `update()`:ssa (hyppy, laskeutuminen, uusi isku).
+- Karjaisu: `sfx.gorillaRoar` ja tapahtuma `gorillaRoar`.
+- Muut: kuolinteksti, F3-painike, tekijät (CREDITS ja Tekijät-paneeli).
+- Testattiin: mallisivu `shots/s51/game_gorilla.html` (suunta ja animaatiot) ja pelissä `s51/gorilla.mjs` (scratchpad; askeltava simulaatio).
+
+**Seuraavaksi**
+- Käyttäjän palaute gorillan vaikeudesta ja käytöksestä.
+
 ## 2026-10-13 (sessio 50)
 **Tehtiin**
 - Ambienssin vika löytyi mittaamalla selaimessa:

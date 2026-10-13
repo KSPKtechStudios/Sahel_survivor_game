@@ -18,6 +18,7 @@ const DEATH_TEXT = {
   warthog: 'Pahkasika puski sinut kumoon.',
   clay: 'Savipeikot saivat sinut.',
   haamu: 'Haamu syöksyi kimppuusi latvusten pimeydestä. Nuotion valo pitää haamut loitolla.',
+  gorilla: 'Gorilla suuttui ja löi sinut maahan. Liiku rauhallisesti gorillan lähellä: se hyökkää vain, jos sitä uhataan.',
   starve: 'Nääntyit nälkään. Syö ajoissa: marjat, hedelmät ja paistettu liha täyttävät.',
 };
 

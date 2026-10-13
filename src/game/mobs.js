@@ -34,6 +34,7 @@ import { events } from './events.js';
 import { windUniforms } from '../render/materials.js';
 import { GhostCloak } from '../models/ghostCloak.js';
 import { loadElephant, elephantReady, makeElephant, animateElephant } from '../models/elephant.js';
+import { loadGorilla, gorillaReady, makeGorilla } from '../models/gorilla.js';
 import { makeHerculesBeetle } from '../models/beetle.js';
 import { OBJECT_TYPES } from '../world/objectTypes.js';
 
@@ -92,6 +93,16 @@ export const MOB_TYPES = {
     name: 'Norsu', hp: 400, radius: 0.85, height: 2.9, walk: 1.05, run: 1.9, mass: 40, sight: 16, turn: 0.6, poise: 999,
     drops: [], heavy: true,
   },
+  // Sessio 51: gorilla (käyttäjän malli, models/gorilla.js). Rauhallinen ja
+  // hieman arka: väistää pelaajaa eikä hyökkää, ellei sitä lyödä tai säikytetä
+  // (hyppy viereen, äkkinäinen ryntäys kohti, huitominen lähellä). Suuttuessaan
+  // karjuu, lyö rintaansa ja hyökkää.
+  gorilla: {
+    name: 'Gorilla', hp: 150, radius: 0.55, height: 1.5, walk: 1.0, run: 6.0, mass: 5,
+    damage: 20, knock: 8.5, up: 2.2, reach: 1.55, windup: 0.32, attack: 0.42, recover: 0.9,
+    sight: 14, poise: 28, turn: 4.2, drops: [['raw_meat', 2, 4], ['hide', 1, 2], ['bone', 1, 2]],
+    cause: 'gorilla', gorilla: true,
+  },
   // Sessio 48: herkuleskuoriainen. tiny = pienet osuma- ja kuolemaefektit.
   beetle: {
     // Sessio 49: 1,4-kertainen (n. 28 cm sarvineen), jotta erottuu paremmin.
@@ -109,10 +120,11 @@ const MAX_CLAY = 3;
 const MAX_HAAMU = 1;
 const MAX_ELEPHANTS = 2;
 const MAX_BEETLES = 6; // sessio 50: 3 -> 6 (käyttäjä: hieman yleisempi)
+const MAX_GORILLAS = 2;
 // Soihdun sytyttämä olento palaa näin kauan (s) ja ottaa vahinkoa / s.
 const FIRE_TIME = 5;
 const FIRE_DPS = 3.5;
-const DESPAWN = { warthog: 150, clay: 70, gazelle: 170, guineafowl: 150, monkey: 150, fennec: 150, bird: 120, haamu: 120, elephant: 230, beetle: 60 };
+const DESPAWN = { warthog: 150, clay: 70, gazelle: 170, guineafowl: 150, monkey: 150, fennec: 150, bird: 120, haamu: 120, elephant: 230, beetle: 60, gorilla: 130 };
 const PLAYER_R = 0.35;
 
 const _wq = {};
@@ -131,7 +143,7 @@ const _tk = { x: 0, z: 0, r: 0 };
 const RED = new THREE.Color(0.55, 0.03, 0.02);
 const BLOOD = {
   warthog: RED, clay: new THREE.Color(0.45, 0.16, 0.07), gazelle: RED, guineafowl: RED, monkey: RED, fennec: RED, bird: RED,
-  haamu: new THREE.Color(0.12, 0.06, 0.26), elephant: RED,
+  haamu: new THREE.Color(0.12, 0.06, 0.26), elephant: RED, gorilla: RED,
   beetle: new THREE.Color(0.32, 0.36, 0.1), // hyönteisen kellanvihreä hemolymfa
 };
 
@@ -160,6 +172,7 @@ const templates = new Map();
 function instantiate(type, n, eyeMat) {
   // Norsulla on oma luuranko (kopioidaan ladatusta mallista).
   if (type === 'elephant') return makeElephant();
+  if (type === 'gorilla') return makeGorilla(); // sessio 51: oma luuranko ja animaatiot
   const key = `${type}:${n % VARIANTS}`;
   let t = templates.get(key);
   if (!t) {
@@ -259,6 +272,7 @@ export class Mobs {
     this.haamuTimer = 25;
     this.elephantTimer = 6;
     this.beetleTimer = 4;
+    this.gorillaTimer = 8;
     this.combat = null; // asetetaan main.js:ssä (osumat pelaajaan)
     this.enabled = true;
     this.seed = 1;
@@ -268,8 +282,9 @@ export class Mobs {
   // olento nyi peliä.
   prepare() {
     loadElephant(); // ladataan taustalla; norsuja syntyy vasta kun malli on valmis
+    loadGorilla(); // sessio 51: samoin gorilla
     for (const type of Object.keys(MOB_TYPES)) {
-      if (type === 'elephant') continue;
+      if (type === 'elephant' || type === 'gorilla') continue;
       for (let n = 0; n < VARIANTS; n++) {
         const inst = instantiate(type, n, this.eyeMaterial);
         inst.material.dispose();
@@ -303,6 +318,7 @@ export class Mobs {
       timer: 1 + Math.random() * 4,
       tx: x, tz: z,          // vaelluksen kohde
       provoked: 0,           // aika, jonka pahkasika on vihainen
+      startle: 0,            // sessio 51: gorillan säikähdys (1 = suuttuu)
       staggerDur: 0,
       vulnerable: false,     // parryn jälkeen ottaa enemmän vahinkoa
       hitDone: false,
@@ -553,6 +569,15 @@ export class Mobs {
       if (opts.arrow && m.state === 'stalk') m.timer = Math.min(m.timer, 0.6);
       else if (m.state === 'dive' || m.state === 'windup') this._set(m, 'rise', 1.6);
     }
+    if (def.gorilla) {
+      // Sessio 51: lyöty gorilla suuttuu heti (vähillä voimilla pakenee).
+      if (m.hp / def.hp < 0.25) {
+        m.provoked = 0;
+        if (!opts.stagger && amount < def.poise) this._set(m, 'flee', 6 + Math.random() * 2);
+      } else {
+        this._gorillaAnger(m, 0.9);
+      }
+    }
     if (m.type === 'warthog') {
       if (m.hp / def.hp < 0.35) {
         m.provoked = 0;
@@ -690,6 +715,7 @@ export class Mobs {
     if (m.state === 'dead' || m.def.ghost || m.def.npc || !this.list.includes(m)) return;
     if (m.def.heavy) { this._elephantLeave(m, true); return; }
     if (m.type === 'clay') { if (!m.burning) this._ignite(m); return; }
+    if (m.def.gorilla) this._gorillaAnger(m, 0.9);
     const fresh = !(m.fireT > 0);
     m.fireT = FIRE_TIME;
     if (fresh && this.fire) this.fire.burst(m.pos.x, m.pos.y + m.def.height * 0.5, m.pos.z, 0.3, 22);
@@ -791,6 +817,12 @@ export class Mobs {
         this.beetleTimer = 4 + Math.random() * 5;
         this._trySpawnBeetle(night);
       }
+      // Sessio 51: gorillat sademetsässä (päivällä useammin).
+      this.gorillaTimer -= dt;
+      if (this.gorillaTimer <= 0) {
+        this.gorillaTimer = 18 + Math.random() * 17;
+        this._trySpawnGorilla(night);
+      }
     }
     for (const m of this.list.slice()) {
       const d = Math.hypot(m.pos.x - p.x, m.pos.z - p.z);
@@ -810,11 +842,22 @@ export class Mobs {
     // Palavat olennot valaisevat ympäristöään (nuotioiden valot jaetaan).
     this.fires.length = 0;
 
+    // Sessio 51: pelaajan äkkinäiset liikkeet (gorilla säikähtää): hypyn alku,
+    // laskeutuminen ja uusi isku tässä ruudussa.
+    const onG = !!player.onGround;
+    this._pJump = this._pOnG && !onG && player.velocity.y > 1.5;
+    this._pLand = this._pOnG === false && onG;
+    this._pOnG = onG;
+    const atk = this.combat ? this.combat.attacking : null;
+    this._pSwing = !!atk && atk !== this._pAtk;
+    this._pAtk = atk;
+
     // --- Tekoäly, liike ja animaatio
     for (const m of this.list.slice()) {
       if (dt > 0) {
         if (m.def.skittish) this._thinkSkittish(m, dt);
         else if (m.def.beetle) this._thinkBeetle(m, dt);
+        else if (m.def.gorilla) this._thinkGorilla(m, dt);
         else if (m.type === 'warthog') this._thinkWarthog(m, dt);
         else if (m.def.ghost) this._thinkHaamu(m, dt);
         else if (m.def.heavy) this._thinkElephant(m, dt);
@@ -876,6 +919,24 @@ export class Mobs {
       if (Math.random() < 0.65) {
         const t = this._beetleFindTrunk(m, false);
         if (t) { m.trunk = t; this._beetleOnTrunk(m); this._set(m, 'climb', 20 + Math.random() * 30); }
+      }
+      return;
+    }
+  }
+
+  // Sessio 51: gorilla (1–2) sademetsässä 35–70 m:n päähän.
+  _trySpawnGorilla(night) {
+    if (!gorillaReady() || this.count('gorilla') >= MAX_GORILLAS || Math.random() > (night ? 0.25 : 0.6)) return;
+    const p = this.player.position;
+    for (let a = 0; a < 6; a++) {
+      const ang = Math.random() * Math.PI * 2;
+      const r = 35 + Math.random() * 35;
+      const x = p.x + Math.cos(ang) * r, z = p.z + Math.sin(ang) * r;
+      if (!this._okSpot(x, z) || (_s.rainforest || 0) < 0.6) continue;
+      const n = Math.random() < 0.6 ? 1 : 2;
+      for (let i = 0; i < n && this.count('gorilla') < MAX_GORILLAS; i++) {
+        const ox = x + (Math.random() - 0.5) * 6, oz = z + (Math.random() - 0.5) * 6;
+        if (this._okSpot(ox, oz)) this.spawn('gorilla', ox, oz);
       }
       return;
     }
@@ -992,6 +1053,7 @@ export class Mobs {
       const x = p.x - Math.sin(ang) * dist, z = p.z - Math.cos(ang) * dist;
       if (!this._okSpot(x, z)) continue;
       if (type === 'elephant' && !elephantReady()) return null;
+      if (type === 'gorilla' && !gorillaReady()) return null;
       const m = this.spawn(type, x, z, { emerge: type === 'clay' });
       m.yaw = Math.atan2(p.x - x, p.z - z);
       return m;
@@ -1663,6 +1725,169 @@ export class Mobs {
     }
   }
 
+  // --- Gorilla (sessio 51) ------------------------------------------------------
+  // Käyttäjä: ei hyökkää heti, vaan jopa hieman pelkää pelaajaa (viidakosta ei
+  // saa tulla liian vaikea). Suuttuu vain, jos kokee olonsa uhatuksi: lyönti,
+  // hyppy viereen tai äkkinäiset liikkeet. Suuttuessaan karjuu ja hyökkää.
+  // Säikähdys kertyy mittariin (m.startle, 1 = suuttuu) ja laantuu ajan myötä;
+  // puolivälissä gorilla varoittaa nousemalla ja lyömällä rintaansa.
+  _thinkGorilla(m, dt) {
+    const def = m.def, P = this.player;
+    m.stateT += dt;
+    m.timer -= dt;
+    m.provoked = Math.max(0, m.provoked - dt);
+    m.startle = Math.max(0, m.startle - dt * 0.2);
+    m.displayCd = Math.max(0, (m.displayCd || 0) - dt);
+    const { dx, dz, d } = this._toPlayer(m);
+    const sees = this._sees(m, d);
+    // Pelaajan nopeus gorillaa kohti (m/s).
+    const toward = P.velocity.x * dx + P.velocity.z * dz < 0 ? -(P.velocity.x * dx + P.velocity.z * dz) : 0;
+    if (m.provoked <= 0 && !P.dead && d < 6 && m.state !== 'dead' && m.state !== 'flee') {
+      // Juoksee suoraan päin (kävely 4,2 m/s ei säikytä, juoksu 7,2 m/s säikyttää).
+      if (toward > 5.5 && d < 4.5) m.startle += dt * 0.9 * (toward / 6);
+      if (this._pJump && d < 3.5) m.startle += d < 2.2 ? 1.1 : 0.55;    // hyppää viereen
+      if (this._pLand && d < 2.5) m.startle += 0.6;                     // laskeutuu viereen
+      if (this._pSwing && d < 3.2) m.startle += 0.45;                   // huitoo lähellä
+      if (d < 1.5) m.startle += dt * 0.35;                              // tunkee liian lähelle
+      if (m.startle >= 1) this._gorillaAnger(m, 1.3);
+      else if (m.startle > 0.45 && m.displayCd <= 0 && m.state !== 'display') {
+        m.displayCd = 7;
+        this._set(m, 'display', 1.5);
+      }
+    }
+    switch (m.state) {
+      case 'graze':
+        this._steer(m, 0, 0, 0, dt);
+        if (m.provoked > 0 && !P.dead) this._set(m, 'chase');
+        else if (sees && d < 6) this._set(m, 'avoid', 4 + Math.random() * 2);
+        else if (sees && d < 11) this._set(m, 'watch', 2 + Math.random() * 2);
+        else if (m.timer <= 0) {
+          const a = Math.random() * Math.PI * 2, r = 4 + Math.random() * 8;
+          m.tx = m.pos.x + Math.cos(a) * r;
+          m.tz = m.pos.z + Math.sin(a) * r;
+          this._set(m, 'wander', 12);
+        }
+        break;
+      case 'wander': {
+        const wx = m.tx - m.pos.x, wz = m.tz - m.pos.z;
+        const wd = Math.hypot(wx, wz);
+        this._steer(m, wx / (wd || 1), wz / (wd || 1), def.walk, dt);
+        if (m.provoked > 0) this._set(m, 'chase');
+        else if (sees && d < 11) this._set(m, 'watch', 2 + Math.random() * 2);
+        else if (wd < 1 || m.timer <= 0) this._set(m, 'graze', 4 + Math.random() * 6);
+        break;
+      }
+      case 'watch':
+        // Pysähtyy katsomaan pelaajaa varovaisena.
+        this._steer(m, dx, dz, 0, dt, true);
+        if (m.provoked > 0) this._set(m, 'chase');
+        else if (d < 6) this._set(m, 'avoid', 3 + Math.random() * 2);
+        else if (m.timer <= 0) this._set(m, !sees || d > 11 ? 'graze' : 'watch', 2 + Math.random() * 2);
+        break;
+      case 'avoid': {
+        // Väistää: kävelee poispäin; jos pelaaja tulee perässä, juoksee
+        // (4,2 m/s, pelaajan kävelyvauhti).
+        if (m.provoked > 0) { this._set(m, 'chase'); break; }
+        const sp = toward > 1.5 && d < 8 ? def.run * 0.7 : def.walk * 1.35;
+        const wob = Math.sin(m.stateT * 0.9 + m.phase) * 0.4;
+        const fx = -dx * Math.cos(wob) + dz * Math.sin(wob), fz = -dz * Math.cos(wob) - dx * Math.sin(wob);
+        this._steer(m, fx, fz, sp, dt);
+        if (m.timer <= 0) this._set(m, d > 10 ? 'watch' : 'avoid', d > 10 ? 1.5 + Math.random() : 2.5);
+        break;
+      }
+      case 'display':
+        // Varoitus: nousee, lyö rintaansa ja katsoo pelaajaa (ei hyökkää).
+        this._steer(m, dx, dz, 0, dt, true);
+        if (m.provoked > 0 && m.stateT > 0.6) this._set(m, 'chase');
+        else if (m.timer <= 0) this._set(m, 'avoid', 3 + Math.random() * 2);
+        break;
+      case 'roar':
+        // Suuttunut: karjuu ja lyö rintaansa, sitten hyökkää.
+        this._steer(m, dx, dz, 0, dt, true);
+        if (m.timer <= 0) this._set(m, 'chase');
+        break;
+      case 'chase':
+        if (m.provoked <= 0 || d > 28 || P.dead) { this._gorillaCalm(m); break; }
+        this._steer(m, dx, dz, def.run * (d < 4 ? 0.75 : 1), dt);
+        if (d - PLAYER_R < def.reach + 0.5) this._set(m, 'windup');
+        break;
+      case 'windup':
+        this._steer(m, dx, dz, 0, dt, true);
+        if (m.stateT >= def.windup) this._set(m, 'attack');
+        break;
+      case 'attack': {
+        // Syöksähdys ja lyönti (osuma kerran).
+        const k = Math.max(0, 1 - m.stateT / def.attack);
+        m.vel.x = Math.sin(m.yaw) * 4.2 * k;
+        m.vel.z = Math.cos(m.yaw) * 4.2 * k;
+        if (!m.hitDone && m.stateT > def.attack * 0.45) this._tryHit(m);
+        if (m.stateT >= def.attack) this._set(m, 'recover');
+        break;
+      }
+      case 'recover':
+        this._steer(m, 0, 0, 0, dt);
+        if (m.stateT >= def.recover) {
+          if (m.provoked <= 0) this._gorillaCalm(m);
+          else if (Math.random() < 0.45) {
+            m.circleDir = Math.random() < 0.5 ? -1 : 1;
+            this._set(m, 'circle', 1 + Math.random());
+          } else this._set(m, 'chase');
+        }
+        break;
+      case 'circle':
+        if (m.provoked <= 0 || P.dead) { this._gorillaCalm(m); break; }
+        this._circle(m, dx, dz, d, 3.5, def.run * 0.45, dt);
+        if (m.timer <= 0) this._set(m, 'chase');
+        break;
+      case 'flee': {
+        const wob = Math.sin(m.stateT * 1.3 + m.phase) * 0.35;
+        this._steer(m, -dx * Math.cos(wob) + dz * Math.sin(wob), -dz * Math.cos(wob) - dx * Math.sin(wob), def.run * 0.8, dt);
+        if (m.timer <= 0 && (d > 30 || P.dead)) this._set(m, 'graze', 4);
+        else if (m.timer <= 0) m.timer = 2;
+        break;
+      }
+      case 'stagger':
+        this._steer(m, 0, 0, 0, dt);
+        if (m.stateT >= m.staggerDur) {
+          if (m.hp / def.hp < 0.25) this._set(m, 'flee', 6);
+          else this._set(m, m.provoked > 0 ? 'chase' : 'avoid', 3);
+        }
+        break;
+      case 'dead':
+        m.deadT += dt;
+        m.vel.multiplyScalar(Math.exp(-dt * 6));
+        if (m.poolAt > 0 && m.deadT >= m.poolAt && this.blood) {
+          m.poolAt = 0;
+          this.blood.splat(m.pos.x, m.pos.z, 1.8, BLOOD.gorilla, 4);
+        }
+        if (m.deadT > 8) this.remove(m);
+        break;
+      default:
+        this._set(m, 'graze', 2);
+    }
+  }
+
+  // Suuttuu (lyönti, tuli tai säikähdys): uusi suuttumus alkaa karjaisulla.
+  _gorillaAnger(m, roarT) {
+    if (m.state === 'dead' || m.state === 'flee') return;
+    const fresh = m.provoked <= 0;
+    m.provoked = 22;
+    m.startle = 0;
+    if (fresh) {
+      this._set(m, 'roar', roarT);
+      events.emit('gorillaRoar', { x: m.pos.x, z: m.pos.z });
+    } else if (m.state === 'avoid' || m.state === 'watch' || m.state === 'graze' || m.state === 'wander' || m.state === 'display') {
+      this._set(m, 'chase');
+    }
+  }
+
+  // Rauhoittuu: väistää pelaajaa taas.
+  _gorillaCalm(m) {
+    m.provoked = 0;
+    m.startle = 0;
+    this._set(m, 'avoid', 4);
+  }
+
   _thinkClay(m, dt) {
     const def = m.def;
     m.stateT += dt;
@@ -2161,6 +2386,7 @@ export class Mobs {
     m.phase += speed * dt * (m.type === 'warthog' ? 4.4 : kind === 'beetle' ? 110 : kind === 'bird' ? 14 : kind === 'guineafowl' ? 9 : m.def.skittish ? 5 : 3.2);
     if (kind === 'elephant') this._animElephant(m, md, speed, dt, elapsed);
     else if (kind === 'beetle') this._animBeetle(m, md, speed, dt, elapsed);
+    else if (kind === 'gorilla') this._animGorilla(m, md, speed, dt);
     else if (m.type === 'warthog') this._animWarthog(m, md, speed, dt, elapsed);
     else if (kind === 'guineafowl' || kind === 'bird') this._animFowl(m, md, speed, dt, elapsed);
     else if (kind === 'haamu') this._animHaamu(m, md, speed, dt, elapsed);
@@ -2168,6 +2394,35 @@ export class Mobs {
     else this._animClay(m, md, speed, dt, elapsed);
     this._fxDaze(m, md, dt, elapsed);
     if (m.emergeGlow) this._fxEmerge(m, dt);
+  }
+
+  // Sessio 51: gorillan animaatiot mallista (models/gorilla.js): seisoo
+  // (idle), kävelee ja juoksee (run, nopeuden mukaan), varoittaa ja karjuu
+  // lyömällä rintaansa (stomp) ja lyö (attack, venytetty valmistelun ja iskun
+  // ajalle). Kuollessaan kaatuu kyljelleen.
+  _animGorilla(m, md, speed, dt) {
+    const s = m.state, A = md.actions;
+    let want = 'idle';
+    if (s === 'display' || s === 'roar') want = 'stomp';
+    else if (s === 'windup' || s === 'attack') want = 'attack';
+    else if (s !== 'dead' && speed > 0.25) want = 'run';
+    const next = A[want] || A.idle;
+    if (md.cur !== next) {
+      next.reset();
+      next.setEffectiveWeight(1);
+      next.play();
+      if (md.cur) md.cur.crossFadeTo(next, want === 'attack' ? 0.08 : 0.25, false);
+      md.cur = next;
+    }
+    if (want === 'run') next.timeScale = speed > 3 ? Math.min(1.5, speed / 5.5) : Math.max(0.35, speed / 2.8);
+    else if (want === 'attack') next.timeScale = next.getClip().duration / (m.def.windup + m.def.attack);
+    else next.timeScale = 1;
+    if (s !== 'dead') md.mixer.update(dt);
+    else {
+      const k = smooth(Math.min(1, m.deadT / 0.8));
+      md.group.rotation.set(0, m.yaw, m.deathSide * k * 1.45);
+      md.group.position.y += k * 0.35;
+    }
   }
 
   // Norsu: kävely, kärsä, korvat ja häntä (models/elephant.js). Jalat

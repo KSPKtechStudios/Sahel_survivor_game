@@ -1,6 +1,11 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 51: gorilla sademetsässä tai [F3] → Olennot → Gorilla.
+  - Väistääkö se rauhallista pelaajaa?
+  - Suuttuuko se vasta lyönnistä, hypystä viereen tai äkkinäisestä ryntäyksestä, ja kuuluuko karjaisu?
+  - Onko se liian vaikea tai liian helppo?
+- [ ] Vastaus: mitä gorillasta saa, kuinka kauan se on vihainen ja kuinka kovaa se lyö.
 - [ ] Käyttäjä testaa session 50:
   - kuuluuko sademetsän ambienssi nyt (myös tuuli savannilla ja sade);
   - herkuleskuoriainen (ei terveyspalkkia, lyönti vain säikäyttää);

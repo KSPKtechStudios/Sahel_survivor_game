@@ -69,6 +69,15 @@ Banaanipuu ja bambut (assets/models/nature/banana_*, bamboo_*;
   mittakaava muutettu, banaanin hedelmäterttu kevennetty, muunnelmia
   (sivuversot), kaukoversiot, tekstuurit pienennetty 512 px.
 
+Gorilla (assets/models/gorilla/gorilla.glb), sessio 51: käyttäjän antama
+  Sketchfab-malli "Gorilla", tekijä planeta-elefante, CC-BY-4.0, NIMEÄMINEN
+  VAADITAAN: https://sketchfab.com/3d-models/gorilla-e69585d870ce4ae382fd071e87ae3b0e
+  Muutokset: animaatioiden avainkehykset kevennetty (gltf-transform resample),
+  tekstuuri JPEG:ksi; pelissä käännetään ja skaalataan.
+Gorillan karjaisu (assets/sfx/gorilla-roar.mp3), sessio 51: käyttäjän antama
+  tiedosto flutie8211-gorilla-roar-523007.mp3 (tiedostonimen perusteella
+  Pixabay, tekijä flutie8211). Leikattu karjaisun kohta (3,2 s).
+
 Kärpäsen surina (assets/sfx/fly-buzz.mp3), sessio 49: käyttäjän antama
   tiedosto kuzu420-fly-buzzing-from-left-to-right-337281.mp3 (tiedostonimen
   perusteella Pixabay, tekijä kuzu420; lisenssi tarkistettava, ks.

@@ -141,6 +141,8 @@ export class DevTools {
     this._button(row, 'Haamu', () => (mobs.spawnInFront('haamu', 14) ? `Haamu kutsuttu${env.daylight > 0.15 ? ' (päivällä se haihtuu heti)' : ''}` : 'Paikkaa ei löytynyt'));
     this._button(row, 'Norsu', () => (mobs.spawnInFront('elephant', 16) ? 'Norsu kutsuttu' : 'Paikkaa ei löytynyt (tai malli latautuu vielä)'));
     this._button(row, 'Herkuleskuoriainen', () => (mobs.spawnInFront('beetle', 2.5) ? 'Herkuleskuoriainen kutsuttu' : 'Paikkaa ei löytynyt'));
+    // Sessio 51: gorilla (rauhallinen; suuttuu, jos sitä lyö tai säikyttää).
+    this._button(row, 'Gorilla', () => (mobs.spawnInFront('gorilla', 9) ? 'Gorilla kutsuttu (älä säikytä sitä)' : 'Paikkaa ei löytynyt (tai malli latautuu vielä)'));
     // Sessio 49: kärpäsen ohilento heti (normaalisti vain sademetsässä silloin tällöin).
     this._button(row, 'Kärpänen ohi', () => { this.ctx.flies?.trigger(); return 'Kärpänen lentää ohi'; });
     // Sessio 50: hyttysen ininä heti.
