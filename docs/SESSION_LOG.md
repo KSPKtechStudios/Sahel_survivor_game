@@ -2,6 +2,16 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-13 (sessio 49, jatko)
+**Tehtiin**
+- Banaanin hedelmäterttu korjattu:
+  - muunnin `userglb.mjs` (scratchpad): `thinFruit` keventää banaanit yksitellen;
+  - tarkistettu lähikuvalla `shots/s49/kitview.html?cam=...`.
+- Päävalikkoon Tekijät-paneeli (`index.html`, `menu.js` `credits`, `menu.css` `.credits-list`); tarkistettu kuvakaappauksella.
+
+**Seuraavaksi**
+- Käyttäjän palaute session 49 muutoksista (ks. TODO).
+
 ## 2026-10-12 (sessio 49)
 **Tehtiin**
 - Herkuleskuoriainen:

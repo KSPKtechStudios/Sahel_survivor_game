@@ -2,6 +2,11 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-13 (sessio 49, jatko): banaanitertut kuntoon, tekijät valikkoon
+
+- **Banaanin hedelmäterttu** näkyy taas oikeana terttuna: ensimmäisessä versiossa kevennys oli hajottanut banaanit litteiksi keltaisiksi siruiksi.
+- **Päävalikkoon Tekijät-paneeli:** CC BY 4.0 -mallien (banaanipuu, bambu, bambupensas) tekijät näkyvät pelissä, kuten lisenssi vaatii; lisäksi CC0-lähteet lyhyesti. Koko lista on edelleen `assets/CREDITS.txt`:ssä.
+
 ## 2026-10-12 (sessio 49): kuoriainen puissa, uudet banaanit ja bambut, kärpäset
 
 - **Herkuleskuoriainen:**

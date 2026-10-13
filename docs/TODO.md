@@ -9,7 +9,7 @@
   - ruudunpäivitys sademetsässä.
 - [ ] Vastaus: kärpäsen ohilentojen tiheys (nyt 10–35 s välein päivällä) ja äänen voimakkuus; onko kuoriainen sopivan kokoinen.
 - [ ] Kärpäsäänen lisenssi: tiedostonimen perusteella Pixabay (tekijä kuzu420). Varmista käyttäjältä lähde.
-- [ ] CC-BY-4.0-mallien (banaani, bambu, bambupensas) tekijät on mainittava, jos peli julkaistaan (nyt `assets/CREDITS.txt`; pelissä ei ole tekijäsivua).
+- [x] CC-BY-4.0-mallien (banaani, bambu, bambupensas) tekijät pelissä: päävalikko → Tekijät (sessio 49, jatko). Pidä lista ajan tasalla, kun malleja tulee lisää.
 - [ ] Käyttäjä testaa session 48:
   - sademetsän ambienssi (kuuluuko);
   - latvuskatto ylös katsoessa ja valoläikät maassa;

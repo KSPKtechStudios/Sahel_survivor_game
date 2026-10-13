@@ -2,6 +2,15 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-13 (sessio 49, jatko)
+- **Banaanitertun kevennys osittain:** terttu on 160 erillistä banaania (52 kolmiota kukin) ja varsi. Koko verkon kevennys hajotti ne, joten nyt:
+  - kärkipisteet yhdistetään ja verkko jaetaan osiin;
+  - lähiversioon jää joka neljäs banaani 1,2-kertaisena ja kevennettynä (noin 900 kolmiota), kaukoversioon joka kymmenes;
+  - varsi säilyy.
+
+  Banaanipuun lähiversio on noin 1 800 kolmiota (ennen 1 074, mutta terttu oli rikki).
+- **Tekijät päävalikkoon** eikä vain tiedostoon: CC BY 4.0 vaatii nimeämisen siellä, missä sisältöä käytetään.
+
 ## 2026-10-12 (sessio 49)
 - **Kuoriainen rungoilla:** rungon paikka ja säde lasketaan puun mallin rungon tiedoista (`userData.tree`: base, top, r0, r1) sekä objektin kierrosta ja koosta. Erillistä törmäyshakua ei tarvita, joten se on kevyt. Rungolla kuoriaisen suunta lasketaan kantavektoreista (selkä ulospäin, pää kulkusuuntaan). Kuolleena se putoaa painovoimalla.
 - **Käyttäjän mallit kit-muotoon** samalla muuntimella kuin Poly Havenin kasvit:

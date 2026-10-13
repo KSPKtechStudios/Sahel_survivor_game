@@ -186,6 +186,7 @@ export class Menu {
     switch (action) {
       case 'worlds': later(() => this._go(this.main, 'worlds')); break;
       case 'settings': later(() => this._go(screenEl, 'settings')); break;
+      case 'credits': later(() => this._go(this.main, 'credits')); break;
       case 'back': later(() => this._go(screenEl, screenEl === this.main ? 'main' : 'pause')); break;
       case 'resume': later(() => this.onResume()); break;
       case 'quit': later(() => this.onQuit()); break;
