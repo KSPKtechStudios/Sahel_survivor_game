@@ -5,8 +5,8 @@
 // nimillä (ks. docs/DECISIONS.md).
 import { makeAcacia, makeBaobab, makeJungleTree, makeCanopyTree, makeEmergentTree, makeSapling } from './trees.js';
 // Sessio 26: uudet palmut ja banaanit.
-import { makePalm, makeCoconutPalm, makeDoumPalm, makeBanana } from './palms.js';
-import { makeBush, makeTumbleweed, makeGrassTuft, makeBamboo, makeThicket, makeEuphorbia, makeReeds } from './plants.js';
+import { makePalm, makeCoconutPalm, makeDoumPalm } from './palms.js';
+import { makeBush, makeTumbleweed, makeGrassTuft, makeThicket, makeEuphorbia, makeReeds } from './plants.js';
 import { makeGroundStick, makeStone, makeTermiteMound, makeOutcrop, makeSpire } from './rocks.js';
 import { scannedBoulder, SCANNED_BOULDER_COUNT } from './scanned/build.js';
 import { kitModel } from './kit/build.js';
@@ -80,7 +80,8 @@ const VARIANTS = {
   // Sessio 24: harmaantuneet kuolleet puut kitistä (ennen makeDeadTree).
   // Sessio 27: lahopuu kaatuu kuten muut puut (rungon tiedot mallin muodosta).
   deadTree: [(s, q) => withTreeMeta(kitModel(['DeadTree_1', 'DeadTree_2', 'DeadTree_3'][Math.round((s - 61) / 101)], q)), 3, 61],
-  bamboo: [makeBamboo, 2, 71],
+  // Sessio 49: käyttäjän tuoma bambu (Sketchfab, CC-BY-4.0; ennen makeBamboo).
+  bamboo: kit(['Bamboo_A'], 71),
   thicket: [makeThicket, 3, 81],
   euphorbia: [makeEuphorbia, 2, 91],
   outcrop: [makeOutcrop, 3, 111],
@@ -93,7 +94,8 @@ const VARIANTS = {
   coconut: [makeCoconutPalm, 3, 171],
   log: [(s) => makeLog(s, false), 2, 181],
   mossyLog: [(s) => makeLog(s, true), 2, 191],
-  banana: [makeBanana, 3, 201],
+  // Sessio 49: käyttäjän tuoma banaanipuu, 0–2 sivuversoa (ennen makeBanana).
+  banana: kit(['Banana_A', 'Banana_B', 'Banana_C'], 201),
   desertShrub: [makeDesertShrub, 3, 211],
   driftwood: [makeDriftwood, 3, 221],
   tallGrass: [makeTallGrass, 3, 231],
@@ -142,9 +144,11 @@ const VARIANTS = {
   emergent: [makeEmergentTree, 3, 1001],
   tropicalPlant: kit(['Calathea_A', 'Calathea_B', 'Calathea_C', 'Fern2_A', 'Fern2_B', 'Fern2_C', 'Fern2_D'], 1101, true),
   sapling: [makeSapling, 4, 1201],
+  // Sessio 49: käyttäjän tuoma bambupensas (kenttäkerros).
+  bambooBush: kit(['BambooBush_A'], 1301),
 };
 // Mallit, joilla on kevyt kaukoversio (ilman varjoa).
-const HAS_FAR = new Set(['emergent', 'bamboo', 'banana', 'acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);
+const HAS_FAR = new Set(['emergent', 'bambooBush', 'bamboo', 'banana', 'acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);
 // Mallit, joista tehdään tiheärunkoinen versio hakkaamista varten.
 const HAS_HI = new Set(['emergent', 'acacia', 'jungle', 'palm', 'canopy', 'shea', 'doum', 'coconut', 'baobab']);
 

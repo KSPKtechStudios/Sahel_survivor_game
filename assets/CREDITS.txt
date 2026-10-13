@@ -55,4 +55,23 @@ Ihon pintakuvio (assets/models/arms/skin_detail_*.webp), sessio 33:
 Kivipuukko (assets/models/items/knife_*.webp), sessio 33: ambientCG.com
   Wood051, Rope001 ja Rock030 (CC0), pienennetty 512 px.
 
+Banaanipuu ja bambut (assets/models/nature/banana_*, bamboo_*;
+  src/models/kit/userKit.js), sessio 49: käyttäjän antamat Sketchfab-mallit,
+  lisenssi CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/),
+  NIMEÄMINEN VAADITAAN:
+  - "Banana Tree (Low Poly)", tekijä EmiyaSyahriel
+    https://sketchfab.com/3d-models/banana-tree-low-poly-97a50ee6d93d4d8cb2c455a64a6d17c2
+  - "bamboo", tekijä evolveduk
+    https://sketchfab.com/3d-models/bamboo-a02bf0e3ffe44617ad49daf3cd94fe59
+  - "Bamboo Bush", tekijä sujirour
+    https://sketchfab.com/3d-models/bamboo-bush-d0d5eb345ff7420bb7f5c5239fcec637
+  Muutokset: muunnettu pelin muotoon (gltf-transform + meshoptimizer),
+  mittakaava muutettu, banaanin hedelmäterttu kevennetty, muunnelmia
+  (sivuversot), kaukoversiot, tekstuurit pienennetty 512 px.
+
+Kärpäsen surina (assets/sfx/fly-buzz.mp3), sessio 49: käyttäjän antama
+  tiedosto kuzu420-fly-buzzing-from-left-to-right-337281.mp3 (tiedostonimen
+  perusteella Pixabay, tekijä kuzu420; lisenssi tarkistettava, ks.
+  docs/TODO.md). Kolme ohilentoa leikattu yhdeksi lyhyeksi tiedostoksi.
+
 Fontit: ks. assets/fonts (OFL).

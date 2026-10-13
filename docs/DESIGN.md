@@ -217,6 +217,18 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 49 (käyttäjän kertoma, 2026-10-12): sademetsän jatko
+- **Kenttäkerrosta ja lehtikatosta (latvusta) lisää**, jos se onnistuu ilman, että pelattavuus ja ruudunpäivitys kärsivät.
+- **Herkuleskuoriainen:**
+  - **pikkiriikkisen suurempi**, jotta pelaaja huomaa sen paremmin (oikeakin on valtava);
+  - **lentelee enemmän** ja kulkee esim. **puunrungoilla** eikä niinkään koko ajan maassa, koska maasta sitä on vaikea huomata.
+- **Käyttäjän 3D-mallit** (Sketchfab, CC-BY-4.0): banaanipuu ja kaksi erilaista bambua (bambu ja bambupensas).
+- **Lisää "eloa kuhisevaa" fiilistä viidakkoon:** hyttysparvia ja perhosia näkyy, mutta lisäksi mustia partikkeleita tai **kärpäsen tai paarman näköisiä pikkuolentoja**, jotka **vilahtavat nopeasti pelaajan näkökentän ohi** silloin tällöin. Ääni käyttäjältä (kärpänen surisee vasemmalta oikealle).
+- Avoimet kysymykset:
+  - Onko kuoriainen nyt sopivan kokoinen (noin 28 cm sarvineen)?
+  - Kuinka usein kärpäsen pitäisi lentää korvan ohi (nyt noin 10–35 s:n välein päivällä)?
+  - Saako bambuista tai banaaneista jotain muuta kuin nykyiset (bambu, risut, banaanit, kuitu)?
+
 ## Sessio 48 (käyttäjän kertoma, 2026-10-12): sademetsäbiomin hiominen
 - Sademetsästä tai viidakosta tulee käyttäjälle ensimmäisenä mieleen **tiheä, pimeä metsikkö**; nykyinen ei anna sellaista fiilistä.
   1. **Sademetsän ambienssiäänet** eivät enää kuulu taustalla.

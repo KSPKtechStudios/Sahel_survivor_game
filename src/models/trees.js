@@ -31,12 +31,24 @@ function trunkParts(base, top, r0, r1, cutY, q, hex, jr, radial) {
 
 // Sessio 23: latvus = pienempi, tummempi ydin + lehtikortit (leafCards).
 // kind: 'acacia' (pariliuskaiset lehdet) tai 'broad' (leveät lehdet).
-function blob(center, scale, detail, hex, jr, shadeCut = null, rotY = 0, kind = 'broad') {
+function blob(center, scale, detail, hex, jr, shadeCut = null, rotY = 0, kind = 'broad', dk = 1) {
   // Sessio 26: latvus pelkistä lehtikorteista (kiinteä ydin poistettiin, se
   // näkyi alta katsottuna rumana möhkäleenä). Kortteja tiheämmin, myös alapinnalla.
+  // dk: tiheyden kerroin (sessio 49, widen); kortit suurenevat vastaavasti.
   void shadeCut;
   const r = jr();
-  return leafCards(center, scale, rotY, hex, r, kind, detail ? 1.75 : 0.3, detail ? 1.05 : 2.0, 0.85);
+  return leafCards(center, scale, rotY, hex, r, kind, (detail ? 1.75 : 0.3) * dk, (detail ? 1.05 : 2.0) / Math.sqrt(dk), 0.85);
+}
+
+// Sessio 49: leveämpi latvus samalla korttimäärällä (käyttäjä: lisää
+// lehtikatosta, kunhan FPS ei kärsi). Leveys × w ja korkeus × h; tiheyden
+// kerroin k pienentää korttimäärän ennalleen (leafCards: määrä ~ pinta-ala ×
+// tiheys) ja kortit suurenevat 1/sqrt(k):lla, joten peitto säilyy mutta
+// latvus peittää taivasta enemmän.
+function widen(s, w, h = 1) {
+  const t = V(s.x * w, s.y * h, s.z * w);
+  const k = (s.x * s.y + s.x * s.z + s.y * s.z) / (t.x * t.y + t.x * t.z + t.y * t.z);
+  return { s: t, k, size: 1 / Math.sqrt(k) };
 }
 
 // Sessio 27: latvus pienistä lehtiryppäistä haarautuvien oksien kärjissä
@@ -311,8 +323,9 @@ export function makeJungleTree(seed, q = 1) {
     const skip = !q && i > 3;
     const j = jr;
     if (skip) { j(); return; }
-    if (q) parts.push(leafCards(c.p, c.s, rot, leaves[i % 3], j(), 'broad', c.sub ? 1.3 : 1.5, 1.0, 0.7));
-    else parts.push(blob(c.p, c.s, 0, leaves[i % 3], j, c.p.y - c.s.y * 0.3, rot));
+    const W = widen(c.s, 1.25, 1.05);
+    if (q) parts.push(leafCards(c.p, W.s, rot, leaves[i % 3], j(), 'broad', (c.sub ? 1.3 : 1.5) * W.k, W.size, 0.7));
+    else parts.push(blob(c.p, W.s, 0, leaves[i % 3], j, c.p.y - c.s.y * 0.3, rot, 'broad', W.k));
   });
   // Sessio 24: runkoa kiertävä köynnös osassa puista.
   const cv = partRand(seed, 950);
@@ -371,12 +384,13 @@ export function makeCanopyTree(seed, q = 1) {
   crowns.forEach((c, i) => {
     const rot = rand() * Math.PI;
     if (!q && i > 2) { jr(); return; }
+    const W = widen(c.s, 1.3, 1.05);
     if (q) {
       // Ryppäät: tiheys hieman pienempi kuin yhdellä isolla latvuksella.
-      parts.push(leafCards(c.p, c.s, rot, leaves[i % leaves.length], jr(), 'broad', c.sub ? 1.35 : 1.55, 1.0, 0.75));
+      parts.push(leafCards(c.p, W.s, rot, leaves[i % leaves.length], jr(), 'broad', (c.sub ? 1.35 : 1.55) * W.k, W.size, 0.75));
       return;
     }
-    parts.push(blob(c.p, c.s, 0, leaves[i % leaves.length], jr, c.p.y - c.s.y * 0.35, rot));
+    parts.push(blob(c.p, W.s, 0, leaves[i % leaves.length], jr, c.p.y - c.s.y * 0.35, rot, 'broad', W.k));
   });
   // Sessio 24: liaanit roikkuvat latvuksista, osassa puista köynnös rungolla.
   if (q) {
@@ -458,14 +472,15 @@ export function makeEmergentTree(seed, q = 1) {
   }
   crowns.forEach((c, i) => {
     const rot = rand() * Math.PI;
+    const W = widen(c.s, 1.15);
     if (q) {
       // Isommat, harvemmat kortit kuin alemmilla puilla: latvus on korkealla
       // (alhaalta katsottuna sama peitto, n. puolet vähemmän kolmioita).
-      parts.push(leafCards(c.p, c.s, rot, leaves[i % leaves.length], jr(), 'broad', c.sub ? 0.55 : 0.6, 1.8, 0.9));
+      parts.push(leafCards(c.p, W.s, rot, leaves[i % leaves.length], jr(), 'broad', (c.sub ? 0.55 : 0.6) * W.k, 1.8 * W.size, 0.9));
       return;
     }
     // Kaukomalli: vähän, isoja kortteja (ei varjoa).
-    parts.push(leafCards(c.p, c.s, rot, leaves[i % leaves.length], jr(), 'broad', 0.16, 2.7, 0.85));
+    parts.push(leafCards(c.p, W.s, rot, leaves[i % leaves.length], jr(), 'broad', 0.16 * W.k, 2.7 * W.size, 0.85));
   });
   // Keskikerros (käyttäjän referenssikuva: lehvästöä kaikilla korkeuksilla):
   // rungon varrella lyhyitä sivuoksia ja päällyskasviryppäitä 6–14 m:ssä.

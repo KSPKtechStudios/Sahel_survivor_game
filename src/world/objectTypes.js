@@ -94,6 +94,7 @@ export const OBJECT_TYPES = {
     harvest: { tool: null, hp: 3, drops: [['fiber', 2], ['stick', 1]] },
   },
   bamboo: {
+    // Sessio 49: malli käyttäjän tuoma (models/kit/userKit.js), materiaali kitistä.
     name: 'Bambu', model: 'bamboo', kind: 'bush', material: 'tall', castShadow: true,
     density: { rainforest: 5, mare: 0.4 },
     scale: [0.9, 1.3], maxSlope: 0.6, collider: 0.55, hit: { y: 1.0, r: 0.8 }, drawDist: 3,
@@ -189,7 +190,7 @@ export const OBJECT_TYPES = {
   },
   undergrowth: {
     name: 'Aluskasvillisuus', model: 'undergrowth', kind: 'decor', material: 'bush', castShadow: false, decorative: true,
-    density: { rainforest: 85, oasis: 15 },
+    density: { rainforest: 115, oasis: 15 }, // sessio 49: 85 -> 115 (kenttäkerros)
     scale: [0.8, 1.6], maxSlope: 0.8, collider: 0, hit: null,
   },
   tallGrass: {
@@ -348,7 +349,7 @@ export const OBJECT_TYPES = {
   // Lisätty loppuun, jotta vanhojen esineiden siemenet eivät muutu.
   groundFern: {
     name: 'Saniainen', model: 'groundFern', kind: 'decor', material: 'bush', castShadow: false, decorative: true,
-    density: { rainforest: 110, oasis: 20, mare: 10, woodland: 3 },
+    density: { rainforest: 150, oasis: 20, mare: 10, woodland: 3 }, // sessio 49: 110 -> 150
     scale: [0.45, 1.0], maxSlope: 0.3, slopeCheck: true, collider: 0, hit: null, decorDist: 44,
   },
   forestPlant: {
@@ -428,7 +429,7 @@ export const OBJECT_TYPES = {
   // Trooppiset aluskasvit (Poly Haven, CC0): calathea ja saniainen.
   tropicalPlant: {
     name: 'Trooppinen kasvi', model: 'tropicalPlant', kind: 'decor', material: 'bush', castShadow: false, decorative: true,
-    density: { rainforest: 100, oasis: 8 },
+    density: { rainforest: 125, oasis: 8 }, // sessio 49: 100 -> 125
     scale: [0.8, 1.25], maxSlope: 0.45, slopeCheck: true, collider: 0, hit: null, decorDist: 44,
   },
   // Taimi: nuori puu keskikerrokseen (1,8–4,2 m). Läpi pääsee kulkemaan;
@@ -438,6 +439,13 @@ export const OBJECT_TYPES = {
     density: { rainforest: 30 },
     scale: [0.85, 1.25], maxSlope: 0.6, collider: 0, hit: { y: 1.0, r: 0.5 }, drawDist: 1,
     harvest: { tool: null, hp: 2, drops: [['stick', 2], ['fiber', 1]] },
+  },
+  // Sessio 49: bambupensas kenttäkerrokseen (käyttäjän tuoma malli, CC-BY-4.0).
+  bambooBush: {
+    name: 'Bambupensas', model: 'bambooBush', kind: 'bush', material: 'bush', castShadow: false,
+    density: { rainforest: 8, mare: 0.3 },
+    scale: [0.75, 1.2], maxSlope: 0.6, collider: 0.2, hit: { y: 1.0, r: 0.7 }, drawDist: 2,
+    harvest: { tool: null, hp: 3, drops: [['bamboo', 1], ['fiber', 1]] },
   },
 };
 

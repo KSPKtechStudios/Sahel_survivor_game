@@ -5,9 +5,8 @@
 // - Runko: rengaskuvio (lehtiarvet), tyvipaksunnos ja juurikaulus;
 //   öljypalmumaisessa palmussa lehtituppien tyngät rungolla.
 // - Latva: lehtitupet ja kookospalmussa kookostertut.
-// - Banaani: tuppimainen valevarsi, isot melamaiset lehdet, jotka tuuli on
-//   repinyt suikaleiksi, kuivuneet lehdet varren ympärillä, terttu ja kukka.
 // - Doumpalmu: viuhkalehdet kapeista, taitetuista liuskoista.
+// (Sessio 49: banaani on nyt käyttäjän tuoma malli, models/kit/userKit.js.)
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
 import { V, paint, limb, merge, tag } from './util.js';
@@ -389,127 +388,4 @@ export function makeDoumPalm(seed, q = 1) {
     kind: 'doum', base: base.toArray(), top: fork.toArray(), r0: 0.21, r1: 0.17, cutY,
     height: forkY + 4, fallLen: forkY + 2.5 - cutY, logR: 0.22,
   });
-}
-
-// --- Villibanaani ------------------------------------------------------------------------
-
-// Banaaninlehti: ruoti, keskisuoni ja kaksi lapaa, jotka tuuli on repinyt
-// suikaleiksi (jokainen suikale roikkuu hieman eri kulmassa).
-function bananaLeaf(m, p, a, elev, len, width, rand, dry, q) {
-  m.two = true;
-  m.back = dry ? 1 : 1.18;
-  const dir = V(Math.cos(a), 0, Math.sin(a));
-  const side = V(-Math.sin(a), 0, Math.cos(a));
-  const segs = q ? 6 : 4;
-  const pet = len * 0.18;
-  const mid = [];
-  for (let s = 0; s <= segs; s++) {
-    const t = s / segs, d = pet + t * len;
-    const droop = (dry ? 1.6 : 0.42) * Math.pow(d / (pet + len), 2.2) * len;
-    mid.push(V(p.x + dir.x * d * Math.cos(elev), p.y + Math.sin(elev) * d - droop, p.z + dir.z * d * Math.cos(elev)));
-  }
-  const pStart = p.clone();
-  const green = dry ? col(rand() < 0.5 ? 0xa08a5a : 0x8a7048) : col([0x5a9c38, 0x66a83e, 0x5e9a34][Math.floor(rand() * 3)], 0.92 + rand() * 0.16);
-  const ribC = dry ? col(0xb09a68) : col(0xb8cc7a);
-  const edgeC = dry ? col(0x6a4a28) : green.clone().multiplyScalar(0.8);
-  // Ruoti
-  m.quad(pStart.clone().addScaledVector(side, -0.03), pStart.clone().addScaledVector(side, 0.03), mid[0].clone().addScaledVector(side, 0.025), mid[0].clone().addScaledVector(side, -0.025), ribC, ribC, ribC, ribC, 0.3);
-  const hw = (t) => width * Math.pow(Math.max(0, Math.sin(Math.PI * Math.min(1, t * 1.08 + 0.02))), 0.45);
-  for (const sgn of [-1, 1]) {
-    // Repeämäkohdat tällä puolella.
-    const cuts = [];
-    const nc = dry ? 8 : Math.floor(rand() * 3.2);
-    for (let i = 0; i < nc; i++) cuts.push(0.15 + rand() * 0.8);
-    cuts.sort((x, y) => x - y);
-    let curDroop = rand() * 0.3;
-    for (let s = 0; s < segs; s++) {
-      const t0 = s / segs, t1 = (s + 1) / segs;
-      if (cuts.some((c) => c > t0 && c <= t1)) curDroop = 0.1 + rand() * (dry ? 1.2 : 0.35);
-      const m0 = mid[s], m1 = mid[s + 1];
-      const tan = m1.clone().sub(m0).normalize();
-      const nrm = new THREE.Vector3().crossVectors(tan, side).normalize();
-      if (nrm.y < 0) nrm.negate();
-      const gap = cuts.some((c) => c > t0 && c <= t1) ? 0.035 : 0;
-      const edge = (mp, t, frac) => mp.clone().addScaledVector(side, sgn * hw(t) * frac)
-        .addScaledVector(nrm, -hw(t) * frac * frac * (0.12 + curDroop * 0.6));
-      // Sisäosa (keskisuonen vieressä, ehjä) ja ulko-osa (suikaleet).
-      const a0 = m0.clone().addScaledVector(side, sgn * 0.02), a1 = m1.clone().addScaledVector(side, sgn * 0.02);
-      const b0 = edge(m0, t0, 0.18), b1 = edge(m1, t1, 0.18);
-      const c0 = edge(m0, t0, 1), c1 = edge(m1, t1 - gap, 1);
-      m.quad(a0, b0, b1, a1, ribC, green, green, ribC, 1.1);
-      m.quad(b0, c0, c1, b1, green, edgeC, edgeC, green, 1.1);
-    }
-  }
-  // Keskisuoni
-  m.two = false;
-  for (let s = 0; s < segs; s++) {
-    const m0 = mid[s], m1 = mid[s + 1];
-    m.quad(m0.clone().addScaledVector(side, -0.02), m0.clone().addScaledVector(side, 0.02), m1.clone().addScaledVector(side, 0.02), m1.clone().addScaledVector(side, -0.02), ribC, ribC, ribC, ribC, 0.4);
-  }
-}
-
-// Banaanitertu: kääntyvä varsi, kampoja ja punavioletti kukka.
-function bananaBunch(parts, top, a, rand) {
-  const dir = V(Math.cos(a), 0, Math.sin(a));
-  const s0 = top.clone().addScaledVector(dir, 0.1);
-  const s1 = s0.clone().addScaledVector(dir, 0.35).add(V(0, 0.1, 0));
-  const s2 = s1.clone().addScaledVector(dir, 0.2).add(V(0, -0.5, 0));
-  const s3 = s2.clone().add(V(0, -0.55, 0));
-  const stalk = 0x6a7a34;
-  parts.push(paint(limb(s0, s1, 0.035, 0.03, 5), stalk, { rand }));
-  parts.push(paint(limb(s1, s2, 0.03, 0.03, 5), stalk, { rand }));
-  parts.push(paint(limb(s2, s3, 0.03, 0.02, 5), stalk, { rand }));
-  const hands = 4 + Math.floor(rand() * 3);
-  for (let h = 0; h < hands; h++) {
-    const c = s2.clone().lerp(s3, h / hands * 0.85);
-    const nf = 7;
-    for (let f = 0; f < nf; f++) {
-      const fa = (f / nf) * Math.PI * 2 + h * 0.4;
-      const out = V(Math.cos(fa), 0, Math.sin(fa));
-      const b = c.clone().addScaledVector(out, 0.04);
-      const e = b.clone().addScaledVector(out, 0.07).add(V(0, 0.12, 0));
-      parts.push(paint(limb(b, e, 0.018, 0.014, 5, true), rand() < 0.7 ? 0x7a9a30 : 0x9aa838, { rand, jitter: 0.05 }));
-    }
-  }
-  let bud = new THREE.SphereGeometry(0.07, 8, 6);
-  bud.scale(1, 1.9, 1);
-  bud.translate(s3.x, s3.y - 0.1, s3.z);
-  parts.push(paint(bud, 0x6a2438, { rand, jitter: 0.06, shade: (x, y) => 0.8 + 0.2 * Math.sin(y * 40) }));
-}
-
-export function makeBanana(seed, q = 1) {
-  const rand = mulberry32(seed);
-  const parts = [];
-  const m = new Mesher();
-  const stems = 1 + (rand() < 0.6 ? 1 : 0) + (rand() < 0.3 ? 1 : 0);
-  for (let si = 0; si < stems; si++) {
-    const main = si === 0;
-    const H = (main ? 2.2 + rand() * 1.2 : 0.9 + rand() * 0.9);
-    const off = main ? V(0, 0, 0) : V((rand() - 0.5) * 0.9, 0, (rand() - 0.5) * 0.9);
-    const top = V(off.x + (rand() - 0.5) * 0.25, H, off.z + (rand() - 0.5) * 0.25);
-    const r = main ? 0.13 : 0.08;
-    // Valevarsi lehtitupeista: vihreänruskea, tummia läiskiä, tupen saumat.
-    parts.push(paint(limb(V(off.x, -0.1, off.z), top, r * 1.45, r * 0.75, 10, false, 6), 0x5e7a36, {
-      rand, jitter: 0.12, shade: (x, y, z) => 0.7 + 0.2 * Math.min(1, y / H) + 0.1 * Math.sin(Math.atan2(z - off.z, x - off.x) * 3 + y * 2),
-    }));
-    // Kuivuneet lehdet riippuvat varren ympärillä.
-    const nd = main ? 2 + Math.floor(rand() * 2) : 1;
-    for (let i = 0; i < nd; i++) {
-      bananaLeaf(m, V(top.x, top.y - 0.25, top.z), rand() * Math.PI * 2, -1.1 - rand() * 0.3, (0.8 + rand() * 0.4) * (main ? 1 : 0.6), 0.06, rand, true, q);
-    }
-    const nl = main ? 7 + Math.floor(rand() * 3) : 4 + Math.floor(rand() * 2);
-    for (let i = 0; i < nl; i++) {
-      const a = (i / nl) * Math.PI * 2 + rand() * 0.5;
-      const young = i === nl - 1;
-      const elev = young ? 1.3 : 0.75 + rand() * 0.45;
-      const len = (main ? 1.8 + rand() * 0.8 : 0.9 + rand() * 0.4) * (young ? 0.7 : 1);
-      bananaLeaf(m, top, a, elev, len, len * 0.21, rand, false, q);
-    }
-    // Kaukoversiossa (q = 0) ei terttua; arvonta silti samassa järjestyksessä.
-    const bunch = main && rand() < 0.55;
-    const ba = rand() * Math.PI * 2;
-    if (bunch && q) bananaBunch(parts, top, ba, rand);
-  }
-  parts.push(m.geometry());
-  return merge(parts);
 }

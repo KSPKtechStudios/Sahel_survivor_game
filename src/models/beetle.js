@@ -7,13 +7,13 @@
 // - kuusi jalkaa (etujalat pisimmät), lyhyet lehdykkätuntosarvet;
 // - lentosiivet kalvomaiset ja ruskehtavat, taitettuina peitinsiipien alla.
 // Malli rakennetaan senttimetreinä ja skaalataan lopuksi (S): pelissä noin
-// 20 cm sarvineen (hieman suurinta todellista kokoa isompi, jotta erottuu).
+// 28 cm sarvineen (sessio 49: suurennettu, jotta pelaaja huomaa sen).
 // Malli katsoo +Z-suuntaan, jalat maassa (y = 0).
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
 import { V, paint, limb, merge } from './util.js';
 
-const S = 0.0125; // m / cm
+const S = 0.0175; // m / cm (sessio 49: 0,0125 -> 0,0175, n. 28 cm sarvineen)
 
 const BLACK = 0x0d0b0a;
 const HAIR = 0x8f5f2a;

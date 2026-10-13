@@ -20,10 +20,11 @@
 // luuranko rakennetaan latauksessa). Vaeltaa ja laiduntaa yksin tai pareittain;
 // liian lähelle tulevaa pelaajaa se katsoo korvat levällään ja siirtyy sitten
 // verkkaisesti kauemmas. Runko on liikkuva este, joka tönäisee pelaajaa.
-// Herkuleskuoriainen (sessio 48): sademetsän pohjalla verkkaisesti kulkeva
-// kuoriainen (oma malli, models/beetle.js), yleisempi öisin. Liian lähelle
-// tulevalle se nostaa sarvensa; lyötynä tai ahdisteltuna se avaa
-// peitinsiipensä ja lentää pöristen pois. Ei hyökkää (todellinenkin on
+// Herkuleskuoriainen (sessio 48, 49): sademetsän kuoriainen (oma malli,
+// models/beetle.js), yleisempi öisin. Lentelee pöristen puulta toiselle ja
+// kiipeilee puunrungoilla (sessio 49: maasta sitä oli vaikea huomata);
+// välillä laskeutuu maahan. Liian lähelle tulevalle se nostaa sarvensa;
+// lyötynä tai ahdisteltuna se lentää pois. Ei hyökkää (todellinenkin on
 // ihmiselle vaaraton; avoin kysymys, ks. DESIGN).
 import * as THREE from 'three';
 import { waterAt, sampleTerrain, insideStructure } from '../world/terrain.js';
@@ -34,6 +35,7 @@ import { windUniforms } from '../render/materials.js';
 import { GhostCloak } from '../models/ghostCloak.js';
 import { loadElephant, elephantReady, makeElephant, animateElephant } from '../models/elephant.js';
 import { makeHerculesBeetle } from '../models/beetle.js';
+import { OBJECT_TYPES } from '../world/objectTypes.js';
 
 export const MOB_TYPES = {
   warthog: {
@@ -92,7 +94,8 @@ export const MOB_TYPES = {
   },
   // Sessio 48: herkuleskuoriainen. tiny = pienet osuma- ja kuolemaefektit.
   beetle: {
-    name: 'Herkuleskuoriainen', hp: 10, radius: 0.1, height: 0.09, walk: 0.16, run: 0.3, mass: 0.15, sight: 1.3, turn: 2.2, poise: 0,
+    // Sessio 49: 1,4-kertainen (n. 28 cm sarvineen), jotta erottuu paremmin.
+    name: 'Herkuleskuoriainen', hp: 10, radius: 0.14, height: 0.125, walk: 0.2, run: 0.4, mass: 0.2, sight: 1.3, turn: 2.2, poise: 0,
     drops: [['beetle_horn', 1, 1]], beetle: true, tiny: true,
   },
 };
@@ -117,6 +120,10 @@ const _v = new THREE.Vector3();
 const _m = new THREE.Matrix4();
 const _w = new THREE.Vector3();
 const _cw = { x: 0, z: 0 }; // sessio 27: tuuli haamun viittaan
+// Sessio 49: kuoriainen rungolla (suunta ja rungon tiedot).
+const _bX = new THREE.Vector3(), _bY = new THREE.Vector3(), _bZ = new THREE.Vector3();
+const _bm = new THREE.Matrix4();
+const _tk = { x: 0, z: 0, r: 0 };
 
 // Veren väri lajeittain (savipeikolla punaruskeaa savivelliä).
 const RED = new THREE.Color(0.55, 0.03, 0.02);
@@ -811,7 +818,8 @@ export class Mobs {
         else if (m.def.heavy) this._thinkElephant(m, dt);
         else this._thinkClay(m, dt);
         if (!this.list.includes(m)) continue;
-        if (m.state === 'fly') this._flyPhysics(m, dt);
+        if (m.def.beetle && (m.state === 'fly' || m.state === 'climb' || m.state === 'dead')) this._beetleAir(m, dt);
+        else if (m.state === 'fly') this._flyPhysics(m, dt);
         else if (m.def.ghost) this._ghostPhysics(m, dt);
         else this._physics(m, dt);
       }
@@ -852,7 +860,7 @@ export class Mobs {
     }
   }
 
-  // Sessio 48: herkuleskuoriainen sademetsän pohjalle 12–30 m:n päähän.
+  // Sessio 48: herkuleskuoriainen sademetsään 12–30 m:n päähän.
   _trySpawnBeetle(night) {
     if (this.count('beetle') >= MAX_BEETLES || Math.random() > (night ? 0.6 : 0.3)) return;
     const p = this.player.position;
@@ -861,7 +869,12 @@ export class Mobs {
       const r = 12 + Math.random() * 18;
       const x = p.x + Math.cos(ang) * r, z = p.z + Math.sin(ang) * r;
       if (!this._okSpot(x, z) || (_s.rainforest || 0) < 0.6) continue;
-      this.spawn('beetle', x, z);
+      const m = this.spawn('beetle', x, z);
+      // Sessio 49: puolet syntyy suoraan puunrungolle (maasta vaikea huomata).
+      if (Math.random() < 0.55) {
+        const t = this._beetleFindTrunk(m, false);
+        if (t) { m.trunk = t; this._beetleOnTrunk(m); this._set(m, 'climb', 20 + Math.random() * 30); }
+      }
       return;
     }
   }
@@ -1376,10 +1389,87 @@ export class Mobs {
   }
 
   // --- Herkuleskuoriainen (sessio 48) ------------------------------------------
-  _beetleTakeOff(m) {
-    if (m.state === 'dead' || m.state === 'fly') return;
-    this._set(m, 'fly', 2.4 + Math.random() * 1.6);
-    m.vy = 1.6;
+  // Sessio 49 (käyttäjä: lentelee enemmän ja on puunrungoilla, koska maasta
+  // sitä on vaikea huomata): kuoriainen lentää itsekseen rungolta toiselle ja
+  // kiipeilee rungoilla enimmäkseen 1–3 m:n korkeudella selkä ulospäin.
+
+  // Rungon keskipiste ja säde korkeudella h (puun mallin rungon tiedoista).
+  _trunkAt(t, h, out) {
+    const o = t.obj, M = t.meta, sc = o.scale;
+    const b = M.base, tp = M.top;
+    const k = Math.max(0, Math.min(1, (h / sc - b[1]) / Math.max(0.1, tp[1] - b[1])));
+    const lx = (b[0] + (tp[0] - b[0]) * k) * sc, lz = (b[2] + (tp[2] - b[2]) * k) * sc;
+    const c = Math.cos(o.rot), sn = Math.sin(o.rot);
+    out.x = o.x + lx * c + lz * sn;
+    out.z = o.z - lx * sn + lz * c;
+    out.r = (M.r0 + (M.r1 - M.r0) * k) * sc;
+    return out;
+  }
+
+  // Kiipeilykorkeus rungolla: enimmäkseen silmien korkeudella (pelaajan pitää
+  // huomata kuoriainen); pönkkäjuurten yläpuolella.
+  _trunkRange(obj, meta) {
+    const hMin = obj.type === 'emergent' ? 3.6 : obj.type === 'jungle' ? 1.9 : 0.7;
+    const hMax = Math.max(hMin + 0.6, Math.min(obj.type === 'emergent' ? 4.6 : 3.0, meta.top[1] * obj.scale * 0.7));
+    return [hMin, hMax];
+  }
+
+  _trunkAlive(t) {
+    return t && !this.world.removed.has(t.obj.id) && !this.world.stumps.has(t.obj.id);
+  }
+
+  // Lähin sopiva runko 2–14 m:n päästä (pakeneva: poispäin pelaajasta).
+  _beetleFindTrunk(m, flee) {
+    const p = this.player.position;
+    this.world.collidersNear(m.pos.x, m.pos.z, 14, _cols);
+    const cand = [];
+    for (const c of _cols) {
+      const o = c.obj;
+      if (!o) continue;
+      const def = OBJECT_TYPES[o.type];
+      if (!def || def.kind !== 'tree' || o.stump) continue;
+      const geo = this.world.models.world[def.model]?.[o.variant];
+      const meta = geo && geo.userData.tree;
+      if (!meta) continue;
+      const d = Math.hypot(o.x - m.pos.x, o.z - m.pos.z);
+      if (d < 1.5 || d > 14) continue;
+      if (flee && Math.hypot(o.x - p.x, o.z - p.z) < Math.hypot(m.pos.x - p.x, m.pos.z - p.z) + 1) continue;
+      cand.push({ obj: o, meta, d });
+    }
+    if (!cand.length) return null;
+    cand.sort((a, b) => a.d - b.d);
+    const pick = cand[Math.floor(Math.random() * Math.min(4, cand.length))];
+    const t = { obj: pick.obj, meta: pick.meta };
+    const [hMin, hMax] = this._trunkRange(pick.obj, pick.meta);
+    t.h = hMin + Math.random() * (hMax - hMin);
+    const c = this._trunkAt(t, t.h, _tk);
+    t.ang = Math.atan2(m.pos.z - c.z, m.pos.x - c.x) + (Math.random() - 0.5) * 1.2;
+    t.dir = Math.random() < 0.5 ? 1 : -1;
+    return t;
+  }
+
+  // Lentoon: kohteena runko (useimmiten) tai maa.
+  _beetleTakeOff(m, flee = true) {
+    if (m.state === 'dead') return;
+    m.trunk = Math.random() < 0.75 ? this._beetleFindTrunk(m, flee) : null;
+    if (!m.trunk) {
+      const p = this.player.position;
+      let a = Math.random() * Math.PI * 2;
+      if (flee) a = Math.atan2(m.pos.z - p.z, m.pos.x - p.x) + (Math.random() - 0.5) * 1.4;
+      const r = 5 + Math.random() * 7;
+      m.fx = m.pos.x + Math.cos(a) * r;
+      m.fz = m.pos.z + Math.sin(a) * r;
+    }
+    this._set(m, 'fly', 14);
+    m.vel.y = 1.4;
+  }
+
+  // Laskeutuminen rungolle: paikka ja suunta rungon pinnalla.
+  _beetleOnTrunk(m) {
+    const t = m.trunk;
+    const c = this._trunkAt(t, t.h, _tk);
+    const off = c.r + 0.012;
+    m.pos.set(c.x + Math.cos(t.ang) * off, (t.obj.y ?? m.pos.y) + t.h, c.z + Math.sin(t.ang) * off);
   }
 
   _thinkBeetle(m, dt) {
@@ -1388,13 +1478,14 @@ export class Mobs {
     m.timer -= dt;
     const { dx, dz, d } = this._toPlayer(m);
     const P = this.player;
-    // Pelaaja aivan vieressä (ei hiivi): kuoriainen uhittelee sarvillaan.
-    const close = !P.dead && d < (P.crouching ? 0.55 : 1.1);
+    const close = !P.dead && d < (P.crouching ? 0.6 : 1.2);
     switch (m.state) {
       case 'graze':
         this._steer(m, 0, 0, 0, dt);
         if (close) this._set(m, 'threat', 1.4 + Math.random());
         else if (m.timer <= 0) {
+          // Usein lentoon (rungolle), muuten pieni kävely.
+          if (Math.random() < 0.55) { this._beetleTakeOff(m, false); break; }
           const a = Math.random() * Math.PI * 2, r = 1 + Math.random() * 3;
           m.tx = m.pos.x + Math.cos(a) * r;
           m.tz = m.pos.z + Math.sin(a) * r;
@@ -1404,43 +1495,79 @@ export class Mobs {
       case 'wander': {
         const wx = m.tx - m.pos.x, wz = m.tz - m.pos.z;
         const wd = Math.hypot(wx, wz);
-        // Hieman mutkitteleva kulku.
         const wob = Math.sin(m.stateT * 1.7 + m.phase * 0.01) * 0.5;
         const ux = wx / (wd || 1), uz = wz / (wd || 1);
         this._steer(m, ux * Math.cos(wob) - uz * Math.sin(wob), uz * Math.cos(wob) + ux * Math.sin(wob), def.walk, dt);
         if (close) this._set(m, 'threat', 1.4 + Math.random());
-        else if (wd < 0.25 || m.timer <= 0) this._set(m, 'graze', 2 + Math.random() * 6);
+        else if (wd < 0.25 || m.timer <= 0) this._set(m, 'graze', 2 + Math.random() * 5);
         break;
       }
       case 'threat':
-        // Kääntyy pelaajaan päin ja nostaa sarvensa. Jos ahdistelu jatkuu,
-        // lentää pois; muuten jatkaa matkaa.
         this._steer(m, dx, dz, 0, dt, true);
         m.annoy = (m.annoy || 0) + (close ? dt : -dt * 0.5);
-        if (m.annoy > 3.2) { m.annoy = 0; this._beetleTakeOff(m); break; }
+        if (m.annoy > 3.2) { m.annoy = 0; this._beetleTakeOff(m, true); break; }
         if (m.timer <= 0) this._set(m, close ? 'threat' : 'graze', close ? 1 : 1.5);
         break;
       case 'fly': {
-        // Kömpelö, pörisevä lento poispäin pelaajasta.
-        const want = Math.atan2(-dx, -dz) + Math.sin(m.stateT * 2.1 + m.phase * 0.01) * 0.6;
-        const diff = angleDiff(want, m.yaw);
-        m.yaw += Math.max(-3 * dt, Math.min(3 * dt, diff));
-        const sp = m.pos.y > (m.groundH ?? m.pos.y) + 0.1 ? 2.6 : 0.6;
-        m.vel.x = Math.sin(m.yaw) * sp;
-        m.vel.z = Math.cos(m.yaw) * sp;
-        if (m.timer <= 0 && m.pos.y <= (m.groundH ?? m.pos.y) + 0.03) {
+        // Kömpelö, pörisevä lento kohteeseen (runko tai maa).
+        const t = m.trunk;
+        if (t && !this._trunkAlive(t)) m.trunk = null;
+        const gy = waterAt(m.pos.x, m.pos.z, _wq).h;
+        let tx, ty, tz;
+        if (m.trunk) {
+          const c = this._trunkAt(m.trunk, m.trunk.h, _tk);
+          const off = c.r + 0.012;
+          tx = c.x + Math.cos(m.trunk.ang) * off;
+          tz = c.z + Math.sin(m.trunk.ang) * off;
+          ty = (m.trunk.obj.y ?? gy) + m.trunk.h;
+        } else {
+          tx = m.fx ?? m.pos.x; tz = m.fz ?? m.pos.z;
+          ty = waterAt(tx, tz, _wq).h;
+        }
+        const hx = tx - m.pos.x, hz = tz - m.pos.z;
+        const hd = Math.hypot(hx, hz);
+        // Kaukana lennetään 1,5–2,5 m:n korkeudella, lähellä suoraan kohteeseen.
+        const cruise = hd > 1.5 ? Math.max(ty, gy + 1.6 + Math.sin(m.stateT * 1.3) * 0.4) : ty;
+        const vx = hx, vy = cruise - m.pos.y, vz = hz;
+        const vl = Math.hypot(vx, vy, vz) || 1;
+        const sp = Math.min(2.6, 0.6 + vl * 2.2);
+        const wob = Math.sin(m.stateT * 9 + m.phase * 0.01) * 0.25;
+        m.vel.x += ((vx / vl) * sp + Math.cos(m.stateT * 3.1) * wob - m.vel.x) * Math.min(1, dt * 4);
+        m.vel.z += ((vz / vl) * sp + Math.sin(m.stateT * 2.7) * wob - m.vel.z) * Math.min(1, dt * 4);
+        m.vel.y += ((vy / vl) * sp - m.vel.y) * Math.min(1, dt * 4);
+        if (hd > 0.05) m.yaw += angleDiff(Math.atan2(hx, hz), m.yaw) * Math.min(1, dt * 5);
+        if (hd < 0.12 && Math.abs(ty - m.pos.y) < 0.12) {
           m.vel.set(0, 0, 0);
-          this._set(m, 'graze', 2 + Math.random() * 3);
+          if (m.trunk) { this._beetleOnTrunk(m); this._set(m, 'climb', 15 + Math.random() * 25); }
+          else { m.pos.y = ty; this._set(m, 'graze', 3 + Math.random() * 6); }
+        } else if (m.timer <= 0) {
+          m.trunk = null; m.fx = m.pos.x; m.fz = m.pos.z; // laskeutuu suoraan alas
         }
         break;
       }
+      case 'climb': {
+        // Rungolla: kiipeää hitaasti ylös ja alas, välillä pysähtyy.
+        const t = m.trunk;
+        if (!this._trunkAlive(t)) { this._beetleTakeOff(m, false); break; }
+        const move = Math.sin(m.stateT * 0.4 + m.phase * 0.01) > -0.2;
+        m.climbV = move ? 0.07 : 0;
+        t.h += t.dir * m.climbV * dt;
+        t.ang += Math.sin(m.stateT * 0.23) * 0.05 * dt;
+        const [hMin, hMax] = this._trunkRange(t.obj, t.meta);
+        if (t.h > hMax) t.dir = -1;
+        if (t.h < hMin) t.dir = 1;
+        this._beetleOnTrunk(m);
+        m.vel.set(0, 0, 0);
+        if (m.timer <= 0 || (close && d < 0.8 && Math.random() < dt * 0.5)) this._beetleTakeOff(m, close);
+        break;
+      }
       case 'stagger':
-        this._steer(m, 0, 0, 0, dt);
-        if (m.stateT >= m.staggerDur) this._beetleTakeOff(m);
+        if (m.stateT >= m.staggerDur) this._beetleTakeOff(m, true);
         break;
       case 'dead':
         m.deadT += dt;
-        m.vel.multiplyScalar(Math.exp(-dt * 6));
+        m.vel.x *= Math.exp(-dt * 6);
+        m.vel.z *= Math.exp(-dt * 6);
         if (m.deadT > 9) this.remove(m);
         break;
       default:
@@ -1448,14 +1575,35 @@ export class Mobs {
     }
   }
 
+  // Ilmassa ja rungolla oma liike (lento kolmiulotteisesti; kuollut putoaa).
+  _beetleAir(m, dt) {
+    const pos = m.pos;
+    const gy = Math.max(waterAt(pos.x, pos.z, _wq).h, -1000);
+    if (m.state === 'climb') return;
+    if (m.state === 'dead') {
+      m.vel.y -= 9.8 * dt;
+      pos.addScaledVector(m.vel, dt);
+      if (pos.y <= gy) { pos.y = gy; m.vel.set(0, 0, 0); }
+      return;
+    }
+    pos.x += (m.vel.x + m.knock.x) * dt;
+    pos.z += (m.vel.z + m.knock.z) * dt;
+    pos.y += m.vel.y * dt;
+    m.knock.multiplyScalar(Math.exp(-dt * 3.5));
+    if (pos.y < gy) { pos.y = gy; m.vel.y = Math.max(0, m.vel.y); }
+  }
+
   // Kuusijalkainen kävely kolmijalkakäynnillä (vasen etu, oikea keski ja
   // vasen taka yhtä aikaa). Uhitellessa etupää ja sarvet nousevat; lentäessä
-  // peitinsiivet aukeavat ja lentosiivet surisevat. Kuollessa kääntyy selälleen.
+  // peitinsiivet aukeavat ja lentosiivet surisevat. Rungolla selkä ulospäin
+  // ja pää kulkusuuntaan. Kuollessa kääntyy selälleen.
   _animBeetle(m, md, speed, dt, elapsed) {
     const L = md.legs, W = md.wings;
     const s = m.state;
-    const flying = s === 'fly' && m.pos.y > (m.groundH ?? m.pos.y) + 0.02;
-    const walkK = Math.min(1, speed / Math.max(0.05, m.def.walk));
+    const climbing = s === 'climb' && m.trunk;
+    const flying = s === 'fly' && m.pos.y > waterAt(m.pos.x, m.pos.z, _wq).h + 0.02;
+    if (climbing) m.phase += (m.climbV || 0) * dt * 110;
+    const walkK = climbing ? Math.min(1, (m.climbV || 0) / 0.07) : Math.min(1, speed / Math.max(0.05, m.def.walk));
     let headX = Math.sin(elapsed * 1.3 + m.phase * 0.01) * 0.04;
     let bodyX = 0;
     if (s === 'threat') { headX = -0.45; bodyX = -0.16; }
@@ -1495,13 +1643,21 @@ export class Mobs {
     }
     md.head.rotation.x += (headX - md.head.rotation.x) * Math.min(1, dt * 8);
     md.body.rotation.x += (bodyX - md.body.rotation.x) * Math.min(1, dt * 8);
-    md.group.rotation.x = flying ? -0.5 : bodyX * 0.6;
+    if (climbing) {
+      // Selkä (+Y) rungosta ulospäin, eteenpäin (+Z) kulkusuuntaan pystyssä.
+      _bY.set(Math.cos(m.trunk.ang), 0, Math.sin(m.trunk.ang));
+      _bZ.set(0, m.trunk.dir, 0);
+      _bX.crossVectors(_bY, _bZ);
+      _bm.makeBasis(_bX, _bY, _bZ);
+      md.group.quaternion.setFromRotationMatrix(_bm);
+      return;
+    }
+    md.group.rotation.set(flying ? -0.5 : bodyX * 0.6, m.yaw, 0);
     if (s === 'dead') {
       // Selälleen: kääntyy pituusakselin ympäri ja nousee kuoren kaaren verran.
       const k = smooth(m.deadT / 0.5);
-      md.group.rotation.z = m.deathSide * k * Math.PI;
-      md.group.position.y += k * 0.055;
-      md.group.rotation.x = 0;
+      md.group.rotation.set(0, m.yaw, m.deathSide * k * Math.PI);
+      md.group.position.y += k * 0.077;
     }
   }
 

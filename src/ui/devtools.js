@@ -141,6 +141,8 @@ export class DevTools {
     this._button(row, 'Haamu', () => (mobs.spawnInFront('haamu', 14) ? `Haamu kutsuttu${env.daylight > 0.15 ? ' (päivällä se haihtuu heti)' : ''}` : 'Paikkaa ei löytynyt'));
     this._button(row, 'Norsu', () => (mobs.spawnInFront('elephant', 16) ? 'Norsu kutsuttu' : 'Paikkaa ei löytynyt (tai malli latautuu vielä)'));
     this._button(row, 'Herkuleskuoriainen', () => (mobs.spawnInFront('beetle', 2.5) ? 'Herkuleskuoriainen kutsuttu' : 'Paikkaa ei löytynyt'));
+    // Sessio 49: kärpäsen ohilento heti (normaalisti vain sademetsässä silloin tällöin).
+    this._button(row, 'Kärpänen ohi', () => { this.ctx.flies?.trigger(); return 'Kärpänen lentää ohi'; });
     this._button(row, 'Poista olennot', () => { mobs.clear(); return 'Olennot poistettu'; });
     row = this._row(sec);
     for (const [type, name] of [['gazelle', 'Gaselli'], ['guineafowl', 'Helmikana'], ['monkey', 'Apina'], ['fennec', 'Aavikkokettu'], ['bird', 'Lintu']]) {

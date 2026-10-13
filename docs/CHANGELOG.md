@@ -2,6 +2,24 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-12 (sessio 49): kuoriainen puissa, uudet banaanit ja bambut, kärpäset
+
+- **Herkuleskuoriainen:**
+  - noin 1,4 kertaa isompi (noin 28 cm sarvineen), joten se erottuu;
+  - lentelee pöristen puulta toiselle ja kiipeilee puunrungoilla enimmäkseen silmien korkeudella (1–3 m), selkä ulospäin;
+  - puolet kuoriaisista syntyy suoraan rungolle; maahan se laskeutuu vain välillä;
+  - jos puu kaadetaan alta, se lähtee lentoon; lyötynä se lentää pois, ja kuollut kuoriainen putoaa rungolta maahan.
+- **Uudet mallisi peliin** (Sketchfab, CC-BY-4.0, tekijät `assets/CREDITS.txt`):
+  - **banaanipuu** korvaa vanhan villibanaanin; muunnelmissa on 0–2 pientä sivuversoa, ja isossa on hedelmäterttu ja kukka;
+  - **bambu** korvaa vanhan bamburyhmän (noin 6–9 m);
+  - **bambupensas** on uusi kasvi sademetsän kenttäkerrokseen (noin 2–3 m); siitä saa bambua ja kuitua.
+- **Kenttäkerros tiheämmäksi:** saniaisia, aluskasvillisuutta ja trooppisia kasveja on noin 25–35 % enemmän, ja lisäksi tulevat bambupensaat.
+- **Latvusto umpinaisemmaksi:** sademetsän puiden latvukset ovat 15–30 % leveämpiä, ja lehtikortteja on yhtä monta kuin ennen (isompia), joten taivasta näkyy vähemmän eikä kolmioita tule lisää.
+- **Kärpäset ja paarmat** (vain sademetsässä, päivällä enemmän):
+  - muutama kärpänen sinkoilee lähistöllä nopein syöksyin, joskus aivan kasvojen edestä;
+  - silloin tällöin kärpänen surisee korvan ohi; ääni (sinun tiedostosi) ja kärpäsen lentorata kulkevat samaan suuntaan;
+  - [F3] → Olennot → **Kärpänen ohi** laukaisee ohilennon heti.
+
 ## 2026-10-12 (sessio 48): sademetsä tiheämmäksi ja eläväisemmäksi
 
 - **Ambienssiäänet kuuluvat taas:**

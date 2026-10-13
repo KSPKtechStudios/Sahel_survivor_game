@@ -46,11 +46,15 @@ const ONESHOTS = {
   whoosh2: 'assets/sfx/whoosh2.mp3',
   punch1: 'assets/sfx/punch1.mp3',
   punch2: 'assets/sfx/punch2.mp3',
+  // Sessio 49: kärpäsen ohilennot (käyttäjän tuoma, kolme pätkää).
+  fly: 'assets/sfx/fly-buzz.mp3',
 };
 // Huitominen: tasattu huipputason mukaan (tiedostojen huiput −1,6 / −6,8 dB),
 // jolloin huitaisu on n. −24 dB ja olentoon osuessa n. −31 dB.
 const WHOOSH_LEVEL = { whoosh1: 0.06, whoosh2: 0.11 };  // sessio 12e: −2 dB
 const BIRD_LEVEL = 0.22;
+// Kärpänen korvan vieressä: tiedoston huippu n. −20 dB.
+const FLY_LEVEL = 0.75;
 // Puun kaatuminen: räsähdyksen kohta tiedostossa (s) ja voimakkuus 10 m:stä.
 // Räsähdyksen jälkeen ääni häivytetään pois (TREE_TAIL s), ettei maassa
 // makaava puu jää rätisemään.
@@ -415,6 +419,30 @@ export class Sfx {
     pan.pan.value = 0.15 + Math.random() * 0.15;
     src.connect(g).connect(pan).connect(this.bus);
     src.start();
+  }
+
+  // Sessio 49: kärpäsen ohilento. Pätkä tiedostosta (alku, kesto); peilattuna
+  // kanavat ristiin, jolloin kärpänen kulkee toiseen suuntaan.
+  flyBuzz(offset, dur, mirror = false, level = 1) {
+    const buf = this.bufs.fly;
+    if (!this.ctx || !buf || this.ctx.state !== 'running') return false;
+    const ctx = this.ctx;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const g = ctx.createGain();
+    g.gain.value = FLY_LEVEL * level;
+    if (mirror) {
+      const sp = ctx.createChannelSplitter(2), mg = ctx.createChannelMerger(2);
+      src.connect(sp);
+      sp.connect(mg, 0, 1);
+      sp.connect(mg, 1, 0);
+      mg.connect(g);
+    } else {
+      src.connect(g);
+    }
+    g.connect(this.bus);
+    src.start(ctx.currentTime + 0.01, offset, dur);
+    return true;
   }
 
   // Lintu jossain lähellä (satunnainen suunta ja etäisyys).

@@ -1,6 +1,15 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 49:
+  - herkuleskuoriainen puunrungoilla ja lennossa ([F3] → Olennot → Herkuleskuoriainen, tai odota sademetsässä): koko, näkyykö se nyt paremmin;
+  - banaanipuut ja bambut (iso bambu ja bambupensas);
+  - kenttäkerros ja latvusto (ylös katsoessa vähemmän taivasta);
+  - kärpäset: sinkoilevat lähellä, ja ohilento äänen kanssa ([F3] → Olennot → Kärpänen ohi);
+  - ruudunpäivitys sademetsässä.
+- [ ] Vastaus: kärpäsen ohilentojen tiheys (nyt 10–35 s välein päivällä) ja äänen voimakkuus; onko kuoriainen sopivan kokoinen.
+- [ ] Kärpäsäänen lisenssi: tiedostonimen perusteella Pixabay (tekijä kuzu420). Varmista käyttäjältä lähde.
+- [ ] CC-BY-4.0-mallien (banaani, bambu, bambupensas) tekijät on mainittava, jos peli julkaistaan (nyt `assets/CREDITS.txt`; pelissä ei ole tekijäsivua).
 - [ ] Käyttäjä testaa session 48:
   - sademetsän ambienssi (kuuluuko);
   - latvuskatto ylös katsoessa ja valoläikät maassa;
@@ -9,7 +18,7 @@
   - herkuleskuoriainen: odota sademetsässä (öisin useammin) tai [F3] → Olennot → Herkuleskuoriainen;
   - ruudunpäivitys sademetsässä.
 - [ ] Vastaus:
-  - herkuleskuoriaisen koko (nyt 20 cm) ja käytös (ei hyökkää);
+  - ~~herkuleskuoriaisen koko (nyt 20 cm)~~ (sessio 49: suurennettu) ja käytös (ei hyökkää);
   - mihin sen sarvea käytetään;
   - pitäisikö tiheikön hidastaa liikkumista?
 - [ ] Jos sademetsä on vielä liian avoin: jättiläispuiden tiheyttä ylös (`objectTypes.js`, `emergent.density.rainforest`), mutta ruudunpäivitys on tarkistettava.

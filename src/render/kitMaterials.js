@@ -83,6 +83,26 @@ Object.assign(BUILD, {
   calathea: tropicalLeaf('calathea.jpg'),
   fern2: tropicalLeaf('fern2.jpg', 0.4),
 });
+// Sessio 49: käyttäjän tuomat banaani ja bambut. Nämä ovat maailman
+// esineitä (ei koristeita), joten ne eivät häivy 44 m:ssä. Saman mallin
+// kaikilla osilla sama tuuli, ettei lehdet irtoa varresta.
+function plantCard(file, wind, flutter, { tint = 0xffffff, rough = 0.75 } = {}) {
+  return () => softFoliage(addTranslucency(addWet(addAO(addWind(new THREE.MeshStandardMaterial({
+    map: tex(file), color: tint, alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, roughness: rough, metalness: 0,
+  }), wind, flutter)), 0.35, 0), 0.3, false));
+}
+function plantSolid(params, wind, flutter, wet = 0.6) {
+  return () => addWet(addAO(addWind(new THREE.MeshStandardMaterial({ metalness: 0, ...params() }), wind, flutter)), wet, 0.2);
+}
+Object.assign(BUILD, {
+  bananaTrunk: plantSolid(() => ({ map: tex('banana_trunk.jpg'), roughness: 0.85 }), 0.06, 1),
+  bananaLeaf: plantCard('banana_leaf.png', 0.06, 1, { tint: 0xc8d0c0, rough: 0.7 }),
+  bananaFruit: plantSolid(() => ({ color: new THREE.Color().setRGB(0.62, 0.46, 0.04), roughness: 0.6 }), 0.06, 1, 0.4),
+  bananaFlower: plantSolid(() => ({ color: new THREE.Color().setRGB(0.3, 0.02, 0.14), roughness: 0.55, side: THREE.DoubleSide }), 0.06, 1, 0.4),
+  bambooStalk: plantSolid(() => ({ map: tex('bamboo_stalk.jpg'), roughness: 0.55 }), 0.012, 0.15, 0.7),
+  bambooLeaf: plantCard('bamboo_leaf.png', 0.012, 0.15),
+  bambooBush: plantCard('bamboo_bush.png', 0.06, 1),
+});
 const matCache = {};
 
 export function kitMaterial(key) {

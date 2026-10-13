@@ -6,9 +6,11 @@
 import * as THREE from 'three';
 import { KIT as NATURE } from './natureKit.js';
 import { TROPICAL } from './tropicalKit.js';
+import { USERKIT } from './userKit.js';
 
 // Sessio 48: Poly Havenin trooppiset aluskasvit samaan kirjastoon.
-const KIT = { ...NATURE, ...TROPICAL };
+// Sessio 49: käyttäjän tuomat banaani ja bambut (Sketchfab, CC-BY-4.0).
+const KIT = { ...NATURE, ...TROPICAL, ...USERKIT };
 
 // Tekstuurien keskivärit (lineaarinen RGB), kun malli hajoaa sirpaleiksi.
 const AVG = {
@@ -20,6 +22,14 @@ const AVG = {
   // Sessio 48 (Poly Haven)
   calathea: [0.08, 0.16, 0.05],
   fern2: [0.09, 0.17, 0.04],
+  // Sessio 49 (käyttäjän mallit)
+  bananaTrunk: [0.18, 0.2, 0.05],
+  bananaLeaf: [0.13, 0.34, 0.04],
+  bananaFruit: [0.8, 0.52, 0.0],
+  bananaFlower: [0.49, 0.0, 0.27],
+  bambooStalk: [0.15, 0.16, 0.05],
+  bambooLeaf: [0.05, 0.1, 0.01],
+  bambooBush: [0.06, 0.17, 0.01],
 };
 
 function decode(b64, Type) {

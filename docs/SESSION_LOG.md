@@ -2,6 +2,27 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-12 (sessio 49)
+**Tehtiin**
+- Herkuleskuoriainen:
+  - 1,4 × isompi (`models/beetle.js` S);
+  - lentää rungolta toiselle ja kiipeilee rungoilla (`game/mobs.js`: `_beetleFindTrunk`, `_trunkAt`, `_beetleAir`, rungolla asento `_animBeetle`:ssa);
+  - osa syntyy suoraan rungolle.
+- Käyttäjän mallit (banaanipuu, bambu, bambupensas; Sketchfab CC-BY-4.0):
+  - muunnin `userglb.mjs` (scratchpad) → `models/kit/userKit.js`;
+  - tekstuurit `assets/models/nature/banana_*`, `bamboo_*`;
+  - materiaalit `kitMaterials.js` (`plantCard`, `plantSolid`);
+  - uusi tyyppi `bambooBush` listan loppuun;
+  - vanhat `makeBanana` ja `makeBamboo` poistettu.
+- Kenttäkerros: koristekasvien tiheydet ylös. Latvusto: `trees.js` `widen` (leveämpi latvus, sama korttimäärä).
+- Kärpäset (`render/flies.js`):
+  - syöksyjät lähistöllä ja ohilento korvan ohi äänen kanssa (`sfx.flyBuzz`, `assets/sfx/fly-buzz.mp3`);
+  - F3-painike "Kärpänen ohi".
+- Tekijät `assets/CREDITS.txt` (CC-BY vaatii nimeämisen).
+
+**Seuraavaksi**
+- Käyttäjän palaute (ks. TODO): kuoriainen rungoilla, uudet kasvit, kärpäset, latvusto ja ruudunpäivitys.
+
 ## 2026-10-12 (sessio 48)
 **Tehtiin**
 - Ambienssi (`audio/sfx.js`): tasot mitattu (EBU R128), viidakkoääni kuuluviin.

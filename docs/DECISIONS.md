@@ -2,6 +2,33 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-12 (sessio 49)
+- **Kuoriainen rungoilla:** rungon paikka ja säde lasketaan puun mallin rungon tiedoista (`userData.tree`: base, top, r0, r1) sekä objektin kierrosta ja koosta. Erillistä törmäyshakua ei tarvita, joten se on kevyt. Rungolla kuoriaisen suunta lasketaan kantavektoreista (selkä ulospäin, pää kulkusuuntaan). Kuolleena se putoaa painovoimalla.
+- **Käyttäjän mallit kit-muotoon** samalla muuntimella kuin Poly Havenin kasvit:
+  - solmujen muunnokset leivottu ja koko skaalattu metreihin;
+  - banaanin hedelmäterttu kevennetty 8 400 → 160 kolmioon (kärkipisteet ensin yhdistetty, koska verkossa oli irrallisia saumoja);
+  - bambunlehtien UV:t siirretty välille 0–1, koska alfatekstuurit eivät toistu, ja ilman siirtoa lehdet eivät näkyneet.
+
+  Kaukoversioissa bambun ja pensaan lehtikorteista jätetään osa ja ne suurennetaan.
+- **Bambuista ei peilattuja kopioita:** pyöritys riittää vaihteluun, ja tiedosto pysyy pienenä (userKit.js 480 kt).
+- **Vanhat proseduraaliset banaani ja bambu poistettu** (`palms.js` `makeBanana`, `plants.js` `makeBamboo`). Syy: käyttäjä toimitti paremmat mallit; muunnelmien määrän muutos ei siirrä objekteja (muunnelma valitaan viimeisenä).
+- **Latvusto leveämmäksi samalla korttimäärällä** (`trees.js` `widen`):
+  - leveys kerrottu (latvuspuu 1,3, viidakkopuu 1,25, jättiläispuu 1,15);
+  - tiheys jaettu pinta-alan kasvulla ja kortit suurennettu;
+  - kolmiomäärä mitattiin samaksi kuin ennen (5 317 / 1 734 / 3 823).
+
+  Syy: käyttäjä halusi lisää lehtikattoa ilman ruudunpäivityksen laskua; kortteja lisäämällä kolmiot olisivat kasvaneet.
+- **Suorituskyky** (sademetsä, näköetäisyys 4, kasvillisuus korkea; sessio 48 → 49):
+  - piirtokutsut 318 → 340 (uudet materiaalit);
+  - kolmiot 4,60 M → 4,58 M (uusi bambu on kevyempi kuin vanha proseduraalinen);
+  - ylöspäin katsottaessa 314 → 338 kutsua ja 4,59 M → 4,57 M kolmiota.
+- **Kenttäkerros:** vain koristetyyppien tiheyksiä nostettiin (`groundFern`, `undergrowth`, `tropicalPlant`), koska niiden paikkoja ei tallenneta. Bambupensas on uusi tyyppi listan lopussa.
+- **Kärpäset:**
+  - rata kulkee kameran suhteessa, jotta stereoäänen panorointi (tiedostossa vasemmalta oikealle) ja näkyvä lento täsmäävät pelaajan kääntyessäkin;
+  - toinen suunta saadaan vaihtamalla kanavat ristiin;
+  - tiedostosta leikattiin kolme ohilentoa (4,2 s, 59 kt alkuperäisen 12,5 s:n ja 400 kt:n sijaan);
+  - liike-epäterävyyden tilalla kärpäsen runkoa venytetään vauhdin mukaan.
+
 ## 2026-10-12 (sessio 48)
 - **Ambienssi:** viidakkoäänen taso 0,22 → 0,4 ja alipäästö 4,2 → 8 kHz. Syy, mitattu EBU R128:lla:
   - tiedosto on −20,9 LUFS, ja sen yläpää (yli 4,2 kHz, hyönteiset ja linnut) −27,5 LUFS;

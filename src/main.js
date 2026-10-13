@@ -23,6 +23,7 @@ import { Rain } from './render/rain.js';
 import { PostFX } from './render/post.js';
 import { Music, BIOME_MUSIC } from './audio/music.js';
 import { Sfx } from './audio/sfx.js';
+import { Flies } from './render/flies.js';
 import { createModelLibrary } from './models/models.js';
 import { World } from './world/world.js';
 import { OBJECT_TYPES } from './world/objectTypes.js';
@@ -135,6 +136,8 @@ env.onStrike = (angle, dist, near) => {
 const music = new Music();
 // Selain sallii äänen vasta käyttäjän ensimmäisen klikkauksen tai näppäimen jälkeen.
 const sfx = new Sfx();
+// Sessio 49: kärpäset vilahtavat ohi sademetsässä (ääni sfx:stä).
+const flies = new Flies(scene, sfx);
 // Pelin fontti ladataan heti (kartat piirtävät tekstiä kankaalle).
 if (document.fonts) document.fonts.load("700 16px 'Philosopher'").catch(() => {});
 const lightningEl = document.getElementById('lightning');
@@ -396,6 +399,7 @@ function clearWorldState(seed) {
   debris.clear();
   tumbleweeds.clear();
   ambient.clear();
+  flies.clear();
   explored.clear();
   splashes.clear();
   fire.clear();
@@ -689,7 +693,7 @@ async function teleportTo(x, z, look = null) {
   player.update(0, input, world);
 }
 const devtools = new DevTools({
-  player, env, world, mobs, inventory, explored, ruins, drops, fps: null, teleport: teleportTo, fmtTime, music, boats,
+  player, env, world, mobs, inventory, explored, ruins, drops, fps: null, teleport: teleportTo, fmtTime, music, boats, flies,
 });
 
 // --- Koko ------------------------------------------------------------------------------
@@ -1071,6 +1075,7 @@ function frame(now) {
   bursts.update(simDt);
   dust.update(elapsed, camera.position, env);
   ambient.update(simDt, elapsed, camera.position, env, env.w.rain);
+  flies.update(running ? simDt : 0, camera, env, env.w.rain);
   sky.update(camera.position);
 
   if (inGame) {
@@ -1150,5 +1155,5 @@ window.sahel = {
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
   ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, sfx, blood,
   startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
-  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient, vines,
+  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient, vines, flies,
 };
