@@ -9,9 +9,11 @@
 import * as THREE from 'three';
 import { waterAt } from '../world/terrain.js';
 
-const SWARMS = 9;
-const PER_SWARM = 34;
-const SWARM_R = 26;      // parvet tämän säteen sisällä pelaajasta
+// Sessio 50 (käyttäjä: yleisemmiksi ja selkeämmiksi): 9 x 34 -> 14 x 48,
+// lähemmäs pelaajaa, isommat pisteet ja siipien välähdys valossa.
+const SWARMS = 14;
+const PER_SWARM = 48;
+const SWARM_R = 22;      // parvet tämän säteen sisällä pelaajasta
 const BUTTERFLIES = 9;
 const BF_R = 18;
 
@@ -22,6 +24,7 @@ uniform float uTime;
 uniform float uAmount;
 uniform float uSize;
 varying float vAlpha;
+varying float vGlint;
 void main() {
   // Nopea, siksakkaava pörräys parven keskipisteen ympärillä.
   float t = uTime * (2.2 + aSeed.w * 2.5);
@@ -33,19 +36,26 @@ void main() {
   vec4 mv = modelViewMatrix * vec4(aCenter + off, 1.0);
   gl_Position = projectionMatrix * mv;
   float dist = -mv.z;
-  gl_PointSize = uSize * 300.0 / max(dist, 0.3);
-  vAlpha = uAmount * smoothstep(0.25, 1.0, dist) * (1.0 - smoothstep(18.0, 26.0, dist));
+  // Vähintään 1,8 px (ennen kaukaiset mäkärät katosivat alle pikselin
+  // kokoisina); pienemmät heikommin.
+  float px = uSize * 300.0 / max(dist, 0.3);
+  gl_PointSize = max(px, 1.8);
+  vAlpha = uAmount * min(1.0, px / 1.8 + 0.35) * smoothstep(0.25, 1.0, dist) * (1.0 - smoothstep(16.0, 22.0, dist));
+  // Siivet välähtävät hetkittäin valossa (erottuu tummaa lehvästöä vasten).
+  vGlint = pow(max(0.0, sin(uTime * (7.0 + aSeed.w * 9.0) + aSeed.x * 60.0)), 10.0);
 }
 `;
 
 const gnatFS = /* glsl */ `
 uniform sampler2D uMap;
 uniform vec3 uColor;
+uniform vec3 uGlint;
 varying float vAlpha;
+varying float vGlint;
 void main() {
   float a = texture2D(uMap, gl_PointCoord).a * vAlpha;
   if (a < 0.01) discard;
-  gl_FragColor = vec4(uColor, a);
+  gl_FragColor = vec4(mix(uColor, uGlint, vGlint), a);
   #include <colorspace_fragment>
 }
 `;
@@ -85,8 +95,8 @@ export class Insects {
     for (let i = 0; i < seed.length; i++) seed[i] = Math.random();
     g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 4));
     this.gnatU = {
-      uTime: { value: 0 }, uAmount: { value: 0 }, uSize: { value: 0.022 },
-      uMap: { value: map }, uColor: { value: new THREE.Color(0.08, 0.07, 0.05) },
+      uTime: { value: 0 }, uAmount: { value: 0 }, uSize: { value: 0.03 },
+      uMap: { value: map }, uColor: { value: new THREE.Color(0.08, 0.07, 0.05) }, uGlint: { value: new THREE.Color(0.6, 0.6, 0.55) },
     };
     this.gnats = new THREE.Points(g, new THREE.ShaderMaterial({
       uniforms: this.gnatU, vertexShader: gnatVS, fragmentShader: gnatFS, transparent: true, depthWrite: false,
@@ -157,7 +167,7 @@ varying vec2 vWingUv;`)
 
   _placeSwarm(sw, i, cam) {
     const a = Math.random() * Math.PI * 2;
-    const r = 4 + Math.random() * (SWARM_R - 6);
+    const r = 2.5 + Math.random() * (SWARM_R - 4);
     sw.x = cam.x + Math.cos(a) * r;
     sw.z = cam.z + Math.sin(a) * r;
     sw.y = this._groundY(sw.x, sw.z) + 0.8 + Math.random() * 1.6;
@@ -182,13 +192,15 @@ varying vec2 vWingUv;`)
   update(dt, elapsed, camPos, env, rain = 0) {
     const humid = env.humid || 0;
     // Mäkärät: päivällä ja hämärässä, sateella vähemmän.
-    const gAmt = Math.max(0, (humid - 0.25) / 0.75) * (0.35 + 0.65 * Math.min(1, env.daylight * 3)) * (1 - 0.7 * rain);
+    const gAmt = Math.min(1, Math.max(0, (humid - 0.2) / 0.6)) * (0.4 + 0.6 * Math.min(1, env.daylight * 3)) * (1 - 0.5 * rain);
     this.gnatU.uAmount.value = gAmt;
     this.gnats.visible = gAmt > 0.01;
     if (this.gnats.visible) {
       this.gnatU.uTime.value = elapsed % 10000;
       // Valossa (aurinko) vaaleammat: siivet ja ruumis heijastavat.
       this.gnatU.uColor.value.setRGB(0.08, 0.07, 0.05).lerp(env.sun.color, 0.12 * env.daylight);
+      // Siipien välähdys: kirkas päivällä, himmeä yöllä.
+      this.gnatU.uGlint.value.setRGB(0.62, 0.62, 0.56).lerp(env.sun.color, 0.3).multiplyScalar(0.2 + 0.8 * Math.min(1, env.daylight * 2));
       this.swarms.forEach((sw, i) => {
         const d2 = (sw.x - camPos.x) ** 2 + (sw.z - camPos.z) ** 2;
         if (!sw.placed || d2 > SWARM_R * SWARM_R) this._placeSwarm(sw, i, camPos);

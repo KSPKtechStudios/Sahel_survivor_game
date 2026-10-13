@@ -190,7 +190,7 @@ export class Archery {
   _collide(a, ox, oy, oz) {
     // Eläimet ja viholliset
     for (const m of this.mobs.list) {
-      if (m.state === 'dead' || m.yOff < -0.6) continue;
+      if (m.state === 'dead' || m.yOff < -0.6 || m.def.npc) continue; // sessio 50: NPC:t läpi
       const r = m.def.radius + 0.12;
       // Lähin kohta liikkeen janalla olennon keskilinjaan (2D) ja korkeus.
       const dx = a.pos.x - ox, dz = a.pos.z - oz;

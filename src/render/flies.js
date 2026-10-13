@@ -8,6 +8,7 @@
 // - Syöksyjät: muutama kärpänen sinkoilee lähistöllä (1–6 m) nopein, suorin
 //   syöksyin ja lyhyin pysähdyksin; joskus aivan kasvojen edestä. Hiljaisia.
 // Vain sademetsässä (env.humid); päivällä paljon, yöllä vähän.
+// Sessio 50: lisäksi hyttysen ininä pään ympärillä (sfx.mosquito).
 import * as THREE from 'three';
 import { waterAt } from '../world/terrain.js';
 
@@ -18,19 +19,20 @@ const DART_R = 6;
 const SIZE = 1.7;
 // Äänitiedoston pätkät: alku ja kesto (s) sekä rata kameran suhteen
 // [aika, x (oikealle), y (ylös), z (eteen)] metreinä. Kovimmillaan ääni on
-// silloin, kun kärpänen on korvan vieressä.
+// silloin, kun kärpänen on korvan vieressä. gain: pätkän tasaus (sessio 50:
+// hiljaiset pätkät kuuluivat huonosti).
 const PASSES = [
   // Pörrää vasemman korvan ohi, kiertää eteen ja poistuu vasemmalle.
-  { at: 0.0, dur: 1.8, key: [
+  { at: 0.0, dur: 1.8, gain: 1.3, key: [
     [0.0, -1.2, 0.25, -0.5], [0.3, -0.5, 0.1, 0.0], [0.5, -0.22, 0.05, 0.12], [0.7, -0.3, 0.1, 0.55],
     [0.9, 0.05, 0.15, 0.85], [1.1, 0.45, 0.1, 0.9], [1.3, 0.15, 0.2, 1.1], [1.5, -0.35, 0.2, 1.0],
     [1.6, -0.6, 0.25, 0.9], [1.8, -1.6, 0.45, 0.6]] },
   // Kaukaa vasemmalta suoraan oikean korvan ohi taakse.
-  { at: 2.0, dur: 1.4, key: [
+  { at: 2.0, dur: 1.4, gain: 1.0, key: [
     [0.0, -3.0, 0.4, 3.2], [0.5, -1.6, 0.2, 2.0], [0.85, -0.5, 0.08, 0.9], [1.0, 0.22, 0.02, 0.15],
     [1.2, 0.7, 0.05, -0.5], [1.4, 1.5, 0.2, -1.6]] },
   // Nopea vilahdus oikealta vasemmalle metrin päästä.
-  { at: 3.6, dur: 0.55, key: [
+  { at: 3.6, dur: 0.55, gain: 3.0, key: [
     [0.0, 1.5, 0.25, 1.5], [0.05, 1.2, 0.2, 1.4], [0.3, -0.1, 0.1, 1.2], [0.55, -1.7, 0.15, 1.2]] },
 ];
 
@@ -112,7 +114,8 @@ export class Flies {
     }
     this.pass = null;
     this.forced = null;
-    this.passTimer = 6 + Math.random() * 10;
+    this.passTimer = 2 + Math.random() * 4;
+    this.mosqTimer = 4 + Math.random() * 6;
     this.passPos = new THREE.Vector3();
     this.passPrev = new THREE.Vector3();
     this._v = new THREE.Vector3();
@@ -194,6 +197,17 @@ export class Flies {
     const show = Math.round(amt * DARTERS);
     const on = show > 0 || this.pass || this.forced;
     this.body.visible = this.wings.visible = !!on;
+    // Sessio 50: hyttynen ininä pään ympärillä silloin tällöin; hämärässä ja
+    // yöllä useammin (hyttyset ovat silloin liikkeellä), ei vedessä.
+    if (dt > 0) {
+      const mAmt = Math.max(0, Math.min(1, (humid - 0.3) / 0.6)) * (1 - 0.6 * rain) * (cam.y < waterAt(cam.x, cam.z, this._wq).wl ? 0 : 1);
+      this.mosqTimer -= dt;
+      if (this.mosqTimer <= 0) {
+        const dusk = 1 - Math.min(1, env.daylight * 2.5);
+        this.mosqTimer = (dusk > 0.5 ? 5 + Math.random() * 9 : 9 + Math.random() * 15) / Math.max(0.4, mAmt);
+        if (mAmt > 0.25) this.sfx?.mosquito(0.7 + 0.3 * mAmt);
+      }
+    }
     if (!on || dt <= 0) return;
     camera.updateMatrixWorld();
 
@@ -229,12 +243,13 @@ export class Flies {
     if (!this.pass) {
       this.passTimer -= dt;
       if (this.passTimer <= 0 || this.forced) {
-        this.passTimer = (10 + Math.random() * 25) / Math.max(0.3, amt);
-        if (amt > 0.35 || this.forced) {
+        // Sessio 50 (käyttäjä: kuului tosi harvoin): 10–35 s -> 4–13 s.
+        this.passTimer = (4 + Math.random() * 9) / Math.max(0.4, amt);
+        if (amt > 0.25 || this.forced) {
           const P = this.forced?.P || PASSES[Math.floor(Math.random() * PASSES.length)];
           const mirror = this.forced?.mirror ?? Math.random() < 0.5;
           this.pass = { P, mirror, t: 0 };
-          this.sfx?.flyBuzz(P.at, P.dur, mirror, 0.6 + 0.4 * Math.max(amt, this.forced ? 1 : 0));
+          this.sfx?.flyBuzz(P.at, P.dur, mirror, P.gain * (0.6 + 0.4 * Math.max(amt, this.forced ? 1 : 0)));
           samplePath(P.key, 0, this.passPrev);
           if (mirror) this.passPrev.x = -this.passPrev.x;
           this.passPrev.applyMatrix4(camera.matrixWorld);

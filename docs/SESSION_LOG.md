@@ -2,6 +2,19 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-13 (sessio 50)
+**Tehtiin**
+- Ambienssin vika löytyi mittaamalla selaimessa:
+  - paikallisesti viidakkoääni soi (analysaattori −36 dB, hiljaisessa kohdassa);
+  - githack ohjaa mp3:t raw.githubusercontent.comiin, joten verkkoversiossa Web Audio sai hiljaisuutta;
+  - korjaus `audio/sfx.js` (`crossOrigin`); testiskripti `s50/audio.mjs` (scratchpad; BASEURL githackiin).
+- Kuoriainen NPC:ksi (`npc`-lippu: `mobs.js`, `archery.js`, `interaction.js`, `nameplates.js`, `styles.css`) ja yleisemmäksi.
+- Kärpäset useammin ja kovempaa (`render/flies.js`, `sfx.js`).
+- Hyttynen (`sfx.mosquito`, `assets/sfx/mosquito-buzz.mp3`, F3-painike); mäkärät (`render/insects.js`).
+
+**Seuraavaksi**
+- Käyttäjän palaute: kuuluuko ambienssi nyt verkkoversiossa.
+
 ## 2026-10-13 (sessio 49, jatko)
 **Tehtiin**
 - Banaanin hedelmäterttu korjattu:

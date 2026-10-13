@@ -143,6 +143,8 @@ export class DevTools {
     this._button(row, 'Herkuleskuoriainen', () => (mobs.spawnInFront('beetle', 2.5) ? 'Herkuleskuoriainen kutsuttu' : 'Paikkaa ei löytynyt'));
     // Sessio 49: kärpäsen ohilento heti (normaalisti vain sademetsässä silloin tällöin).
     this._button(row, 'Kärpänen ohi', () => { this.ctx.flies?.trigger(); return 'Kärpänen lentää ohi'; });
+    // Sessio 50: hyttysen ininä heti.
+    this._button(row, 'Hyttynen', () => (this.ctx.flies?.sfx?.mosquito(1) ? 'Hyttynen pörrää' : 'Ääni ei ole vielä käytössä (klikkaa peliä)'));
     this._button(row, 'Poista olennot', () => { mobs.clear(); return 'Olennot poistettu'; });
     row = this._row(sec);
     for (const [type, name] of [['gazelle', 'Gaselli'], ['guineafowl', 'Helmikana'], ['monkey', 'Apina'], ['fennec', 'Aavikkokettu'], ['bird', 'Lintu']]) {

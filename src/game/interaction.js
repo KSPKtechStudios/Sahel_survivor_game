@@ -127,7 +127,8 @@ export class Interaction {
     if (target.kind === 'mob') {
       const m = target.obj;
       const t = MOB_TYPES[m.type];
-      return { name: t.name, action: '', hp: Math.max(0, m.hp) / t.hp };
+      // Sessio 50: NPC:llä (kuoriainen) ei terveyspalkkia.
+      return { name: t.name, action: '', hp: t.npc ? null : Math.max(0, m.hp) / t.hp };
     }
     if (target.kind === 'tumbleweed') return { name: 'Tumbleweed', action: '[Hiiri 1] Hakkaa' };
     if (target.kind === 'chest') {

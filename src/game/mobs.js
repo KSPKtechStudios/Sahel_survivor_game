@@ -20,12 +20,12 @@
 // luuranko rakennetaan latauksessa). Vaeltaa ja laiduntaa yksin tai pareittain;
 // liian lähelle tulevaa pelaajaa se katsoo korvat levällään ja siirtyy sitten
 // verkkaisesti kauemmas. Runko on liikkuva este, joka tönäisee pelaajaa.
-// Herkuleskuoriainen (sessio 48, 49): sademetsän kuoriainen (oma malli,
+// Herkuleskuoriainen (sessio 48–50): sademetsän kuoriainen (oma malli,
 // models/beetle.js), yleisempi öisin. Lentelee pöristen puulta toiselle ja
 // kiipeilee puunrungoilla (sessio 49: maasta sitä oli vaikea huomata);
 // välillä laskeutuu maahan. Liian lähelle tulevalle se nostaa sarvensa;
-// lyötynä tai ahdisteltuna se lentää pois. Ei hyökkää (todellinenkin on
-// ihmiselle vaaraton; avoin kysymys, ks. DESIGN).
+// ahdisteltuna tai lyötynä se lentää pois. Sessio 50: NPC, ei mobi (ei
+// vahinkoa, ei terveyspalkkia, ei hyökkää).
 import * as THREE from 'three';
 import { waterAt, sampleTerrain, insideStructure } from '../world/terrain.js';
 import { makeWarthog, makeClayGolem, makeGazelle, makeFennec, makeMonkey, makeGuineafowl, makeBird, makeHaamu } from '../models/creatures.js';
@@ -95,8 +95,10 @@ export const MOB_TYPES = {
   // Sessio 48: herkuleskuoriainen. tiny = pienet osuma- ja kuolemaefektit.
   beetle: {
     // Sessio 49: 1,4-kertainen (n. 28 cm sarvineen), jotta erottuu paremmin.
+    // Sessio 50 (käyttäjä): ei enää mobi vaan NPC (npc): sitä ei voi tappaa,
+    // eikä sillä ole terveyspalkkia; lyönti vain säikäyttää sen lentoon.
     name: 'Herkuleskuoriainen', hp: 10, radius: 0.14, height: 0.125, walk: 0.2, run: 0.4, mass: 0.2, sight: 1.3, turn: 2.2, poise: 0,
-    drops: [['beetle_horn', 1, 1]], beetle: true, tiny: true,
+    drops: [], beetle: true, tiny: true, npc: true,
   },
 };
 const WILD = ['gazelle', 'guineafowl', 'monkey', 'fennec', 'bird'];
@@ -106,7 +108,7 @@ const MAX_WARTHOGS = 3;
 const MAX_CLAY = 3;
 const MAX_HAAMU = 1;
 const MAX_ELEPHANTS = 2;
-const MAX_BEETLES = 3;
+const MAX_BEETLES = 6; // sessio 50: 3 -> 6 (käyttäjä: hieman yleisempi)
 // Soihdun sytyttämä olento palaa näin kauan (s) ja ottaa vahinkoa / s.
 const FIRE_TIME = 5;
 const FIRE_DPS = 3.5;
@@ -485,7 +487,7 @@ export class Mobs {
     const fx = dir.x / hl, fz = dir.z / hl;
     const pitch = Math.atan2(dir.y, hl);
     for (const m of this.list) {
-      if (m.state === 'dead' || m.yOff < -0.6) continue;
+      if (m.state === 'dead' || m.yOff < -0.6 || m.def.npc) continue; // sessio 50: NPC:hen ei lyödä
       bodyPoint(m, px, pz, _bp);
       const dx = _bp.x - px, dz = _bp.z - pz;
       const d = Math.hypot(dx, dz);
@@ -509,6 +511,11 @@ export class Mobs {
   // Vahinko olentoon. opts: { fromX, fromZ, knock, up, stagger }
   damage(m, amount, opts = {}) {
     if (m.state === 'dead') return false;
+    // Sessio 50: NPC (herkuleskuoriainen) ei ota vahinkoa; säikähtää lentoon.
+    if (m.def.npc) {
+      if (m.def.beetle && m.state !== 'fly') this._beetleTakeOff(m, true);
+      return false;
+    }
     if (m.def.heavy) {
       // Norsu ei kaadu: osuma vain ärsyttää sitä, ja se lähtee pois.
       m.hp = Math.max(m.def.hp * 0.2, m.hp - amount);
@@ -529,11 +536,6 @@ export class Mobs {
       return true;
     }
     const def = m.def;
-    if (def.beetle) {
-      // Kuoriainen lentää pois.
-      this._beetleTakeOff(m);
-      return true;
-    }
     if (def.skittish) {
       // Arka eläin pakenee heti (lintu lentää) ja varoittaa laumaansa.
       this._startFlee(m, true);
@@ -685,7 +687,7 @@ export class Mobs {
   // Soihdun isku sytyttää olennon (sessio 12e). Savipeikko palaa loppuun kuten
   // aamulla; muut palavat hetken (vahinkoa ajan mukana) ja pakenevat.
   setOnFire(m) {
-    if (m.state === 'dead' || m.def.ghost || !this.list.includes(m)) return;
+    if (m.state === 'dead' || m.def.ghost || m.def.npc || !this.list.includes(m)) return;
     if (m.def.heavy) { this._elephantLeave(m, true); return; }
     if (m.type === 'clay') { if (!m.burning) this._ignite(m); return; }
     const fresh = !(m.fireT > 0);
@@ -786,7 +788,7 @@ export class Mobs {
       // Sessio 48: herkuleskuoriaiset sademetsässä (öisin useammin).
       this.beetleTimer -= dt;
       if (this.beetleTimer <= 0) {
-        this.beetleTimer = 6 + Math.random() * 8;
+        this.beetleTimer = 4 + Math.random() * 5;
         this._trySpawnBeetle(night);
       }
     }
@@ -862,7 +864,7 @@ export class Mobs {
 
   // Sessio 48: herkuleskuoriainen sademetsään 12–30 m:n päähän.
   _trySpawnBeetle(night) {
-    if (this.count('beetle') >= MAX_BEETLES || Math.random() > (night ? 0.6 : 0.3)) return;
+    if (this.count('beetle') >= MAX_BEETLES || Math.random() > (night ? 0.85 : 0.6)) return;
     const p = this.player.position;
     for (let a = 0; a < 6; a++) {
       const ang = Math.random() * Math.PI * 2;
@@ -871,7 +873,7 @@ export class Mobs {
       if (!this._okSpot(x, z) || (_s.rainforest || 0) < 0.6) continue;
       const m = this.spawn('beetle', x, z);
       // Sessio 49: puolet syntyy suoraan puunrungolle (maasta vaikea huomata).
-      if (Math.random() < 0.55) {
+      if (Math.random() < 0.65) {
         const t = this._beetleFindTrunk(m, false);
         if (t) { m.trunk = t; this._beetleOnTrunk(m); this._set(m, 'climb', 20 + Math.random() * 30); }
       }

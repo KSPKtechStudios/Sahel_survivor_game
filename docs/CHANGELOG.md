@@ -2,6 +2,14 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-13 (sessio 50): taustaäänet verkkoversioon, kuoriainen NPC:ksi, hyttyset
+
+- **Taustaäänet kuuluvat taas verkossa pelattaessa** (sademetsän ambienssi, tuuli, sade, kaukainen ukkonen). Ne eivät olleet kuuluneet githack-linkin kautta lainkaan: palvelu ohjaa mp3-tiedostot toiselle palvelimelle, ja ilman CORS-merkintää selain syötti niiden tilalle hiljaisuutta. Musiikki kuului, koska se soi eri reittiä. Lisäksi sademetsän ambienssia on hieman enemmän.
+- **Herkuleskuoriainen on NPC, ei mobi:** sitä ei voi tappaa, eikä sillä ole terveyspalkkia. Lyönti, nuoli tai kaatuva puu vain säikäyttää sen lentoon. Kuoriaisia on enemmän (enintään 6, ennen 3) ja ne ilmestyvät useammin. Sarvi-esinettä ei enää saa.
+- **Kärpäset:** ohilento korvan ohi 4–13 s välein (ennen 10–35 s), ja hiljaisimmat pätkät ovat kovempia.
+- **Mäkäräparvet:** parvia ja mäkäriä on enemmän ja ne ovat lähempänä, pisteet näkyvät kauempaakin, ja siivet välähtävät valossa, joten parvet erottuvat myös tummaa lehvästöä vasten.
+- **Hyttynen** (sinun äänesi) pörrää silloin tällöin pään ympärillä: lähestyy, kiertää korvan ohi ja loittonee. Hämärässä ja yöllä useammin. [F3] → Olennot → **Hyttynen** soittaa sen heti.
+
 ## 2026-10-13 (sessio 49, jatko): banaanitertut kuntoon, tekijät valikkoon
 
 - **Banaanin hedelmäterttu** näkyy taas oikeana terttuna: ensimmäisessä versiossa kevennys oli hajottanut banaanit litteiksi keltaisiksi siruiksi.

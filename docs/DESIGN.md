@@ -217,6 +217,16 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 50 (käyttäjän kertoma, 2026-10-13)
+- **Sademetsän ambienssi ei taaskaan kuulu**, ei edes musiikki pois päältä.
+- **Herkuleskuoriainen:**
+  - hieman yleisempi;
+  - **ei enää mobi:** sitä ei voi tappaa eikä sillä ole terveyspalkkia, mutta se liikkuu edelleen NPC:nä.
+- **Kärpäsen äänet** kuuluvat tosi harvoin.
+- **Mäkäräparvet** yleisemmiksi ja selkeämmiksi.
+- **Hyttysen ääni** (käyttäjän tiedosto) kuuluu satunnaisesti pelaajan ympärillä.
+- Avoin kysymys: saako herkuleskuoriaisesta vielä jotain (sarvi-esine jäi pelistä pois)?
+
 ## Sessio 49 (käyttäjän kertoma, 2026-10-12): sademetsän jatko
 - **Kenttäkerrosta ja lehtikatosta (latvusta) lisää**, jos se onnistuu ilman, että pelattavuus ja ruudunpäivitys kärsivät.
 - **Herkuleskuoriainen:**

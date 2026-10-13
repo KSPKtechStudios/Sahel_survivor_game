@@ -1,6 +1,12 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 50:
+  - kuuluuko sademetsän ambienssi nyt (myös tuuli savannilla ja sade);
+  - herkuleskuoriainen (ei terveyspalkkia, lyönti vain säikäyttää);
+  - kärpäset ja hyttynen (F3 → Olennot → Hyttynen / Kärpänen ohi);
+  - mäkäräparvet.
+- [ ] Vastaus: kuinka usein hyttysen pitäisi kuulua; saako kuoriaisesta jotain?
 - [ ] Käyttäjä testaa session 49:
   - herkuleskuoriainen puunrungoilla ja lennossa ([F3] → Olennot → Herkuleskuoriainen, tai odota sademetsässä): koko, näkyykö se nyt paremmin;
   - banaanipuut ja bambut (iso bambu ja bambupensas);

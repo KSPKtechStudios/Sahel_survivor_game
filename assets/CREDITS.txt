@@ -74,4 +74,8 @@ Kärpäsen surina (assets/sfx/fly-buzz.mp3), sessio 49: käyttäjän antama
   perusteella Pixabay, tekijä kuzu420; lisenssi tarkistettava, ks.
   docs/TODO.md). Kolme ohilentoa leikattu yhdeksi lyhyeksi tiedostoksi.
 
+Hyttysen ininä (assets/sfx/mosquito-buzz.mp3), sessio 50: käyttäjän antama
+  tiedosto freesound_community-flying-mosquito-105770.mp3 (tiedostonimen
+  perusteella Pixabay / Freesound-yhteisö). Normalisoitu, monoksi.
+
 Fontit: ks. assets/fonts (OFL).

@@ -70,6 +70,8 @@ export class Nameplates {
     el.className = 'plate';
     el.innerHTML = `<div class="pl-name"></div><div class="pl-act"></div><div class="pl-hp"><i></i></div><div class="pl-spot">${EYE}</div>`;
     el.children[0].textContent = MOB_TYPES[m.type].name;
+    // Sessio 50: NPC:llä (kuoriainen) ei terveyspalkkia eikä huomasi-merkkiä.
+    if (MOB_TYPES[m.type].npc) el.classList.add('npc');
     this.root.appendChild(el);
     // Esiin pehmeästi (seuraavassa ruudussa, jotta siirtymä käynnistyy).
     requestAnimationFrame(() => el.classList.add('on'));
@@ -133,7 +135,7 @@ export class Nameplates {
       }
       p.el.style.transform = `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) translate(-50%, -100%)`;
       p.hp.style.width = `${Math.max(0, Math.min(1, m.hp / m.def.hp)) * 100}%`;
-      const aware = AWARE.has(m.state);
+      const aware = AWARE.has(m.state) && !m.def.npc;
       p.spot.style.display = aware ? '' : 'none';
       p.spot.classList.toggle('hostile', aware && HOSTILE.has(m.state));
       const isTarget = prompt && prompt.mob === m;

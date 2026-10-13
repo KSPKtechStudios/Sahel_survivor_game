@@ -2,6 +2,21 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-13 (sessio 50)
+- **Taustaäänten audio-elementeille `crossOrigin = 'anonymous'`.**
+  - Syy: raw.githack ohjaa mp3:t (301) raw.githubusercontent.comiin, eli eri alkuperään. Web Audio (`createMediaElementSource`) saa ilman CORS-pyyntöä vain hiljaisuutta.
+  - raw.githubusercontent palauttaa `access-control-allow-origin: *` ja tukee osittaisia latauksia, joten korjaus riittää.
+  - Paikallisissa testeissä (sama alkuperä) vika ei näkynyt, joten testaan äänet jatkossa myös githack-osoitteesta.
+  - Musiikki soittaa elementin omalla äänenvoimakkuudella eikä Web Audion kautta, siksi se kuului.
+- **Viidakon taso 0,4 → 0,55** (noin −26 LUFS, hieman sademetsän musiikin −28 LUFS:n yläpuolella).
+- **Kuoriainen NPC:ksi lipulla `npc`** (ei uutta järjestelmää):
+  - `inArc` (lähitaistelu) ja nuolet ohittavat sen;
+  - `damage()` ja `setOnFire()` palaavat heti (säikähtää lentoon), joten myöskään kaatuva puu ei tapa sitä;
+  - nimilapulla ja kohteen tiedoissa ei terveyspalkkia;
+  - sarvi-esine jää koodiin vanhoja tallennuksia varten, mutta sitä ei enää saa.
+- **Hyttysen ääni:** normalisoitu (+26 dB, rajoitin), mono 64 kbps (91 kt). Ininä on yksi pätkä, jonka rata kulkee pään suhteen, joten panorointi, voimakkuus ja kirkkaus ajastetaan käyrinä alussa eikä joka ruudulla.
+- **Mäkärät:** pisteen vähimmäiskoko 1,8 px. Ennen 5 m:n päässä piste oli noin 1,3 px ja käytännössä näkymätön. Siipien välähdys tehdään varjostimessa (ei lisäkustannusta).
+
 ## 2026-10-13 (sessio 49, jatko)
 - **Banaanitertun kevennys osittain:** terttu on 160 erillistä banaania (52 kolmiota kukin) ja varsi. Koko verkon kevennys hajotti ne, joten nyt:
   - kärkipisteet yhdistetään ja verkko jaetaan osiin;

@@ -19,7 +19,8 @@ const BEDS = {
   // ja linnut (tiedoston yläpää −27,5 LUFS). Sademetsän musiikki soi
   // −28 LUFS:ssä ja peitti sen. Nyt n. −29 LUFS ja alipäästö 8 kHz
   // (terävin kirkuna pois, sirinä ja linnut kuuluvat).
-  jungle: { file: 'assets/sfx/jungle.mp3', level: 0.4, tau: 0.9, lowpass: 8000 },
+  // Sessio 50: taso 0,4 -> 0,55 (n. −26 LUFS, hieman musiikin yläpuolella).
+  jungle: { file: 'assets/sfx/jungle.mp3', level: 0.55, tau: 0.9, lowpass: 8000 },
   rain: { file: 'assets/sfx/rain.mp3', level: 0.42, tau: 1.2 },
   thunder: { file: 'assets/sfx/thunder-distant.mp3', level: 0.42, tau: 2.2 },
   // Sessio 12c: aavikon tuuli (aina hyvin hiljaa, hiekkamyrskyssä kovaa) ja
@@ -48,13 +49,17 @@ const ONESHOTS = {
   punch2: 'assets/sfx/punch2.mp3',
   // Sessio 49: kärpäsen ohilennot (käyttäjän tuoma, kolme pätkää).
   fly: 'assets/sfx/fly-buzz.mp3',
+  // Sessio 50: hyttysen ininä (käyttäjän tuoma; normalisoitu, mono).
+  mosquito: 'assets/sfx/mosquito-buzz.mp3',
 };
 // Huitominen: tasattu huipputason mukaan (tiedostojen huiput −1,6 / −6,8 dB),
 // jolloin huitaisu on n. −24 dB ja olentoon osuessa n. −31 dB.
 const WHOOSH_LEVEL = { whoosh1: 0.06, whoosh2: 0.11 };  // sessio 12e: −2 dB
 const BIRD_LEVEL = 0.22;
-// Kärpänen korvan vieressä: tiedoston huippu n. −20 dB.
-const FLY_LEVEL = 0.75;
+// Kärpänen korvan vieressä: tiedoston huippu n. −20 dB. Sessio 50: 0,75 -> 1.
+const FLY_LEVEL = 1.0;
+// Hyttynen korvan vieressä (tiedosto n. −16 dB keskimäärin): n. −25 dB.
+const MOSQUITO_LEVEL = 0.35;
 // Puun kaatuminen: räsähdyksen kohta tiedostossa (s) ja voimakkuus 10 m:stä.
 // Räsähdyksen jälkeen ääni häivytetään pois (TREE_TAIL s), ettei maassa
 // makaava puu jää rätisemään.
@@ -100,6 +105,11 @@ class Bed {
   _el(i) {
     if (!this.els[i]) {
       const el = new window.Audio();
+      // Sessio 50: raw.githack ohjaa mp3-tiedostot raw.githubusercontent.comiin
+      // (eri alkuperä). Ilman CORS-pyyntöä selain syöttää Web Audioon pelkkää
+      // hiljaisuutta, joten taustaäänet (viidakko, tuuli, sade, ukkonen) eivät
+      // kuuluneet verkkoversiossa lainkaan (paikallisesti kuuluivat).
+      el.crossOrigin = 'anonymous';
       el.src = this.def.file;
       el.preload = 'auto';
       const g = this.sfx.ctx.createGain();
@@ -442,6 +452,46 @@ export class Sfx {
     }
     g.connect(this.bus);
     src.start(ctx.currentTime + 0.01, offset, dur);
+    return true;
+  }
+
+  // Sessio 50: hyttynen pörrää pään ympärillä. Pätkä satunnaisesta kohdasta;
+  // rata on pään suhteen (lähestyy, kiertää korvan ohi, loittonee), joten
+  // panorointi, voimakkuus ja kirkkaus ajastetaan käyrinä alussa.
+  mosquito(level = 1) {
+    const buf = this.bufs.mosquito;
+    if (!this.ctx || !buf || this.ctx.state !== 'running') return false;
+    const ctx = this.ctx, t0 = ctx.currentTime + 0.02;
+    const rate = 0.9 + Math.random() * 0.2;
+    const dur = Math.min((buf.duration - 0.2) / rate, 2.5 + Math.random() * 3.5);
+    const off = Math.random() * Math.max(0, buf.duration - dur * rate - 0.1);
+    const N = 64;
+    const pan = new Float32Array(N), gain = new Float32Array(N), freq = new Float32Array(N);
+    const a0 = Math.random() * Math.PI * 2, w = (Math.random() < 0.5 ? -1 : 1) * (1.2 + Math.random() * 2.2);
+    const rMin = 0.1 + Math.random() * 0.3, rMax = 1.4 + Math.random() * 0.8, peak = 0.3 + Math.random() * 0.4;
+    for (let i = 0; i < N; i++) {
+      const u = i / (N - 1);
+      // Etäisyys: kaukaa lähelle (kohdassa peak) ja taas kauas.
+      const k = u < peak ? u / peak : (1 - u) / (1 - peak);
+      const r = rMax - (rMax - rMin) * Math.sin(k * Math.PI * 0.5);
+      const ang = a0 + w * u * dur;
+      pan[i] = Math.sin(ang) * Math.min(1, 0.6 + 0.4 / Math.max(0.3, r));
+      const fade = Math.min(1, u / 0.1, (1 - u) / 0.12);
+      gain[i] = MOSQUITO_LEVEL * level * fade * Math.min(1, 0.25 / r);
+      freq[i] = 2200 + 9000 * Math.min(1, 0.3 / r);
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = rate;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    const g = ctx.createGain();
+    const p = ctx.createStereoPanner();
+    lp.frequency.setValueCurveAtTime(freq, t0, dur);
+    g.gain.setValueCurveAtTime(gain, t0, dur);
+    p.pan.setValueCurveAtTime(pan, t0, dur);
+    src.connect(lp).connect(g).connect(p).connect(this.bus);
+    src.start(t0, off, dur * rate); // puskurin aikaa: soi tasan dur sekuntia
     return true;
   }
 
