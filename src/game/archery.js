@@ -9,6 +9,7 @@ import { events } from './events.js';
 import { waterAt } from '../world/terrain.js';
 import { makeArrowGeometry } from '../models/items2.js';
 import { bodyPoint } from './mobs.js';
+import { OBJECT_TYPES } from '../world/objectTypes.js';
 
 const GRAVITY = 9.8;
 const MAX_ARROWS = 24;
@@ -149,6 +150,8 @@ export class Archery {
 
   // Nuoli pysähtyi: ehjä nuoli jää poimittavaksi.
   _land(a, keepChance) {
+    // Sessio 52: nuolen osuma lähelle säikäyttää linnut lentoon.
+    this.mobs.arrowImpact(a.pos.x, a.pos.y, a.pos.z);
     if (Math.random() < keepChance) {
       this.drops.spawn(a.kind, 1, _p.copy(a.pos).addScaledVector(_q.copy(a.vel).normalize(), -0.2), { spread: 0.05, up: 0.15 });
     }
@@ -187,6 +190,17 @@ export class Archery {
     }
   }
 
+  // Esineen yläpinnan korkeus (puu: runko 6 m; muut mallin rajauslaatikosta).
+  _objTop(o) {
+    const def = OBJECT_TYPES[o.type];
+    const sc = o.scale || 1;
+    if (!def || def.kind === 'tree') return o.y + 6 * sc;
+    const geo = this.world.models?.world?.[def.model]?.[o.variant];
+    if (!geo) return o.y + 6 * sc;
+    if (!geo.boundingBox) geo.computeBoundingBox();
+    return o.y + geo.boundingBox.max.y * sc;
+  }
+
   _collide(a, ox, oy, oz) {
     // Eläimet ja viholliset
     for (const m of this.mobs.list) {
@@ -223,8 +237,10 @@ export class Archery {
         if (c.top !== undefined && a.pos.y > c.top) continue;
       } else {
         if ((a.pos.x - c.x) ** 2 + (a.pos.z - c.z) ** 2 > c.r * c.r) continue;
-        // Puiden rungot ja kivet: korkeus karkeasti esineen mukaan.
-        const top = c.obj ? c.obj.y + 6 * (c.obj.scale || 1) : (c.top ?? Infinity);
+        // Puiden rungot ja kivet: korkeus karkeasti esineen mukaan (sessio 52:
+        // kivien ja pensaiden yli menevä nuoli ei enää pysähdy ilmaan, joten
+        // kiven päällä istuvaan lintuun voi osua).
+        const top = c.obj ? this._objTop(c.obj) : (c.top ?? Infinity);
         if (a.pos.y > top) continue;
       }
       this.debris.chips(a.pos, 0x8a7a6a, 3, null, 0.4);

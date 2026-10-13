@@ -2,6 +2,25 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-13 (sessio 52)
+**Tehtiin**
+- Gorillan syöksy hitaammaksi (`mobs.js`: run, windup, attack, syöksy).
+- Harmaapapukaijat:
+  - malli `models/creatures.js` `makeParrot`;
+  - tekoäly, lento ja animaatio `mobs.js` (`_thinkParrot`, `_parrotMove`, `_animParrot`, istumapaikat `_parrotPerches`);
+  - nuolen osuma säikäyttää (`arrowImpact`), ja nuolen törmäyskorkeus kivillä on mallin mukainen (`archery.js` `_objTop`).
+- Leopardi:
+  - malli kevennetty scratchpadissa (`tropical/leo_prep.mjs`, `leo_norm.mjs`) → `assets/models/leopard/leopard.glb`;
+  - luuranko, painot, oikean etujalan korjaus ja proseduraaliset animaatiot `models/leopard.js`;
+  - tekoäly `mobs.js` `_thinkLeopard`;
+  - syntetisoitu murina `sfx.leopardGrowl`.
+- Testattiin:
+  - mallisivut `shots/s52/` (rig-, anim- ja papukaijasivut, git-poissuljettu);
+  - pelissä `s52/parrot*.mjs` ja `s52/leopard.mjs` (scratchpad): vaanii → loikkaa → raapii → vetäytyy, jähmettyy katsottaessa, soihtu, osumat.
+
+**Seuraavaksi**
+- Käyttäjän palaute papukaijoista, leopardista ja gorillan nopeudesta (ks. TODO).
+
 ## 2026-10-13 (sessio 51)
 **Tehtiin**
 - Gorilla:

@@ -78,6 +78,14 @@ Gorillan karjaisu (assets/sfx/gorilla-roar.mp3), sessio 51: käyttäjän antama
   tiedosto flutie8211-gorilla-roar-523007.mp3 (tiedostonimen perusteella
   Pixabay, tekijä flutie8211). Leikattu karjaisun kohta (3,2 s).
 
+Leopardi (assets/models/leopard/leopard.glb), sessio 52: käyttäjän antama
+  Sketchfab-malli "Prowling Leopard 3D Model Free", tekijä iRahulRajput,
+  CC-BY-4.0, NIMEÄMINEN VAADITAAN:
+  https://sketchfab.com/3d-models/prowling-leopard-3d-model-free-d02a9709556348968fef810684b4e3fa
+  Muutokset: kevennetty 232 000 -> 11 000 kolmioon, irralliset viikset pois,
+  vain värikartta (JPEG), käännetty ja skaalattu; pelissä lisätään luuranko,
+  oikean etujalan alaosa korvataan vasemman peilikuvalla ja animoidaan koodissa.
+
 Kärpäsen surina (assets/sfx/fly-buzz.mp3), sessio 49: käyttäjän antama
   tiedosto kuzu420-fly-buzzing-from-left-to-right-337281.mp3 (tiedostonimen
   perusteella Pixabay, tekijä kuzu420; lisenssi tarkistettava, ks.

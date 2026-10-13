@@ -403,6 +403,77 @@ export function makeBird(seed = 1) {
   return { group, material, body, head, legs, tail, wings, kind: 'bird' };
 }
 
+// --- Sessio 52: harmaapapukaija (sademetsä) ----------------------------------
+// Noin 33 cm: harmaa, suomukuvioinen höyhenpuku, valkoinen paljas naamari,
+// musta koukkunokka ja kirkkaanpunainen pyrstö. Runko on lonkkanivelessä
+// (hip), jota kallistetaan: istuessa pystyssä, lennossa vaakatasossa.
+// Kokoon taitetut siivet ovat osa vartaloa; lentosiivet (sivuttain, kierrot
+// järjestyksessä ZYX: Y taittaa, Z lyö) näkyvät vain siivet avattuina.
+export function makeParrot(seed = 1) {
+  const rand = mulberry32(seed + 140);
+  const material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85 });
+  const group = new THREE.Group();
+  const GREY = 0x868b90, PALE = 0xa9adb1, DARK = 0x50555a, FACE = 0xe4e0d8, RED = 0xc0121a;
+  // Suomukuvio: höyhenten vaaleat reunat.
+  const scale = (x, y, z) => (Math.sin(x * 140 + z * 60) * Math.sin(z * 150 - y * 40) > 0.45 ? 1.18 : 1);
+  const hip = new THREE.Group();
+  hip.position.set(0, 0.05, 0);
+  group.add(hip);
+  const body = new THREE.Mesh(merge([
+    blob(0.06, 0.85, 0.85, 1.45, 0, 0.0, -0.005, GREY, rand, { detail: 2, shade: scale, jitter: 0.04 }),
+    blob(0.048, 1, 1, 1, 0, 0.012, 0.05, PALE, rand, { detail: 2, shade: scale, jitter: 0.04 }),
+    blob(0.035, 1.1, 0.8, 1.2, 0, 0.0, -0.075, PALE, rand, { detail: 1 }),
+    // Kokoon taitetut siivet kyljillä (lennossa erilliset siivet).
+    blob(0.05, 0.42, 0.78, 1.95, 0.036, 0.014, -0.035, DARK, rand, { detail: 1, shade: scale, jitter: 0.05 }),
+    blob(0.05, 0.42, 0.78, 1.95, -0.036, 0.014, -0.035, DARK, rand, { detail: 1, shade: scale, jitter: 0.05 }),
+  ]), material);
+  body.castShadow = true;
+  hip.add(body);
+  const head = joint(merge([
+    blob(0.038, 1, 0.95, 1.12, 0, 0.012, 0.012, PALE, rand, { detail: 2, shade: scale, jitter: 0.03 }),
+    blob(0.018, 0.55, 1, 1.35, 0.026, 0.014, 0.03, FACE, rand, { detail: 1, jitter: 0.02 }),
+    blob(0.018, 0.55, 1, 1.35, -0.026, 0.014, 0.03, FACE, rand, { detail: 1, jitter: 0.02 }),
+    blob(0.0055, 1, 1, 1, 0.034, 0.018, 0.032, 0xe8dfa2, rand, { detail: 0, jitter: 0 }),
+    blob(0.0055, 1, 1, 1, -0.034, 0.018, 0.032, 0xe8dfa2, rand, { detail: 0, jitter: 0 }),
+    paint(limb(V(0, 0.004, 0.04), V(0, -0.022, 0.066), 0.016, 0.003, 6, true), 0x17171a, { rand, jitter: 0.02 }),
+    paint(limb(V(0, -0.008, 0.038), V(0, -0.012, 0.05), 0.011, 0.006, 5, true), 0x26262a, { rand, jitter: 0.02 }),
+  ]), material, 0, 0.045, 0.075);
+  hip.add(head);
+  // Siipi: tyvestä kärkeen kapeneva levy; käsisulat (kärki) tummemmat.
+  const wingGeo = (sx) => {
+    const g = new THREE.BoxGeometry(0.21, 0.012, 0.1, 5, 1, 1);
+    const p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const t = p.getX(i) / 0.105 * 0.5 + 0.5; // 0 tyvi .. 1 kärki
+      p.setZ(i, p.getZ(i) * (1 - 0.5 * t * t) - t * 0.025);
+    }
+    g.translate(sx * 0.105, 0, -0.015);
+    return merge([paint(g, DARK, { rand, jitter: 0.06, shade: (x) => (Math.abs(x) > 0.13 ? 0.6 : Math.abs(x) < 0.05 ? 1.35 : 1) })]);
+  };
+  const wings = [];
+  for (const sx of [-1, 1]) {
+    const w = joint(wingGeo(sx), material, sx * 0.05, 0.022, 0.035);
+    w.rotation.order = 'ZYX';
+    hip.add(w);
+    wings.push(w);
+  }
+  const tail = joint(merge([
+    blob(0.04, 1.05, 0.28, 1.55, 0, 0, -0.05, RED, rand, { detail: 1, jitter: 0.05 }),
+  ]), material, 0, 0.0, -0.085);
+  hip.add(tail);
+  const legGeo = merge([
+    paint(limb(V(0, 0, 0), V(0, -0.05, 0.006), 0.007, 0.006, 4, true), 0x3a3a3e, { rand }),
+    blob(0.012, 1.2, 0.5, 1.4, 0, -0.05, 0.008, 0x3a3a3e, rand, { detail: 0 }),
+  ]);
+  const legs = [];
+  for (const x of [-0.022, 0.022]) {
+    const l = joint(legGeo, material, x, 0.05, 0);
+    group.add(l);
+    legs.push(l);
+  }
+  return { group, material, hip, body, head, legs, tail, wings, kind: 'parrot' };
+}
+
 // --- Sessio 10: Haamu ---------------------------------------------------------------
 // Mustakaapuinen olento, joka leijuu öisin sademetsän latvusten tasolla.
 // Kaavun helma on riekaleinen, hupun alla on pimeää ja kaksi violettia silmää.

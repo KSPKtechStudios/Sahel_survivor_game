@@ -143,6 +143,10 @@ export class DevTools {
     this._button(row, 'Herkuleskuoriainen', () => (mobs.spawnInFront('beetle', 2.5) ? 'Herkuleskuoriainen kutsuttu' : 'Paikkaa ei löytynyt'));
     // Sessio 51: gorilla (rauhallinen; suuttuu, jos sitä lyö tai säikyttää).
     this._button(row, 'Gorilla', () => (mobs.spawnInFront('gorilla', 9) ? 'Gorilla kutsuttu (älä säikytä sitä)' : 'Paikkaa ei löytynyt (tai malli latautuu vielä)'));
+    // Sessio 52: leopardi (vaanii; katso sitä, niin se pysähtyy).
+    this._button(row, 'Leopardi', () => (mobs.spawnInFront('leopard', 16) ? 'Leopardi kutsuttu (vaanii: katso sitä, niin se pysähtyy)' : 'Paikkaa ei löytynyt (tai malli latautuu vielä)'));
+    // Sessio 52: papukaijaparvi lähimmille kiville ja lahopuille.
+    this._button(row, 'Papukaijat', () => (mobs.spawnInFront('parrot', 12) ? 'Papukaijaparvi kutsuttu (ammu jousella; lähestyttäessä ne lentävät pois)' : 'Paikkaa ei löytynyt'));
     // Sessio 49: kärpäsen ohilento heti (normaalisti vain sademetsässä silloin tällöin).
     this._button(row, 'Kärpänen ohi', () => { this.ctx.flies?.trigger(); return 'Kärpänen lentää ohi'; });
     // Sessio 50: hyttysen ininä heti.

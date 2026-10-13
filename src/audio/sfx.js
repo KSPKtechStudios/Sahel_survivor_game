@@ -465,6 +465,66 @@ export class Sfx {
     if (Math.hypot(x - listener.x, z - listener.z) < 50) this.duck(0.55, 1.6);
   }
 
+  // Sessio 52: leopardin murina (syntetisoitu; omaa äänitiedostoa ei ole).
+  // Kohina kaistanpäästösuotimen läpi, voimakkuutta moduloi n. 25 Hz:n
+  // värähtely (kurkun rahina), alla matala sahalaitaääni. kind: 'growl'
+  // (matala, pitkä: ennen loikkaa) tai 'snarl' (kova, lyhyt sähähdys: varoitus).
+  leopardGrowl(x, z, listener, kind = 'growl') {
+    if (!this.ctx || this.ctx.state !== 'running') return;
+    const sp = this._spatial(x, z, listener, 8, 70);
+    if (sp.gain < 0.01) return;
+    const ctx = this.ctx, t0 = ctx.currentTime + 0.01;
+    const snarl = kind === 'snarl';
+    const dur = snarl ? 0.9 : 1.5;
+    if (!this.noiseBuf) {
+      const n = ctx.sampleRate * 2;
+      this.noiseBuf = ctx.createBuffer(1, n, ctx.sampleRate);
+      const d = this.noiseBuf.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const out = ctx.createGain();
+    const level = (snarl ? 0.55 : 0.45) * sp.gain;
+    out.gain.setValueAtTime(0.0001, t0);
+    out.gain.exponentialRampToValueAtTime(Math.max(0.0002, level), t0 + (snarl ? 0.05 : 0.18));
+    out.gain.setValueAtTime(level, t0 + dur * 0.6);
+    out.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    // Rahina: kohina -> kaistanpäästö -> amplitudimodulaatio.
+    const src = ctx.createBufferSource();
+    src.buffer = this.noiseBuf;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.setValueAtTime(snarl ? 900 : 380, t0);
+    bp.frequency.exponentialRampToValueAtTime(snarl ? 600 : 300, t0 + dur);
+    bp.Q.value = snarl ? 0.8 : 1.6;
+    const am = ctx.createGain();
+    am.gain.value = 0.55;
+    const lfo = ctx.createOscillator();
+    lfo.frequency.setValueAtTime(snarl ? 34 : 24, t0);
+    lfo.frequency.linearRampToValueAtTime(snarl ? 28 : 19, t0 + dur);
+    const lfoG = ctx.createGain();
+    lfoG.gain.value = 0.45;
+    lfo.connect(lfoG).connect(am.gain);
+    src.connect(bp).connect(am).connect(out);
+    // Matala ääni (kurkku).
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(snarl ? 120 : 72, t0);
+    osc.frequency.linearRampToValueAtTime(snarl ? 95 : 62, t0 + dur);
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = snarl ? 700 : 320;
+    const og = ctx.createGain();
+    og.gain.value = snarl ? 0.18 : 0.32;
+    osc.connect(lp).connect(og).connect(am);
+    const pan = ctx.createStereoPanner();
+    pan.pan.value = sp.pan;
+    out.connect(pan).connect(this.bus);
+    src.start(t0, Math.random() * 0.5);
+    src.stop(t0 + dur + 0.05);
+    lfo.start(t0); lfo.stop(t0 + dur + 0.05);
+    osc.start(t0); osc.stop(t0 + dur + 0.05);
+  }
+
   // Sessio 50: hyttynen pörrää pään ympärillä. Pätkä satunnaisesta kohdasta;
   // rata on pään suhteen (lähestyy, kiertää korvan ohi, loittonee), joten
   // panorointi, voimakkuus ja kirkkaus ajastetaan käyrinä alussa.

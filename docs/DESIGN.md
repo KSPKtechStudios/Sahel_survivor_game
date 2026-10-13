@@ -217,6 +217,25 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 52 (käyttäjän kertoma, 2026-10-13): linnut ja leopardi
+- **Gorillan hyökkäyspyrähdys on aivan liian nopea.**
+- **Sademetsään lintuja:**
+  - niitä voi ampua nuolilla, ja niistä saa sulkia;
+  - niitä ei voi tappaa käsin, koska ne pakenevat lähestyttäessä.
+- **Sademetsään lisää elämää: uusi mobi, leopardi** (käyttäjän 3D-malli). Sille tehdään fiksut animaatiot.
+- Toteutuksen ehdotukset (eivät käyttäjän sanomia; vahvistettava):
+  - Lintu on harmaapapukaija. Parvi istuu lahopuiden, sammalkivien ja lohkareiden päällä, pyrähtää lentoon ja laskeutuu kauemmas. Kolmannen lennon jälkeen parvi lentää pois.
+  - Leopardi on harvinainen, öisin yleisempi, vaaniva saalistaja:
+    - hiipii pelaajan selän taakse ja jähmettyy, kun pelaaja katsoo sitä;
+    - ärjyy varoitukseksi ja loikkaa huomaamatta;
+    - pelkää soihtua ja pakenee haavoittuneena.
+- Avoimet kysymykset:
+  - Mitä leopardista saa (nyt lihaa, taljaa, luita, jänteitä)? Oma leopardintalja-esine?
+  - Onko leopardi sopivan vaarallinen (loikka 18, tassun isku 10, noin 2–3 iskua ennen vetäytymistä)?
+  - Leopardin ääni: nyt syntetisoitu murina. Onko käyttäjällä äänitiedosto?
+  - Papukaijojen ääni: nyt ei ääntä. Lisätäänkö?
+  - Onko papukaija oikea lintu, vai halutaanko jokin muu (esim. turako tai sarvinokka)?
+
 ## Sessio 51 (käyttäjän kertoma, 2026-10-13): gorilla
 - **Uusi mobi: gorilla** (käyttäjän 3D-malli animaatioineen ja karjaisuääni).
 - **Karjaisu** kuuluu aina, kun gorilla huomaa pelaajan ja hyökkää kimppuun.

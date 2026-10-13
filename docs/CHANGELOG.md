@@ -2,6 +2,41 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-13 (sessio 52): linnut ja leopardi sademetsään, gorillan syöksy hitaammaksi
+
+- **Gorillan hyökkäys on hitaampi:**
+  - ryntäys 6,0 → 4,6 m/s, eli kävelyä nopeampi mutta juoksua hitaampi;
+  - valmistelu ennen lyöntiä 0,32 → 0,6 s;
+  - syöksy 4,2 → 2,4 m/s.
+- **Harmaapapukaijat sademetsään:**
+  - harmaita, punainen pyrstö;
+  - parvet (3–5) istuvat lahopuiden, sammalkivien ja lohkareiden päällä, katselevat ympärilleen, nokkivat, sukivat ja hyppivät paikasta toiseen.
+- **Papukaijat pakenevat:**
+  - kun pelaaja huomataan, ne pysähtyvät katsomaan;
+  - jos pelaaja tulee lähemmäs, juoksee, hyppää, huitoo tai nuoli osuu lähelle, koko parvi pyrähtää lentoon ja laskeutuu 25–45 m päähän;
+  - kolmannella kerralla tai ammuttaessa ne lentävät pois;
+  - lyönnit eivät osu niihin, vain nuolet. Nuolesta lintu putoaa (lennosta maahan), ja siitä saa 2–4 sulkaa.
+  - Nuoli ei enää pysähdy ilmaan kivien ja pensaiden yläpuolella, joten kiven päällä istuvaan lintuun voi osua.
+- **Uusi olento: leopardi** (sinun mallisi).
+- **Leopardin malli ja animaatiot:**
+  - Malli oli staattinen, joten sille rakennettiin luuranko (selkäranka, kaula, pää, kuusiosainen häntä, kissan jalat lapoineen) ja animaatiot:
+    - käynti, ravi ja laukka;
+    - hiiviskely matalana;
+    - loikka (kyyristyy, heiluttaa takapäätä, ponnistaa);
+    - tassun isku, ärjyminen hännän piiskatessa;
+    - kuolema kyljelleen.
+  - Tassut pysyvät maassa askeltaessa, pää seuraa pelaajaa ja häntä elää tilan mukaan.
+  - Mallin oikea etutassu oli sulautunut vasempaan, joten oikean etujalan alaosa on vasemman peilikuva.
+- **Leopardin käytös:**
+  - harvinainen (yksi kerrallaan), öisin yleisempi;
+  - vaanii ja hiipii selän taakse; jos katsot sitä suoraan, se jähmettyy, ja pitkään katsottuna se luovuttaa;
+  - liian lähellä se ärjyy varoitukseksi;
+  - huomaamatta se loikkaa, raapii tassuilla hetken ja vetäytyy viidakkoon;
+  - pelkää palavaa soihtua ja pakenee haavoittuneena;
+  - siitä saa lihaa, taljan, luita ja jänteitä.
+- [F3] → Olennot → **Leopardi** ja **Papukaijat**.
+- Tekijät-paneeliin lisätty leopardin malli (CC BY 4.0).
+
 ## 2026-10-13 (sessio 51): gorilla
 
 - **Uusi olento: gorilla** sademetsään (sinun mallisi ja animaationsa: seisominen, laukka, rintaan lyönti ja lyönti; kävely on hidastettu laukka). Gorilloja on enintään kaksi kerralla, joskus pareittain, ja päivällä useammin.

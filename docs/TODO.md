@@ -1,6 +1,12 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 52:
+  - gorillan hyökkäys (hitaampi syöksy);
+  - papukaijat sademetsässä tai [F3] → Olennot → Papukaijat: lähestyminen, ampuminen jousella, sulat;
+  - leopardi ([F3] → Olennot → Leopardi): vaaniminen, jähmettyminen katsottaessa, loikka, soihtu, animaatiot.
+- [ ] Vastaus: leopardin saalis ja vaarallisuus; leopardin ja papukaijan äänet (äänitiedostot?); onko papukaija sopiva lintu.
+- [ ] Leopardin etutassuissa on pieniä jäänteitä vanhasta oikeasta tassusta (vasemman tassun sisäsivulla). Paranna, jos käyttäjä huomaa.
 - [ ] Käyttäjä testaa session 51: gorilla sademetsässä tai [F3] → Olennot → Gorilla.
   - Väistääkö se rauhallista pelaajaa?
   - Suuttuuko se vasta lyönnistä, hypystä viereen tai äkkinäisestä ryntäyksestä, ja kuuluuko karjaisu?

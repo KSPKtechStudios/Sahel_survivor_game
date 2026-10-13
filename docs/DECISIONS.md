@@ -2,6 +2,30 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-13 (sessio 52)
+- **Gorillan ryntäys 4,6 m/s:** kävelyä (4,2) nopeampi, jotta kävellen ei pääse karkuun, mutta juoksua (7,2) hitaampi. Väistön juoksu on erikseen 4,2 m/s, ettei se hidastunut samalla.
+- **Rainforest-lintu on harmaapapukaija** (Keski-Afrikan sademetsän tunnetuin lintu, punainen pyrstö erottuu hämärässä). Käyttäjä sanoi vain "lintuja", joten laji on vahvistettava (DESIGN).
+- **Linnut istuvat esineiden päällä:**
+  - Paikat ovat lahopuu, sammalkivi ja lohkare; korkeus luetaan mallin rajauslaatikosta, ja paikan korkeus on 0,3–2,6 m.
+  - Syy: tiheä aluskasvillisuus peittäisi maassa olevat linnut, eikä puiden oksista ole paikkatietoa.
+  - Paikkoja on harvassa (noin 7 / 30 m), joten haku tehdään 14 m:n säteellä ja parvi jaetaan eri paikoille.
+- **Lyönti ei osu lintuihin** (`noMelee`): käyttäjän mukaan niitä ei voi tappaa käsin. Lisäksi lentoon lähtö lähestyttäessä.
+- **Leopardin luuranko rakennetaan latauksessa** (kuten norsulla):
+  - nivelet mitattu mallista;
+  - kyynär- ja polvinivel lasketaan luiden pituuksista (vasen ja oikea yhtä pitkät);
+  - painot: lähin sallittu luu ja pehmennys pintaa pitkin, ei eri jalkojen välillä.
+  - Animaatiot ovat proseduraalisia (IK sivutasossa), koska mallissa ei ole valmiita.
+- **Oikean etujalan alaosa korvataan vasemman peilikuvalla.**
+  - Syy: lähdemallin oikea tassu on käpristynyt ja sulautunut vasemman ranteen taakse.
+  - Kokeiltiin myös erottelua pintaetäisyydellä, lähimmällä luulla, koveruudella ja leikkaamalla ranteesta. Kaikissa tassut repesivät tai jäivät vajaiksi.
+  - Leikkaus tehdään vaakatasossa kyynärpään alta; kopio kohdistetaan leikkausrenkaiden keskipisteisiin.
+- **Leopardin käytös reiluksi** (ei käyttäjän sanoma, vrt. gorillan "ei liian vaikea"):
+  - jähmettyy, kun pelaaja katsoo sitä (näkölinja tarkistetaan), ja luovuttaa 5 s katsottuna;
+  - pelkää soihtua;
+  - murisee ennen loikkaa;
+  - raatelu kestää 2,5–4 s: passiivinen pelaaja menettää noin 38 terveyttä.
+- **Leopardin murina syntetisoidaan** (kohina + 25 Hz:n amplitudimodulaatio + matala sahalaita), koska äänitiedostoa ei ole.
+
 ## 2026-10-13 (sessio 51)
 - **Gorillan malli:**
   - Valmiit animaatiot (idle, run, stomp, attack) soitetaan `THREE.AnimationMixer`illa; jokaisella gorillalla on oma luurankokopio (`SkeletonUtils.clone`).
