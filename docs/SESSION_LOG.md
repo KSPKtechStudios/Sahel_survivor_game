@@ -2,6 +2,26 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-14 (sessio 53)
+**Tehtiin**
+- Käyttäjän palaute: leopardin ja gorillan animaatiot liian nopeita, leopardin kävely vaappuu.
+- Syyt mitattiin:
+  - leopardi kääntyi 5 rad/s napsahtaen ja kallistui joka käännöksessä noin 9°; esteiden kierto laukaisi tätä jatkuvasti;
+  - paikallaan kääntyminen nosti askellajin raviin;
+  - takajalan kanta laski maahan askeleen lopussa;
+  - gorillan lyöntiklipissä koko malli on siirretty 1,7–2,2 m eteen, ja nousuklippi on vain 0,57 s.
+- Korjaukset:
+  - `mobs.js` `_steer`: pehmeä kääntyminen (`turnAcc`) leopardille ja gorillalle;
+  - `models/leopard.js`: tahti, kallistus, kintereet, tassut, häntä;
+  - `models/gorilla.js`: uusi `animateGorilla` (kävely raajojen vaiheista ja peilattu oikea jalka, nousun ja lyönnin ajoitus, rinnan lyönti IK:lla), lyöntiklipin juurisiirto pois;
+  - `mobs.js` `_animGorilla` kutsuu sitä.
+- Testattiin:
+  - ruutusarjat `shots/s53/` (`leo_strip`, `ganim`, `gstrip`; git-poissuljettu);
+  - pelissä leopardin käytös (`s52/leopard.mjs`) ja liikkeen arvot sademetsässä (`s53/run_prowl.mjs`), gorillan käytös (`s51/gorilla.mjs`).
+
+**Seuraavaksi**
+- Käyttäjän palaute tahdista (ks. TODO).
+
 ## 2026-10-13 (sessio 52)
 **Tehtiin**
 - Gorillan syöksy hitaammaksi (`mobs.js`: run, windup, attack, syöksy).

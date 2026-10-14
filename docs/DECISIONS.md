@@ -2,6 +2,13 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-14 (sessio 53)
+- **Isoille eläimille pehmeä kääntyminen** (`turnAcc` mobin määrittelyssä, `_steer`): kulmanopeus kiihtyy ja jarruttaa ennen kohdesuuntaa. Syy: leopardin "vaappuminen" johtui pääosin nopeista napsahtavista käännöksistä (5 rad/s) ja niiden kallistuksista, joita tiheän sademetsän esteiden kierto laukaisi jatkuvasti. Koskee nyt leopardia ja gorillaa; muut eläimet ennallaan.
+- **Leopardin askeltahti asetettu hieman todellista hitaammaksi** (kävely ~1 Hz). Syy: käyttäjän mielestä animaatiot olivat liian nopeita; pelissä rauhallinen tahti näyttää isolta kissalta.
+- **Gorillan animaatioita ohjataan itse** (`animateGorilla`): kaikkien klippien painot ja ajat asetetaan joka ruudussa. Syy: mallin klipit ovat hyvin lyhyitä (nousu 0,57 s, lyönti 0,2 s), ja ne piti venyttää pelin tilojen kestoille.
+- **Gorillan kävely tehdään laukasta raajojen vaiheita siirtämällä** (apinoiden ristikkäinen nelitahti), ja oikealle jalalle peilataan vasemman jalan liike. Syy: mallissa ei ole kävelyanimaatiota; laukan johtava oikea jalka potkaisee liian korkealle.
+- **Rinnan lyönti käsien IK:lla** (kädet rintaan, kyynärpäät sivuille). Syy: lähdeanimaatiossa ei ole lyöntiä, ja Biped-luiden akselit ovat hankalia suoraan kierrettäviksi.
+
 ## 2026-10-13 (sessio 52)
 - **Gorillan ryntäys 4,6 m/s:** kävelyä (4,2) nopeampi, jotta kävellen ei pääse karkuun, mutta juoksua (7,2) hitaampi. Väistön juoksu on erikseen 4,2 m/s, ettei se hidastunut samalla.
 - **Rainforest-lintu on harmaapapukaija** (Keski-Afrikan sademetsän tunnetuin lintu, punainen pyrstö erottuu hämärässä). Käyttäjä sanoi vain "lintuja", joten laji on vahvistettava (DESIGN).

@@ -2,6 +2,23 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-14 (sessio 53): rauhallisemmat ja paremmat animaatiot (leopardi, gorilla)
+
+- **Leopardin kävely ei enää vaapu:**
+  - kääntyminen on pehmeää: kulmanopeus kiihtyy ja hidastuu, enintään 3,2 rad/s (ennen 5 rad/s napsahtaen);
+  - kaarteessa kallistus vain vauhdissa (kävellen enintään noin 2°, ennen 9°);
+  - paikallaan kääntyessä askelletaan hitaasti, ei ravin tahtiin;
+  - takajalkojen kintereet pysyvät ylhäällä (kissa kulkee varpaillaan, ennen kantapää laski maahan);
+  - tassut taittuvat heilahduksessa maltillisemmin;
+  - hännän sivuheilunta puoleen.
+- **Leopardin askeltahti hitaammaksi:** kävely noin 1 askelsykli sekunnissa (ennen 1,4), kävelyvauhti 1,25 → 0,95 m/s, ravi ja laukka noin 20 % rauhallisemmin. Tassun iskun valmistelu 0,45 → 0,55 s.
+- **Gorillan animaatiot:**
+  - lyönnissä malli hyppäsi 1,7–2,2 m eteen ja liukui takaisin (lähdeanimaation juurisiirto). Nyt lyönti tapahtuu paikallaan;
+  - lyönti tahdistettu: käsi nousee valmistelun ajan ja isku osuu samalla hetkellä kuin vahinko;
+  - varoitus ja karjaisu: nousu pystyyn venytetty koko tilan ajalle (ennen 0,57 s ja jähmettyminen), pidon aikana gorilla lyö rintaansa vuorotellen molemmilla käsillä;
+  - kävely rystysillä: oikea nelitahtinen käynti (ennen hidastettu laukka), oikea jalka ei enää potkaise lantion korkeudelle;
+  - kääntyminen pehmeää (enintään 2,8 rad/s, ennen 4,2), siirtymät liikkeiden välillä pehmeämpiä.
+
 ## 2026-10-13 (sessio 52): linnut ja leopardi sademetsään, gorillan syöksy hitaammaksi
 
 - **Gorillan hyökkäys on hitaampi:**

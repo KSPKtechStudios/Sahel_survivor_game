@@ -1,6 +1,10 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 53 ([F3] → Olennot → Leopardi / Gorilla):
+  - leopardin kävely ja kääntyminen (ei vaappumista), hiipiminen, juoksu;
+  - gorillan kävely rystysillä, varoitus (nousee ja lyö rintaansa), lyönti (ei hyppää eteen).
+- [ ] Vastaus: onko animaatioiden tahti nyt sopiva?
 - [ ] Käyttäjä testaa session 52:
   - gorillan hyökkäys (hitaampi syöksy);
   - papukaijat sademetsässä tai [F3] → Olennot → Papukaijat: lähestyminen, ampuminen jousella, sulat;

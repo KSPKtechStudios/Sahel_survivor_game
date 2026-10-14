@@ -686,7 +686,7 @@ function solveLeg(L, T, phi, toe) {
 
 function newState() {
   return {
-    cyc: Math.random(), w: 0, gt: 0, gg: 0, crouch: 0, alert: 0, lookY: 0, lookX: 0, bodyY: 0, pitch: 0,
+    cyc: Math.random(), v: 0, w: 0, gt: 0, gg: 0, crouch: 0, alert: 0, lookY: 0, lookX: 0, bodyY: 0, pitch: 0,
     snarl: 0, hurt: 0, ph: Math.random() * 20, roll: 0, bend: 0, flex: 0, air: 0, blink: 0,
     lookT: 0, lookR: 0, tailW: 0,
   };
@@ -705,14 +705,18 @@ export function animateLeopard(e, o, dt) {
   const dead = o.dead >= 0;
   const pounce = o.pounce ?? -1, swipe = o.swipe ?? -1;
 
-  // Askellaji nopeuden mukaan (pehmeästi).
-  const v = dead ? 0 : Math.max(o.speed, Math.abs(o.turn || 0) * 0.5);
+  // Askellaji nopeuden mukaan (pehmeästi). Nopeus suodatetaan, ettei tahti
+  // nyi kiihdytyksissä. Paikallaan kääntyessä askelletaan hitaasti (ei ravia).
+  // Sessio 53: tahti hitaammaksi (käynti n. 1 askelsykli/s), askel pidemmäksi.
+  const v0 = dead ? 0 : Math.max(o.speed, Math.min(0.6, Math.abs(o.turn || 0) * 0.3));
+  S.v += (v0 - S.v) * k(5);
+  const v = S.v;
   S.w += (smooth((v - 0.05) / 0.35) - S.w) * k(4);
-  S.gt += (smooth((v - 1.8) / 1.2) - S.gt) * k(3); // käynti -> ravi
-  S.gg += (smooth((v - 4.2) / 1.6) - S.gg) * k(3); // ravi -> laukka
+  S.gt += (smooth((v - 1.9) / 1.2) - S.gt) * k(2.5); // käynti -> ravi
+  S.gg += (smooth((v - 4.3) / 1.6) - S.gg) * k(2.5); // ravi -> laukka
   const G = (n) => lerp(lerp(GAITS.walk[n], GAITS.trot[n], S.gt), GAITS.gallop[n], S.gg);
   S.crouch += ((o.crouch || 0) - S.crouch) * k(3);
-  const freq = lerp(0.85 + 0.45 * Math.min(v, 2), 1.6 + 0.12 * v, S.gt) * (1 - 0.35 * S.crouch);
+  const freq = lerp(0.42 + 0.62 * Math.min(v, 1.6), 1.15 + 0.1 * v, S.gt) * (1 - 0.15 * S.crouch);
   const stride = v / Math.max(0.3, freq);
   const duty = Math.min(G('duty') + 0.1 * S.crouch, stride > 1e-3 ? Math.max(0.2, 0.7 / stride) : 1);
   const sweep = stride * duty * S.w;
@@ -742,10 +746,12 @@ export function animateLeopard(e, o, dt) {
   const flex = gal * Math.sin((S.cyc - 0.2) * Math.PI * 2); // + = koukistus
   const wantPitch = slope - 0.05 * S.crouch + 0.1 * pg - 0.22 * pl + 0.08 * pf - 0.18 * sw + 0.05 * flex;
   S.pitch += (wantPitch - S.pitch) * k(8);
-  S.roll += (Math.max(-0.2, Math.min(0.2, -(o.turn || 0) * 0.05 * (0.5 + v * 0.15))) - S.roll) * k(4);
-  S.bend += (Math.max(-0.5, Math.min(0.5, (o.turn || 0) * 0.18)) - S.bend) * k(5);
+  // Kallistus kaarteessa vain vauhdissa (keskihakuvoima ~ kulmanopeus * nopeus);
+  // kävellessä runko pysyy pystyssä, selkä taipuu hieman kaarteen mukaan.
+  S.roll += (Math.max(-0.18, Math.min(0.18, -(o.turn || 0) * v * 0.022)) - S.roll) * k(3);
+  S.bend += (Math.max(-0.35, Math.min(0.35, (o.turn || 0) * 0.11)) - S.bend) * k(3);
   S.air += ((o.air || 0) - S.air) * k(20);
-  const wiggle = pg * Math.sin(t * 22) * 0.05 * smooth((pounce - 0.12) / 0.15);
+  const wiggle = pg * Math.sin(t * 15) * 0.05 * smooth((pounce - 0.12) / 0.15);
   e.holder.position.set(0, S.air, 0);
   B.root.position.set(B.root.userData.rest.x + wiggle * 0.4, B.root.userData.rest.y + S.bodyY, B.root.userData.rest.z);
   B.root.rotation.set(S.pitch - 0.25 * flex * 0.4, wiggle, S.roll + wiggle * 0.6);
@@ -761,7 +767,7 @@ export function animateLeopard(e, o, dt) {
   S.lookY += (Math.max(-1.1, Math.min(1.1, lookY)) - S.lookY) * k(4);
   const lookX = (o.lookUp || 0) * S.alert + 0.32 * S.crouch + 0.25 * S.snarl - 0.15 * pf + 0.25 * pg + 0.3 * S.hurt + 0.15 * sw;
   S.lookX += (lookX - S.lookX) * k(5);
-  const nod = S.w * (1 - S.gg) * Math.sin(S.cyc * Math.PI * 4 + 0.6) * 0.03;
+  const nod = S.w * (1 - S.gg) * Math.sin(S.cyc * Math.PI * 4 + 0.6) * 0.02;
   B.neck.rotation.set(S.lookX * 0.5 - 0.08 * S.crouch + nod, S.lookY * 0.55, 0);
   B.head.rotation.set(S.lookX * 0.5 + 0.05 * S.crouch - nod * 0.5 + (swipe >= 0 ? 0.15 * Math.sin(Math.PI * smooth((swipe - 0.4) / 0.4)) : 0), S.lookY * 0.45, S.snarl * Math.sin(t * 3) * 0.05);
 
@@ -778,14 +784,17 @@ export function animateLeopard(e, o, dt) {
     let phi, toe;
     if (st || S.w < 0.01) {
       z += sweep * (0.5 - s);
-      phi = L.front ? lerp(0.05, 0.85, s * s * S.w) : lerp(0.42, 0.95, s * s * S.w);
+      // Tukivaihe: etukämmen painuu loivemmaksi (ranne joustaa), takajalan
+      // kinner nousee askeleen lopussa (varpailla kulkija: kantapää ei laske).
+      phi = L.front ? lerp(0.12, lerp(0.12, 0.72, s), S.w) : lerp(0.45, lerp(0.5, 0.15, smooth(s)), S.w);
       toe = Math.PI / 2;
     } else {
       z += sweep * (smooth(s) - 0.5);
-      const lift = (L.front ? 0.08 : 0.06) * Math.min(1, 0.5 + stride * 0.5) * (1 + 0.6 * S.crouch);
+      const lift = (L.front ? 0.075 : 0.06) * Math.min(1, 0.5 + stride * 0.5) * (1 + 0.6 * S.crouch);
       y += lift * Math.pow(Math.sin(Math.PI * s), 0.8);
-      phi = L.front ? (s < 0.55 ? lerp(0.85, -1.2, smooth(s / 0.3)) : lerp(-1.2, 0.1, smooth((s - 0.55) / 0.4))) : (s < 0.5 ? lerp(0.95, -0.2, smooth(s / 0.3)) : lerp(-0.2, 0.45, smooth((s - 0.5) / 0.45)));
-      toe = phi + 0.5;
+      // Heilahdus: tassu taittuu kevyesti taakse ja ojentuu ennen laskua.
+      phi = L.front ? (s < 0.45 ? lerp(0.72, -0.7, smooth(s / 0.4)) : lerp(-0.7, 0.12, smooth((s - 0.45) / 0.5))) : (s < 0.45 ? lerp(0.15, -0.3, smooth(s / 0.4)) : lerp(-0.3, 0.5, smooth((s - 0.45) / 0.5)));
+      toe = phi + 0.45;
     }
     // Paikallaan: jalat lepoasentoon (ei askelta), paino vaihtuu hitaasti.
     if (S.w < 0.99) {
@@ -856,7 +865,7 @@ export function animateLeopard(e, o, dt) {
     prev = d;
     // Sivuheilunta: rauhallinen huisku; ärjyessä piiskaa.
     const lash = S.tailW * Math.sin(t * 7 - i * 0.6) * 0.32;
-    B.tail[i].rotation.y = Math.sin(t * 1.1 - i * 0.55) * 0.07 * (1 + tw) + lash + (pg ? Math.sin(t * 9 - i) * 0.08 * pg : 0);
+    B.tail[i].rotation.y = Math.sin(t * 0.9 - i * 0.55) * 0.035 * (1 + 0.5 * tw) + lash + (pg ? Math.sin(t * 9 - i) * 0.08 * pg : 0);
   }
 
   // Osuma: nytkähdys. Kuolema: kaatuu kyljelleen, jalat veltoiksi.

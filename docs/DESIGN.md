@@ -217,6 +217,14 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 53 (käyttäjän kertoma, 2026-10-14): animaatiot
+- **Leopardin ja gorillan animaatiot ovat aivan liian nopeita.**
+- **Leopardin kävely on erikoista vaappumista.**
+- Kaivataan parempia animaatioita.
+- Avoimet kysymykset:
+  - Onko tahti nyt sopiva, vai vieläkin hitaammaksi?
+  - Gorilla lyö nyt rintaansa varoittaessaan ja karjuessaan. Sopiiko?
+
 ## Sessio 52 (käyttäjän kertoma, 2026-10-13): linnut ja leopardi
 - **Gorillan hyökkäyspyrähdys on aivan liian nopea.**
 - **Sademetsään lintuja:**

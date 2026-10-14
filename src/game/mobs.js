@@ -34,7 +34,7 @@ import { events } from './events.js';
 import { windUniforms } from '../render/materials.js';
 import { GhostCloak } from '../models/ghostCloak.js';
 import { loadElephant, elephantReady, makeElephant, animateElephant } from '../models/elephant.js';
-import { loadGorilla, gorillaReady, makeGorilla } from '../models/gorilla.js';
+import { loadGorilla, gorillaReady, makeGorilla, animateGorilla } from '../models/gorilla.js';
 import { loadLeopard, leopardReady, makeLeopard, animateLeopard } from '../models/leopard.js';
 import { makeHerculesBeetle } from '../models/beetle.js';
 import { OBJECT_TYPES } from '../world/objectTypes.js';
@@ -103,7 +103,7 @@ export const MOB_TYPES = {
   gorilla: {
     name: 'Gorilla', hp: 150, radius: 0.55, height: 1.5, walk: 1.0, run: 4.6, mass: 5,
     damage: 20, knock: 8.5, up: 2.2, reach: 1.55, windup: 0.6, attack: 0.5, recover: 0.9,
-    sight: 14, poise: 28, turn: 4.2, drops: [['raw_meat', 2, 4], ['hide', 1, 2], ['bone', 1, 2]],
+    sight: 14, poise: 28, turn: 2.8, turnAcc: 7, drops: [['raw_meat', 2, 4], ['hide', 1, 2], ['bone', 1, 2]],
     cause: 'gorilla', gorilla: true,
   },
   // Sessio 48: herkuleskuoriainen. tiny = pienet osuma- ja kuolemaefektit.
@@ -119,9 +119,9 @@ export const MOB_TYPES = {
   // _thinkLeopard. pounceDamage = loikan osuma, damage = tassun isku.
   // long: rungon pituus osumissa (bodyPoint).
   leopard: {
-    name: 'Leopardi', hp: 80, radius: 0.3, height: 0.75, walk: 1.25, run: 7.4, mass: 2,
-    damage: 10, pounceDamage: 18, knock: 6, up: 1.6, reach: 1.25, windup: 0.45, attack: 0.3, recover: 1.05,
-    sight: 20, poise: 12, turn: 5, drops: [['raw_meat', 1, 3], ['hide', 1, 1], ['bone', 0, 1], ['sinew', 0, 1]],
+    name: 'Leopardi', hp: 80, radius: 0.3, height: 0.75, walk: 0.95, run: 7.4, mass: 2,
+    damage: 10, pounceDamage: 18, knock: 6, up: 1.6, reach: 1.25, windup: 0.55, attack: 0.3, recover: 1.05,
+    sight: 20, poise: 12, turn: 3.2, turnAcc: 9, drops: [['raw_meat', 1, 3], ['hide', 1, 1], ['bone', 0, 1], ['sinew', 0, 1]],
     cause: 'leopard', leopard: true, long: true,
   },
   // Sessio 52 (käyttäjä): sademetsän lintu, jota voi ampua nuolella ja josta
@@ -2922,7 +2922,16 @@ export class Mobs {
     }
     const diff = angleDiff(want, m.yaw);
     const turn = m.def.turn * (speed > 3 ? 1.1 : 1);
-    m.yaw += Math.max(-turn * dt, Math.min(turn * dt, diff));
+    if (m.def.turnAcc) {
+      // Sessio 53: isot eläimet kääntyvät pehmeästi (kulmanopeus kiihtyy ja
+      // hidastuu ennen kohdesuuntaa), eivät napsahda suoraan uuteen suuntaan.
+      const acc = m.def.turnAcc;
+      const ad = Math.abs(diff);
+      const wantRate = Math.sign(diff) * Math.min(turn, Math.sqrt(2 * acc * ad) * 0.85, ad * 12);
+      const r = m.yawRate || 0;
+      m.yawRate = r + Math.max(-acc * dt, Math.min(acc * dt, wantRate - r));
+      m.yaw += m.yawRate * dt;
+    } else m.yaw += Math.max(-turn * dt, Math.min(turn * dt, diff));
     const align = face ? 0 : Math.max(0, Math.cos(diff));
     const tv = speed * align;
     const k = 1 - Math.exp(-dt * 8);
@@ -3073,33 +3082,24 @@ export class Mobs {
     if (m.emergeGlow) this._fxEmerge(m, dt);
   }
 
-  // Sessio 51: gorillan animaatiot mallista (models/gorilla.js): seisoo
-  // (idle), kävelee ja juoksee (run, nopeuden mukaan), varoittaa ja karjuu
-  // lyömällä rintaansa (stomp) ja lyö (attack, venytetty valmistelun ja iskun
-  // ajalle). Kuollessaan kaatuu kyljelleen.
+  // Sessio 51/53: gorillan animaatiot mallista (models/gorilla.js,
+  // animateGorilla): seisoo, kävelee rystysillään, laukkaa, nousee pystyyn ja
+  // lyö rintaansa (varoitus ja karjaisu) ja lyö. Kuollessaan kaatuu kyljelleen.
   _animGorilla(m, md, speed, dt) {
-    const s = m.state, A = md.actions;
-    let want = 'idle';
-    if (s === 'display' || s === 'roar') want = 'stomp';
-    else if (s === 'windup' || s === 'attack') want = 'attack';
-    else if (s !== 'dead' && speed > 0.25) want = 'run';
-    const next = A[want] || A.idle;
-    if (md.cur !== next) {
-      next.reset();
-      next.setEffectiveWeight(1);
-      next.play();
-      if (md.cur) md.cur.crossFadeTo(next, want === 'attack' ? 0.08 : 0.25, false);
-      md.cur = next;
-    }
-    if (want === 'run') next.timeScale = speed > 3 ? Math.min(1.5, speed / 5.5) : Math.max(0.35, speed / 2.8);
-    else if (want === 'attack') next.timeScale = next.getClip().duration / (m.def.windup + m.def.attack);
-    else next.timeScale = 1;
-    if (s !== 'dead') md.mixer.update(dt);
-    else {
+    const s = m.state;
+    if (s === 'dead') {
       const k = smooth(Math.min(1, m.deadT / 0.8));
       md.group.rotation.set(0, m.yaw, m.deathSide * k * 1.45);
       md.group.position.y += k * 0.35;
+      return;
     }
+    const turn = dt > 0 ? angleDiff(m.yaw, m.prevYaw ?? m.yaw) / dt : 0;
+    m.prevYaw = m.yaw;
+    const d = m.def;
+    animateGorilla(md, {
+      state: s, stateT: m.stateT, stateDur: m.stateT + Math.max(0, m.timer), speed, turn,
+      windup: d.windup, attack: d.attack, recover: d.recover,
+    }, dt);
   }
 
   // Norsu: kävely, kärsä, korvat ja häntä (models/elephant.js). Jalat
