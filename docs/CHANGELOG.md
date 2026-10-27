@@ -2,6 +2,24 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-27 (sessio 54): uudet esinemallit ja tekstuurit (Blender)
+
+- **Kaikille esineille uudet 3D-mallit** (106 esinettä). Ne on tehty Blenderillä skripteistä (`tools/blender/`):
+  - työkalut: kirveet, hakut ja vasara;
+  - aseet: tikarit, miekat, viidakkoveitsi, nuijat, moukari, keihäät ja kilvet;
+  - jouset (5) ja nuolet (5). Kädessä näkyy uusi jousen runko, ja jänteellä ja lennossa uusi nuoli;
+  - panssarit: 7 kypärää, 5 ylävartalon panssaria, 2 housut ja säärikääreet;
+  - materiaalit, ruoat ja lääkkeet, arvoesineet (kultahippu, kaurikotilot, pronssirengas, kello), kuitu ja nuotio.
+- Puunuija, soihtu ja kivipuukko ovat ennallaan (käyttäjän pyyntö).
+- **Oikeat tekstuurit:**
+  - puu, kuori, kivi, metallit, nahka, köysi, kangas, luu ja turkki ovat ambientCG:n CC0-tekstuureja (väri, normaali ja karheus);
+  - rengas- ja suomupanssarin tekstuurit on tehty itse;
+  - varjostus (AO) on leivottu malleihin;
+  - hedelmien, sienten, lihan, sulkien ym. kuviot on maalattu malleihin.
+- Kuvakkeet, maassa olevat esineet ja kädessä pidettävät esineet käyttävät samoja malleja.
+- Kaikki mallit ovat yhdessä tiedostossa `assets/models/items/items.glb` (2,9 Mt, meshopt-pakattu). Jos lataus epäonnistuu, käytetään vanhoja malleja.
+- Korjattu: toisessa kädessä olevalla kilvellä on nyt kilven oma materiaali.
+
 ## 2026-10-14 (sessio 53): rauhallisemmat ja paremmat animaatiot (leopardi, gorilla)
 
 - **Leopardin kävely ei enää vaapu:**

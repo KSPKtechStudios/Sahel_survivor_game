@@ -8,6 +8,7 @@ import { ITEMS } from './items.js';
 import { events } from './events.js';
 import { waterAt } from '../world/terrain.js';
 import { makeArrowGeometry } from '../models/items2.js';
+import { itemAsset } from '../models/itemAssets.js';
 import { bodyPoint } from './mobs.js';
 import { OBJECT_TYPES } from '../world/objectTypes.js';
 
@@ -33,7 +34,13 @@ export class Archery {
     this.arrows = [];
     this.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8 });
     this.geos = {};
-    for (const k of AMMO_ORDER) this.geos[k] = makeArrowGeometry(k);
+    this.mats = {};
+    for (const k of AMMO_ORDER) {
+      // Sessio 54: Blender-malli (arrow1_<tunnus>), jos se on ladattu.
+      const a = itemAsset('arrow1_' + k);
+      this.geos[k] = a || makeArrowGeometry(k);
+      this.mats[k] = (a && a.userData.material) || this.material;
+    }
     this.noAmmoT = 0;
   }
 
@@ -108,7 +115,7 @@ export class Archery {
     _dir.z += (Math.random() - 0.5) * spread * 2;
     _dir.normalize();
     const speed = (16 + 44 * d * d) * bow.power * a.speed;
-    const mesh = new THREE.Mesh(this.geos[kind], this.material);
+    const mesh = new THREE.Mesh(this.geos[kind], this.mats[kind]);
     mesh.castShadow = true;
     // Lähtö jousen kohdalta (hieman oikealla ja alempana), jotta nuolen
     // lennon näkee ruudulla.

@@ -25,6 +25,7 @@ TEX_WORLD = {
     'iron': (0.35, 'u'), 'steel': (0.25, 'u'), 'copper': (0.35, 'u'), 'gold': (0.3, 'u'), 'brass': (0.3, 'u'),
     'leather': (0.25, 'u'), 'rope': (0.08, 'u'), 'cloth': (0.3, 'u'), 'bone': (0.3, 'u'), 'fur': (0.3, 'u'),
     'ruby': (0.1, 'u'), 'gum': (0.1, 'u'),
+    'chain': (0.12, 'v'), 'scales': (0.26, 'v'),
 }
 
 

@@ -1,5 +1,6 @@
 # Sessio 54: esineiden materiaalikirjaston tekstuurit (ambientCG, CC0).
 # Ajo: python3 -I tools/blender/prep_textures.py <ambientCG-kansio> assets/textures/items
+#      python3 -I tools/blender/prep_textures.py --procedural assets/textures/items (rengas- ja suomupanssari)
 # Lähdekansiossa on kunkin materiaalin 1K-JPG-paketti purettuna (<Id>/<Id>_1K-JPG_Color.jpg ...).
 # Tulos: <avain>_c.webp (väri), _n.webp (normaali, OpenGL), _r.webp (karheus),
 # 512 x 512. gray = väri harmaaksi (sävy annetaan pelissä materiaalipaikan
@@ -51,5 +52,76 @@ def main(src, dst):
         print(key, aid)
 
 
+def _save_maps(dst, key, h, col_on, col_off, rough_on, rough_off, strength=6.0):
+    """Korkeuskartasta (0..1) väri-, normaali- ja karheuskartat."""
+    import numpy as np
+    gy, gx = np.gradient(h)
+    nx, ny, nz = -gx * strength, gy * strength, np.ones_like(h)
+    ln = np.sqrt(nx * nx + ny * ny + nz * nz)
+    nrm = np.stack([(nx / ln + 1) * 127.5, (ny / ln + 1) * 127.5, (nz / ln + 1) * 127.5], -1).clip(0, 255).astype('uint8')
+    m = (h > 0.02).astype('float32')[..., None]
+    shade = (0.55 + 0.45 * h)[..., None]
+    col = (np.array(col_on) * shade * m + np.array(col_off) * (1 - m)).clip(0, 255).astype('uint8')
+    rough = (rough_on * m[..., 0] + rough_off * (1 - m[..., 0])) * 255
+    Image.fromarray(col).save(os.path.join(dst, f'{key}_c.webp'), quality=88, method=6)
+    Image.fromarray(nrm).save(os.path.join(dst, f'{key}_n.webp'), quality=92, method=6)
+    Image.fromarray(rough.clip(0, 255).astype('uint8')).save(os.path.join(dst, f'{key}_r.webp'), quality=88, method=6)
+    print(key, 'procedural')
+
+
+def gen_chain(dst, n=8):
+    """Rengaspanssari: rivien renkaat kallistuvat vuorotellen eri suuntiin
+    (4-in-1-punos), joka toinen rivi päällä (toistuva)."""
+    import numpy as np
+    S = SIZE
+    yy, xx = np.mgrid[0:S, 0:S].astype('float32') / S
+    h = np.zeros((S, S), 'float32')
+    cell = 1.0 / n
+    R, w = cell * 0.5, cell * 0.12
+    rows = 12  # parillinen määrä rivejä, rivikorkeus jakaa ruudun tasan (toistuu saumatta)
+    for j in range(rows):
+        th = 0.55 if j % 2 == 0 else -0.55
+        c, s_ = np.cos(th), np.sin(th)
+        for i in range(n):
+            cx = (i + 0.5 * (j % 2)) * cell
+            cy = j / rows
+            for ox in (-1, 0, 1):
+                for oy in (-1, 0, 1):
+                    dx = xx - (cx + ox)
+                    dy = yy - (cy + oy)
+                    u = dx * c + dy * s_
+                    v = (-dx * s_ + dy * c) / 0.62
+                    d = np.abs(np.sqrt(u * u + v * v) - R)
+                    val = np.sqrt(np.clip(1 - (d / w) ** 2, 0, 1))
+                    h = np.maximum(h, val * (0.72 + 0.28 * ((j % 2) == 0)))
+    _save_maps(dst, 'chain', h, (128, 130, 134), (30, 28, 26), 0.55, 1.0, strength=8.0)
+
+
+def gen_scales(dst, n=8):
+    """Suomupanssari: limittäiset pyöreäpäiset suomut riveittäin (toistuva)."""
+    import numpy as np
+    S = SIZE
+    yy, xx = np.mgrid[0:S, 0:S].astype('float32') / S
+    h = np.zeros((S, S), 'float32')
+    rows = 10
+    cw, ch = 1.0 / n, 1.0 / rows
+    for j in range(rows - 1, -1, -1):
+        for i in range(n):
+            cx = (i + 0.5 * (j % 2)) * cw
+            cy = j * ch
+            for ox in (-1, 0, 1):
+                for oy in (-1, 0, 1):
+                    dx = (xx - (cx + ox)) / (cw * 0.5)
+                    dy = (yy - (cy + oy)) / (ch * 0.9)
+                    inside = (np.abs(dx) < 1) & (dy > -1.2) & (dy < 0.4) & ((dy < 0) | (dx * dx + (dy / 0.4) ** 2 < 1))
+                    prof = np.clip(0.4 + 0.6 * (-dy / 1.2), 0.15, 1) * (1 - 0.35 * dx * dx)
+                    h = np.where(inside, prof, h)
+    _save_maps(dst, 'scales', h, (200, 128, 78), (40, 24, 14), 0.5, 0.9, strength=5.0)
+
+
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2])
+    if sys.argv[1] == '--procedural':
+        gen_chain(sys.argv[2])
+        gen_scales(sys.argv[2])
+    else:
+        main(sys.argv[1], sys.argv[2])

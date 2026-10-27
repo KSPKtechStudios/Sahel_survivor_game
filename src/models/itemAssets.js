@@ -37,6 +37,9 @@ const LIB = {
   cloth: { rough: 1 },
   bone: { rough: 0.7 },
   fur: { rough: 1, nrm: 1.4 },
+  // Proseduraaliset (tools/blender/prep_textures.py --procedural).
+  chain: { rough: 1, metal: 0.9, env: 1 },
+  scales: { rough: 1, metal: 0.9, env: 1 },
   ruby: { special: 'ruby' },
   // Eloperäiset: väri ja kuviot verteksiväreissä (Blender maalaa), ei tekstuuria.
   skin: { vc: true, rough: 0.55 },
@@ -45,7 +48,7 @@ const LIB = {
   plant: { vc: true, rough: 0.6, side: true },
   straw: { vc: true, rough: 0.9, side: true },
   feather: { vc: true, rough: 0.85, side: true },
-  liquid: { vc: true, rough: 0.08, env: 0.9 },
+  liquid: { vc: true, rough: 0.12, env: 0.45 },
   paste: { vc: true, rough: 0.8 },
   shell: { vc: true, rough: 0.3, env: 0.5 },
   chitin: { vc: true, rough: 0.25, env: 0.7 },

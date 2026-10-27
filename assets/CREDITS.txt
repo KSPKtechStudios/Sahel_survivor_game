@@ -95,4 +95,20 @@ Hyttysen ininä (assets/sfx/mosquito-buzz.mp3), sessio 50: käyttäjän antama
   tiedosto freesound_community-flying-mosquito-105770.mp3 (tiedostonimen
   perusteella Pixabay / Freesound-yhteisö). Normalisoitu, monoksi.
 
+Esinemallit (assets/models/items/items.glb; lähde tools/blender/), sessio 54:
+  mallinnettu tässä projektissa Blenderillä (Python-skriptit), ei ulkopuolisia
+  malleja. Materiaalikirjaston tekstuurit (assets/textures/items/), ambientCG
+  (https://ambientcg.com), CC0, 1K-JPG pienennetty 512 px WebP:ksi:
+  wood = Wood049       hardwood = Wood027   heartwood = Wood026  bark = Bark012
+  stone = Rock041      flint = Rock035      clay = Rock029       bone = Rock054
+  iron = Metal046B     steel = Metal055A    copper = Metal047B   gold = Metal048A
+  brass = Metal007     leather = Leather030 rope = Rope001       cloth = Fabric045
+  fur = Fabric084
+  (flint värikylläisyys vähennetty; cloth, bone ja fur harmaiksi, sävy annetaan
+  pelissä). Rengas- ja suomupanssarin tekstuurit (chain_*, scales_*) on tehty
+  itse skriptillä tools/blender/prep_textures.py.
+meshoptimizer (vendor/meshopt/meshopt_decoder.module.js), sessio 54:
+  https://github.com/zeux/meshoptimizer, MIT-lisenssi (vendor/meshopt/LICENSE.md).
+  Esinemallien pakkaus (EXT_meshopt_compression) ja purku pelissä.
+
 Fontit: ks. assets/fonts (OFL).

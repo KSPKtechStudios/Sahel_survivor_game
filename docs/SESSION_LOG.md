@@ -2,6 +2,34 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-27 (sessio 54)
+**Tehtiin**
+- Käyttäjän pyyntö: paremmat 3D-mallit ja tekstuurit kaikille esineille. Puunuija, soihtu ja kivipuukko jätettiin ennalleen.
+- Blender 4.0.2 asennettiin pilviympäristöön (apt) sekä `python3-numpy` (glTF-vientiä varten).
+- Putki `tools/blender/` (ks. `tools/blender/README.md`):
+  - `itemlib.py`, `shapes.py` ja `paint.py`: muodot, UV:t, AO:n leivonta ja maalaus;
+  - `items_*.py`: esineet ryhmittäin (työkalut, aseet, materiaalit, ruoat, sekalaiset, jouset, panssarit);
+  - `prep_textures.py`: ambientCG-tekstuurit ja itse tehdyt rengas- ja suomutekstuurit;
+  - `optimize_glb.mjs`: meshopt-pakkaus.
+- Pelin puolella:
+  - `src/models/itemAssets.js`: GLB:n lataus ja materiaalikirjasto;
+  - `items.js` korvaa vanhat mallit uusilla;
+  - `icons.js`, `drops.js` ja `main.js` käyttävät niitä;
+  - `viewmodel.js`: jousen runko, jänteen nuoli ja kilven materiaali;
+  - `archery.js`: lentävä nuoli.
+- Testattiin:
+  - esikatselusivut `shots/s54/` (vanha ja uusi rinnakkain; git-poissuljettu);
+  - pelissä headless (`s54/game_items.mjs`, scratchpad): 109/109 mallia ladattu, ei virheitä, kuvakkeet, maassa olevat esineet, kädessä pidettävät, jousen jännitys ja laukaus;
+  - vertailu session 53 versioon: kädessä näkyvät samat esineet samalla tavalla;
+  - lint puhdas.
+
+**Kesken / tiedossa**
+- Pieniä hiottavia malleja (ks. TODO): köysikerä, pihka, taljojen reuna, kookospähkinän ääriviiva.
+
+**Seuraavaksi**
+- Käyttäjän palaute uusista malleista.
+- Leopardin ja gorillan animaatiot (käyttäjä: eivät vielä täysin kunnossa): kysy, mikä on vialla.
+
 ## 2026-10-14 (sessio 53)
 **Tehtiin**
 - Käyttäjän palaute: leopardin ja gorillan animaatiot liian nopeita, leopardin kävely vaappuu.

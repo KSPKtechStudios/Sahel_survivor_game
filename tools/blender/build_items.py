@@ -11,6 +11,9 @@ import items_tools  # noqa: E402,F401
 import items_misc  # noqa: E402,F401
 import items_weapons  # noqa: E402,F401
 import items_mats  # noqa: E402,F401
+import items_food  # noqa: E402,F401
+import items_bows  # noqa: E402,F401
+import items_armor  # noqa: E402,F401
 
 
 def main():

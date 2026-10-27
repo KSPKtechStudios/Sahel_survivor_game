@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { itemBowBody, bowPoints, makeArrowGeometry, BOW_STYLES } from '../models/items2.js';
 import { attachGlow } from '../render/itemGlow.js';
+import { itemAsset } from '../models/itemAssets.js';
 import { ITEMS } from '../game/items.js';
 import { createFlameTexture } from '../render/textures.js';
 import { Arms } from './arms.js';
@@ -296,7 +297,9 @@ export class ViewModel {
     this.bowGroup.add(this.bowArm);
     this.bowBodies = {};
     for (const [id, style] of Object.entries(BOWS)) {
-      const body = new THREE.Mesh(itemBowBody(style), itemMat);
+      // Sessio 54: Blender-malli ilman jännettä (bowbody_<tunnus>), jos ladattu.
+      const asset = itemAsset('bowbody_' + id);
+      const body = new THREE.Mesh(asset || itemBowBody(style), (asset && asset.userData.material) || itemMat);
       attachGlow(body);
       body.rotation.y = Math.PI / 2; // kaari eteenpäin (-Z), jänne pelaajaa kohti
       body.scale.setScalar(BOW_SCALE);
@@ -311,7 +314,8 @@ export class ViewModel {
     this.bowGroup.add(...this.strings);
     this.nocked = {};
     for (const kind of ARROWS) {
-      const a = new THREE.Mesh(makeArrowGeometry(kind), itemMat);
+      const ag = itemAsset('arrow1_' + kind);
+      const a = new THREE.Mesh(ag || makeArrowGeometry(kind), (ag && ag.userData.material) || itemMat);
       a.visible = false;
       this.bowGroup.add(a);
       this.nocked[kind] = a;
@@ -329,7 +333,7 @@ export class ViewModel {
     this.left.add(this.leftAnim);
     this.leftArm = new THREE.Mesh(buildLeftArmGeometry(), this.material);
     this.leftArm.position.set(0, 0, 0.036);
-    this.shieldMesh = new THREE.Mesh(itemGeometries.shield || new THREE.CylinderGeometry(0.3, 0.3, 0.03, 16).rotateX(Math.PI / 2), itemMat);
+    this.shieldMesh = new THREE.Mesh(itemGeometries.shield || new THREE.CylinderGeometry(0.3, 0.3, 0.03, 16).rotateX(Math.PI / 2), (itemGeometries.shield && itemGeometries.shield.userData.material) || itemMat);
     this.shieldMesh.scale.setScalar(0.8);
     // Soihtu toisessa kädessä (sessio 20) ja sen liekki.
     this.leftTorch = new THREE.Mesh(itemGeometries.torch || new THREE.CylinderGeometry(0.02, 0.025, 0.5, 6), (itemGeometries.torch && itemGeometries.torch.userData.material) || itemMat);
@@ -426,6 +430,7 @@ export class ViewModel {
     if (kind === 'shield' && id && id !== this.shieldId && this.geos[id]) {
       this.shieldId = id;
       this.shieldMesh.geometry = this.geos[id];
+      if (this.geos[id].userData.material) this.shieldMesh.material = this.geos[id].userData.material;
     }
   }
 

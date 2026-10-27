@@ -2,6 +2,24 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-27 (sessio 54)
+- **Esinemallit tehdään Blenderillä Python-skripteistä** (`tools/blender/`), ei käsin eikä valmiita malleja lataamalla.
+  - Syy: yli 100 esinettä yhtenäisellä tyylillä, ja skriptiä muuttamalla ja ajamalla uudelleen työ on toistettavaa.
+  - Mitat on sovitettu vanhoihin malleihin, joten käden otteet (`holdFor`) ja kuvakkeiden kulmat toimivat sellaisenaan.
+  - Blender (4.0.2) ajetaan pilviympäristössä Ubuntun paketista; käyttäjän Steam-Blenderiä ei tarvita.
+- **Tekstuurit ovat yhteinen materiaalikirjasto, ei esinekohtaisia leivottuja tekstuureja.**
+  - 17 toistuvaa CC0-materiaalia (512 px WebP: väri, normaali, karheus) ja kaksi itse tehtyä (rengas- ja suomupanssari), yhteensä 3,1 Mt.
+  - UV:t ovat metreinä, joten tekstuurin tarkkuus on sama kaikissa esineissä. Sävy annetaan materiaalipaikan nimessä (esim. `cloth:8a6a4a`).
+  - Syy: pieni latauskoko, ja uusia esineitä voi tehdä ilman uusia tekstuureja.
+- **AO leivotaan verteksiväreihin, ja orgaaniset kuviot maalataan verteksiväreillä** (banaanin pilkut, sienten lakit, liha, sulat). Syy: ei tarvita esinekohtaisia tekstuureja.
+- **Kaikki esineet ovat yhdessä GLB:ssä (EXT_meshopt_compression), ja UV:t on pyöristetty 1/1024 ruudun tarkkuuteen.**
+  - Syy: yksi lataus, ja koko putosi 9,7 Mt → 2,9 Mt.
+  - Purkaja (meshoptimizer, MIT) on `vendor/meshopt/`-kansiossa.
+- **Vanhat proseduraaliset mallit jäävät varalle.** Syy: jos GLB ei lataudu, peli toimii silti.
+- **Panssarien etupuoli osoittaa kuvakekameraa kohti** (pelin +Z). Syy: vanhoissa malleissa etupuoli oli −Z:n suuntaan, joten kuvakkeessa näkyi lähinnä takapuoli.
+- **Jousen runko ja yksittäinen nuoli ovat GLB:ssä omina solmuinaan** (`bowbody_<tunnus>`, `arrow1_<tunnus>`), ja jänne piirretään pelissä kuten ennen. Syy: jänne liikkuu vedettäessä.
+- **Ladatun ambientCG-paketin `.blend`-tiedostoja ei avata**; vain JPG-kuvia käytetään. Syy: `.blend` voi sisältää ajettavaa Python-koodia.
+
 ## 2026-10-14 (sessio 53)
 - **Isoille eläimille pehmeä kääntyminen** (`turnAcc` mobin määrittelyssä, `_steer`): kulmanopeus kiihtyy ja jarruttaa ennen kohdesuuntaa. Syy: leopardin "vaappuminen" johtui pääosin nopeista napsahtavista käännöksistä (5 rad/s) ja niiden kallistuksista, joita tiheän sademetsän esteiden kierto laukaisi jatkuvasti. Koskee nyt leopardia ja gorillaa; muut eläimet ennallaan.
 - **Leopardin askeltahti asetettu hieman todellista hitaammaksi** (kävely ~1 Hz). Syy: käyttäjän mielestä animaatiot olivat liian nopeita; pelissä rauhallinen tahti näyttää isolta kissalta.

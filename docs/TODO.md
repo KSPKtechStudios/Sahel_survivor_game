@@ -2,6 +2,16 @@
 
 ## Heti (odottaa käyttäjää)
 - [ ] Leopardin ja gorillan animaatiot eivät ole vieläkään täysin kunnossa (käyttäjä, sessio 54). Palataan myöhemmin: kysy, mikä on vielä vialla.
+- [ ] Käyttäjä testaa session 54: uudet esinemallit.
+  - Kuvakkeet repussa ja valmistuksessa.
+  - Maahan pudotetut esineet ([Q]).
+  - Kädessä pidettävät työkalut ja aseet, jousi ja nuolet (jänteellä ja lennossa), kilpi toisessa kädessä.
+- [ ] Vastaus: mitkä mallit näyttävät vielä huonoilta tai väärän kokoisilta?
+- [ ] Esinemallien hiominen (sessio 54, pieniä):
+  - köysikerän kerrosten välissä näkyy katko;
+  - pihka on liian kirkkaan oranssi;
+  - taljoista puuttuu reuna ylä- ja alapinnan välistä;
+  - kookospähkinä on ääriviivoiltaan kulmikas.
 - [ ] Käyttäjä testaa session 53 ([F3] → Olennot → Leopardi / Gorilla):
   - leopardin kävely ja kääntyminen (ei vaappumista), hiipiminen, juoksu;
   - gorillan kävely rystysillä, varoitus (nousee ja lyö rintaansa), lyönti (ei hyppää eteen).
@@ -169,7 +179,7 @@
 
 ## Myöhemmin (grafiikan jalostus)
 - [ ] Oikeat CC0-tekstuurit maastoon (hiekka, lateriitti, kivi, sademetsän maa), normaalikartat
-- [ ] glTF-mallit proseduraalisten tilalle (sama nimi `src/models/`-tiedostoissa)
+- [x] glTF-mallit proseduraalisten tilalle: esineet (sessio 54, `assets/models/items/items.glb`)
 - [ ] Parempi käsimalli (luut/animaatiot), vesi-shader, jälkikäsittely (bloom, värimäärittely)
 - [ ] Päätä lopullinen nimi (Sahel vai jokin muu)
 

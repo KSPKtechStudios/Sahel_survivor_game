@@ -223,6 +223,7 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Valmiita malleja ei tehdä uusiksi:** puunuija ja soihtu (käyttäjän mallit) sekä kivipuukko (sessio 33) ovat jo loistavia.
 - Avoimet kysymykset:
   - Mikä animaatioissa on vielä vialla (leopardi, gorilla)?
+  - Ovatko uudet esinemallit oikean näköisiä ja kokoisia? Mitkä vaativat vielä korjausta?
 
 ## Sessio 53 (käyttäjän kertoma, 2026-10-14): animaatiot
 - **Leopardin ja gorillan animaatiot ovat aivan liian nopeita.**
