@@ -217,6 +217,13 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 54 (käyttäjän kertoma, 2026-10-27): esineiden mallit
+- Leopardin ja gorillan animaatiot eivät ole vieläkään täysin kunnossa; niihin palataan myöhemmin.
+- **Kaikille esineille paremmat 3D-mallit ja tekstuurit.** Blenderiä ja internetiä saa käyttää.
+- **Valmiita malleja ei tehdä uusiksi:** puunuija ja soihtu (käyttäjän mallit) sekä kivipuukko (sessio 33) ovat jo loistavia.
+- Avoimet kysymykset:
+  - Mikä animaatioissa on vielä vialla (leopardi, gorilla)?
+
 ## Sessio 53 (käyttäjän kertoma, 2026-10-14): animaatiot
 - **Leopardin ja gorillan animaatiot ovat aivan liian nopeita.**
 - **Leopardin kävely on erikoista vaappumista.**

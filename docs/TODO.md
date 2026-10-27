@@ -1,6 +1,7 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Leopardin ja gorillan animaatiot eivät ole vieläkään täysin kunnossa (käyttäjä, sessio 54). Palataan myöhemmin: kysy, mikä on vielä vialla.
 - [ ] Käyttäjä testaa session 53 ([F3] → Olennot → Leopardi / Gorilla):
   - leopardin kävely ja kääntyminen (ei vaappumista), hiipiminen, juoksu;
   - gorillan kävely rystysillä, varoitus (nousee ja lyö rintaansa), lyönti (ei hyppää eteen).

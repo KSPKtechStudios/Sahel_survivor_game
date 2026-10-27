@@ -51,6 +51,7 @@ import { PIECES } from './game/pieces.js';
 import { events } from './game/events.js';
 import { loadWorldData, saveWorldData, loadSettings } from './game/save.js';
 import { renderItemIcons } from './ui/icons.js';
+import { loadItemAssets } from './models/itemAssets.js';
 import { Hud, RESPAWN_WAIT } from './ui/hud.js';
 import { Nameplates } from './ui/nameplates.js';
 import { Minimap } from './ui/minimap.js';
@@ -88,6 +89,8 @@ const materials = createSharedMaterials(createGroundDetailTexture());
 // Hakattavat ja kaatuvat puut: sama kaarna kuin seisovissa (sessio 23).
 const activeMaterial = softFoliage(addTranslucency(addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, map: leafTexture, alphaTest: 0.42, alphaToCoverage: true, side: THREE.DoubleSide }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 0.3, 0), 0.38));
 loadSurfaces(renderer);
+// Sessio 54: Blenderissä tehdyt esinemallit ladataan ennen mallikirjastoa.
+await loadItemAssets();
 const models = createModelLibrary();
 const sky = new Sky(scene);
 materials.water = createWaterMaterial(sky);

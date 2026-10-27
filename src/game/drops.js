@@ -98,7 +98,9 @@ export class Drops {
   _add(item, count, pos, vel, resting) {
     if (this.list.length >= MAX_DROPS) this._remove(this.list[0]);
     const geo0 = this.geos[item];
-    const mesh = new THREE.Mesh(geo0, ITEMS[item].valuable ? this.valuableMaterial : (geo0 && geo0.userData.material) || this.material);
+    // Sessio 54: tekstuuroiduilla malleilla omat materiaalit (myös arvoesineillä; hehku kertoo arvon).
+    const tm = geo0 && geo0.userData.material;
+    const mesh = new THREE.Mesh(geo0, tm || (ITEMS[item].valuable ? this.valuableMaterial : this.material));
     mesh.castShadow = true;
     mesh.position.copy(pos);
     const yaw = Math.random() * Math.PI * 2;

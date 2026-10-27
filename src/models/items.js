@@ -1,5 +1,6 @@
 // Esinemallit (kädessä, maassa ja kuvakkeissa). Kahva origossa, esine +Y-suuntaan.
 import { userClub } from './userItems.js';
+import { itemAsset } from './itemAssets.js';
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
 import { V, displace, paint, limb, flatNormals, merge, prep } from './util.js';
@@ -307,7 +308,7 @@ function itemClay() {
 }
 
 export function createItemModels() {
-  return {
+  const out = {
     stick: itemStick(),
     stone: itemStone(),
     fiber: itemFiber(),
@@ -328,4 +329,11 @@ export function createItemModels() {
     ...createItemModels2(),
     ...createItemModels3(),
   };
+  // Sessio 54: Blender-mallit (itemAssets.js) korvaavat koodilla tehdyt,
+  // kun ne on ladattu. Puunuija, soihtu ja kivipuukko pysyvät ennallaan.
+  for (const id of Object.keys(out)) {
+    const a = itemAsset(id);
+    if (a) out[id] = a;
+  }
+  return out;
 }

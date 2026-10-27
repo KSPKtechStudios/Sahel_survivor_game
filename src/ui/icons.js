@@ -86,7 +86,8 @@ export function renderItemIcons(itemGeometries, size = 96) {
   const sz = new THREE.Vector3();
 
   for (const [id, geo] of Object.entries(itemGeometries)) {
-    const mesh = new THREE.Mesh(geo, mat);
+    // Sessio 54: tekstuuroiduilla malleilla omat materiaalit (Blender-mallit, nuija, soihtu).
+    const mesh = new THREE.Mesh(geo, geo.userData.material || mat);
     attachGlow(mesh);
     const pose = ICON_POSE[id] || iconPose(id);
     mesh.rotation.set(pose[0], pose[1], pose[2]);
