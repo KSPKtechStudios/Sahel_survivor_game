@@ -168,15 +168,24 @@ def iron_ingot():
     return ingot('iron', 2)
 
 
-@item
+@item(ao_strength=0.8, ao_dist=0.03)
 def iron_rings():
+    # Pala rengaspunosta (4-in-1) ja muutama irtorengas.
     parts = []
+    mat = 'steel:b4b4bc'
+    for row in range(5):
+        for col in range(4):
+            cx = (col - 1.5) * 0.023 + (0.0115 if row % 2 else 0.0)
+            cy = (row - 2) * 0.0155
+            tilt = 0.55 if row % 2 else -0.55
+            u = V(1, 0, 0)
+            v = V(0, math.cos(tilt), math.sin(tilt))
+            parts.append(cord(mat, ellipse_pts(V(cx, cy, 0.01), u, v, 0.0125, 0.0125, 16), 0.0021, n=6))
     R = rng(5)
-    for i in range(9):
-        c = V(R.uniform(-0.04, 0.05), R.uniform(-0.05, 0.03), R.uniform(0.008, 0.04))
-        u = V(R.uniform(-1, 1), R.uniform(-1, 1), R.uniform(-0.3, 0.3)).normalized()
-        v = u.cross(V(R.uniform(-0.3, 0.3), R.uniform(-0.3, 0.3), 1)).normalized()
-        parts.append(cord('iron', ellipse_pts(c, u, v, 0.016, 0.016, 18), 0.0028, n=8))
+    for i in range(3):
+        c = V(0.06 + R.uniform(0, 0.03), -0.03 + i * 0.025, 0.003)
+        a = R.uniform(0, 3)
+        parts.append(cord(mat, ellipse_pts(c, V(math.cos(a), math.sin(a), 0), V(-math.sin(a), math.cos(a), 0.15).normalized(), 0.0125, 0.0125, 16), 0.0021, n=6))
     return parts
 
 
@@ -215,45 +224,47 @@ def bone():
     return parts
 
 
+SHELL_END = {}
+
+
 def shell_paint(co, n, mat):
     if mat != 'shell':
         return None
-    r = math.hypot(co.x, co.y + 0.03)
-    band = 0.5 + 0.5 * math.sin(r * 160)
-    base = mixc(hexc(0xf2e6d2), hexc(0xd88a5a), band * 0.6 * nz(co, 30))
-    return mulc(base, 0.85 + 0.25 * nz(co, 80))
+    c, r = SHELL_END.get('c'), SHELL_END.get('r', 0)
+    if c is not None and (Vector(co) - c).length < r * 0.95:
+        return mixc(hexc(0xf0b49a), hexc(0xd87a6a), nz(co, 60))  # suun sisäpinta
+    a = math.atan2(co.z - 0.035, co.y)
+    band = 0.5 + 0.5 * math.sin(co.x * 150 + a * 3 + nz(co, 40) * 2)
+    base = mixc(hexc(0xf4e8d0), hexc(0xb8683a), smoothstep(0.55, 0.95, band) * 0.85)
+    return mulc(base, 0.82 + 0.26 * nz(co, 110))
 
 
-@item(paint=shell_paint, ao_strength=0.6)
+@item(paint=shell_paint, ao_strength=0.75, ao_dist=0.04)
 def seashell():
-    # Kampasimpukka: viuhkamainen, säteittäiset harjanteet (Blender: Y = pelin -Z).
-    p = Part('shell')
-    nr, na = 10, 28
-    hinge = p.bm.verts.new(V(0, -0.03, 0.018))
-    vs = []
-    for i in range(1, nr + 1):
-        rr = i / nr
-        row = []
-        for k in range(na + 1):
-            a = lerp(-1.25, 1.25, k / na)
-            R = 0.042 * rr
-            x = math.sin(a) * R
-            y = math.cos(a) * R - 0.03
-            rib = 0.0025 * abs(math.sin(k * math.pi / 2)) * rr
-            z = 0.016 * (1 - rr ** 2) * math.cos(a * 0.6) + rib + 0.002
-            row.append(p.bm.verts.new(V(x, y, z)))
-        vs.append(row)
-    for k in range(na):
-        p.face([hinge, vs[0][k + 1], vs[0][k]])
-    for i in range(nr - 1):
-        for k in range(na):
-            p.face([vs[i][k], vs[i][k + 1], vs[i + 1][k + 1], vs[i + 1][k]])
-    bmesh.ops.contextual_create(p.bm, geom=[e for e in p.bm.edges if e.is_boundary])
-    for f in p.bm.faces:
-        f.smooth = True
-    bmesh.ops.recalc_face_normals(p.bm, faces=p.bm.faces)
-    box_uv(p, 0.1)
-    return [p]
+    # Kierteinen meritorvisimpukka kyljellään: kasvavat kierrokset, nystyrät
+    # olkapäillä ja levenevä suu (sisältä vaaleanpunainen).
+    TH = 4.4 * 2 * math.pi
+    k = math.log(1 / 0.05) / TH
+    N = 170
+    path, rad = [], []
+    for i in range(N + 1):
+        th = TH * i / N
+        g = math.exp(k * (th - TH))
+        R = 0.022 * g
+        path.append(V(0.035 - 0.085 * (1 - g), R * math.cos(th), 0.035 + R * math.sin(th)))
+        t = i / N
+        rad.append(0.028 * g * (1 + 0.45 * smoothstep(0.9, 1.0, t)))
+    p = tube_path('shell', path, lambda t: rad[min(N, int(round(t * N)))], n=18)
+    SHELL_END['c'] = path[-1]
+    SHELL_END['r'] = rad[-1]
+    parts = [p]
+    for i in range(N // 2, N - 6, 7):
+        th = TH * i / N
+        g = math.exp(k * (th - TH))
+        out = V(-0.55, math.cos(th), math.sin(th)).normalized()
+        base = path[i] + out * rad[i] * 0.7
+        parts.append(tube_path('shell', [base, base + out * rad[i] * 0.55], lambda t: 0.0075 * g * (1 - t) ** 0.8 + 0.0006, n=8))
+    return parts
 
 
 def feather_paint(co, n, mat):
@@ -355,28 +366,51 @@ def palm_leaf():
     return parts
 
 
-@item(ao_strength=0.4)
+def gum_paint(co, n, mat):
+    if mat != 'gum':
+        return None
+    return mixc(hexc(0xe8b850), hexc(0xb86a1c), nz(co, 9, 4) * 1.2 - 0.1)
+
+
+def teardrop(mat, c, R, h, axis, seed):
+    """Pisaran muotoinen kyynel: pyöreä tyvi, suippo kärki."""
+    from items_food import lathe
+    prof = [(0.0006, 0.0), (0.62 * R, 0.12 * h), (0.95 * R, 0.35 * h), (0.86 * R, 0.6 * h), (0.5 * R, 0.84 * h), (0.16 * R, 0.97 * h), (0.0006, h)]
+    p = lathe(mat, prof, n=14, wob=0.06, seed=seed)
+    axis = axis.normalized()
+    q = V(0, 0, 1).rotation_difference(axis).to_matrix().to_4x4()
+    transform(p, Matrix.Translation(c) @ q)
+    return p
+
+
+@item(paint=gum_paint, ao_strength=0.55, ao_dist=0.03)
 def gum():
-    from items_weapons import ball
+    # Arabikumin kyyneliä: kellertäviä, kiiltäviä pisaroita kasana.
+    R = rng(33)
     parts = []
-    for c, r in ((V(0, 0, 0.03), 0.032), (V(0.035, 0.02, 0.022), 0.022), (V(-0.032, -0.018, 0.018), 0.019), (V(0.01, -0.035, 0.015), 0.016)):
-        parts.append(ball('gum:8a4a10', c, r, sub=3, sz=1.15, noise_amp=r * 0.12, seed=int(r * 1000)))
+    spots = [(0, 0, 0.012), (0.03, 0.012, 0.01), (-0.028, 0.016, 0.01), (0.012, -0.03, 0.01), (-0.016, -0.026, 0.01),
+             (0.042, -0.02, 0.008), (-0.045, -0.008, 0.008), (0.006, 0.02, 0.03), (-0.008, -0.006, 0.032)]
+    for i, (x, y, z) in enumerate(spots):
+        r = R.uniform(0.011, 0.016)
+        ax = V(R.uniform(-1, 1), R.uniform(-1, 1), R.uniform(-0.3, 0.6))
+        parts.append(teardrop('gum', V(x, y, z), r, r * 2.4, ax, i))
     return parts
 
 
 @item(ao_strength=0.9, ao_dist=0.03)
 def rope():
-    # Kiepillä oleva köysi: litteä spiraali kahdessa kerroksessa.
+    # Kiepillä oleva köysi: kaksi kerrosta, joiden välillä köysi nousee
+    # tasaisesti puolen kierroksen matkalla; pää roikkuu ulos.
     pts = []
     turns = 4.2
-    N = 220
+    N = 240
     for i in range(N):
         t = i / (N - 1)
         a = t * turns * 2 * math.pi
-        layer = 0 if t < 0.55 else 1
-        rr = 0.068 - 0.007 * (t * turns % 1) * 0 - 0.012 * layer
-        pts.append(V(math.cos(a) * rr, math.sin(a) * rr, 0.012 + layer * 0.022 + 0.004 * math.sin(a * 3)))
-    pts += [pts[-1] + V(0.03, -0.01, 0.006), pts[-1] + V(0.055, -0.03, 0.01)]
+        lift = smoothstep(0.5, 0.62, t)
+        rr = 0.068 - 0.013 * lift
+        pts.append(V(math.cos(a) * rr, math.sin(a) * rr, 0.012 + lift * 0.021 + 0.002 * math.sin(a * 3)))
+    pts += [pts[-1] + V(0.03, -0.012, 0.004), pts[-1] + V(0.058, -0.03, 0.0), pts[-1] + V(0.08, -0.045, -0.006)]
     return [tube_path('rope', pts, lambda t: 0.011, n=10)]
 
 
@@ -396,42 +430,58 @@ def clay():
     return [p]
 
 
-@item
+def sinew_paint(co, n, mat):
+    if mat != 'gum':
+        return None
+    return mulc(mixc(hexc(0xf0dcb0), hexc(0xc8a06a), nz(co, 60)), 0.9 + 0.15 * nz(co, 200))
+
+
+@item(paint=sinew_paint, ao_strength=0.7, ao_dist=0.03)
 def sinew():
+    # Kuivattu jännevyyhti: kierretyt säikeet soikeana lenkkinä, sidottu yläpäästä.
     parts = []
-    for k in range(5):
-        a = 2 * math.pi * k / 5
+    N = 64
+    for j in range(7):
+        ph = 2 * math.pi * j / 7
         pts = []
-        for i in range(30):
-            t = i / 29
-            z = lerp(-0.081, 0.241, t)
-            r = 0.006 * (1 - 0.3 * abs(2 * t - 1))
-            pts.append(V(math.cos(a + t * 9) * r, math.sin(a + t * 9) * r, z))
-        parts.append(tube_path('rope:e0c89a', pts, lambda t: 0.0032 * (1 - 0.5 * abs(2 * t - 1) ** 3), n=6))
+        for i in range(N):
+            t = i / N
+            a = 2 * math.pi * t
+            c = V(math.sin(a) * 0.026, 0, 0.08 - math.cos(a) * 0.15)
+            pinch = 1 - 0.65 * smoothstep(0.6, 0.95, -math.cos(a))
+            off = 0.006 * pinch
+            tw = a * 9 + ph
+            pts.append(c + V(math.cos(tw) * off, math.sin(tw) * off, 0))
+        parts.append(cord('gum', pts, 0.0019, n=5))
+    for z in (0.198, 0.206, 0.214):
+        parts.append(cord('rope:b09a70', ellipse_pts(V(0, 0, z), V(1, 0, 0), V(0, 1, 0), 0.0105, 0.0105, 12), 0.0022))
     return parts
 
 
 # --- Taljat ------------------------------------------------------------------------------
 
-def pelt(paint_fn, seed, size=(0.18, 0.18)):
-    """Litteä talja: epäsäännöllinen ääriviiva ja jalkaliuskat, hieman poimuilla."""
+def pelt(seed, size=(0.18, 0.2), legs=0.42, tail=None, fur=0.004):
+    """Talja: eläimen ääriviiva (neljä jalkaliuskaa, kaula), turkkipinta
+    kuprulla, nahkapuoli alla ja paksu reuna. tail = (pituus, säde) tai None."""
     R = rng(seed)
     p = Part('fur')
-    nr, na = 8, 48
+    nr, na = 9, 64
     sx, sy = size
-    cen = p.bm.verts.new(V(0, 0, 0.03))
+    tops = []
+    cen = p.bm.verts.new(V(0, 0, 0.03 + fur * 0.5))
     rows = []
     for i in range(1, nr + 1):
         rr = i / nr
         row = []
         for k in range(na):
             a = 2 * math.pi * k / na
-            leg = 0.28 * max(0, math.cos(2 * (a - 0.78))) ** 8
-            neck = 0.18 * max(0, math.cos(a - math.pi / 2)) ** 12
-            e = 1 + leg + neck + 0.06 * math.sin(a * 5 + seed)
+            leg = legs * max(0.0, math.cos(2 * (a - math.pi / 4))) ** 10
+            neck = 0.32 * max(0.0, math.cos(a - math.pi / 2)) ** 10
+            e = 1 + leg + neck + 0.05 * math.sin(a * 7 + seed)
             x = math.cos(a) * sx * rr * e
             y = math.sin(a) * sy * rr * e
-            z = 0.03 + 0.012 * math.sin(x * 30 + seed) * math.cos(y * 25) - 0.012 * rr ** 3
+            z = 0.03 + 0.01 * math.sin(x * 25 + seed) * math.cos(y * 20) - 0.01 * rr ** 3
+            z += fur * nz(V(x, y, 0), 70, seed) * (1 - 0.6 * rr ** 4)
             row.append(p.bm.verts.new(V(x, y, z)))
         rows.append(row)
     for k in range(na):
@@ -439,55 +489,75 @@ def pelt(paint_fn, seed, size=(0.18, 0.18)):
         p.face([cen, rows[0][k], rows[0][k1]])
         for i in range(nr - 1):
             p.face([rows[i][k], rows[i + 1][k], rows[i + 1][k1], rows[i][k1]])
-    # Alapinta: kopio ohuena nahkakerroksena.
-    ret = bmesh.ops.duplicate(p.bm, geom=p.bm.faces[:])
-    nv = [g for g in ret['geom'] if isinstance(g, bmesh.types.BMVert)]
-    for v in nv:
-        v.co.z -= 0.006
+    top_verts = p.bm.verts[:]
+    ret = bmesh.ops.duplicate(p.bm, geom=p.bm.verts[:] + p.bm.edges[:] + p.bm.faces[:])
+    vmap = ret['vert_map']
+    for v in top_verts:
+        d = vmap[v]
+        rr = math.hypot(v.co.x / sx, v.co.y / sy)
+        d.co.z = 0.022 + 0.01 * math.sin(v.co.x * 25 + seed) * math.cos(v.co.y * 20) - 0.01 * min(1.0, rr) ** 3
     nf = [g for g in ret['geom'] if isinstance(g, bmesh.types.BMFace)]
     bmesh.ops.reverse_faces(p.bm, faces=nf)
+    for k in range(na):
+        a, b = rows[-1][k], rows[-1][(k + 1) % na]
+        p.bm.faces.new([a, vmap[a], vmap[b], b])
+    bmesh.ops.recalc_face_normals(p.bm, faces=p.bm.faces[:])
     for f in p.bm.faces:
         f.smooth = True
     box_uv(p, 0.3)
-    return [p]
+    parts = [p]
+    if tail:
+        L, r = tail
+        y0 = -sy * 0.95
+        path = [V(0, y0 + 0.02, 0.03), V(0.01, y0 - L * 0.4, 0.032), V(0.03, y0 - L * 0.8, 0.03), V(0.035, y0 - L, 0.028)]
+        tp = tube_path('fur', path, lambda t: r * (1 - 0.35 * t) * (1 if r > 0.012 else (1 - 0.6 * t)) + 0.002, n=10)
+        box_uv(tp, 0.3)
+        parts.append(tp)
+    return parts
 
 
-def pelt_paint(back, belly, stripe=None, spots_col=None):
+def pelt_paint(back, belly, stripe=None, mane=None, tail_tip=None, sx=0.2):
     B, W = hexc(back), hexc(belly)
     S = hexc(stripe) if stripe else None
+    M = hexc(mane) if mane else None
+    T = hexc(tail_tip) if tail_tip else None
 
     def f(co, n, mat):
         if mat != 'fur':
             return None
         if n.z < -0.5:
-            return hexc(0xc8b49a)  # nahkapuoli
-        d = abs(co.x) / 0.2
+            return mulc(hexc(0xd2bea0), 0.9 + 0.15 * nz(co, 30))  # nahkapuoli
+        d = abs(co.x) / sx
         col = mixc(B, W, smoothstep(0.45, 0.8, d))
         if S:
-            col = mixc(col, S, max(0, 1 - abs(d - 0.42) / 0.06))
-        col = mulc(col, 0.85 + 0.25 * nz(co, 25, 2))
-        return col
+            col = mixc(col, S, max(0, 1 - abs(d - 0.42) / 0.07))
+        if M:
+            col = mixc(col, M, 1 - smoothstep(0.08, 0.2, d))
+        if T and co.y < -0.3:
+            col = mixc(col, T, smoothstep(-0.3, -0.34, co.y))
+        return mulc(col, 0.82 + 0.3 * nz(co, 45, 2))
     return f
 
 
-@item(paint=pelt_paint(0x7a6656, 0x9a8676))
+@item(paint=pelt_paint(0x7a6656, 0x9a8676, mane=0x2e2620), ao_strength=0.8, ao_dist=0.04)
 def hide():
-    return pelt(None, 11)
+    # Pahkasian talja: karkea, harjaksinen, tumma harjaraita selässä.
+    return pelt(11, fur=0.007, tail=(0.12, 0.0045))
 
 
-@item(paint=pelt_paint(0xc8955a, 0xf2ead8, stripe=0x3a2a1c))
+@item(paint=pelt_paint(0xc8955a, 0xf2ead8, stripe=0x3a2a1c), ao_strength=0.8, ao_dist=0.04)
 def gazelle_pelt():
-    return pelt(None, 12)
+    return pelt(12, size=(0.17, 0.21), legs=0.55, tail=(0.07, 0.008))
 
 
-@item(paint=pelt_paint(0x8a8478, 0xc8c2b4))
+@item(paint=pelt_paint(0x8a8478, 0xc8c2b4, mane=0x5a564e), ao_strength=0.8, ao_dist=0.04)
 def monkey_pelt():
-    return pelt(None, 13)
+    return pelt(13, size=(0.15, 0.18), legs=0.6, tail=(0.24, 0.006))
 
 
-@item(paint=pelt_paint(0xe0b878, 0xf4ecd8))
+@item(paint=pelt_paint(0xc8743a, 0xf4ecd8, tail_tip=0xf8f4ec), ao_strength=0.8, ao_dist=0.04)
 def fox_pelt():
-    return pelt(None, 14)
+    return pelt(14, size=(0.15, 0.18), legs=0.45, tail=(0.17, 0.024))
 
 
 def horn_paint(co, n, mat):
@@ -504,33 +574,40 @@ def beetle_horn():
     return [p]
 
 
-@item
-def leather():
-    # Rulla nahkaa nyörillä sidottuna (makaa X-akselin suuntaisesti).
+def leather_sheet(mat, L, W, t, z, seed, fold=True):
+    """Taiteltu nahka: ohut levy, pyöreä taitereuna toisella sivulla ja
+    epätasainen, aaltoileva reuna toisella."""
+    R = rng(seed)
     rings = []
-    for i in range(13):
-        s = i / 12
-        x = lerp(-0.105, 0.105, s)
+    seg = 16
+    for i in range(seg + 1):
+        s_ = i / seg
+        x = lerp(-L / 2, L / 2, s_)
+        wav = 0.006 * math.sin(s_ * 9 + seed) + 0.003 * math.sin(s_ * 23 + seed * 2)
         pts = []
-        for k in range(24):
-            a = 2 * math.pi * k / 24
-            rr = 0.03 + 0.004 * (a / (2 * math.pi))
-            pts.append(V(x, math.cos(a) * rr, 0.034 + math.sin(a) * rr))
+        for k in range(16):
+            a = 2 * math.pi * k / 16
+            c, sn = math.cos(a), math.sin(a)
+            yy = math.copysign(abs(c) ** 0.35, c) * (W / 2 + (wav if c < 0 else 0))
+            zz = sn * t / 2 * (1.0 if c > 0 else 0.7)
+            pts.append(V(x, yy, z + zz + 0.002 * math.sin(x * 40 + seed) * (1 if c < 0 else 0.3)))
         rings.append(pts)
-    parts = [loft('leather', rings)]
-    flap = Part('leather')
-    vs = []
-    for i in range(13):
-        s = i / 12
-        x = lerp(-0.105, 0.105, s) * (1 - 0.1 * math.sin(s * 9))
-        vs.append([flap.bm.verts.new(V(x, 0.03 + 0.07 * u, 0.006 + 0.004 * u)) for u in (0, 0.5, 1)])
-    for i in range(12):
-        for j in range(2):
-            flap.face([vs[i][j], vs[i + 1][j], vs[i + 1][j + 1], vs[i][j + 1]])
-    box_uv(flap)
-    parts.append(flap)
-    for x in (-0.05, 0.05):
-        parts.append(cord('rope', ellipse_pts(V(x, 0, 0.034), V(0, 1, 0), V(0, 0, 1), 0.034, 0.034, 18), 0.0025))
+    p = loft(mat, rings)
+    return p
+
+
+@item(ao_strength=0.85, ao_dist=0.04)
+def leather():
+    # Pino taiteltuja parkittuja nahkoja, sidottu nahkanauhalla.
+    parts = []
+    for i, (mat, dz, ang, off) in enumerate((('leather', 0.006, 0.0, 0.0), ('leather:d8b48c', 0.018, 0.08, 0.008), ('leather:c09a76', 0.03, -0.06, -0.006))):
+        sh = leather_sheet(mat, 0.21, 0.13, 0.011, dz, i + 3)
+        transform(sh, Matrix.Translation(V(off, off * 0.5, 0)) @ Matrix.Rotation(ang, 4, 'Z'))
+        parts.append(sh)
+    for x in (-0.055, 0.055):
+        pts = ellipse_pts(V(x, 0.0, 0.019), V(0, 1, 0), V(0, 0, 1), 0.074, 0.024, 20)
+        pts = [V(p.x, p.y, max(p.z, 0.0005)) for p in pts]
+        parts.append(cord('leather:6a4a30', pts, 0.0022, n=6))
     return parts
 
 

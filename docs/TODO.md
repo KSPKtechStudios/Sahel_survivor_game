@@ -7,11 +7,12 @@
   - Maahan pudotetut esineet ([Q]).
   - Kädessä pidettävät työkalut ja aseet, jousi ja nuolet (jänteellä ja lennossa), kilpi toisessa kädessä.
 - [ ] Vastaus: mitkä mallit näyttävät vielä huonoilta tai väärän kokoisilta?
-- [ ] Esinemallien hiominen (sessio 54, pieniä):
-  - köysikerän kerrosten välissä näkyy katko;
-  - pihka on liian kirkkaan oranssi;
-  - taljoista puuttuu reuna ylä- ja alapinnan välistä;
-  - kookospähkinä on ääriviivoiltaan kulmikas.
+- [ ] Käyttäjä testaa session 55:
+  - nuijan kuvake pikapalkissa;
+  - eri tasojen kirveet, hakut, miekat, tikarit, keihäät ja kilvet: erottuvatko ne nyt toisistaan;
+  - uudet mallit: simpukka, rautarenkaat, akasiankumi, jänne, nahka, taljat, paahdetut sienet, raaka liha, kookos, köysi.
+- [ ] Vastaus: mitkä mallit ovat vielä huonoja? (Ehdokkaita jatkoon: fonio, moringa, hibiskus, bissap-kuppi.)
+- [x] Esinemallien hiominen (sessio 54): köysikerän katko, pihka, taljojen reuna, kookospähkinän ääriviiva (sessio 55)
 - [ ] Käyttäjä testaa session 53 ([F3] → Olennot → Leopardi / Gorilla):
   - leopardin kävely ja kääntyminen (ei vaappumista), hiipiminen, juoksu;
   - gorillan kävely rystysillä, varoitus (nousee ja lyö rintaansa), lyönti (ei hyppää eteen).

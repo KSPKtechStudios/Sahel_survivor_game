@@ -217,6 +217,14 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 55 (käyttäjän kertoma, 2026-10-27): esinemallien jatko
+- **Eri tasojen aseiden ja kilpien välillä pitää olla eroja**, etteivät ne aina näytä samalta.
+- **Osa malleista on vielä aika huonolaatuisia;** jotkin saa suunnitella aivan kokonaan uusiksi.
+- **Nuijan tekstuurit eivät näy pikapalkissa** (kuvake).
+- Avoimet kysymykset:
+  - Ovatko tasojen erot nyt riittävät?
+  - Mitkä mallit ovat vielä huonoja?
+
 ## Sessio 54 (käyttäjän kertoma, 2026-10-27): esineiden mallit
 - Leopardin ja gorillan animaatiot eivät ole vieläkään täysin kunnossa; niihin palataan myöhemmin.
 - **Kaikille esineille paremmat 3D-mallit ja tekstuurit.** Blenderiä ja internetiä saa käyttää.

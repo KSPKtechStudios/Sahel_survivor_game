@@ -52,6 +52,7 @@ import { events } from './game/events.js';
 import { loadWorldData, saveWorldData, loadSettings } from './game/save.js';
 import { renderItemIcons } from './ui/icons.js';
 import { loadItemAssets } from './models/itemAssets.js';
+import { userTexturesReady } from './models/userItems.js';
 import { Hud, RESPAWN_WAIT } from './ui/hud.js';
 import { Nameplates } from './ui/nameplates.js';
 import { Minimap } from './ui/minimap.js';
@@ -183,6 +184,7 @@ const survival = new Survival(player);
 const archery = new Archery({ scene, camera, player, inventory, viewmodel, mobs, world, drops, debris });
 const build = new BuildSystem({ camera, player, inventory, structures, world, viewmodel, drops, boats });
 
+await userTexturesReady();
 const icons = renderItemIcons(models.items);
 const pieceIcons = renderItemIcons(models.build);
 const hud = new Hud(inventory, icons, survival);

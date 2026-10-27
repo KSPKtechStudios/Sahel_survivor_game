@@ -5,7 +5,7 @@ import math
 import bpy
 from itemlib import V, Vector, Matrix, smooth, lerp, ring, loft, transform, displace, box_uv, from_object, Part, rng
 from registry import item
-from shapes import haft, wrap, blade, scallops, lashing, cord, ellipse_pts
+from shapes import haft, wrap, blade, scallops, lashing, cord, ellipse_pts, lathe_z, tube_path, shaped_disc, mirror_x
 
 
 def bar(mat, x0, x1, zc, ry, rz, seg=10, n=12, power=3.0, taper=0.0, bend=0.0):
@@ -53,16 +53,30 @@ def flint_dagger():
     return parts
 
 
+def ruby_inlay(bz0, L, curve, bth, t0, t1, w, rise=1.03, seg=24):
+    """Ohut rubiininauha terän keskellä molemmin puolin (hehkuu). Terä alkaa
+    korkeudelta bz0, pituus L, kaarevuus curve ja puolipaksuus bth(t)."""
+    z0, z1 = bz0 + t0 * L, bz0 + t1 * L
+    tb = lambda u: t0 + u * (t1 - t0)
+    return blade('ruby', z0, z1, lambda u: w * (1 - 0.45 * u) + 0.0005, lambda u: bth(tb(u)) * rise, n=10, seg=seg,
+                 shift=lambda u: curve * tb(u) ** 2)
+
+
 @item
 def ruby_dagger():
-    w = lambda t: 0.02 * (1 - t ** 1.6) + 0.001
-    th = lambda t: 0.006 * (1 - 0.6 * t) + 0.0008
-    parts = blade('ruby', 0.05, 0.3, w, th, n=8, seg=6, power=1.0)
-    parts += grip(-0.075, 0.042, 0.0125, mat='leather', core='heartwood')
-    parts.append(bar('iron', -0.026, 0.026, 0.047, 0.009, 0.006, power=2.4, taper=0.3))
-    parts.append(ball('ruby', V(0, 0, -0.082), 0.014, sub=1))
-    for f in parts[0].bm.faces:
-        f.smooth = False
+    # Kaareva kaksiteräinen tikari (jambiya): tumma teräs, rubiininauha,
+    # messinkinen kahva ja rubiini ponnessa.
+    L = 0.25
+    w = lambda t: 0.021 * (1 - 0.25 * t) * (1 - smooth((t - 0.6) / 0.4) ** 1.4) + 0.001
+    th = lambda t: 0.0055 * (1 - 0.6 * t) + 0.0008
+    parts = blade('steel', 0.045, 0.045 + L, w, th, n=16, seg=26, curve=0.05, fuller=-0.25)
+    parts += ruby_inlay(0.045, L, 0.05, th, 0.06, 0.74, 0.0058, rise=1.2)
+    parts.append(bar('brass', -0.03, 0.03, 0.04, 0.008, 0.007, power=2.4, taper=0.25, bend=-0.006))
+    parts += grip(-0.07, 0.034, 0.0128, mat='leather:4a2a20', core='heartwood', turns=7)
+    for z in (-0.068, 0.032):
+        parts.append(cord('brass', ellipse_pts(V(0, 0, z), V(1, 0, 0), V(0, 1, 0), 0.0142, 0.0124, 16), 0.0022))
+    parts.append(lathe_z('brass', [(0.008, -0.07), (0.016, -0.078), (0.017, -0.088), (0.01, -0.095)], n=16, sy=0.85))
+    parts.append(ball('ruby', V(0, 0, -0.098), 0.0105, sub=1, sz=1.2))
     return parts
 
 
@@ -83,19 +97,70 @@ def sword(mat, guard_mat, z_blade, hw, length, th, guard_w, grip_r=0.0135, fulle
 
 @item
 def copper_sword():
-    # Lyhyt, leveä lehtiterä (pronssikauden malli).
-    return sword('copper', 'copper', 0.012, 0.03, 0.51, 0.006, 0.04, fuller=0.0, leaf=0.25, tip=0.18)
+    # Pronssikauden lehtimiekka: keskiharjanne, valettu kuparikahva renkain ja
+    # "antenni"-ponsi, jonka kierukat kiertyvät ulospäin.
+    def w(t):
+        return 0.024 * (1 + 0.32 * math.sin(math.pi * min(1, t / 0.78)) ** 1.5 - 0.1 * t) * (1 - smooth((t - 0.8) / 0.2) ** 1.25) + 0.0008
+    th = lambda t: 0.0068 * (1 - 0.55 * t) + 0.0008
+    parts = blade('copper', 0.0, 0.5, w, th, n=18, seg=34, fuller=-0.35)
+    # Olkapää: kaareva kuparivalos terän tyvessä.
+    parts.append(bar('copper', -0.034, 0.034, 0.002, 0.01, 0.012, power=2.2, taper=0.45, bend=-0.01))
+    prof = [(0.0125, -0.008), (0.012, -0.02), (0.0145, -0.03), (0.012, -0.04), (0.0115, -0.055), (0.0145, -0.065), (0.0115, -0.075),
+            (0.0115, -0.09), (0.0145, -0.1), (0.012, -0.11), (0.0105, -0.118)]
+    parts.append(lathe_z('copper', prof, n=14, sy=0.8))
+    for sx in (-1, 1):
+        C = V(sx * 0.027, 0, -0.131)
+        pts = [V(0, 0, -0.114), V(sx * 0.006, 0, -0.125)]
+        for i in range(21):
+            t = i / 20
+            th = t * 2.25 * math.pi
+            rr = 0.0135 * (1 - 0.7 * t)
+            pts.append(C + V(sx * rr * math.cos(math.pi - th), 0, rr * math.sin(math.pi - th)))
+        parts.append(tube_path('copper', pts, lambda t: 0.0055 * (1 - 0.5 * t), n=8))
+    return parts
 
 
 @item
 def iron_sword():
-    return sword('steel', 'iron', 0.012, 0.024, 0.69, 0.0052, 0.075, fuller=0.5)
+    # Takouba (tuaregien miekka): pitkä suora kaksiteräinen terä kolmella uralla,
+    # lyhyt ristikko, nahkakahva messinkirenkain ja litteä pyöreä ponsi.
+    hw = 0.021
+
+    def w(t):
+        return hw * (1 - 0.1 * t) * (1 - smooth((t - 0.9) / 0.1) ** 1.3) + 0.0008
+    th = lambda t: 0.005 * (1 - 0.5 * t) + 0.0007
+    parts = blade('steel', 0.012, 0.73, w, th, n=26, seg=40, grooves=[(-0.42, 0.1, 0.5), (0.0, 0.1, 0.55), (0.42, 0.1, 0.5)])
+    parts.append(bar('iron', -0.055, 0.055, 0.004, 0.009, 0.0075, power=3.0, taper=-0.25))
+    for sx in (-1, 1):
+        parts.append(ball('iron', V(sx * 0.058, 0, 0.004), 0.009, sub=2, sx=0.7, sz=1.3))
+    parts += grip(-0.112, -0.004, 0.0132, mat='leather:3a2418', core='hardwood', turns=9)
+    for z in (-0.04, -0.075):
+        parts.append(cord('brass', ellipse_pts(V(0, 0, z), V(1, 0, 0), V(0, 1, 0), 0.0145, 0.0128, 16), 0.0021))
+    parts.append(ball('iron', V(0, 0, -0.124), 0.025, sub=3, sx=1.0, sy=0.42, sz=0.62))
+    parts.append(ball('brass', V(0, 0, -0.144), 0.006, sub=1, sz=1.2))
+    return parts
 
 
 @item
 def ruby_sword():
-    # Kapea, punaisena hehkuva terä (rubiini), rautaväistin.
-    return sword('ruby', 'iron', 0.012, 0.018, 0.67, 0.005, 0.06, fuller=0.0, tip=0.15)
+    # Kaareva sapeli: tumma teräs ja hehkuva rubiininauha, messinkinen
+    # alaspäin kaartuva ristikko, rubiinit ristikossa ja ponnessa.
+    L = 0.67
+    cv = 0.07
+
+    def w(t):
+        return 0.025 * (1 + 0.12 * smooth((t - 0.55) / 0.3)) * (1 - smooth((t - 0.86) / 0.14) ** 1.2) + 0.0008
+    th = lambda t: 0.0052 * (1 - 0.5 * t) + 0.0007
+    parts = blade('steel:a8a8b0', 0.012, 0.012 + L, w, th, n=18, seg=40, curve=cv)
+    parts += ruby_inlay(0.012, L, cv, th, 0.03, 0.82, 0.0068, rise=1.04)
+    parts.append(bar('brass', -0.062, 0.062, 0.004, 0.009, 0.007, power=2.6, taper=0.3, bend=-0.02))
+    for sx in (-1, 1):
+        parts.append(ball('brass', V(sx * 0.064, 0, -0.016), 0.008, sub=2))
+    parts.append(ball('ruby', V(0, 0, 0.004), 0.011, sub=1, sx=0.9, sy=1.25, sz=1.0))
+    parts += grip(-0.112, -0.004, 0.0132, mat='leather:4a2a20', core='heartwood', turns=9)
+    parts.append(lathe_z('brass', [(0.011, -0.112), (0.017, -0.12), (0.016, -0.132), (0.008, -0.138)], n=16, sy=0.8))
+    parts.append(ball('ruby', V(0, 0, -0.142), 0.0105, sub=1, sz=1.2))
+    return parts
 
 
 @item
@@ -219,18 +284,28 @@ def spear():
 
 @item
 def iron_spear():
-    parts = [shaft('hardwood', -0.45, 1.02, 0.0155)]
-    # Kartiomainen holkki ja pitkä lehtimäinen kärki.
-    rings = []
-    for i in range(9):
-        t = i / 8
-        z = lerp(0.98, 1.06, t)
-        r = lerp(0.0175, 0.011, t)
-        rings.append(ring(V(0, 0, z), V(1, 0, 0), V(0, 1, 0), r, r, 14))
-    parts.append(loft('iron', rings))
-    w = lambda t: 0.024 * math.sin(math.pi * min(1, 0.18 + t * 0.9)) ** 0.9 + 0.0012
-    th = lambda t: 0.0055 * (1 - 0.6 * t) + 0.0008
-    parts += blade('steel', 1.055, 1.244, w, th, n=16, seg=22)
+    # Leveä lehtikärki keskiharjanteella, pitkä holkki messinkirenkain,
+    # punainen kuitutupsu, nahkakääre ja rautainen tyvipiikki.
+    parts = [shaft('hardwood', -0.43, 1.0, 0.0155)]
+    prof = [(0.0172, 0.96), (0.0185, 0.966), (0.0168, 0.972), (0.0158, 1.0), (0.0172, 1.006), (0.0152, 1.012), (0.0128, 1.05), (0.011, 1.065)]
+    parts.append(lathe_z('iron', prof, n=14))
+    for z in (0.975, 1.03):
+        parts.append(cord('brass', ellipse_pts(V(0, 0, z), V(1, 0, 0), V(0, 1, 0), 0.0165 if z < 1 else 0.0145, 0.0165 if z < 1 else 0.0145, 14), 0.0022))
+    w = lambda t: 0.034 * math.sin(math.pi * min(1, 0.12 + t * 0.92)) ** 1.1 * (1 - 0.15 * t) + 0.0012
+    th = lambda t: 0.0058 * (1 - 0.6 * t) + 0.0008
+    parts += blade('steel', 1.055, 1.29, w, th, n=18, seg=26, fuller=-0.4)
+    # Tupsu.
+    from items_mats import ribbon
+    R = rng(91)
+    for i in range(14):
+        a = 2 * math.pi * i / 14 + R.uniform(-0.1, 0.1)
+        d = V(math.cos(a), math.sin(a), 0)
+        L = R.uniform(0.07, 0.1)
+        pts = [d * 0.016 + V(0, 0, 0.958), d * 0.026 + V(0, 0, 0.958 - L * 0.4), d * 0.034 + V(0, 0, 0.958 - L)]
+        parts.append(ribbon('cloth:b02818', pts, lambda t: 0.0055 * (1 - 0.5 * t), thick=0.0008, twist=R.uniform(-1, 1)))
+    parts.append(cord('cloth:b02818', ellipse_pts(V(0, 0, 0.955), V(1, 0, 0), V(0, 1, 0), 0.0172, 0.0172, 14), 0.0035))
+    parts.append(wrap('leather:4a3020', -0.08, 0.16, 0.0158, 0.0146, turns=8, bow=0))
+    parts.append(lathe_z('iron', [(0.0165, -0.4), (0.017, -0.43), (0.012, -0.46), (0.004, -0.5), (0.0008, -0.51)], n=12, cap0=False))
     return parts
 
 
@@ -289,10 +364,10 @@ def boss(mat, r, y, h):
     return loft(mat, rings, cap0=False)
 
 
-def shield_back(wood, handle_mat='leather'):
+def shield_back(wood, handle_mat='leather', w=0.24, zs=None):
     parts = []
-    for z in (-0.15, 0.15):
-        parts.append(bar(wood, -0.24, 0.24, 0, 0.009, 0.018, power=4.0))
+    for z, ww in (zs or ((-0.15, w), (0.15, w))):
+        parts.append(bar(wood, -ww, ww, 0, 0.009, 0.018, power=4.0))
         transform(parts[-1], Matrix.Translation(V(0, -0.03, z)))
     parts.append(bar(handle_mat, -0.07, 0.07, 0, 0.011, 0.011, power=2.2, bend=0.0))
     transform(parts[-1], Matrix.Translation(V(0, -0.048, 0)))
@@ -332,47 +407,156 @@ def shield():
     return parts
 
 
-@item
+def hide_paint(co, n, mat):
+    """Lehmäntaljan mustat ja ruskeat laikut valkoisella pohjalla."""
+    if not mat.startswith('fur'):
+        return None
+    from mathutils import noise as _n
+    v = _n.noise(Vector((co.x * 5.0 + 3.1, co.z * 4.0 - 1.7, 0.4))) + 0.35 * _n.noise(Vector((co.x * 19, co.z * 17, 2.2)))
+    u = _n.noise(Vector((co.x * 5.0 - 7.3, co.z * 4.0 + 2.9, 1.3)))
+    if v > 0.02:
+        return (0.11, 0.09, 0.08)
+    if u > 0.22:
+        return (0.42, 0.25, 0.14)
+    return (0.95, 0.92, 0.86)
+
+
+@item(paint=hide_paint, ao_strength=0.7, ao_dist=0.06)
 def hide_shield():
-    R = 0.298
-    parts = [disc('fur:9a7650', R, -0.006, 0.014, dome=0.02)]
-    parts.append(rim('leather', R - 0.004, 0.004, 0.012))
-    parts.append(boss('leather', 0.055, 0.03, 0.03))
-    for k in range(16):
-        a = 2 * math.pi * k / 16
-        parts.append(ball('rope', V(math.cos(a) * (R - 0.02), 0.022, math.sin(a) * (R - 0.02)), 0.006, sub=1, sy=0.5))
-    parts += shield_back('wood')
+    # Korkea soikea taljakilpi: lehmäntalja laikkuineen, pystysuora keppi
+    # keskellä ja kaksi riviä nahkanauhoja, joilla talja on punottu keppiin.
+    RX, RZ = 0.215, 0.34
+
+    def rfn(a):
+        return 1 / math.sqrt((math.cos(a) / RX) ** 2 + (math.sin(a) / RZ) ** 2)
+    parts = [shaped_disc('fur', rfn, -0.004, 0.004, n=48, rows=7, bend=0.04, rmax=RX)]
+    stick = haft('wood', -0.42, 0.44, 0.0105, 0.0105, bow=0, knob=0.05, taper=0.15, n=10, seg=20)
+    transform(stick, Matrix.Translation(V(0, -0.016, 0)))
+    parts.append(stick)
+    parts.append(ball('fur:2a2018', V(0, -0.016, 0.45), 0.022, sub=2, sx=0.8, sy=0.8, sz=1.3, noise_amp=0.004, seed=3))
+    # Kaksi pystyriviä nauhoja, jotka kulkevat taljan rakojen läpi vuorotellen.
+    for i in range(13):
+        z = lerp(-0.26, 0.26, i / 12)
+        for col, sx in enumerate((-1, 1)):
+            zz = z + (0.0215 if col else 0.0)
+            if abs(zz) > 0.27:
+                continue
+            b = bar('fur:e8dcc4', sx * 0.022 - 0.015, sx * 0.022 + 0.015, zz, 0.0022, 0.0085, seg=4, n=8, power=3.0)
+            transform(b, Matrix.Translation(V(0, 0.0062, 0)))
+            parts.append(b)
+    # Kahva: kepin keskikohta nahalla kiedottuna.
+    parts.append(wrap('leather', -0.07, 0.07, 0.0108, 0.0108, turns=6, bow=0))
+    transform(parts[-1], Matrix.Translation(V(0, -0.016, 0)))
     return parts
 
 
-@item
+@item(ao_strength=0.65, ao_dist=0.05)
 def copper_shield():
-    R = 0.302
-    parts = planks('hardwood', R, -0.012, 0.012)
-    parts.append(rim('copper', R - 0.004, 0.0, 0.014))
-    parts.append(boss('copper', 0.07, 0.012, 0.055))
-    for k in range(12):
-        a = 2 * math.pi * k / 12
-        parts.append(ball('copper', V(math.cos(a) * (R - 0.03), 0.013, math.sin(a) * (R - 0.03)), 0.007, sub=1, sy=0.6))
-    parts += shield_back('hardwood')
+    # Kupera kuparikilpi (pronssikauden mallin mukaan): samankeskiset kohoreunat,
+    # pistekuvioiden rivit, kupu keskellä ja rullattu reuna.
+    R, dome = 0.29, 0.035
+    parts = [shaped_disc('copper', lambda a: R, -0.004, 0.003, n=56, rows=8, dome=dome, rmax=R)]
+
+    def yf(r):
+        return 0.003 + dome * (1 - (r / R) ** 2)
+    for r in (0.075, 0.115, 0.17, 0.215, 0.255):
+        parts.append(cord('copper', ellipse_pts(V(0, yf(r), 0), V(1, 0, 0), V(0, 0, 1), r, r, 48), 0.0034, n=6))
+    for r in (0.095, 0.235):
+        cnt = int(2 * math.pi * r / 0.026)
+        for k in range(cnt):
+            a = 2 * math.pi * k / cnt
+            parts.append(ball('copper', V(math.cos(a) * r, yf(r), math.sin(a) * r), 0.0042, sub=1, sy=0.55))
+    parts.append(cord('copper', ellipse_pts(V(0, 0.0, 0), V(1, 0, 0), V(0, 0, 1), R, R, 64), 0.0075, n=8))
+    parts.append(boss('copper', 0.05, yf(0.05) - 0.002, 0.04))
+    parts += shield_back('hardwood', w=0.22)
     return parts
 
 
-@item
+@item(ao_strength=0.7, ao_dist=0.06)
 def iron_shield():
-    R = 0.322
-    parts = planks('heartwood', R, -0.012, 0.012)
-    parts.append(rim('iron', R - 0.004, 0.0, 0.016))
-    parts.append(boss('iron', 0.075, 0.012, 0.058))
-    # Kaksi rautavannetta ristiin.
+    # Kolmiokilpi (heater): ydinpuulankut, rautareuna, rautavanteet ristiin,
+    # kupu ja niitit.
+    W, top, side_bot, tipz = 0.25, 0.3, -0.02, -0.38
+
+    def zb(px):
+        """Alareunan korkeus kohdassa x (kaari sivulta kärkeen)."""
+        u = min(1.0, abs(px) / W)
+        return side_bot + (tipz - side_bot) * (1 - u) ** 1.6
+
+    def rfn(a):
+        x, z = math.cos(a), math.sin(a)
+        best = 9.0
+        if z > 0:
+            best = min(best, (top + 0.015 * (1 - x * x)) / z)
+        rs = W / abs(x) if abs(x) > 1e-6 else 9.0
+        if z >= 0 or rs * z >= side_bot:
+            return min(best, rs)
+        lo, hi = 0.0, rs
+        for _ in range(40):
+            m = (lo + hi) / 2
+            if m * z - zb(m * x) > 0:
+                lo = m
+            else:
+                hi = m
+        return min(best, lo)
+    parts = planks_shape('heartwood', rfn, -0.012, 0.012, W)
+    sd = shaped_disc('iron', rfn, -0.013, 0.013, n=120, rows=1, rmax=W)
+    rimpts = resample_loop([V(p.x * 0.985, 0.0, p.z * 0.985) for p in sd.outline], 96)
+    parts.append(cord('iron', rimpts, 0.0145, n=8))
     for ang in (0.0, math.pi / 2):
-        b = bar('iron', -R + 0.01, R - 0.01, 0, 0.004, 0.022, power=4.0, seg=24)
-        for v in b.bm.verts:
-            x, y, z = v.co
-            v.co = V(x * math.cos(ang), y + 0.016, x * math.sin(ang) + z * math.cos(ang))
+        if ang == 0.0:
+            b = bar('iron', -W + 0.012, W - 0.012, 0.13, 0.004, 0.02, power=4.0, seg=20)
+        else:
+            b = bar('iron', -0.22, 0.3, 0, 0.004, 0.02, power=4.0, seg=24)
+            for v in b.bm.verts:
+                x, y, z = v.co
+                v.co = V(z, y, x)
+            import bmesh
+            bmesh.ops.reverse_faces(b.bm, faces=b.bm.faces[:])
+        transform(b, Matrix.Translation(V(0, 0.016, 0)))
         parts.append(b)
-    for k in range(16):
-        a = 2 * math.pi * k / 16
-        parts.append(ball('iron', V(math.cos(a) * (R - 0.028), 0.014, math.sin(a) * (R - 0.028)), 0.0075, sub=1, sy=0.6))
-    parts += shield_back('heartwood')
+    parts.append(boss('iron', 0.065, 0.012, 0.05))
+    transform(parts[-1], Matrix.Translation(V(0, 0, 0.0)))
+    for p in resample_loop(sd.outline, 26):
+        parts.append(ball('steel', V(p.x * 0.91, 0.016, p.z * 0.91), 0.0065, sub=1, sy=0.6))
+    parts += shield_back('heartwood', zs=((0.15, 0.2), (-0.08, 0.15)))
     return parts
+
+
+def resample_loop(pts, n):
+    """Suljetun pistejonon tasavälinen uudelleennäytteistys (kaarenpituuden mukaan)."""
+    m = len(pts)
+    seg = [(pts[(i + 1) % m] - pts[i]).length for i in range(m)]
+    total = sum(seg)
+    out, i, acc = [], 0, 0.0
+    for k in range(n):
+        target = total * k / n
+        while acc + seg[i] < target:
+            acc += seg[i]
+            i += 1
+        f = (target - acc) / max(1e-9, seg[i])
+        out.append(pts[i].lerp(pts[(i + 1) % m], f))
+    return out
+
+
+def planks_shape(mat, rfn, y0, y1, W, count=5, gap=0.004):
+    """Lankut annetun ääriviivan sisällä (pystysyyt)."""
+    import bmesh
+    out = []
+    w = 2 * W / count
+    for i in range(count):
+        x0 = -W + i * w + gap / 2
+        x1 = x0 + w - gap
+        p = shaped_disc(mat, rfn, y0, y1, n=120, rows=5, rmax=W)
+        geom = p.bm.verts[:] + p.bm.edges[:] + p.bm.faces[:]
+        bmesh.ops.bisect_plane(p.bm, geom=geom, plane_co=V(x0, 0, 0), plane_no=V(-1, 0, 0), clear_outer=True)
+        geom = p.bm.verts[:] + p.bm.edges[:] + p.bm.faces[:]
+        bmesh.ops.bisect_plane(p.bm, geom=geom, plane_co=V(x1, 0, 0), plane_no=V(1, 0, 0), clear_outer=True)
+        bmesh.ops.holes_fill(p.bm, edges=[e for e in p.bm.edges if e.is_boundary], sides=0)
+        for f in p.bm.faces:
+            for lp in f.loops:
+                co = lp.vert.co
+                lp[p.uv].uv = (co.z / 0.5 + i * 0.37, co.x / 0.5 + co.y * 2)
+            f.smooth = False
+        out.append(p)
+    return out

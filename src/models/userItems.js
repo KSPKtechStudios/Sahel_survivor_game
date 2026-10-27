@@ -9,16 +9,25 @@ import { CLUB, TORCH } from './data/userItems.js';
 const DIR = 'assets/models/items/';
 const loader = new THREE.TextureLoader();
 const texCache = new Map();
+const loading = [];
 function tex(name, srgb) {
   if (!name) return null;
   if (!texCache.has(name)) {
-    const t = loader.load(DIR + name + '.webp');
+    let done;
+    loading.push(new Promise((r) => { done = r; }));
+    const t = loader.load(DIR + name + '.webp', () => done(), undefined, () => done());
     t.flipY = false; // glTF-tekstuurien UV-suunta
     if (srgb) t.colorSpace = THREE.SRGBColorSpace;
     t.anisotropy = 4;
     texCache.set(name, t);
   }
   return texCache.get(name);
+}
+
+// Sessio 55: kuvakkeet piirretään kerran käynnistyksessä, joten tekstuurien
+// on oltava ladattuina ennen sitä (muuten nuijan kuvake jäi ilman tekstuuria).
+export function userTexturesReady() {
+  return Promise.all(loading);
 }
 
 function dec(b64, T) {

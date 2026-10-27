@@ -42,6 +42,15 @@ const ICON_POSE = {
   palm_leaf: [0.4, 0, -0.6],
   feather: [0.2, 0.4, -0.7],
   bone: [0.2, 0, -0.75],
+  // Sessio 55: litteät esineet hieman ylhäältä, jotta pinta näkyy.
+  hide: [0.95, 0.35, 0],
+  gazelle_pelt: [0.95, 0.35, 0],
+  monkey_pelt: [0.95, 0.35, 0],
+  fox_pelt: [0.95, 0.35, 0],
+  leather: [0.8, 0.4, 0],
+  iron_rings: [0.85, 0.3, 0],
+  seashell: [0.45, 0.6, 0],
+  gum: [0.6, 0.3, 0],
 };
 
 // Sessio 22: pitkät työkalut ja aseet vinottain, panssarit hieman ylhäältä.

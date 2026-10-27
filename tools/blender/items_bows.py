@@ -13,18 +13,32 @@ from items_weapons import ball, bar
 STYLES = {
     'bow': dict(recurve=False, long=1.0, thick=1.0, wood='wood', grip='rope', tips=None, gem=False),
     'sinew_bow': dict(recurve=True, long=1.0, thick=1.0, wood='hardwood:b89070', grip='leather', tips='bone', gem=False, back='rope:d8c49a'),
-    'hardwood_bow': dict(recurve=False, long=1.14, thick=1.0, wood='hardwood', grip='leather', tips=None, gem=False),
-    'heartwood_bow': dict(recurve=True, long=1.08, thick=1.2, wood='heartwood', grip='leather', tips='iron', gem=False, back='rope:d8c49a'),
-    'ruby_bow': dict(recurve=True, long=1.0, thick=1.0, wood='hardwood:7a6a6a', grip='leather', tips='iron', gem=True),
+    # Pitkäjousi: sarvikärjet (nocks) ja nahkakahva nuolituella.
+    'hardwood_bow': dict(recurve=False, long=1.14, thick=1.0, wood='hardwood', grip='leather', tips=None, gem=False, nocks='bone:d6c4a0', rest=True),
+    # Skyyttalainen kaksoiskaari: kahva painuu sisään, kärjet kääntyvät ulos;
+    # punaiset sidokset raajoissa.
+    'heartwood_bow': dict(recurve=True, long=1.08, thick=1.2, wood='heartwood', grip='leather', tips='iron', gem=False, back='rope:d8c49a', deflex=0.03, bands='cloth:a02818'),
+    # Tumma jousi, teräksiset kärkilevyt ja iso rubiini kahvassa.
+    'ruby_bow': dict(recurve=True, long=1.0, thick=1.0, wood='hardwood:7a6a6a', grip='leather', tips=None, gem=True, plates='steel', bands='brass'),
 }
 
 
-def bow_curve(recurve, long, t):
-    """Pelin bowPoints-käyrä (t -1..1) -> Blender (X, Z)."""
+def bow_curve(st, t):
+    """Pelin bowPoints-käyrä (t -1..1) -> Blender (X, Z). deflex painaa kahvaa
+    kohti jännettä (kärjet pysyvät pelin jänteen päissä)."""
     x = 0.12 * (1 - t * t)
-    if recurve:
+    if st['recurve']:
         x += abs(t) ** 6 * 0.08
-    return x, t * 0.62 * long
+    x -= st.get('deflex', 0.0) * math.exp(-(t / 0.22) ** 2)
+    return x, t * 0.62 * st['long']
+
+
+def limb_frame(st, t):
+    x, z = bow_curve(st, t)
+    x2, z2 = bow_curve(st, min(1, t + 0.01))
+    x1, z1 = bow_curve(st, max(-1, t - 0.01))
+    d = V(x2 - x1, 0, z2 - z1).normalized()
+    return V(x, 0, z), d, d.cross(V(0, 1, 0))
 
 
 def bow_body(st):
@@ -34,9 +48,9 @@ def bow_body(st):
     th = st['thick']
     for i in range(seg + 1):
         t = i / seg * 2 - 1
-        x, z = bow_curve(st['recurve'], st['long'], t)
-        x2, z2 = bow_curve(st['recurve'], st['long'], min(1, t + 0.01))
-        x1, z1 = bow_curve(st['recurve'], st['long'], max(-1, t - 0.01))
+        x, z = bow_curve(st, t)
+        x2, z2 = bow_curve(st, min(1, t + 0.01))
+        x1, z1 = bow_curve(st, max(-1, t - 0.01))
         d = V(x2 - x1, 0, z2 - z1).normalized()
         a = abs(t)
         grip = 1 - smooth((a - 0.08) / 0.12)
@@ -55,9 +69,9 @@ def bow_body(st):
             t = i / seg * 2 - 1
             if abs(t) > 0.9:
                 continue
-            x, z = bow_curve(st['recurve'], st['long'], t)
-            x2, z2 = bow_curve(st['recurve'], st['long'], min(1, t + 0.01))
-            x1, z1 = bow_curve(st['recurve'], st['long'], max(-1, t - 0.01))
+            x, z = bow_curve(st, t)
+            x2, z2 = bow_curve(st, min(1, t + 0.01))
+            x1, z1 = bow_curve(st, max(-1, t - 0.01))
             d = V(x2 - x1, 0, z2 - z1).normalized()
             v = d.cross(V(0, 1, 0))
             a = abs(t)
@@ -66,7 +80,7 @@ def bow_body(st):
             brings.append(ring(V(x, 0, z) - v * thick * 0.8, V(0, 1, 0), v, w, 0.0016, 10, power=3))
         parts.append(loft(st['back'], brings))
     # Kahvan kääre.
-    gx, _ = bow_curve(st['recurve'], st['long'], 0)
+    gx, _ = bow_curve(st, 0)
     rings = []
     for i in range(13):
         s = i / 12
@@ -81,12 +95,39 @@ def bow_body(st):
     parts.append(loft(st['grip'], rings))
     if st['tips']:
         for t in (-1, 1):
-            x, z = bow_curve(st['recurve'], st['long'], t)
+            x, z = bow_curve(st, t)
             parts.append(ball(st['tips'], V(x, 0, z + t * 0.004), 0.009, sub=2, sz=1.7))
+    if st.get('nocks'):
+        for t in (-1, 1):
+            c, d, v = limb_frame(st, t * 0.985)
+            dd = d * t
+            parts.append(tube_path(st['nocks'], [c - dd * 0.02, c + dd * 0.012, c + dd * 0.03 - v * 0.004], lambda q: 0.0085 * (1 - q) ** 0.8 + 0.0015, n=10))
+    if st.get('plates'):
+        for t in (-1, 1):
+            pts, nr = [], []
+            for i in range(9):
+                q = lerp(0.78, 1.0, i / 8) * t
+                c, d, v = limb_frame(st, q)
+                pts.append(c - v * 0.0045 * st['thick'])
+                nr.append(-v)
+            from items_armor import strip
+            parts.append(strip(st['plates'], pts, nr, lambda q: 0.02 * (1 - 0.35 * q), 0.0025))
+            c, d, v = limb_frame(st, t)
+            parts.append(ball(st['plates'], c + d * t * 0.006, 0.0075, sub=2, sz=1.4))
+    if st.get('bands'):
+        for t in (-0.55, -0.3, 0.3, 0.55):
+            c, d, v = limb_frame(st, t)
+            a = abs(t)
+            w = (0.017 - 0.009 * a ** 1.3) * st['thick']
+            thick = (0.009 - 0.0045 * a) * st['thick']
+            parts.append(cord(st['bands'], ring(c, V(0, 1, 0), v, w + 0.0012, thick + 0.0012, 12), 0.0022, n=5))
+    if st.get('rest'):
+        gx, _ = bow_curve(st, 0)
+        parts.append(ball('leather:6a4a30', V(gx - 0.016, 0.0, 0.058 * st['long']), 0.007, sub=2, sy=1.1, sz=0.7))
     if st['gem']:
         g = Part('ruby')
         from items_misc import crystal
-        crystal(g, V(gx - 0.014, 0, -0.016), V(-1, 0, 0.0), 0.014, 0.014, 0.012, 9)
+        crystal(g, V(gx - 0.014, 0, -0.012), V(-1, 0, 0.0), 0.017, 0.016, 0.014, 9)
         for f in g.bm.faces:
             f.smooth = False
         box_uv(g)
@@ -95,8 +136,8 @@ def bow_body(st):
 
 
 def bow_string(st):
-    x0, z0 = bow_curve(st['recurve'], st['long'], -1)
-    x1, z1 = bow_curve(st['recurve'], st['long'], 1)
+    x0, z0 = bow_curve(st, -1)
+    x1, z1 = bow_curve(st, 1)
     return tube_path('rope:f0e8d8', [V(x0, 0, z0 + 0.004), V(x1, 0, z1 - 0.004)], lambda t: 0.0022, n=5)
 
 

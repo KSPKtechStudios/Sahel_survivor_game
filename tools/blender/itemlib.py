@@ -137,18 +137,43 @@ def ring(center, axis_u, axis_v, ru, rv, n=12, phase=0.0, power=2.0):
     return out
 
 
+def transport_frames(path, closed=False):
+    """Pyörimättömät kehykset polulle (rinnakkaissiirto): ei hyppäyksiä
+    renkaiden vaiheessa, joten putki ei kierry tai nipisty. Suljetulla
+    polulla jäljelle jäävä kierto jaetaan tasaisesti koko matkalle."""
+    m = len(path)
+
+    def tangent(i):
+        if closed:
+            return (path[(i + 1) % m] - path[(i - 1) % m]).normalized()
+        return (path[min(m - 1, i + 1)] - path[max(0, i - 1)]).normalized()
+    ds = [tangent(i) for i in range(m)]
+    d0 = ds[0]
+    ref = Vector((1, 0, 0)) if abs(d0.x) < 0.9 else Vector((0, 1, 0))
+    u = (ref - d0 * ref.dot(d0)).normalized()
+    us = [u]
+    for i in range(1, m + (1 if closed else 0)):
+        dp, dn = ds[i - 1], ds[i % m]
+        q = dp.rotation_difference(dn)
+        u = q @ u
+        u = (u - dn * u.dot(dn)).normalized()
+        us.append(u)
+    if closed:
+        uend = us.pop()
+        ang = math.atan2(d0.dot(uend.cross(us[0])), uend.dot(us[0]))
+        for i in range(m):
+            us[i] = Matrix.Rotation(ang * i / m, 3, ds[i]) @ us[i]
+    return [(ds[i], us[i], ds[i].cross(us[i])) for i in range(m)]
+
+
 def tube(mat, path, radius, n=12, cap0=True, cap1=True, ry=None, twist=0.0, power=2.0):
     """Putki polkua pitkin. radius(t) ja ry(t) funktioita (t 0..1) tai lukuja."""
     rings = []
     m = len(path)
     rf = radius if callable(radius) else (lambda t, r=radius: r)
     yf = ry if callable(ry) else (rf if ry is None else (lambda t, r=ry: r))
-    for i, c in enumerate(path):
+    for i, (c, (d, u, v)) in enumerate(zip(path, transport_frames(path))):
         t = i / (m - 1)
-        d = (path[min(m - 1, i + 1)] - path[max(0, i - 1)]).normalized()
-        ref = Vector((1, 0, 0)) if abs(d.x) < 0.9 else Vector((0, 1, 0))
-        u = (ref - d * ref.dot(d)).normalized()
-        v = d.cross(u)
         rings.append(ring(c, u, v, rf(t), yf(t), n, phase=twist * t, power=power))
     return loft(mat, rings, cap0, cap1)
 

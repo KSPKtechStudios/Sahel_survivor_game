@@ -2,6 +2,17 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-27 (sessio 55)
+- **Kullakin tasolla on oma muotonsa, ei vain eri materiaali.**
+  - Kupari: pronssikauden muodot (puolikuukirves, lehtimiekka antenniponnella, kohokuvioitu kupera kilpi).
+  - Rauta: käytännölliset taotut muodot ja Sahelin perinne (partakirves, takouba-miekka, kolmiokilpi vantein).
+  - Rubiini: koristeelliset muodot ja hehkuva rubiini (kaksiteräinen kirves, kaareva sapeli, sotahakku).
+  - Taljakilpi on soikea lehmäntaljakilpi (Itä- ja Etelä-Afrikan malli).
+  - Syy: käyttäjä halusi tasojen erottuvan toisistaan.
+- **Otekohta ja koko pidetään ennallaan**, kun mallin muoto muuttuu. Syy: käden otteet (`holdFor`) ja jousen jänne (`bowPoints`) toimivat ilman muutoksia.
+- **Putket ja nyörit käyttävät rinnakkaissiirrettyjä kehyksiä** (`itemlib.transport_frames`). Syy: aiemmin poikkileikkauksen suunta hyppäsi tietyissä kulmissa, mistä tuli katkoja ja nipistyksiä (köysikerä, rannerengas).
+- **Kuvakkeet piirretään vasta, kun käyttäjän mallien (nuija, soihtu, puukko) tekstuurit ovat latautuneet** (`userTexturesReady`). Syy: muuten kuvake jäi ilman tekstuuria.
+
 ## 2026-10-27 (sessio 54)
 - **Esinemallit tehdään Blenderillä Python-skripteistä** (`tools/blender/`), ei käsin eikä valmiita malleja lataamalla.
   - Syy: yli 100 esinettä yhtenäisellä tyylillä, ja skriptiä muuttamalla ja ajamalla uudelleen työ on toistettavaa.

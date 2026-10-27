@@ -2,6 +2,30 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-27 (sessio 55): eri tasojen aseet ja kilvet erinäköisiksi, heikoimmat mallit uusiksi
+
+- **Nuijan kuvake näkyy nyt tekstuurein** pikapalkissa ja repussa (myös soihtu ja kivipuukko). Kuvakkeet piirrettiin ennen kuin tekstuurit olivat latautuneet.
+- **Eri tasojen aseet ja kilvet näyttävät nyt erilaisilta:**
+  - kirveet: kuparinen puolikuukirves holkilla, rautainen partakirves vasarapäällä ja varren rautaliuskoilla, kaksiteräinen rubiinikirves piikillä;
+  - hakut: kuparinen piikki + viuhkaterä, rautainen kaksipiikkinen hakku, rubiininen sotahakku (rubiinikide kärjessä, vasarapää);
+  - miekat: kuparinen lehtimiekka antenniponnella (pronssikausi), rautainen takouba (tuaregien miekka), kaareva rubiinisapeli hehkuvalla rubiininauhalla;
+  - rubiinitikari: kaareva tikari, messinkikahva ja rubiini;
+  - rautakeihäs: leveä lehtikärki, messinkirenkaat, punainen tupsu ja tyvipiikki;
+  - kilvet: korkea soikea lehmäntaljakilpi (keppi ja nauhapunos), kupera kuparikilpi kohokuvioin, rautainen kolmiokilpi rautavanteineen; puukilpi ennallaan;
+  - jouset: pitkäjousessa sarvikärjet ja nuolituki, ydinpuujousessa kaksoiskaari ja punaiset sidokset, rubiinijousessa teräksiset kärkilevyt ja isompi rubiini.
+- **Heikoimmat mallit tehty uusiksi:**
+  - simpukankuori: kierteinen meritorvi;
+  - rautarenkaat: pala rengaspunosta;
+  - akasiankumi: kellertäviä kumikyyneliä;
+  - jänne: kierretty vyyhti;
+  - nahka: pino taiteltuja nahkoja;
+  - taljat: eläimen muoto, häntä, paksu reuna ja turkkipinta; pahkasialla harjaraita, ketulla tuuhea häntä;
+  - paahdetut sienet: kolme sientä vartaassa;
+  - raaka liha: tummempi, marmoroitu;
+  - kookospähkinä: pyöreä ja kuituinen;
+  - köysikerän katko korjattu.
+- Taljat, nahka, renkaat ja simpukka näkyvät kuvakkeessa hieman ylhäältä.
+
 ## 2026-10-27 (sessio 54): uudet esinemallit ja tekstuurit (Blender)
 
 - **Kaikille esineille uudet 3D-mallit** (106 esinettä). Ne on tehty Blenderillä skripteistä (`tools/blender/`):

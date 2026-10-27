@@ -40,20 +40,11 @@ def wrap(mat, z0, z1, rx, ry, turns=7, step=0.0013, n=14, seg=36, bow=-0.012, zb
 
 def cord(mat, pts, r, n=5, closed=True):
     """Ohut nyöri pisteiden kautta (suljettu silmukka tai avoin)."""
+    from itemlib import transport_frames
+    pts = list(pts)
+    rings = [ring(c, u, v, r, r, n) for c, (d, u, v) in zip(pts, transport_frames(pts, closed=closed))]
     if closed:
-        pts = list(pts) + [pts[0], pts[1]]
-    rings = []
-    m = len(pts)
-    for i in range(m - (1 if closed else 0)):
-        c = pts[i]
-        d = (pts[min(m - 1, i + 1)] - pts[max(0, i - 1)]).normalized()
-        ref = Vector((0, 0, 1)) if abs(d.z) < 0.9 else Vector((1, 0, 0))
-        u = (ref - d * ref.dot(d)).normalized()
-        v = d.cross(u)
-        rings.append(ring(c, u, v, r, r, n))
-    if closed:
-        rings = rings[:-1]
-        rings[-1] = [p.copy() for p in rings[0]]
+        rings.append([p.copy() for p in rings[0]])
     return loft(mat, rings, cap0=not closed, cap1=not closed)
 
 
@@ -120,7 +111,7 @@ def head_loft(mat, x0, x1, top, bot, thick, seg=26, n=18, bulge=0.0, split=None,
     return [loft(mat, rings[:k + 1], cap1=False), loft(split_mat, rings[k:], cap0=False)]
 
 
-def pick_head(mat, zc, half, r0, tipA=0.003, tipB=0.003, arch=0.03, seg=30, n=10, tip_mat=None, chisel=False, collar=0.25, aspect=1.35):
+def pick_head(mat, zc, half, r0, tipA=0.003, tipB=0.003, arch=0.03, seg=30, n=10, tip_mat=None, chisel=False, collar=0.25, aspect=1.35, chisel_w=1.6):
     """Hakun kärki: kaareva tanko X-suunnassa varren läpi (keskellä paksumpi kaulus).
     tipA = -X-pään säde, tipB = +X-pään säde; chisel = +X-pää litteä taltta."""
     rings = []
@@ -134,7 +125,7 @@ def pick_head(mat, zc, half, r0, tipA=0.003, tipB=0.003, arch=0.03, seg=30, n=10
         ry = r * 0.8
         rz = r * aspect
         if chisel and t > 0.5:
-            ry = lerp(r, r * 1.6, smooth((a - 0.3) / 0.7))
+            ry = lerp(r, r * chisel_w, smooth((a - 0.3) / 0.7))
             rz = lerp(r, 0.0015, smooth((a - 0.3) / 0.7))
         d = V(1, 0, -arch * 4 * (2 * t - 1) / half / 2).normalized()
         u = V(0, 1, 0)
@@ -146,9 +137,11 @@ def pick_head(mat, zc, half, r0, tipA=0.003, tipB=0.003, arch=0.03, seg=30, n=10
     return [loft(mat, rings)]
 
 
-def blade(mat, z0, z1, width, thick, n=14, seg=30, tip=0.08, guard_w=None, edge_mat=None, fuller=0.0, curve=0.0, power=2.0, edge_split=0.62):
+def blade(mat, z0, z1, width, thick, n=14, seg=30, tip=0.08, guard_w=None, edge_mat=None, fuller=0.0, curve=0.0, power=2.0, edge_split=0.62, grooves=None, shift=None):
     """Miekan / veitsen terä Z-suunnassa: linssimäinen poikkileikkaus,
-    leveys width(t), paksuus thick(t). curve = terän kaarevuus X-suunnassa."""
+    leveys width(t), paksuus thick(t). curve = terän kaarevuus X-suunnassa.
+    fuller < 0 = keskiharjanne. grooves = [(keskikohta -1..1, puoliväli, syvyys)]
+    useita kapeita uria (takouba). shift(t) = terän keskilinjan siirto X:ssä."""
     rings = []
     for i in range(seg + 1):
         t = i / seg
@@ -165,7 +158,11 @@ def blade(mat, z0, z1, width, thick, n=14, seg=30, tip=0.08, guard_w=None, edge_
             py = math.copysign(abs(s) ** (2 / power), s) * th * (1 - 0.85 * abs(c) ** 2.2)
             if fuller and abs(c) < 0.35 and 0.05 < t < 0.75:
                 py *= 1 - fuller * (1 - abs(c) / 0.35)
-            pts.append(V(x + px, py, z))
+            if grooves and 0.03 < t < 0.8:
+                for gc, gw, gd in grooves:
+                    if abs(c - gc) < gw:
+                        py *= 1 - gd * (1 - abs(c - gc) / gw) * smooth((0.8 - t) / 0.1)
+            pts.append(V(x + px + (shift(t) if shift else 0.0), py, z))
         rings.append(pts)
     return [loft(mat, rings, cap1=True)]
 
@@ -173,3 +170,74 @@ def blade(mat, z0, z1, width, thick, n=14, seg=30, tip=0.08, guard_w=None, edge_
 def tube_path(mat, path, rfn, n=8, cap0=True, cap1=True):
     """Putki polkua pitkin, säde rfn(t)."""
     return tube(mat, path, rfn, n, cap0=cap0, cap1=cap1)
+
+
+def mirror_x(p):
+    """Peilaa osan X-akselin yli (normaalit pysyvät ulospäin)."""
+    import bmesh
+    for v in p.bm.verts:
+        v.co.x = -v.co.x
+    bmesh.ops.reverse_faces(p.bm, faces=p.bm.faces[:])
+    for f in p.bm.faces:
+        for lp in f.loops:
+            uv = lp[p.uv].uv
+            lp[p.uv].uv = (-uv[0], uv[1])
+    return p
+
+
+def lathe_z(mat, prof, c=V(0, 0, 0), n=16, cap0=True, cap1=True, sy=1.0):
+    """Pyörähdyskappale Z-akselin ympäri profiilista [(r, z), ...]
+    (alhaalta ylös tai ylhäältä alas; normaalit ulospäin kummin tahansa)."""
+    if prof[0][1] > prof[-1][1]:
+        prof = prof[::-1]
+        cap0, cap1 = cap1, cap0
+    rings = []
+    for r, z in prof:
+        rings.append(ring(c + V(0, 0, z), V(1, 0, 0), V(0, 1, 0), r, r * sy, n))
+    return loft(mat, rings, cap0=cap0, cap1=cap1)
+
+
+def shaped_disc(mat, rfn, y0, y1, n=48, rows=7, zc=0.0, bend=0.0, dome=0.0, rmax=0.3, uv_scale=0.6):
+    """Litteä levy XZ-tasossa, ääriviiva r = rfn(a) keskipisteestä (0, zc).
+    Etupinta y1 (+Y), takapinta y0. bend kaartaa levyä pystyakselin ympäri
+    (reunat taaksepäin), dome pullistaa keskeltä."""
+    import bmesh
+    p = Part(mat)
+    bm = p.bm
+    s = uv_scale
+
+    def yoff(x, z, k):
+        return -bend * (x / rmax) ** 2 + dome * (1 - k * k)
+
+    cf = bm.verts.new(V(0, y1 + dome, zc))
+    cb = bm.verts.new(V(0, y0 + dome * 0.6, zc))
+    rf, rb = [], []
+    for j in range(1, rows + 1):
+        k = j / rows
+        f, b = [], []
+        for i in range(n):
+            a = 2 * math.pi * i / n
+            r = rfn(a) * k
+            x, z = math.cos(a) * r, zc + math.sin(a) * r
+            yo = yoff(x, z, k)
+            f.append(bm.verts.new(V(x, y1 + yo, z)))
+            b.append(bm.verts.new(V(x, y0 + yo * 0.6 - bend * 0.4 * (x / rmax) ** 2, z)))
+        rf.append(f)
+        rb.append(b)
+    uv = lambda v: (v.co.x / s, v.co.z / s)
+    for i in range(n):
+        i1 = (i + 1) % n
+        p.face([cf, rf[0][i], rf[0][i1]], [uv(cf), uv(rf[0][i]), uv(rf[0][i1])])
+        p.face([cb, rb[0][i1], rb[0][i]], [uv(cb), uv(rb[0][i1]), uv(rb[0][i])])
+        for j in range(rows - 1):
+            q = [rf[j][i], rf[j + 1][i], rf[j + 1][i1], rf[j][i1]]
+            p.face(q, [uv(v) for v in q])
+            q = [rb[j][i1], rb[j + 1][i1], rb[j + 1][i], rb[j][i]]
+            p.face(q, [uv(v) for v in q])
+        q = [rf[-1][i], rb[-1][i], rb[-1][i1], rf[-1][i1]]
+        p.face(q, [(i / n * 6, 0), (i / n * 6, 0.05), ((i + 1) / n * 6, 0.05), ((i + 1) / n * 6, 0)])
+    for f in bm.faces:
+        f.smooth = True
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    p.outline = [rf[-1][i].co.copy() for i in range(n)]
+    return p

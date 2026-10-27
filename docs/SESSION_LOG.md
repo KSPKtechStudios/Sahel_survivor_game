@@ -2,6 +2,34 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-27 (sessio 55)
+**Tehtiin**
+- Käyttäjän palaute:
+  - eri tasojen aseiden ja kilpien pitää näyttää erilaisilta;
+  - osa malleista on huonolaatuisia ja saa suunnitella uusiksi;
+  - nuijan tekstuurit eivät näy pikapalkissa.
+- Nuija:
+  - kuvakkeet piirrettiin ennen kuin käyttäjän mallien tekstuurit ehtivät latautua;
+  - `userItems.js` `userTexturesReady()`, ja `main.js` odottaa sitä ennen `renderItemIcons`.
+- Tasot:
+  - uudet muodot kuparille, raudalle ja rubiinille (`items_tools.py`, `items_weapons.py`, `items_bows.py`);
+  - uudet apufunktiot `shapes.py`: `mirror_x`, `lathe_z`, `shaped_disc`; `blade`-funktioon urat ja keskilinjan siirto;
+  - uudet apufunktiot `items_weapons.py`: `resample_loop`, `planks_shape`.
+- Heikot mallit uusiksi (`items_mats.py`, `items_food.py`), litteille esineille kuvakekulmat (`icons.js`).
+- Putkien ja nyörien kehykset rinnakkaissiirrolla (`itemlib.transport_frames`).
+- Testattiin:
+  - esikatselusivut `shots/s55/` (scratchpad);
+  - pelin omat kuvakkeet isona arkkina (`s54/iconsheet.mjs`);
+  - pelissä headless (`s54/game55.mjs`): 109/109 mallia, ei virheitä, uudet aseet kädessä ja kilvet vasemmassa kädessä;
+  - lint puhdas.
+
+**Kesken / tiedossa**
+- GLB kasvoi 2,9 → 3,5 Mt (kohokuviot, taljojen reunat).
+
+**Seuraavaksi**
+- Käyttäjän palaute (ks. TODO).
+- Leopardin ja gorillan animaatiot.
+
 ## 2026-10-27 (sessio 54)
 **Tehtiin**
 - Käyttäjän pyyntö: paremmat 3D-mallit ja tekstuurit kaikille esineille. Puunuija, soihtu ja kivipuukko jätettiin ennalleen.

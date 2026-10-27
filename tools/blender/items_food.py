@@ -101,11 +101,11 @@ def mushroom_termite():
 
 @item(paint=mush_paint(0x5a3418, 0x7a4a24, 0xa8865a, 0x8a6a44, char=0.5), ao_strength=0.7)
 def roasted_mushroom():
-    # Paahdetut sienet vartaassa (varras = risu).
-    parts = [tube_path('bark', [V(0, 0, z) for z in (-0.12, 0.0, 0.08, 0.16)], lambda t: 0.005 * (1 - 0.6 * t) + 0.001, n=8)]
-    for z, r, s in ((0.02, 0.034, 1), (0.085, 0.03, 2)):
-        m = mushroom(V(0, 0, 0), r, r * 0.7, r * 0.25, r * 0.5, seed=s, gills=False)
-        rot = Matrix.Translation(V(0, 0, z)) @ Matrix.Rotation(math.pi / 2, 4, 'Y') @ Matrix.Translation(V(0, 0, -r * 0.6))
+    # Vartaassa kolme paahdettua sientä pystyssä kuin kebab; teroitettu varras.
+    parts = [tube_path('bark', [V(0, 0, z) for z in (-0.12, 0.0, 0.1, 0.17, 0.2)], lambda t: 0.0045 * (1 - smooth((t - 0.8) / 0.2)) + 0.0006, n=8)]
+    for i, (z, r, tilt) in enumerate(((-0.005, 0.03, 0.12), (0.052, 0.034, -0.1), (0.112, 0.028, 0.18))):
+        m = mushroom(V(0, 0, 0), r, r * 0.62, r * 0.32, r * 0.55, seed=i + 1, gills=True)
+        rot = Matrix.Translation(V(0, 0, z)) @ Matrix.Rotation(tilt, 4, 'X') @ Matrix.Rotation(i * 1.7, 4, 'Z')
         for q in m:
             transform(q, rot)
         parts += m
@@ -148,10 +148,14 @@ def meat_bone():
 def raw_paint(co, n, mat):
     if mat != 'flesh':
         return None
-    fat = smoothstep(0.66, 0.72, nz(V(co.x * 0.6, co.y, co.z * 2.5), 35, 2))
-    cap = smoothstep(0.045, 0.06, -co.y + 0.008 * nz(co, 30))
-    base = mixc(hexc(0xa82a24), hexc(0x6a1410), nz(co, 25))
-    return mixc(base, hexc(0xf0e2d0), max(fat * 0.75, cap * 0.85))
+    # Syvänpunainen liha, ohuet marmoroinnin juovat ja rasvareunus toisella sivulla.
+    w = V(co.x * 1.0 + 0.012 * nz(co, 20, 5), co.y, co.z)
+    streak = abs(math.sin(w.x * 70 + nz(co, 14, 6) * 6 + w.y * 25))
+    marb = (1 - smoothstep(0.0, 0.12, streak)) * smoothstep(0.45, 0.7, nz(co, 18, 7))
+    cap = smoothstep(0.063, 0.071, -co.y + 0.005 * nz(co, 30))
+    base = mixc(hexc(0x7a1a18), hexc(0x480a0a), nz(co, 22))
+    base = mulc(base, 0.88 + 0.22 * nz(co, 90, 3))
+    return mixc(base, hexc(0xe8d6b8), max(marb * 0.75, cap * 0.85))
 
 
 def cooked_paint(co, n, mat):
@@ -163,9 +167,11 @@ def cooked_paint(co, n, mat):
     return base
 
 
-@item(paint=raw_paint)
+@item(paint=raw_paint, ao_strength=0.65)
 def raw_meat():
-    return [meat_shape(3)] + meat_bone()
+    p = meat_shape(3)
+    transform(p, Matrix.Diagonal((1.05, 1.05, 0.8, 1)))
+    return [p] + meat_bone()
 
 
 @item(paint=cooked_paint)
@@ -241,16 +247,33 @@ def banana():
 def husk(co, n):
     eyes = 0
     for a in (0, 2.1, 4.2):
-        e = V(math.cos(a) * 0.022, math.sin(a) * 0.022, 0.175)
-        eyes = max(eyes, 1 - (co - e).length / 0.012)
+        e = V(math.cos(a) * 0.02, math.sin(a) * 0.02, 0.193)
+        eyes = max(eyes, 1 - (co - e).length / 0.011)
     return mixc(mulc(hexc(0x6a4024), 0.85 + 0.3 * nz(co, 40)), hexc(0x1e120a), max(0, eyes))
 
 
 @item(paint=fruit_paint({'fur': husk}), ao_strength=0.7)
 def coconut():
-    prof = [(0.001, -0.008), (0.05, -0.0), (0.08, 0.04), (0.09, 0.09), (0.08, 0.14), (0.05, 0.175), (0.02, 0.188), (0.001, 0.19)]
-    p = lathe('fur', prof, n=28)
-    displace(p, 0.004, 20, seed=2)
+    # Kuorittu kookospähkinä: pyöreä, kärjestä hieman suippo, pituussuuntaiset
+    # kuituharjanteet ja kolme "silmää" päässä.
+    prof = []
+    for i in range(17):
+        t = i / 16
+        a = math.pi * t
+        r = 0.088 * math.sin(a) ** 0.85 * (1 - 0.1 * t) + 0.0008
+        z = 0.095 - 0.095 * math.cos(a) * (1 + 0.06 * t)
+        prof.append((r, z))
+    p = lathe('fur', prof, n=40)
+    for v in p.bm.verts:
+        ang = math.atan2(v.co.y, v.co.x)
+        rr = math.hypot(v.co.x, v.co.y)
+        if rr > 0.01:
+            k = 1 + 0.035 * abs(math.sin(ang * 1.5)) ** 4 + 0.012 * math.sin(ang * 23 + v.co.z * 40)
+            v.co.x *= k
+            v.co.y *= k
+    displace(p, 0.0025, 30, seed=2)
+    for f in p.bm.faces:
+        f.smooth = True
     return [p]
 
 
