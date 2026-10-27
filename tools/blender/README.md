@@ -61,3 +61,45 @@ python3 -I tools/blender/prep_textures.py --procedural assets/textures/items
 ```
 
 Pakettien `.blend`-tiedostoja ei avata; vain JPG-kuvia käytetään.
+
+# Puut Blenderillä (sessio 56)
+
+Savannin ja sademetsän puut tehdään skripteillä. Tulos on
+`assets/models/trees/` (`trees.glb`, lehtiatlas `leaves.webp`,
+kaarnatekstuurit `bark_<laji>_{c,n}.webp`). Peli lataa ne
+`src/models/treeAssets.js`:ssä; jos lataus epäonnistuu, käytetään vanhoja
+koodilla tehtyjä puita (`src/models/trees.js`).
+
+## Tiedostot
+
+- `leafgen.py`: lehvät (akasia, karite, baobab, leveälehtiset, kapokki,
+  taimi) bmeshinä verteksiväreillä; Cycles renderöi kunkin solun
+  läpinäkyvälle taustalle (`cell_<nimi>.png`).
+- `pack_leaves.py`: solut atlakseksi (`leaves.webp`, 4 × 2 solua) ja
+  kunkin solun UV-alue ja kuvasuhde tiedostoon `leaf_cells.json`.
+- `build_trees.py`: lajit (`SPECIES`: akasia, karite, baobab, sademetsäpuu,
+  kapokki, jättiläispuu, taimi), kustakin 2-4 muunnelmaa, lähi- ja
+  kaukomalli.
+  - Oksat kasvavat rekursiivisesti ohjausfunktion mukaan (`Tree.grow`,
+    `Tree.children`), lehtikortit oksien varsille (`Tree.foliage`).
+  - Runko (`trunk_line`, `build_trunk`): tyvessä pyöreät juurilohkot, jotka
+    levenevät maata kohti ja jatkuvat maan alle; sademetsässä korkeat,
+    kapeat pönkkäjuuret. Tyvessä renkaat ja kulmat ovat tiheämmässä ja
+    ommellaan yläosan harvempaan putkeen. Kaatokorkeudella on tarkka rengas
+    (kanto ja kaatuva latva, `src/game/treeCut.js`).
+  - Verteksiväri: R = AO, G = runko, B = lehti.
+  - Solmun extras: `tree` (kaatotiedot), `vines` (liaanien kiinnityskohdat).
+- `prep_textures.py --bark`: kaarnatekstuurit (ambientCG, ks. `assets/CREDITS.txt`).
+
+## Ajo
+
+```
+blender -b --factory-startup --python tools/blender/leafgen.py -- /tmp/leaves
+python3 -I tools/blender/pack_leaves.py /tmp/leaves assets/models/trees/leaves.webp tools/blender/leaf_cells.json
+python3 -I tools/blender/prep_textures.py --bark <ambientCG-kansio> assets/models/trees
+blender -b --factory-startup --python tools/blender/build_trees.py -- /tmp/trees_raw.glb tools/blender/leaf_cells.json
+node tools/blender/optimize_glb.mjs /tmp/trees_raw.glb assets/models/trees/trees.glb
+```
+
+Vain osa lajeista: lisää viimeiseksi argumentiksi esim. `acacia,shea`
+(GLB sisältää silloin vain ne).

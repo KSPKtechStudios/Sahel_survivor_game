@@ -2,6 +2,36 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-27 (sessio 56)
+**Tehtiin**
+- Käyttäjän pyynnöt:
+  - paranna kaikki esineet paitsi soihtu, nuija ja muut käyttäjän mallit;
+  - puut Blenderillä realistisemmiksi ja tiheämmiksi;
+  - kesken session: kannot ja juuret ovat liian kulmikkaita (kuvat: sademetsäpuun kolmiolevyt vs. oikea kanto).
+- Puut (`tools/blender/`):
+  - `leafgen.py` + `pack_leaves.py`: lehtiatlas Blenderissä mallinnetuista lehvistä;
+  - `build_trees.py`: 7 lajia, 23 muunnelmaa, lähi- ja kaukomalli; latvukset `Tree.foliage`-korteista;
+  - tyven juurilohkot rungon osana (`trunk_line(lobes=...)`, `build_trunk`, `lobe_angles`, `lobe_shape`); vanhat kolmiolevyt (`buttresses`) poistettu;
+  - `prep_textures.py --bark`: kaarnatekstuurit, baobabin kaarna vaalennettu (`BARK_ADJ`).
+- Peli:
+  - `src/models/treeAssets.js` lataa puut ja muuntaa ne kitin muotoon; `models.js` käyttää niitä (`ASSET_TREES`), vanhat puut varalla;
+  - `kitMaterials.js`: `treeLeaf`, `treeBark_<laji>` (tuore puu `freshWood`, lehtien normaalit `keepLeafNormal`);
+  - `treeCut.js splitTree` säilyttää materiaaliryhmät; `breakables.js` ja `fallen.js` käyttävät `kitMaterials`-taulukkoa;
+  - `objectTypes.js`: akasian ja karitteen tiheys suuremmaksi (vanhat puut pysyvät paikoillaan, ks. DECISIONS).
+- Esineet: 17 mallia uusiksi (`items_misc.py`, `items_mats.py`, `items_food.py`); apufunktiot `shapes.facet_cuts`, `shapes.split_part`, `items_food.smooth_prof`; uudet materiaalit `ash`, `coal` (`itemAssets.js`).
+- Testattiin:
+  - esikatselu `shots/s56/trees.html` (myös tyven lähikuva `eye=2`);
+  - pelissä headless: biomien kuvat, akasian ja karitteen kaato ja kanto (scratchpad `s56/fell.mjs`);
+  - esineiden esikatselut ja koko `items.glb` (116 esinettä);
+  - lint puhdas, Blender-skriptit kääntyvät.
+
+**Kesken / tiedossa**
+- Palmut, doumpalmu, kookospalmu ja kuollut puu ovat vanhoja malleja.
+- Sademetsän puiden (jättiläispuu, kapokki, sademetsäpuu) kaatotesti ja suorituskykymittaus (piirtokutsut, kolmiot) olivat kesken commitin hetkellä; ne kaatuvat samalla koodilla kuin akasia ja karite.
+
+**Seuraavaksi**
+- Käyttäjän palaute puista, kannoista, tiheydestä ja esineistä (ks. TODO).
+
 ## 2026-10-27 (sessio 55)
 **Tehtiin**
 - Käyttäjän palaute:

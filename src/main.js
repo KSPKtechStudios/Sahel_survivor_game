@@ -53,6 +53,7 @@ import { loadWorldData, saveWorldData, loadSettings } from './game/save.js';
 import { renderItemIcons } from './ui/icons.js';
 import { loadItemAssets } from './models/itemAssets.js';
 import { userTexturesReady } from './models/userItems.js';
+import { loadTreeAssets } from './models/treeAssets.js';
 import { Hud, RESPAWN_WAIT } from './ui/hud.js';
 import { Nameplates } from './ui/nameplates.js';
 import { Minimap } from './ui/minimap.js';
@@ -92,6 +93,7 @@ const activeMaterial = softFoliage(addTranslucency(addWet(addSurfaceDetail(new T
 loadSurfaces(renderer);
 // Sessio 54: Blenderissä tehdyt esinemallit ladataan ennen mallikirjastoa.
 await loadItemAssets();
+await loadTreeAssets(); // sessio 56: Blenderillä tehdyt puut
 const models = createModelLibrary();
 const sky = new Sky(scene);
 materials.water = createWaterMaterial(sky);

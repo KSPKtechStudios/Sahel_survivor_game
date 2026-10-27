@@ -217,6 +217,13 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 56 (käyttäjän kertoma, 2026-10-27): kaikki esineet paremmiksi, puut
+- **Paranna kaikki esinemallit**, paitsi soihtu, nuija ja muut käyttäjän valmiit mallit.
+- **Puut realistisemmiksi ja tiheämmiksi** (Blenderillä): ne ovat vielä vähän hassuja.
+- Avoimet kysymykset:
+  - Tarkoittaako "tiheämmäksi" tuuheampia latvuksia, enemmän puita vai molempia? (Tehty molempia maltillisesti, ks. CHANGELOG.)
+- **Kannot ja juuret eivät saa olla kulmikkaita** (käyttäjän kuvat: sademetsäpuun terävät kolmiolevyt tyvessä vs. oikea kanto). Oikea kanto: tyvi levenee pyöreästi, paksut juuret kaartuvat maahan, kaarna jatkuu juuria pitkin.
+
 ## Sessio 55 (käyttäjän kertoma, 2026-10-27): esinemallien jatko
 - **Eri tasojen aseiden ja kilpien välillä pitää olla eroja**, etteivät ne aina näytä samalta.
 - **Osa malleista on vielä aika huonolaatuisia;** jotkin saa suunnitella aivan kokonaan uusiksi.

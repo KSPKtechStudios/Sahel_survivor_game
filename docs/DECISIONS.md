@@ -2,6 +2,26 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-27 (sessio 56)
+- **Puut tehdään Blenderillä skripteistä** (`tools/blender/build_trees.py`), ei valmiita malleja ladaten. Syy: sama toistettava tapa kuin esineissä, ja puut sopivat pelin kaatoon, kantoihin, loviin ja liaaneihin (runko ensin, tarkka rengas kaatokorkeudella, kaatotiedot solmun extras-kentässä).
+- **Puut muunnetaan pelissä kitin muotoon** (`treeAssets.js`): kolmiot ilman indeksiä, ryhmä per materiaali (kaarna, lehdet), runkokolmiot ensin. Syy: kaato (`splitTree`), lovet ja hakattavat palat toimivat ilman erillistä polkua. `splitTree` säilyttää nyt materiaaliryhmät.
+- **Kaarnan verteksiväri on valkoinen, ja tuore puu sekoitetaan varjostimessa** (`freshWood`). Syy: tekstuuroidussa kaarnassa lovien ja kuorinnan värit eivät muuten näkyisi.
+- **Lehdet ovat atlaksesta otettuja kortteja; atlas renderöidään Blenderissä mallinnetuista lehvistä.** Syy: yksi tekstuuri kaikille lajeille ja yksi materiaali, ja lehvät näyttävät oikeilta lehdiltä.
+- **Tyven juurilohkot ovat osa runkoa** (säde kulman ja korkeuden funktiona), eivät erillisiä levyjä. Syy:
+  - käyttäjä piti kolmion muotoisia pönkkäjuuria ja kantoja kulmikkaina;
+  - lohko on pyöreä ja liittyy runkoon saumatta, ja kanto saa saman muodon kaadossa;
+  - tyvessä on tiheämmät renkaat ja kulmat, jotka ommellaan yläosan harvempaan putkeen, joten kolmioita ei tule turhaan koko rungon matkalle;
+  - juuret jatkuvat maan alle viistosti, jotta ne eivät jää ilmaan rinteessä.
+- **Kaarnan U kulkee juurilohkon kyljillä ylös ja alas (peilautuu harjalla)** ja V mitataan tyvessä pintaa pitkin. Syy: muuten kuvio venyisi lohkoilla tai vinoutuisi renkaiden välillä. Ympäri on kokonainen määrä tekstuurikierroksia, ettei saumaa näy.
+- **Tiheyttä lisättiin kertomalla kaikki biomit vähintään samalla kertoimella kuin suurin tiheys** (akasia: metsäsavanni 11 → 16 ja muut ≥ ×1,45; karite ×1,5, avoin savanni ×1,8).
+  - Ehdokkaiden satunnaisluvut ja hyväksymisraja (tiheys / suurin tiheys) pysyvät vanhoilla ehdokkailla samoina tai suurenevat.
+  - Siksi vanhojen maailmojen puut (ja tallennetut kannot) pysyvät paikoillaan, ja uudet puut tulevat lisäksi.
+  - Sademetsän tiheyksiä ei muutettu: se on jo tiheä, ja sen puut ovat raskaimpia.
+- **Baobabin kaarnatekstuuria vaalennettiin valmisteluvaiheessa** (`prep_textures.py`, `BARK_ADJ`). Syy: ambientCG:n Bark005 on tumman oliivinen, mutta baobabin kaarna on vaalean harmaanruskea.
+- **Esineissä parannettiin heikoimmat mallit** (17 kpl), ei kaikkia uudelleen. Syy: sessioissa 54–55 tehdyt työkalut, aseet ja panssarit näyttävät jo hyviltä; heikoimmat olivat yksinkertaisia möhkäleitä (kivi, piikivi, savi), ohuita tikkuja (ruoko, fonio) tai pallokasoja (pähkinät, hibiskus).
+  - Piikiven kuori on oma osansa (`split_part`), jossa on vaalea luutekstuuri. Syy: tekstuurin väriä voi vain tummentaa, joten vaalea kuori ei onnistu tumman piikiven tekstuurilla.
+  - Nuotion tuhka ja hiilet ovat omia verteksivärimateriaaleja (`ash`, `coal`).
+
 ## 2026-10-27 (sessio 55)
 - **Kullakin tasolla on oma muotonsa, ei vain eri materiaali.**
   - Kupari: pronssikauden muodot (puolikuukirves, lehtimiekka antenniponnella, kohokuvioitu kupera kilpi).

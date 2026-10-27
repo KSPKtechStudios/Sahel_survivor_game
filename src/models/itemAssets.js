@@ -54,6 +54,8 @@ const LIB = {
   chitin: { vc: true, rough: 0.25, env: 0.7 },
   gum: { vc: true, rough: 0.15, env: 0.8 },
   endgrain: { vc: true, rough: 0.95 },
+  ash: { vc: true, rough: 1 }, // sessio 56: nuotion tuhka ja hiilet
+  coal: { vc: true, rough: 0.8 },
   vc: { vc: true, rough: 0.8 },
 };
 

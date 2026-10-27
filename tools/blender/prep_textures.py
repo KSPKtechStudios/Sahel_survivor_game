@@ -1,5 +1,6 @@
 # Sessio 54: esineiden materiaalikirjaston tekstuurit (ambientCG, CC0).
 # Ajo: python3 -I tools/blender/prep_textures.py <ambientCG-kansio> assets/textures/items
+#      python3 -I tools/blender/prep_textures.py --bark <ambientCG-kansio> assets/models/trees (puiden kaarnat)
 #      python3 -I tools/blender/prep_textures.py --procedural assets/textures/items (rengas- ja suomupanssari)
 # Lähdekansiossa on kunkin materiaalin 1K-JPG-paketti purettuna (<Id>/<Id>_1K-JPG_Color.jpg ...).
 # Tulos: <avain>_c.webp (väri), _n.webp (normaali, OpenGL), _r.webp (karheus),
@@ -29,6 +30,32 @@ LIB = {
     'fur': ('Fabric084', {'gray': True}),
 }
 SIZE = 512
+
+# Sessio 56: puiden kaarnat (assets/models/trees/bark_<avain>_{c,n}.webp).
+BARK = {
+    'acacia': 'Bark014', 'shea': 'Bark001', 'baobab': 'Bark005', 'rain': 'Bark009',
+    'kapok': 'Bark010', 'emergent': 'Bark004', 'sapling': 'Bark002',
+}
+# Värin säätö: keskiarvo kohti annettua väriä, värikylläisyys (baobabin kaarna
+# on vaalean harmaanruskea, ambientCG:n Bark005 tumman oliivinen).
+BARK_ADJ = {'baobab': ((152, 140, 126), 0.55)}
+
+
+def bark(src, dst):
+    os.makedirs(dst, exist_ok=True)
+    for key, aid in BARK.items():
+        base = os.path.join(src, aid, f'{aid}_1K-JPG_')
+        col = Image.open(base + 'Color.jpg').convert('RGB').resize((SIZE, SIZE), Image.LANCZOS)
+        if key in BARK_ADJ:
+            from PIL import ImageStat
+            target, sat = BARK_ADJ[key]
+            col = ImageEnhance.Color(col).enhance(sat)
+            mean = ImageStat.Stat(col).mean
+            ch = [c.point(lambda v, k=target[i] / max(1, mean[i]): min(255, int(v * k))) for i, c in enumerate(col.split())]
+            col = Image.merge('RGB', ch)
+        col.save(os.path.join(dst, f'bark_{key}_c.webp'), quality=84, method=6)
+        Image.open(base + 'NormalGL.jpg').convert('RGB').resize((SIZE, SIZE), Image.LANCZOS).save(os.path.join(dst, f'bark_{key}_n.webp'), quality=88, method=6)
+        print('bark', key, aid)
 
 
 def main(src, dst):
@@ -120,7 +147,9 @@ def gen_scales(dst, n=8):
 
 
 if __name__ == '__main__':
-    if sys.argv[1] == '--procedural':
+    if sys.argv[1] == '--bark':
+        bark(sys.argv[2], sys.argv[3])
+    elif sys.argv[1] == '--procedural':
         gen_chain(sys.argv[2])
         gen_scales(sys.argv[2])
     else:

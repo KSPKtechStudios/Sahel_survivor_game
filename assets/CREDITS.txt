@@ -112,3 +112,11 @@ meshoptimizer (vendor/meshopt/meshopt_decoder.module.js), sessio 54:
   Esinemallien pakkaus (EXT_meshopt_compression) ja purku pelissä.
 
 Fontit: ks. assets/fonts (OFL).
+
+Puut (assets/models/trees/; lähde tools/blender/build_trees.py, leafgen.py,
+  pack_leaves.py), sessio 56: mallinnettu tässä projektissa Blenderillä
+  (Python-skriptit), ei ulkopuolisia malleja. Lehtiatlas (leaves.webp) on
+  renderöity Blenderissä itse tehdyistä lehvistä. Kaarnatekstuurit ambientCG
+  (https://ambientcg.com), CC0, 1K-JPG pienennetty 512 px WebP:ksi:
+  acacia = Bark014   shea = Bark001   baobab = Bark005 (vaalennettu, harmaampi)
+  rain = Bark009     kapok = Bark010  emergent = Bark004   sapling = Bark002

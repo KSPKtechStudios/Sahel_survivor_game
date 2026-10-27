@@ -144,8 +144,22 @@ export function splitTree(geo) {
   const col = geo.attributes.color;
   const uvA = geo.attributes.uv; // sessio 23: lehtikorttien UV mukaan
   const aoA = geo.attributes.aAO; // sessio 27: kitin mallit (lahopuu) varjostuksineen
-  const stump = { p: [], n: [], c: [], u: [], a: [] };
-  const top = { p: [], n: [], c: [], u: [], a: [] };
+  // Sessio 56: monimateriaaliset puut (kaarna + lehdet): kolmiot pidetään
+  // materiaaliryhmittäin, ja ryhmät rakennetaan molempiin osiin uudelleen.
+  const groups = geo.groups && geo.groups.length ? geo.groups : null;
+  const matOf = (i) => {
+    if (!groups) return 0;
+    for (const g of groups) if (i >= g.start && i < g.start + g.count) return g.materialIndex;
+    return 0;
+  };
+  const bucket = () => ({ p: [], n: [], c: [], u: [], a: [] });
+  const stump = new Map();
+  const top = new Map();
+  const into = (side, m) => {
+    if (!side.has(m)) side.set(m, bucket());
+    return side.get(m);
+  };
+  const trunkMat = matOf(range[0]);
   const eps = 1e-3;
   const below = (i) => {
     _v.fromBufferAttribute(pos, i);
@@ -154,8 +168,9 @@ export function splitTree(geo) {
   };
   let topTrunk = 0;
   for (let i = 0; i < pos.count; i += 3) {
-    const tgt = below(i) && below(i + 1) && below(i + 2) ? stump : top;
-    if (tgt === top && i >= range[0] && i < range[1]) topTrunk += 3;
+    const side = below(i) && below(i + 1) && below(i + 2) ? stump : top;
+    const tgt = into(side, matOf(i));
+    if (side === top && i >= range[0] && i < range[1]) topTrunk += 3;
     for (let k = 0; k < 3; k++) {
       tgt.p.push(pos.getX(i + k), pos.getY(i + k), pos.getZ(i + k));
       tgt.n.push(nrm.getX(i + k), nrm.getY(i + k), nrm.getZ(i + k));
@@ -187,7 +202,8 @@ export function splitTree(geo) {
       const qa = Math.atan2(q.clone().sub(center).dot(w), q.clone().sub(center).dot(u));
       return pa - qa;
     });
-    const cap = (tgt, up) => {
+    const cap = (side, up) => {
+      const tgt = into(side, trunkMat);
       for (let i = 0; i < ring.length; i++) {
         const a = ring[i];
         const b = ring[(i + 1) % ring.length];
@@ -210,8 +226,18 @@ export function splitTree(geo) {
     cap(top, !upFirst);
   }
 
-  const build = (d, offset) => {
+  const build = (side, offset) => {
+    // Ryhmät materiaalijärjestyksessä (runko on kaarnaryhmän alussa).
+    const d = bucket();
     const g = new THREE.BufferGeometry();
+    let start = 0;
+    for (const m of [...side.keys()].sort((a, b) => a - b)) {
+      const b = side.get(m);
+      for (const k of ['p', 'n', 'c', 'u', 'a']) for (const x of b[k]) d[k].push(x);
+      const cnt = b.p.length / 3;
+      if (groups) g.addGroup(start, cnt, m);
+      start += cnt;
+    }
     const p = new Float32Array(d.p);
     if (offset) {
       for (let i = 0; i < p.length; i += 3) { p[i] -= offset.x; p[i + 1] -= offset.y; p[i + 2] -= offset.z; }

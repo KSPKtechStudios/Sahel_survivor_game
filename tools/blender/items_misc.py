@@ -5,18 +5,44 @@ from itemlib import V, Vector, Part, from_object, displace, box_uv, transform, M
 from registry import item
 
 
-@item(ao_strength=0.7, ao_dist=0.08)
-def stone():
-    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=4, radius=1)
-    ob = bpy.context.active_object
-    p = from_object('stone', ob)
-    transform(p, Matrix.Diagonal((0.15, 0.13, 0.085, 1)))
-    displace(p, 0.018, 7.0, seed=3)
-    displace(p, 0.004, 28.0, seed=9)
-    transform(p, Matrix.Translation(V(0, 0, 0.02)))
+def stone_paint(co, n, mat):
+    """Kirjava kivi (kertoo tekstuurin): rakeita, kvartsijuova ja jäkälää yläpinnalla."""
+    if not mat.startswith('stone'):
+        return None
+    from paint import hexc, mixc, mulc, nz, spots, smoothstep
+    k = 0.84 + 0.22 * nz(co, 16, 4)
+    g = nz(co, 240, 6, octaves=1)
+    k *= 0.78 if g < 0.32 else (1.1 if g > 0.7 else 1.0)
+    col = mulc((1.0, 0.97, 0.92), k)
+    vein = abs(math.sin((co.x * 0.8 + co.z * 0.6 - co.y * 0.3) * 110 + nz(co, 18, 2) * 3))
+    if vein < 0.1:
+        col = mixc(col, (1.0, 1.0, 0.97), 1 - vein / 0.1)
+    lichen = spots(co, 34, 5, 0.4) * smoothstep(0.25, 0.75, n.z)
+    if lichen > 0:
+        col = mixc(col, hexc(0xc4bc78), min(1.0, lichen * 1.8))
+    return col
+
+
+def fieldstone(mat, size, seed, cuts=5, sub=4):
+    """Pyöristynyt lohkare, jossa muutama tasainen lohkeamispinta."""
+    from shapes import facet_cuts
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=sub, radius=1)
+    p = from_object(mat, bpy.context.active_object)
+    transform(p, Matrix.Diagonal((size[0], size[1], size[2], 1)))
+    displace(p, max(size) * 0.11, 0.9 / max(size), seed=seed)
+    facet_cuts(p, cuts, (max(size) * 0.08, max(size) * 0.22), seed=seed + 5)
+    displace(p, max(size) * 0.02, 4.0 / max(size), seed=seed + 9)
     box_uv(p)
     for f in p.bm.faces:
         f.smooth = True
+    return p
+
+
+@item(paint=stone_paint, ao_strength=0.7, ao_dist=0.08)
+def stone():
+    # Sessio 56: kenttäkivi lohkeamispinnoin, kvartsijuova ja jäkälää.
+    p = fieldstone('stone', (0.15, 0.125, 0.088), 3)
+    transform(p, Matrix.Translation(V(0, 0, 0.02)))
     return [p]
 
 
@@ -97,42 +123,54 @@ def fiber():
 
 
 def fire_paint(co, n, mat):
-    # Puiden sisäpäät hiiltyneet, tuhka harmaanmusta.
+    # Puiden sisäpäät hiiltyneet, tuhka harmaa, hiilet mustia ja hehkuvia.
     r = math.hypot(co.x, co.y)
-    if mat == 'endgrain' and co.z < 0.03:
-        return mixc(hexc(0x3a3632), hexc(0x141210), nz(co, 30) * 0.8 + 0.4 * (1 - smoothstep(0.02, 0.1, r)))
+    if mat == 'ash':
+        ember = smoothstep(0.62, 0.8, nz(co, 70, 3)) * (1 - smoothstep(0.03, 0.11, r))
+        base = mixc(hexc(0x8a8680), hexc(0x2a2624), nz(co, 40) * 0.6 + 0.5 * (1 - smoothstep(0.02, 0.12, r)))
+        return mixc(base, hexc(0xc8501a), ember * 0.7)
+    if mat == 'coal':
+        return mixc(hexc(0x1a1614), hexc(0xb8481a), smoothstep(0.66, 0.85, nz(co, 120, 7)) * 0.6)
     if mat in ('bark', 'endgrain'):
-        char = 1 - smoothstep(0.05, 0.15, r)
-        return mixc(hexc(0xffffff), hexc(0x1a1612), char * (0.75 + 0.25 * nz(co, 80)))
-    return None
+        char = 1 - smoothstep(0.03, 0.12, r)
+        return mixc(hexc(0xffffff) if mat == 'bark' else hexc(0xc8a878), hexc(0x16120e), char * (0.8 + 0.2 * nz(co, 80)))
+    return stone_paint(co, n, mat)
 
 
 @item(paint=fire_paint)
 def campfire():
-    # Kivikehä, ristikkäiset puut ja hiiltä.
+    # Sessio 56: isommat lohkokivet kehänä, puut kotana, hiillos ja tuhka.
     from items_mats import branch
     parts = []
     R = rng(71)
-    for k in range(9):
-        a = 2 * math.pi * k / 9
-        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=1)
-        p = from_object('stone', bpy.context.active_object)
-        s = R.uniform(0.045, 0.06)
-        transform(p, Matrix.Diagonal((s * 1.2, s, s * 0.8, 1)))
-        displace(p, s * 0.15, 30, seed=k)
-        transform(p, Matrix.Translation(V(math.cos(a) * 0.23, math.sin(a) * 0.23, s * 0.5)) @ Matrix.Rotation(a, 4, 'Z'))
-        box_uv(p)
-        for f in p.bm.faces:
-            f.smooth = True
+    for k in range(10):
+        a = 2 * math.pi * k / 10 + R.uniform(-0.12, 0.12)
+        s = R.uniform(0.045, 0.062)
+        p = fieldstone('stone', (s * 1.3, s, s * 0.85), 40 + k, cuts=3, sub=3)
+        transform(p, Matrix.Translation(V(math.cos(a) * 0.24, math.sin(a) * 0.24, s * 0.45)) @ Matrix.Rotation(a + R.uniform(-0.3, 0.3), 4, 'Z'))
         parts.append(p)
-    for k in range(5):
-        a = 2 * math.pi * k / 5 + 0.3
+    # Kota: halot nojaavat toisiinsa keskellä.
+    for k in range(6):
+        a = 2 * math.pi * k / 6 + 0.3 + R.uniform(-0.15, 0.15)
         d = V(math.cos(a), math.sin(a), 0)
-        path = [d * 0.2 + V(0, 0, 0.02), d * 0.1 + V(0, 0, 0.08), d * -0.02 + V(0, 0, 0.17)]
-        parts += branch('bark', 'endgrain', path, 0.018, 0.012, n=8)
+        foot = d * R.uniform(0.15, 0.18) + V(0, 0, 0.012)
+        tip = d * -0.02 + V(0, 0, R.uniform(0.2, 0.24))
+        path = [foot.lerp(tip, t) + V(0, 0, 0.006 * math.sin(t * 3.1)) for t in (0, 0.33, 0.66, 1.0)]
+        parts += branch('bark', 'endgrain', path, R.uniform(0.016, 0.02), 0.012, n=9)
+    # Risuja ja hiiliä keskellä.
+    for k in range(5):
+        a = R.uniform(0, 6.28)
+        c = V(math.cos(a) * R.uniform(0.0, 0.06), math.sin(a) * R.uniform(0.0, 0.06), 0.012)
+        q = ball('coal', c, R.uniform(0.011, 0.017), sub=2, sx=1.4, sz=0.8, noise_amp=0.002, seed=k)
+        parts.append(q)
+    for k in range(4):
+        a = R.uniform(0, 6.28)
+        d = V(math.cos(a), math.sin(a), 0)
+        path = [d * -0.08 + V(0, 0, 0.008), d * 0.0 + V(0, 0, 0.03), d * 0.07 + V(0, 0, 0.05)]
+        parts += branch('bark', 'endgrain', path, 0.006, 0.004, n=6)
     bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3, radius=1)
-    p = from_object('endgrain', bpy.context.active_object)
-    transform(p, Matrix.Diagonal((0.13, 0.13, 0.02, 1)))
+    p = from_object('ash', bpy.context.active_object)
+    transform(p, Matrix.Diagonal((0.16, 0.16, 0.022, 1)))
     displace(p, 0.006, 25, seed=3)
     box_uv(p)
     parts.append(p)
@@ -276,3 +314,8 @@ def clock():
     parts.append(loft('brass', [ring(V(0, 0, z), V(1, 0, 0), V(0, 1, 0), r, r, 12) for z, r in ((0.135, 0.008), (0.145, 0.009), (0.152, 0.006))]))
     parts.append(cord('brass', ellipse_pts(V(0, 0, 0.162), V(1, 0, 0), V(0, 0, 1), 0.014, 0.012, 20), 0.0025))
     return parts
+
+
+def ball(mat, c, r, sub=3, sx=1.0, sy=1.0, sz=1.0, noise_amp=0.0, seed=0):
+    from items_weapons import ball as _ball
+    return _ball(mat, c, r, sub=sub, sx=sx, sy=sy, sz=sz, noise_amp=noise_amp, seed=seed)

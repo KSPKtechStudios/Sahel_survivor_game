@@ -2,6 +2,40 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-27 (sessio 56): puut Blenderillä, pyöreät kannot ja juuret, tiheämpi savanni, paremmat esineet
+
+- **Uudet puut** (akasia, karite, baobab, sademetsäpuu, kapokki, jättiläispuu ja taimi), tehty Blenderillä:
+  - oikeat haarautuvat oksat ja runko kaarnatekstuurilla (ambientCG, CC0);
+  - tuuheat latvukset lehtikorteista, joiden lehvät on renderöity Blenderissä (akasian parilehdet, karitteen lehtiruusukkeet, baobabin ja kapokin sormilehdet, leveät sademetsän lehdet);
+  - akasian latvus on leveä ja litteä kuin sateenvarjo, karitteen pyöreä ja tiheä;
+  - jättiläispuun rungon varrella on lehtiryppäitä 6–14 metrissä, kuten ennenkin;
+  - lähellä tarkka malli, kaukana kevyempi;
+  - kaato, kanto, lovet, baobabin kuorinta, tuuli, varjot ja liaanit toimivat kuten ennen.
+- **Kannot ja juuret pyöreiksi** (käyttäjän kuvat):
+  - tyvi levenee pyöreästi ja paksut juuret kaartuvat maahan; kaarnan syy seuraa juuria;
+  - sademetsän pönkkäjuuret ovat korkeita ja ohuita mutta pyöreäreunaisia (ennen terävät kolmiolevyt);
+  - kaadetusta puusta jää samanlainen juurekas kanto.
+- **Baobabin runko** on vaalean harmaanruskea (ennen lähes musta).
+- **Savannilla ja metsäsavannilla on enemmän puita:**
+  - akasioita noin 1,5-kertaisesti (avoimella savannilla 1,7-kertaisesti);
+  - karitepuita 1,5-kertaisesti (avoimella savannilla 1,8-kertaisesti);
+  - vanhojen maailmojen puut pysyvät paikoillaan, uudet tulevat lisäksi.
+- **Paremmat esinemallit:**
+  - kivi: lohkeamispinnat, kirjava pinta, kvartsijuova ja jäkälää;
+  - piikivi: liitumainen vaalea kuori ja kiiltävät lohkaisuarvet aaltorenkaineen;
+  - savi: sormien painaumat, märät kohdat ja kuivuva, halkeileva pinta;
+  - ruoko: nippu korsia, lehtiä ja pörröiset huiskilot, sidottu kuidulla;
+  - fonio: lyhde, jossa sormimaiset tähkät ja jyvät;
+  - kuoriaisen sarvi: kaartuva sarvi, hampaat ja kullanruskea karvaharja;
+  - nuotio: lohkokivet, halot kotana, hiillos ja tuhka;
+  - karitepähkinät: kiiltävät pähkinät ja vaalea napa-arpi; paahdetuissa haljenneita;
+  - baobabin hedelmä: samettinen, kyhmyinen kota pitkässä varressa;
+  - hibiskus: rosellin mehevät punaiset verhiöt (bissap-juoman raaka-aine);
+  - moringa: kaksoisparilehti pienine lehdykkäineen;
+  - bissap-kuppi ja rohtopullo: kalebasseissa poltettu koristekuvio;
+  - halot (puu, jalopuu, ydinpuu): oksantyngät ja kirveellä lyöty kiilapää.
+- Soihtu, nuija ja kivipuukko ovat ennallaan.
+
 ## 2026-10-27 (sessio 55): eri tasojen aseet ja kilvet erinäköisiksi, heikoimmat mallit uusiksi
 
 - **Nuijan kuvake näkyy nyt tekstuurein** pikapalkissa ja repussa (myös soihtu ja kivipuukko). Kuvakkeet piirrettiin ennen kuin tekstuurit olivat latautuneet.

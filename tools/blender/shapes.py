@@ -241,3 +241,43 @@ def shaped_disc(mat, rfn, y0, y1, n=48, rows=7, zc=0.0, bend=0.0, dome=0.0, rmax
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     p.outline = [rf[-1][i].co.copy() for i in range(n)]
     return p
+
+
+# --- Sessio 56: kivien lohkeamispinnat ------------------------------------------------------
+
+def facet_cuts(p, cuts, depth, seed=0, dirs=None, soft=0.92):
+    """Lohkeamispinnat: kärjet siirretään tasojen taakse (tasaiset viisteet).
+    depth = (min, max) syvyys reunasta; dirs(R) -> tason normaali.
+    Palauttaa [(normaali, leikatut kärjet)]."""
+    import random
+    R = random.Random(seed)
+    out = []
+    for k in range(cuts):
+        n = dirs(R) if dirs else V(R.uniform(-1, 1), R.uniform(-1, 1), R.uniform(-1, 1)).normalized()
+        m = max(v.co.dot(n) for v in p.bm.verts)
+        d = m - R.uniform(*depth)
+        cut = []
+        for v in p.bm.verts:
+            s = v.co.dot(n) - d
+            if s > 0:
+                v.co -= n * s * soft
+                cut.append(v)
+        out.append((n, cut))
+    return out
+
+
+def split_part(p, sel, mat2):
+    """Jakaa osan: tahkot, joille sel(f) on tosi, siirtyvät uuteen osaan (mat2).
+    Saumakärjet yhdistyvät taas koottaessa, joten varjostus jatkuu."""
+    import bmesh
+    from itemlib import Part
+    flags = [sel(f) for f in p.bm.faces]
+    q = Part(mat2)
+    q.bm.free()
+    q.bm = p.bm.copy()
+    q.uv = q.bm.loops.layers.uv.active
+    p.bm.faces.ensure_lookup_table()
+    q.bm.faces.ensure_lookup_table()
+    bmesh.ops.delete(p.bm, geom=[f for f, s in zip(p.bm.faces, flags) if s], context='FACES')
+    bmesh.ops.delete(q.bm, geom=[f for f, s in zip(q.bm.faces, flags) if not s], context='FACES')
+    return q

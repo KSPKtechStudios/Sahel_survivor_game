@@ -103,19 +103,40 @@ def stick():
 
 
 def log_item(bark, light, dark, core=None, seed=1, r=0.085):
-    path = [V(0, 0, z) for z in (-0.09, 0.0, 0.1, 0.2, 0.33)]
+    # Sessio 56: halko: kaarnan pinta kuhmuinen, kaksi oksantynkää, alapää
+    # sahattu suoraksi ja yläpää kirveellä kiilaksi lyöty (kaksi viistoa pintaa).
+    path = [V(0, 0, z) for z in (-0.09, -0.03, 0.03, 0.1, 0.17, 0.24, 0.3, 0.33)]
     rings = []
     R = rng(seed)
     for i, c in enumerate(path):
         pts = []
-        for k in range(20):
-            a = 2 * math.pi * k / 20
+        for k in range(24):
+            a = 2 * math.pi * k / 24
             rr = r * (1 + 0.06 * math.sin(a * 3 + seed) + 0.03 * math.sin(a * 7 + i))
-            pts.append(c + V(math.cos(a) * rr, math.sin(a) * rr, 0))
+            q = c + V(math.cos(a) * rr, math.sin(a) * rr, 0)
+            if i == len(path) - 1:
+                q.z += 0.045 * abs(math.cos(a)) - 0.012
+            pts.append(q)
         rings.append(pts)
     side = loft(bark, rings, cap0=False, cap1=False)
-    displace(side, 0.004, 25, seed=seed)
-    return [side, endcap('endgrain', rings[0], flip=True), endcap('endgrain', rings[-1])]
+    displace(side, 0.005, 22, seed=seed)
+    top = Part('endgrain')
+    cv = [top.bm.verts.new(V(0, r * 0.95 * s_, path[-1].z - 0.012)) for s_ in (-1, 1)]
+    vs = [top.bm.verts.new(q) for q in rings[-1]]
+    n = len(vs)
+    for k in range(n):
+        a0, a1 = vs[k], vs[(k + 1) % n]
+        ang = 2 * math.pi * (k + 0.5) / n
+        mid = top.bm.verts.new(V(0, (a0.co.y + a1.co.y) / 2, path[-1].z - 0.012))
+        top.face([mid, a0, a1], [(v.co.x * 4, v.co.y * 4) for v in (mid, a0, a1)])
+    for v in cv:
+        top.bm.verts.remove(v)
+    parts = [side, endcap('endgrain', rings[0], flip=True), top]
+    for z, a, L in ((0.06 + R.uniform(0, 0.04), R.uniform(0, 6.28), 0.03), (0.2 + R.uniform(0, 0.05), R.uniform(0, 6.28), 0.022)):
+        d = V(math.cos(a), math.sin(a), 0.5).normalized()
+        b0 = V(math.cos(a) * r * 0.7, math.sin(a) * r * 0.7, z)
+        parts += branch(bark, 'endgrain', [b0, b0 + d * (r * 0.3 + L * 0.5), b0 + d * (r * 0.3 + L)], 0.016, 0.013, n=10, cap0=False)
+    return parts
 
 
 @item(paint=endgrain_paint(0xdcc097, 0xa5825a))
@@ -189,18 +210,47 @@ def iron_rings():
     return parts
 
 
-@item
+def flint_paint(co, n, mat):
+    # Kuori: liitumainen, kellertävä ja täplikäs; lohkaisupinnat tekstuurista.
+    if mat.startswith('bone'):
+        return mulc(mixc(hexc(0xfffaf0), hexc(0xe0d4bc), nz(co, 30, 2)), 0.9 + 0.14 * nz(co, 160, 4))
+    if mat == 'flint':
+        return mulc((1.0, 1.0, 1.0), 0.85 + 0.25 * nz(co, 45, 8))
+    return None
+
+
+@item(paint=flint_paint, ao_strength=0.6)
 def flint():
+    # Sessio 56: piikivimukula. Toisella puolella liitumainen kuori, toisella
+    # koverat lohkaisuarvet, joissa simpukkamaiset aaltorenkaat iskukohdasta.
+    from shapes import facet_cuts, split_part
     bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=4, radius=1)
     p = from_object('flint', bpy.context.active_object)
-    transform(p, Matrix.Diagonal((0.095, 0.062, 0.05, 1)))
-    displace(p, 0.008, 9, seed=7)
-    scallops(p, 0.006, 0.022, seed=8)
+    transform(p, Matrix.Diagonal((0.1, 0.066, 0.052, 1)))
+    displace(p, 0.011, 7, seed=7)
+
+    def side(R):
+        a, e = R.uniform(-1.3, 1.3), R.uniform(-0.7, 0.7)
+        return V(math.cos(e) * math.cos(a), math.cos(e) * math.sin(a), math.sin(e))
+    flakes = facet_cuts(p, 7, (0.012, 0.03), seed=21, dirs=side, soft=1.0)
+    knap = set()
+    for n, cut in flakes:
+        if len(cut) < 4:
+            continue
+        knap.update(cut)
+        c = sum((v.co for v in cut), Vector()) / len(cut)
+        rm = max((v.co - c).length for v in cut) or 1
+        hit = min(cut, key=lambda v: v.co.z).co.copy()
+        for v in cut:
+            r = (v.co - c).length / rm
+            v.co -= n * (0.0035 * (1 - r * r) + 0.0006 * math.sin((v.co - hit).length * 650))
     transform(p, Matrix.Translation(V(0, 0, 0.043)))
-    box_uv(p)
-    for f in p.bm.faces:
-        f.smooth = True
-    return [p]
+    cortex = split_part(p, lambda f: not all(v in knap for v in f.verts), 'bone:f4ecdc')
+    for q in (p, cortex):
+        box_uv(q)
+        for f in q.bm.faces:
+            f.smooth = True
+    return [p, cortex]
 
 
 @item
@@ -326,15 +376,46 @@ def stalk_paint(green, tan, node_dark=0.6, period=0.11):
     return f
 
 
-@item(paint=stalk_paint(0x9aa860, 0xc8b47a, period=0.13))
+def reed_paint(co, n, mat):
+    if mat == 'feather':
+        # Huiskilo: purppuranruskea, kärjistä vaaleampi.
+        return mulc(mixc(hexc(0xa08478), hexc(0xe0d0b4), smoothstep(0.4, 0.6, co.z) * 0.5 + nz(co, 60) * 0.5), 0.92 + 0.16 * nz(co, 300))
+    return stalk_paint(0x9aa860, 0xc8b47a, period=0.13)(co, n, mat)
+
+
+@item(paint=reed_paint, ao_strength=0.45, ao_dist=0.02)
 def reed():
+    # Sessio 56: nippu järviruokoja (Phragmites): nivelikkäät korret,
+    # kapeat lehdet, latvassa riippuvat huiskilot; sidottu kuidulla.
+    R = rng(33)
     parts = []
-    for i, (x, y, tilt, top) in enumerate([(0, 0, 0.02, 0.572), (0.022, 0.012, -0.03, 0.5), (-0.018, -0.01, 0.05, 0.46)]):
-        path = [V(x + tilt * t, y, lerp(-0.12, top, t)) for t in [k / 12 for k in range(13)]]
-        r = 0.0055
-        parts.append(tube_path('straw', path, lambda t: r * (1 - 0.3 * t), n=8))
-        leaf = [V(x + tilt * 0.3 + 0.002 + 0.04 * u * u, y, lerp(0.1 + i * 0.05, 0.35 + i * 0.04, u)) for u in [k / 10 for k in range(11)]]
-        parts.append(ribbon('straw', leaf, lambda t: 0.006 * math.sin(math.pi * min(1, 0.1 + t)), thick=0.0006))
+    for i in range(6):
+        a = 2 * math.pi * i / 6 + R.uniform(-0.3, 0.3)
+        r0 = 0.012 if i else 0.0
+        top = R.uniform(0.47, 0.57)
+        lean = V(math.cos(a), math.sin(a), 0) * R.uniform(0.02, 0.05)
+        base = V(math.cos(a) * r0, math.sin(a) * r0, -0.12)
+        path = [base + lean * (t * t) + V(0, 0, (top + 0.12) * t) for t in [k / 12 for k in range(13)]]
+        parts.append(tube_path('straw', path, lambda t: 0.0052 * (1 - 0.35 * t), n=8))
+        # Lehti tupesta.
+        z0 = R.uniform(0.0, 0.2)
+        la = a + R.uniform(-0.8, 0.8)
+        d = V(math.cos(la), math.sin(la), 0)
+        leaf = [path[0].lerp(path[-1], (z0 + 0.12) / (top + 0.12)) + d * (0.05 * u * u) + V(0, 0, 0.2 * u - 0.05 * u * u * u) for u in [k / 10 for k in range(11)]]
+        parts.append(ribbon('straw', leaf, lambda t: 0.006 * math.sin(math.pi * min(1, 0.12 + t * 0.95)), thick=0.0006, twist=R.uniform(-1, 1)))
+        # Huiskilo: riippuvia haaroja kärjen ympärillä.
+        tip = path[-1]
+        droop = V(math.cos(a + 0.6), math.sin(a + 0.6), 0)
+        for j in range(24):
+            t = j / 23
+            at = tip + V(0, 0, -0.07 * t) + droop * 0.01 * t
+            b = a + j * 2.4
+            dd = (V(math.cos(b), math.sin(b), 0) * 0.5 + droop * 0.9 + V(0, 0, 0.25 - 0.6 * t)).normalized()
+            L = 0.045 * (1 - 0.45 * t) + R.uniform(0, 0.01)
+            br = [at + dd * (L * u) + V(0, 0, -0.012 * u * u) for u in (0, 0.33, 0.66, 1.0)]
+            parts.append(ribbon('feather', br, lambda t: 0.0055 * math.sin(math.pi * min(1.0, 0.25 + 0.8 * t)) + 0.0008, thick=0.0012, twist=1.2))
+    for z in (0.07, 0.083):
+        parts.append(cord('rope', ellipse_pts(V(0, 0, z), V(1, 0, 0), V(0, 1, 0), 0.02, 0.02, 14), 0.0024))
     return parts
 
 
@@ -414,15 +495,47 @@ def rope():
     return [tube_path('rope', pts, lambda t: 0.011, n=10)]
 
 
-@item(ao_strength=0.7)
+def clay_paint(co, n, mat):
+    # Pinta kuivuu vaaleammaksi ja halkeilee, sormenpainaumat ovat märempiä.
+    if mat != 'clay':
+        return None
+    from mathutils import noise as _n
+    d, _ = _n.voronoi(Vector(co) * 70, distance_metric='DISTANCE')
+    crack = 1 - smoothstep(0.0, 0.05, d[1] - d[0])
+    dry = smoothstep(0.03, 0.07, co.z) * 0.5
+    k = (0.9 + 0.15 * nz(co, 25, 3)) * (1 + 0.12 * dry) * (1 - 0.35 * crack * dry)
+    wet = CLAY_DENTS and max(0.0, 1 - min((Vector(co) - c).length / r for c, r in CLAY_DENTS))
+    return mulc((1.0, 0.96, 0.92), k * (1 - 0.18 * wet))
+
+
+CLAY_DENTS = []
+
+
+@item(paint=clay_paint, ao_strength=0.7)
 def clay():
-    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=4, radius=1)
+    # Sessio 56: savimöhkäle: litistynyt pohja, sormien painaumat ja
+    # niissä sormenjäljen uurteet, kuivuva ja halkeileva yläpinta.
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=5, radius=1)
     p = from_object('clay', bpy.context.active_object)
-    transform(p, Matrix.Diagonal((0.078, 0.07, 0.055, 1)))
-    displace(p, 0.012, 14, seed=12)
+    transform(p, Matrix.Diagonal((0.082, 0.07, 0.052, 1)))
+    displace(p, 0.01, 12, seed=12)
     for v in p.bm.verts:
-        if v.co.z < -0.025:
-            v.co.z = -0.025 - (v.co.z + 0.025) * 0.15
+        if v.co.z < -0.026:
+            v.co.z = -0.026 - (v.co.z + 0.026) * 0.12
+    CLAY_DENTS.clear()
+    R = rng(5)
+    for k in range(4):
+        a = R.uniform(0, 6.28)
+        e = R.uniform(0.25, 0.9)
+        dirn = V(math.cos(e) * math.cos(a) * 0.082, math.cos(e) * math.sin(a) * 0.07, math.sin(e) * 0.052)
+        c = dirn * 1.05
+        rad = R.uniform(0.016, 0.022)
+        CLAY_DENTS.append((c + V(0, 0, 0.03), rad * 1.3))
+        for v in p.bm.verts:
+            dist = (v.co - c).length
+            if dist < rad * 1.3:
+                f = smooth(1 - dist / (rad * 1.3))
+                v.co -= dirn.normalized() * (0.006 * f + 0.0003 * f * math.sin(dist * 2600))
     transform(p, Matrix.Translation(V(0, 0, 0.03)))
     box_uv(p)
     for f in p.bm.faces:
@@ -561,17 +674,47 @@ def fox_pelt():
 
 
 def horn_paint(co, n, mat):
+    # Kiiltävän musta sarvi; sisäkaaren alapinnalla kullanruskea karvaharja.
     if mat != 'chitin':
         return None
-    under = smoothstep(0.0, 0.6, -n.x)
-    return mixc(hexc(0x1a1612), hexc(0x8a6a3a), under * 0.8 * nz(co, 300, 1))
+    brush = smoothstep(0.2, 0.7, -n.x) * smoothstep(0.03, 0.05, co.z) * (1 - smoothstep(0.095, 0.11, co.z))
+    hair = nz(co, 900, 2, octaves=1)
+    base = mixc(hexc(0x141110), hexc(0x3a2a1e), nz(co, 40) * 0.5)
+    return mixc(base, mixc(hexc(0x8a6a34), hexc(0xc89a50), hair), brush * 0.9)
 
 
 @item(paint=horn_paint, ao_strength=0.5)
 def beetle_horn():
-    path = [V(0.012 * math.sin(t * 1.6) - 0.004, 0, lerp(0, 0.114, t)) for t in [k / 16 for k in range(17)]]
-    p = tube_path('chitin', path, lambda t: 0.009 * (1 - t) ** 0.8 + 0.0008, n=10)
-    return [p]
+    # Sessio 56: herkuleskuoriaisen etuselän sarvi: kaartuu alas, litteähkö
+    # poikkileikkaus, selkäpuolella hammas, tyvessä pala etuselän kuorta.
+    from items_weapons import ball
+    seg = 20
+    rings = []
+    for i in range(seg + 1):
+        t = i / seg
+        x = 0.016 * math.sin(t * 1.9) - 0.006 - 0.02 * t ** 3
+        z = 0.118 * t
+        r = 0.0095 * (1 - t) ** 0.75 + 0.0007
+        rings.append(ring(V(x, 0, z), V(1, 0, 0), V(0, 1, 0), r * 1.12, r * 0.8, 12))
+    parts = [loft('chitin', rings)]
+    for zt, h in ((0.045, 0.008), (0.07, 0.005)):
+        t = zt / 0.118
+        x = 0.016 * math.sin(t * 1.9) - 0.006 - 0.02 * t ** 3
+        r = 0.0095 * (1 - t) ** 0.75
+        tooth = [V(x + r * 0.7, 0, zt - h * 0.4), V(x + r + h * 0.6, 0, zt + h * 0.1), V(x + r + h * 1.1, 0, zt + h * 0.55)]
+        parts.append(tube_path('chitin', tooth, lambda u: h * 0.45 * (1 - u) + 0.0003, n=8))
+    # Tyvi: katkennut pala etuselän kuorta, rosoinen reuna.
+    rings = []
+    for i, (z, k) in enumerate(((-0.012, 1.55), (-0.006, 1.6), (0.0, 1.35), (0.008, 1.08))):
+        pts = []
+        for j in range(12):
+            a = 2 * math.pi * j / 12
+            jag = 1 + (0.12 * math.sin(a * 5 + 1.3) + 0.06 * math.sin(a * 11)) * (1 if i == 0 else 0.3)
+            rr = 0.0095 * k * jag
+            pts.append(V(-0.006 + math.cos(a) * rr * 1.12, math.sin(a) * rr * 0.8, z + (0.002 * math.sin(a * 7) if i == 0 else 0)))
+        rings.append(pts)
+    parts.append(loft('chitin', rings, cap0=True, cap1=False))
+    return parts
 
 
 def leather_sheet(mat, L, W, t, z, seed, fold=True):

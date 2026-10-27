@@ -16,7 +16,10 @@
 export const OBJECT_TYPES = {
   acacia: {
     name: 'Akasia', model: 'acacia', kind: 'tree', material: 'vegetation', castShadow: true,
-    density: { savanna: 2.2, woodland: 11, mare: 4, laterite: 0.6, dunes: 0.25, desert: 0.04, mountains: 0.5, oasis: 1 },
+    // Sessio 56: tiheämmäksi. Kaikki biomit kerrottu vähintään samalla
+    // kertoimella kuin suurin (woodland ×1,45), jotta vanhojen maailmojen puut
+    // pysyvät paikoillaan ja uudet tulevat lisäksi (ks. DECISIONS).
+    density: { savanna: 3.8, woodland: 16, mare: 5.85, laterite: 0.9, dunes: 0.37, desert: 0.06, mountains: 0.73, oasis: 1.46 },
     scale: [0.85, 1.25], maxSlope: 0.45, collider: 0.3, hit: { y: 1.2, r: 0.6 }, drawDist: 99,
     harvest: { tool: 'axe', hp: 5, needMsg: 'Tarvitset kirveen' },
     log: { name: 'Kaatunut akasia', hp: 4, drops: [['wood', 3], ['stick', 2], ['gum', 1]] },
@@ -44,7 +47,7 @@ export const OBJECT_TYPES = {
   },
   shea: {
     name: 'Karitepuu', model: 'shea', kind: 'tree', material: 'vegetation', castShadow: true,
-    density: { savanna: 1.0, woodland: 2.6, mare: 0.6, laterite: 0.3 },
+    density: { savanna: 1.8, woodland: 3.9, mare: 0.91, laterite: 0.46 }, // sessio 56: ×1,5 (savanni ×1,8)
     scale: [0.85, 1.2], maxSlope: 0.45, collider: 0.34, hit: { y: 1.2, r: 0.65 }, drawDist: 99,
     harvest: { tool: 'axe', hp: 6, needMsg: 'Tarvitset kirveen' },
     log: { name: 'Kaatunut karitepuu', hp: 4, drops: [['wood', 4], ['stick', 2], ['shea_nuts', 3]] },

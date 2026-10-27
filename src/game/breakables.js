@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import { addSurfaceDetail } from '../render/surfaces.js';
 import { scannedMaterial } from '../render/scannedMaterials.js';
-import { kitMaterial } from '../render/kitMaterials.js';
+import { kitMaterials } from '../render/kitMaterials.js';
 import { OBJECT_TYPES } from '../world/objectTypes.js';
 import { makeChoppable, addNotch, trunkAxis, applyNotches } from './treeCut.js';
 import { events } from './events.js';
@@ -163,7 +163,7 @@ export class Breakables {
     if (!obj.active) {
       const geo = makeChoppable(this.models.hi(def.model, obj.variant));
       // Sessio 27: kitin puut (lahopuu) omalla materiaalillaan.
-      const mat = geo.userData.kit ? kitMaterial(geo.userData.kit[0]) : this.material;
+      const mat = geo.userData.kit ? kitMaterials(geo.userData.kit) : this.material;
       this.world.activate(obj, this._activeMesh(obj, geo, mat));
       if (obj.peel !== undefined) this._applyPeel(obj);
     }

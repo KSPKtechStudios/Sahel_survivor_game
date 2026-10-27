@@ -7,6 +7,14 @@
   - Maahan pudotetut esineet ([Q]).
   - Kädessä pidettävät työkalut ja aseet, jousi ja nuolet (jänteellä ja lennossa), kilpi toisessa kädessä.
 - [ ] Vastaus: mitkä mallit näyttävät vielä huonoilta tai väärän kokoisilta?
+- [ ] Käyttäjä testaa session 56:
+  - uudet puut savannilla, metsäsavannilla ja sademetsässä: näyttävätkö realistisilta, ovatko latvukset tarpeeksi tuuheita;
+  - kannot ja juuret (seisovan puun tyvi ja kaadetun puun kanto): ovatko nyt pyöreät;
+  - puiden määrä savannilla ja metsäsavannilla: sopiva vai vieläkin lisää;
+  - ruudunpäivitys savannilla ja sademetsässä (uudet puut ovat tarkempia);
+  - uudet esineet: kivi, piikivi, savi, ruoko, fonio, kuoriaisen sarvi, nuotio, karitepähkinät, baobabin hedelmä, hibiskus, moringa, bissap-kuppi, rohtopullo, halot.
+- [ ] Vastaus: tarkoittiko "tiheämmäksi" tuuheampia latvuksia vai enemmän puita (molempia tehty maltillisesti)? Lisätäänkö puita myös sademetsään?
+- [ ] Puut: palmut, doumpalmu, kookospalmu ja kuollut puu ovat vielä vanhoja malleja. Tehdäänkö nekin Blenderillä?
 - [ ] Käyttäjä testaa session 55:
   - nuijan kuvake pikapalkissa;
   - eri tasojen kirveet, hakut, miekat, tikarit, keihäät ja kilvet: erottuvatko ne nyt toisistaan;

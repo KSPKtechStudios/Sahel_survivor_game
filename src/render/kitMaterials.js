@@ -103,6 +103,69 @@ Object.assign(BUILD, {
   bambooLeaf: plantCard('bamboo_leaf.png', 0.012, 0.15),
   bambooBush: plantCard('bamboo_bush.png', 0.06, 1),
 });
+// Sessio 56: Blenderillä tehdyt puut (models/treeAssets.js). Kaarna ja
+// lehdet huojuvat samalla tuulella kuin vanhat puut (vegetation-materiaali),
+// jotta lehdet eivät irtoa oksista. Lehdet eivät häivy etäisyyden mukaan.
+const TREE_DIR = 'assets/models/trees';
+const TREE_WIND = 0.0045;
+const treeTexCache = {};
+function treeTex(file, srgb = true) {
+  if (treeTexCache[file]) return treeTexCache[file];
+  const t = file.startsWith('leaves') ? loadAlphaTexture(`${TREE_DIR}/${file}`, { cutoff: 0.5, srgb }) : loader.load(`${TREE_DIR}/${file}`);
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 16;
+  if (!file.startsWith('leaves')) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  treeTexCache[file] = t;
+  return t;
+}
+// Kaksipuolisten lehtikorttien normaali pysyy latvuksesta ulospäin myös
+// takapuolelta katsottuna (muuten kortin takapinta tummuu).
+function keepLeafNormal(material) {
+  const prev = material.onBeforeCompile;
+  material.onBeforeCompile = (shader, renderer) => {
+    if (prev) prev(shader, renderer);
+    shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>
+normal = normalize( vNormal );`);
+  };
+  const prevKey = material.customProgramCacheKey;
+  material.customProgramCacheKey = () => `${prevKey ? prevKey.call(material) : ''}-leafn`;
+  return material;
+}
+// Kaarnan verteksiväri on valkoinen; lovet ja kuoriminen (treeCut.js,
+// breakables.js) värjäävät sen tuoreen puun väriseksi, joka näkyy tekstuurin päällä.
+function freshWood(material) {
+  const prev = material.onBeforeCompile;
+  material.onBeforeCompile = (shader, renderer) => {
+    if (prev) prev(shader, renderer);
+    shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `#if defined( USE_COLOR )
+  float freshK = clamp( ( 2.97 - ( vColor.r + vColor.g + vColor.b ) ) * 6.0, 0.0, 1.0 );
+  diffuseColor.rgb = mix( diffuseColor.rgb, vColor.rgb, freshK );
+#endif`);
+  };
+  const prevKey = material.customProgramCacheKey;
+  material.customProgramCacheKey = () => `${prevKey ? prevKey.call(material) : ''}-fresh`;
+  return material;
+}
+function treeBark(key, tint = 0xffffff) {
+  return () => {
+    const map = treeTex(`bark_${key}_c.webp`), normalMap = treeTex(`bark_${key}_n.webp`, false);
+    return freshWood(addWet(addAO(addWind(new THREE.MeshStandardMaterial({
+      map, normalMap, color: tint, roughness: 0.95, metalness: 0, vertexColors: true,
+    }), TREE_WIND)), 0.8, 0.4));
+  };
+}
+Object.assign(BUILD, {
+  treeLeaf: () => keepLeafNormal(softFoliage(addTranslucency(addWet(addAO(addWind(new THREE.MeshStandardMaterial({
+    map: treeTex('leaves.webp'), alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, roughness: 0.82, metalness: 0,
+  }), TREE_WIND)), 0.3, 0), 0.35, false))),
+  treeBark_acacia: treeBark('acacia', 0xbcac9c),
+  treeBark_shea: treeBark('shea'),
+  treeBark_baobab: treeBark('baobab'),
+  treeBark_rain: treeBark('rain', 0xb0aa98),
+  treeBark_kapok: treeBark('kapok', 0xd8d8d0),
+  treeBark_emergent: treeBark('emergent', 0xe0dcd4),
+  treeBark_sapling: treeBark('sapling', 0xa89a80),
+});
 const matCache = {};
 
 export function kitMaterial(key) {

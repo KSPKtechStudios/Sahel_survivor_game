@@ -7,7 +7,7 @@ import { heightAt } from '../world/terrain.js';
 import { OBJECT_TYPES } from '../world/objectTypes.js';
 import { makeChoppable, addNotch, splitTree, trunkAxis } from './treeCut.js';
 import { events } from './events.js';
-import { kitMaterial } from '../render/kitMaterials.js';
+import { kitMaterials } from '../render/kitMaterials.js';
 
 const UP = new THREE.Vector3(0, 1, 0);
 const _v = new THREE.Vector3();
@@ -38,7 +38,7 @@ export class FallenTrees {
     const inner = new THREE.Group();
     inner.rotation.y = rot;
     inner.scale.setScalar(scale);
-    const mesh = new THREE.Mesh(geo, geo.userData.kit ? kitMaterial(geo.userData.kit[0]) : this.material);
+    const mesh = new THREE.Mesh(geo, geo.userData.kit ? kitMaterials(geo.userData.kit) : this.material);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     inner.add(mesh);
@@ -184,7 +184,7 @@ export class FallenTrees {
     if (this.vines) this.vines.bindToLog(obj, log, split.cutLocal);
     // Sessio 27: palmun kookokset putoavat.
     if (this.coconuts && this.clock) this.coconuts.onFell(obj, this.clock());
-    const stump = new THREE.Mesh(split.stump, split.stump.userData.kit ? kitMaterial(split.stump.userData.kit[0]) : this.material);
+    const stump = new THREE.Mesh(split.stump, split.stump.userData.kit ? kitMaterials(split.stump.userData.kit) : this.material);
     stump.position.set(obj.x, obj.y, obj.z);
     stump.rotation.y = obj.rot;
     stump.scale.setScalar(obj.scale);

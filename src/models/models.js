@@ -13,6 +13,7 @@ import { kitModel } from './kit/build.js';
 import { makeAncientPillar, makeRustyShield, makeAncientRoots, makeTwigs } from './ancient.js';
 import { makeKelp, makeSeabedRocks, makeShoreRocks, makeBeachStones } from './shore.js';
 import { ensureUv } from './util.js';
+import { treeAsset, treeVariantCount } from './treeAssets.js';
 import { makeCampfireBase, createItemModels } from './items.js';
 import { createBuildModels } from './building.js';
 import {
@@ -152,6 +153,11 @@ const HAS_FAR = new Set(['emergent', 'bambooBush', 'bamboo', 'banana', 'acacia',
 // Mallit, joista tehdään tiheärunkoinen versio hakkaamista varten.
 const HAS_HI = new Set(['emergent', 'acacia', 'jungle', 'palm', 'canopy', 'shea', 'doum', 'coconut', 'baobab']);
 
+// Sessio 56: Blenderillä tehdyt puut (treeAssets.js) korvaavat nämä
+// proseduraaliset puut, jos ne latautuivat. Kaukomalli on mukana, ja
+// hakattava malli on sama kuin lähimalli (rungossa on tiheät renkaat).
+const ASSET_TREES = ['acacia', 'shea', 'baobab', 'canopy', 'jungle', 'emergent', 'sapling'];
+
 function seedsFor(model) {
   const [, n, base] = VARIANTS[model];
   return Array.from({ length: n }, (_, i) => base + i * 101);
@@ -166,13 +172,21 @@ export function createModelLibrary() {
     near[model] = seeds.map((s) => ensureUv(fn(s, 1)));
     far[model] = HAS_FAR.has(model) ? seeds.map((s) => ensureUv(fn(s, 0))) : null;
   }
+  const assetTrees = new Set();
+  for (const model of ASSET_TREES) {
+    const n = treeVariantCount(model);
+    if (!n || !VARIANTS[model]) continue;
+    near[model] = Array.from({ length: n }, (_, v) => treeAsset(model, v, 'near'));
+    far[model] = Array.from({ length: n }, (_, v) => treeAsset(model, v, 'far') || near[model][v]);
+    assetTrees.add(model);
+  }
   const hiCache = {};
   return {
     world: near,
     far,
     // Hakattava versio luodaan vasta tarvittaessa.
     hi(model, variant) {
-      if (!HAS_HI.has(model)) return near[model][variant];
+      if (assetTrees.has(model) || !HAS_HI.has(model)) return near[model][variant];
       const key = `${model}:${variant}`;
       if (!hiCache[key]) hiCache[key] = ensureUv(VARIANTS[model][0](seedsFor(model)[variant], 2));
       return hiCache[key];
