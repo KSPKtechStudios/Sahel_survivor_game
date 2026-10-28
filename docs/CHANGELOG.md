@@ -2,6 +2,16 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-28 (sessio 58, jatko 3): pilviverho karstihuipuilla
+
+- **Ohut pilviverho karstihuippujen tuntumassa:**
+  - laikukas, valkoinen höyryvyö leijuu massiivien yläkolmanneksen korkeudella (noin 30–52 m laakson pohjasta) ja ajelehtii hitaasti tuulen mukana;
+  - huiput nousevat verhon läpi, ja verho pehmenee itsestään kallion ja puiden kohdalla;
+  - auringon puolella se hehkuu valoisana, yöllä se on himmeä;
+  - sitä on vain karstimassiivien kohdalla ja vähän niiden ympärillä, eikä sitä tule aivan kasvojen eteen, kun seisoo laella;
+  - verho on hento (enintään noin puoliksi peittävä).
+- Toteutus jälkikäsittelyssä, ei uusia piirrettäviä kappaleita: kustannus on muutama laskutoimitus kuvapistettä kohden.
+
 ## 2026-10-28 (sessio 58, jatko 2): kaukaiset vuoret usvassa, säädettävä etäisyys
 
 - **Vuoret näkyvät kaukaa usvaisina siluetteina:**

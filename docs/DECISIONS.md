@@ -2,6 +2,9 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-28 (sessio 58, jatko 3)
+- **Huippujen pilviverho tehdään jälkikäsittelyssä korkeusvyöhykkeenä** (`post.js` `uVeil`, `render/peakMist.js`), ei sprite-pilvinä. Syy: syvyyspuskurin ansiosta verho loppuu pehmeästi maaston ja puiden kohdalla (spritet leikkaisivat kallioon teräviä reunoja), eikä uusia piirtokutsuja tule. Missä verhoa on, kertoo 48 × 48 ruudun kartta (64 m ruutu) massiivien korotuksesta, laajennettuna yhdellä ruudulla. Kartta lasketaan vähitellen pelaajan siirtyessä.
+
 ## 2026-10-28 (sessio 58, jatko 2)
 - **Sumu muutettiin korkeusriippuvaiseksi kaikille materiaaleille** (`render/fogPatch.js`: Three.js:n `fog_*`-palat korvataan ennen materiaalien kääntämistä). Usvan yläraja on yhteinen uniform (`fogMist`, sama olio kaikissa materiaaleissa), ja main.js asettaa sen 18 m laakson pohjan yläpuolelle (pelaajan kohdalla maasto miinus karstin korotus). Syy: vuoret näkyvät usvasta johdonmukaisesti, olivat ne ladattua maastoa tai siluetteja, eikä tarvita uniformia jokaiseen materiaaliin erikseen.
 - **Kaukaiset vuoret ovat oma kevyt kerroksensa** (`render/farTerrain.js`), ei näköetäisyyden kasvatus. Syy: puiden ja esineiden määrä kasvaa näköetäisyyden neliönä, siluetit taas maksavat vain korkeuserojen kohdista. Päällekkäisyys ladattujen palojen kanssa estetään latausruudukon tekstuurilla, ei säteellä (palojen reuna on rosoinen).

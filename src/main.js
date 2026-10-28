@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { fogMist } from './render/fogPatch.js'; // sessio 58: korkeusriippuvainen sumu (ennen materiaalien kääntämistä)
 import { FarTerrain } from './render/farTerrain.js';
+import { PeakMist } from './render/peakMist.js';
 import { loadSurfaces, addSurfaceDetail, leafTexture, surfaceUniforms } from './render/surfaces.js';
 import { updateGlow } from './render/itemGlow.js';
 import { CONFIG } from './config.js';
@@ -121,6 +122,7 @@ const structures = new Structures(scene, models, world);
 const ruins = new Ruins({ scene, world, drops, bursts });
 const ripples = new Ripples(renderer);
 const post = new PostFX(renderer);
+const peakMist = new PeakMist(post); // sessio 58: pilviverho karstihuippujen tuntumassa
 const splashes = new Splashes(scene);
 const waterfalls = new Waterfalls(scene, splashes, ripples);
 const fire = new FireFx(scene);
@@ -413,6 +415,7 @@ function clearWorldState(seed) {
   vines.clear();
   waterfalls.clear();
   farTerrain.clear();
+  peakMist.clear();
   coconuts.clear();
   debris.clear();
   tumbleweeds.clear();
@@ -955,6 +958,7 @@ function frame(now) {
     const mistTop = Math.max(CONFIG.waterLevel, floorY) + 18;
     fogMist.x += (mistTop - camera.position.y - fogMist.x) * Math.min(1, rawDt * 2);
     farTerrain.mistTop = mistTop;
+    peakMist.update(Math.min(0.25, rawDt), player.position, Math.max(CONFIG.waterLevel, floorY), env.windDir, 0.12 + 0.88 * env.daylight, inGame && state !== 'menu');
     hf.falloff = 0.1 + 0.06 * (1 - env.humid);
     hf.color.copy(scene.fog.color);
     // Sessio 26: valokeilojen ilman tiheys (sademetsän kostea ilma, aamu-usva, utu).
@@ -1186,5 +1190,5 @@ window.sahel = {
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
   ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, sfx, blood,
   startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
-  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient, vines, flies, waterfalls, farTerrain,
+  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient, vines, flies, waterfalls, farTerrain, peakMist,
 };

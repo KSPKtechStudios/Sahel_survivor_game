@@ -210,6 +210,10 @@ uniform sampler2D tLum;  // sessio 25: sopeutunut kirkkaus (log)
 uniform vec4 uAE;        // x = viitekirkkaus, y = voimakkuus (0 = pois), z = min, w = max
 uniform vec4 uHFog;      // sessio 24: korkeussumu x = tiheys, y = pohja (m), z = vaimeneminen, w = aika
 uniform vec3 uHFogColor;
+uniform vec4 uVeil;      // sessio 58: huippujen pilviverho x, y = vyöhykkeen ala- ja yläraja (m), z = voimakkuus, w = valoisuus
+uniform vec4 uVeilRect;  // kartan alkukulma (x, z) ja koko (m)
+uniform vec2 uVeilDrift; // tuulen mukana ajelehtiminen (m)
+uniform sampler2D tVeil; // missä massiiveja on (0..1)
 uniform sampler2D tVol;  // sessio 26: valokeilat (r = valaistu matka m, g = säteen pituus)
 uniform vec3 uVolCol;    // auringon väri * voimakkuus * ilman tiheys
 uniform vec2 uVolTexel;
@@ -497,6 +501,43 @@ void main() {
     float mu = max(dot(ray, uSunDir), 0.0);
     vec3 hcol = uHFogColor + uSunColor * pow(mu, 5.0) * 0.35 * uInscatter;
     col = mix(col, hcol, clamp(amt, 0.0, 0.9));
+  }
+
+  // Sessio 58: ohut pilviverho karstihuippujen tuntumassa (käyttäjä: huipuille
+  // suuruuden ja korkeuden tunnetta, ei liikaa). Katsesäde leikataan
+  // korkeusvyöhykkeellä [uVeil.x, uVeil.y]; tiheys tulee kartasta (missä
+  // massiiveja on) ja tuulen mukana ajelehtivasta laikkukohinasta. Maaston
+  // kohdalla verho loppuu itsestään (syvyys), joten huiput nousevat sen läpi.
+  if (uVeil.z > 0.0) {
+    float L = sky ? 1400.0 : dist;
+    float y0 = uVeil.x, y1 = uVeil.y;
+    float t0 = 1.0, t1 = 0.0;
+    if (abs(ray.y) < 1e-4) {
+      if (uCamPos.y > y0 && uCamPos.y < y1) { t0 = 0.0; t1 = L; }
+    } else {
+      float a = (y0 - uCamPos.y) / ray.y, b = (y1 - uCamPos.y) / ray.y;
+      t0 = max(min(a, b), 0.0);
+      t1 = min(max(a, b), L);
+    }
+    if (t1 > t0) {
+      float seg = min(t1 - t0, 260.0);
+      float tm = t0 + seg * 0.5;
+      vec3 P = uCamPos + ray * tm;
+      vec2 mp = (P.xz - uVeilRect.xy) / uVeilRect.z;
+      float mask = (mp.x > 0.0 && mp.y > 0.0 && mp.x < 1.0 && mp.y < 1.0) ? texture2D(tVeil, mp).r : 0.0;
+      if (mask > 0.01) {
+        vec2 q = P.xz - uVeilDrift;
+        float n = hfN(q * 0.011) * 0.62 + hfN(q * 0.031 + 7.3) * 0.38;
+        // Ohenee vyöhykkeen ylä- ja alareunaa kohti.
+        float hm = (P.y - y0) / max(y1 - y0, 1.0) * 2.0 - 1.0;
+        float dens = mask * smoothstep(0.4, 0.78, n) * (1.0 - hm * hm);
+        float amt = (1.0 - exp(-dens * seg * 0.02)) * uVeil.z;
+        amt *= smoothstep(25.0, 90.0, tm); // ei pilveä kasvojen edessä
+        float mu = max(dot(ray, uSunDir), 0.0);
+        vec3 vcol = vec3(0.9, 0.92, 0.95) * uVeil.w + uSunColor * (0.1 + 0.35 * pow(mu, 4.0)) * uInscatter;
+        col = mix(col, vcol, clamp(amt, 0.0, 0.55));
+      }
+    }
   }
 
   // Ilmakehä: sumu hehkuu auringon suunnassa (aamu- ja iltavalo, usva).
@@ -860,6 +901,7 @@ export class PostFX {
       uFogNear: { value: 50 }, uFogFar: { value: 330 },
       uHeat: { value: 0 }, uTime: { value: 0 }, uViewProj: { value: new THREE.Matrix4() },
       uHFog: { value: new THREE.Vector4(0, 0, 0.12, 0) }, uHFogColor: { value: new THREE.Color(0.7, 0.72, 0.74) },
+      uVeil: { value: new THREE.Vector4(0, 0, 0, 1) }, uVeilRect: { value: new THREE.Vector4(0, 0, 1, 0) }, uVeilDrift: { value: new THREE.Vector2() }, tVeil: { value: null },
       tLum: { value: null }, uAE: { value: new THREE.Vector4(0.3, 0, 0.6, 3) },
       tVol: { value: null }, uVolCol: { value: new THREE.Color(0, 0, 0) }, uVolTexel: { value: new THREE.Vector2(1, 1) },
       tAO: { value: null }, uAORes: { value: new THREE.Vector2(1, 1) }, uAOStr: { value: 0 }, uOutA: { value: 1 }, uSkyK: { value: 1 },
@@ -890,6 +932,8 @@ export class PostFX {
     }, { toneMapped: false });
     // Sessio 24: korkeussumu (main.js asettaa tiheyden ja pohjan).
     this.hfog = { density: 0, base: 0, falloff: 0.12, color: new THREE.Color(0.7, 0.72, 0.74) };
+    // Sessio 58: huippujen pilviverho (render/peakMist.js asettaa).
+    this.veil = { y0: 0, y1: 0, strength: 0, light: 1, tex: null, rect: new THREE.Vector4(0, 0, 1, 0), drift: new THREE.Vector2() };
     this.time = 0;
 
     // Sessio 37: ambienttiokkluusio (0 = pois, 1 = kevyt, 2 = laadukas),
@@ -958,7 +1002,7 @@ export class PostFX {
   }
 
   get active() {
-    return this.autoExposure || this.godRays || this.motionBlur > 0 || this.dof || this.lens > 0.01 || this.splashOn || (this.lensFlare && this.flare > 0.01) || this.hfog.density > 0.0005;
+    return this.autoExposure || this.godRays || this.motionBlur > 0 || this.dof || this.lens > 0.01 || this.splashOn || (this.lensFlare && this.flare > 0.01) || this.hfog.density > 0.0005 || (this.veil.tex !== null && this.veil.strength > 0.001);
   }
 
   _resize() {
@@ -1147,6 +1191,11 @@ export class PostFX {
     const hf = this.hfog;
     cu.uHFog.value.set(hf.density, hf.base, hf.falloff, this.time);
     cu.uHFogColor.value.copy(hf.color);
+    const vl = this.veil;
+    cu.uVeil.value.set(vl.y0, vl.y1, vl.tex ? vl.strength : 0, vl.light);
+    cu.uVeilRect.value.copy(vl.rect);
+    cu.uVeilDrift.value.copy(vl.drift);
+    cu.tVeil.value = vl.tex;
 
     // --- Silmän mukautuminen
     if (this.autoExposure) {

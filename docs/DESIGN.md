@@ -235,6 +235,7 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
   - **Tarkennus:** perus tasainen viidakko on ihan hyvä sellaisenaan. Karstivuoristo on sademetsäbiomin sisällä paikoittain esiintyvä variantti, ei koko viidakon korvaaja.
   - **Vuoret saisivat erottua jo kauempaa,** mutta usvaisina, kaukaisina hahmoina.
   - **Näköetäisyys (render distance) säädettäväksi asetuksista,** ja se on toteutettava niin, ettei mitään turhaa piirretä eikä fps putoa pohjamutiin.
+  - **Vuorten huippujen lähellä aivan kevyt höyry tai pieni usva,** pieni pilviverho, joka leijailee ja tuo huipuille suuruuden ja korkeuden tunnetta ("oho"-elämys yksinäiselle viidakontutkijalle). Ei överiksi.
 
 ## Sessio 56 (käyttäjän kertoma, 2026-10-27): kaikki esineet paremmiksi, puut
 - **Paranna kaikki esinemallit**, paitsi soihtu, nuija ja muut käyttäjän valmiit mallit.

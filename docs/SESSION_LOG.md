@@ -2,6 +2,18 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-28 (sessio 58, jatko 3)
+**Tehtiin**
+- Käyttäjän idea: kevyt höyry tai pilviverho vuorten huippujen tuntumaan ("oho"-elämys, ei överiksi).
+- `render/post.js`: verhovyöhyke (`uVeil`, `uVeilRect`, `uVeilDrift`, `tVeil`); `render/peakMist.js`: massiivikartta ja vyöhykkeen korkeus laakson pohjan mukaan; `main.js` kytkentä.
+- Testattiin: `s58/misttest.mjs` (laelta kolmeen suuntaan, verho päällä ja pois), eslint, ei virheitä konsolissa.
+
+**Kesken / tiedossa**
+- Laaksosta ylös katsottuna verhoa ei saatu testikuvaan (latvusto peittää), toimivuus nähty laelta.
+
+**Seuraavaksi**
+- Käyttäjän palaute verhon määrästä.
+
 ## 2026-10-28 (sessio 58, jatko 2)
 **Tehtiin**
 - Käyttäjän pyynnöt:
