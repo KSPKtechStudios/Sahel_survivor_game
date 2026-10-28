@@ -85,10 +85,10 @@ export function saveWorldData(id, data) {
 // (grade) ja vinjetti. Matalalla laadulla raskaat (AO, bloom) pois, kevyt
 // värimäärittely ja vinjetti päällä.
 export const QUALITY_PRESETS = {
-  low: { viewDistance: 3, shadows: 'off', renderScale: 0.7, godRays: false, motionBlur: 'off', dof: false, lensFlare: false, foliage: 'low', ao: 'off', bloom: false, grade: true, vignette: true },
-  medium: { viewDistance: 4, shadows: 'normal', renderScale: 0.85, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'normal', ao: 'off', bloom: true, grade: true, vignette: true },
-  high: { viewDistance: 5, shadows: 'normal', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high', ao: 'off', bloom: true, grade: true, vignette: true },
-  ultra: { viewDistance: 7, shadows: 'high', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high', ao: 'off', bloom: true, grade: true, vignette: true },
+  low: { viewDistance: 3, farView: 800, shadows: 'off', renderScale: 0.7, godRays: false, motionBlur: 'off', dof: false, lensFlare: false, foliage: 'low', ao: 'off', bloom: false, grade: true, vignette: true },
+  medium: { viewDistance: 4, farView: 1200, shadows: 'normal', renderScale: 0.85, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'normal', ao: 'off', bloom: true, grade: true, vignette: true },
+  high: { viewDistance: 5, farView: 1400, shadows: 'normal', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high', ao: 'off', bloom: true, grade: true, vignette: true },
+  ultra: { viewDistance: 7, farView: 2000, shadows: 'high', renderScale: 1, godRays: true, motionBlur: 'off', dof: true, lensFlare: true, foliage: 'high', ao: 'off', bloom: true, grade: true, vignette: true },
 };
 // Asetusten versio: vanhoihin tallennettuihin asetuksiin kytketään uudet
 // oletukset kerran (v2: DOF ja linssiheijastukset päälle; v3: AO, bloom,
@@ -103,6 +103,7 @@ export const DEFAULT_SETTINGS = {
   invertY: false,
   fov: 72,
   viewDistance: 5,    // chunkia
+  farView: 1400,      // m: kaukaisten vuorten siluetit (sessio 58; 0 = pois)
   shadows: 'normal',  // off | normal | high
   renderScale: 1,     // 0.5 .. 1
   showFps: false,

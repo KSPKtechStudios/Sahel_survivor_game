@@ -3,7 +3,7 @@ import { listWorlds, createWorld, deleteWorld, saveSettings, QUALITY_PRESETS } f
 
 const QUALITY_NAMES = { low: 'Matala', medium: 'Keskitaso', high: 'Korkea', ultra: 'Ultra', custom: 'Oma' };
 // Asetukset, jotka kuuluvat grafiikan laatuun (niiden muutos = "oma").
-const GRAPHICS_KEYS = new Set(['viewDistance', 'shadows', 'renderScale', 'godRays', 'motionBlur', 'dof', 'lensFlare', 'foliage', 'ao', 'bloom', 'grade', 'vignette']);
+const GRAPHICS_KEYS = new Set(['viewDistance', 'farView', 'shadows', 'renderScale', 'godRays', 'motionBlur', 'dof', 'lensFlare', 'foliage', 'ao', 'bloom', 'grade', 'vignette']);
 import { seedFromString, randomSeed } from '../world/terrain.js';
 
 const $ = (id) => document.getElementById(id);
@@ -278,6 +278,7 @@ export class Menu {
     bindRange('set-sens', 'sensitivity', (v) => `${v.toFixed(2)}×`);
     bindRange('set-fov', 'fov', (v) => `${v}°`);
     bindRange('set-view', 'viewDistance', (v) => `${v * 64} m`);
+    bindRange('set-far', 'farView', (v) => (v > 0 ? `${v} m` : 'pois'));
     bindRange('set-scale', 'renderScale', (v) => `${Math.round(v * 100)} %`);
     bindRange('set-master', 'masterVolume', (v) => `${Math.round(v * 100)} %`);
     bindRange('set-music', 'musicVolume', (v) => `${Math.round(v * 100)} %`);
@@ -344,6 +345,7 @@ export class Menu {
     set('set-sens', s.sensitivity, `${(+s.sensitivity).toFixed(2)}×`);
     set('set-fov', s.fov, `${s.fov}°`);
     set('set-view', s.viewDistance, `${s.viewDistance * 64} m`);
+    set('set-far', s.farView, s.farView > 0 ? `${s.farView} m` : 'pois');
     set('set-scale', s.renderScale, `${Math.round(s.renderScale * 100)} %`);
     set('set-master', s.masterVolume, `${Math.round(s.masterVolume * 100)} %`);
     set('set-music', s.musicVolume, `${Math.round(s.musicVolume * 100)} %`);

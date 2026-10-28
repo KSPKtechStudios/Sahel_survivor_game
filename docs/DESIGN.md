@@ -233,6 +233,8 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
   - Käyttäjän välittämä ehdotus (Gemini): thaimaalainen karstivuoristo (Phang Nga, Krabi). Tasaiset laaksot ja jyrkät kalliot (porrastettu tai harjanteinen kohina), matala kohina tekee tasaisen viidakon pohjan ja jokilaaksot. Korkeat kohdat nousevat jyrkästi pystysuoriksi kalliopylväiksi ja -seinämiksi, ei pyöreiksi kukkuloiksi. Siirtymä tasaiselta pohjalta kallioseinään näyttää luonnolliselta, ja kasvillisuutta on rinteillä tiettyyn jyrkkyyteen asti.
   - Tarkistettava, miten puut ja kasvit toimivat maastogeneraation kanssa ja toimivatko ylipäätään.
   - **Tarkennus:** perus tasainen viidakko on ihan hyvä sellaisenaan. Karstivuoristo on sademetsäbiomin sisällä paikoittain esiintyvä variantti, ei koko viidakon korvaaja.
+  - **Vuoret saisivat erottua jo kauempaa,** mutta usvaisina, kaukaisina hahmoina.
+  - **Näköetäisyys (render distance) säädettäväksi asetuksista,** ja se on toteutettava niin, ettei mitään turhaa piirretä eikä fps putoa pohjamutiin.
 
 ## Sessio 56 (käyttäjän kertoma, 2026-10-27): kaikki esineet paremmiksi, puut
 - **Paranna kaikki esinemallit**, paitsi soihtu, nuija ja muut käyttäjän valmiit mallit.

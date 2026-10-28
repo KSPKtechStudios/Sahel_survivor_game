@@ -1,5 +1,7 @@
 // Sahel: käynnistys, tilat (päävalikko / lataus / peli / tauko / reppu) ja pääsilmukka.
 import * as THREE from 'three';
+import { fogMist } from './render/fogPatch.js'; // sessio 58: korkeusriippuvainen sumu (ennen materiaalien kääntämistä)
+import { FarTerrain } from './render/farTerrain.js';
 import { loadSurfaces, addSurfaceDetail, leafTexture, surfaceUniforms } from './render/surfaces.js';
 import { updateGlow } from './render/itemGlow.js';
 import { CONFIG } from './config.js';
@@ -112,6 +114,7 @@ const gameHours = () => env.day * 24 + env.time;
 const fallen = new FallenTrees({ scene, world, models, material: activeMaterial, debris, drops, bursts });
 // Sessio 27: liaanien fysiikka (tuuli, pelaaja, kaatuvat puut).
 const vines = new Vines(scene, world, models);
+const farTerrain = new FarTerrain(scene, world); // sessio 58: kaukaisten vuorten siluetit
 fallen.vines = vines;
 const breakables = new Breakables({ world, models, debris, drops, fallen, material: activeMaterial });
 const structures = new Structures(scene, models, world);
@@ -316,6 +319,10 @@ function applySettings(s) {
   camera.updateProjectionMatrix();
   if (world.viewRadius !== s.viewDistance) world.setViewRadius(s.viewDistance);
   env.maxVis = s.viewDistance * 64 + 10;
+  // Sessio 58: kaukaiset vuoret (siluetit) ja kameran kaukotaso niiden mukaan.
+  farTerrain.setRange(s.farView ?? 1400);
+  camera.far = Math.max(1500, (s.farView || 0) + 200);
+  camera.updateProjectionMatrix();
   // Ultra: tarkkuus myös tarkoilla näytöillä (enintään 2× pikselitiheys).
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, s.quality === 'ultra' ? 2 : 1.5) * s.renderScale);
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -405,6 +412,7 @@ function clearWorldState(seed) {
   fallen.clear();
   vines.clear();
   waterfalls.clear();
+  farTerrain.clear();
   coconuts.clear();
   debris.clear();
   tumbleweeds.clear();
@@ -940,7 +948,13 @@ function frame(now) {
     hf.density = inGame && state !== 'menu'
       ? Math.max(env.humid * env.humidHaze, env.w.rain * 0.026, dawn * (0.008 + wetland * 0.022) * dryK, night * 0.006 * dryK)
       : 0;
-    hf.base = Math.max(CONFIG.waterLevel, _s.h - 1.5);
+    // Sessio 58: usva lepää laakson pohjalla (karstimassiivin korotus pois),
+    // joten massiivin laelta näkee kauas ja huiput nousevat usvasta.
+    const floorY = _s.h - (_s.escSharp || 0);
+    hf.base = Math.max(CONFIG.waterLevel, floorY - 1.5);
+    const mistTop = Math.max(CONFIG.waterLevel, floorY) + 18;
+    fogMist.x += (mistTop - camera.position.y - fogMist.x) * Math.min(1, rawDt * 2);
+    farTerrain.mistTop = mistTop;
     hf.falloff = 0.1 + 0.06 * (1 - env.humid);
     hf.color.copy(scene.fog.color);
     // Sessio 26: valokeilojen ilman tiheys (sademetsän kostea ilma, aamu-usva, utu).
@@ -991,6 +1005,7 @@ function frame(now) {
   footprints.update(simDt, env.sun.position, env.hemi.intensity / Math.max(0.05, env.sun.intensity) * 0.9);
   if (inGame) {
     vines.update(simDt, player.position);
+    farTerrain.update(simDt, camera.position);
     coconuts.update(simDt, player.position, gameHours());
   }
   tumbleweeds.update(simDt, player.position, env.w.wind, env.windDir);
@@ -1171,5 +1186,5 @@ window.sahel = {
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
   ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, sfx, blood,
   startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
-  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient, vines, flies, waterfalls,
+  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient, vines, flies, waterfalls, farTerrain,
 };

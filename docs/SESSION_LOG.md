@@ -2,6 +2,22 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-28 (sessio 58, jatko 2)
+**Tehtiin**
+- Käyttäjän pyynnöt:
+  - vuoret erottumaan kaukaa usvaisina, kaukaisina hahmoina;
+  - näköetäisyys säädettäväksi asetuksista niin, ettei fps putoa.
+- `render/fogPatch.js`: korkeusriippuvainen sumu (`fogMist`); `main.js` päivittää usvan ylärajan ja jälkikäsittelyn korkeussumun pohjan laakson pohjaan.
+- `render/farTerrain.js`: kaukaisten vuorten siluetit; `terrain.js` `sampleRelief`; asetus `farView` (`save.js`, `menu.js`, `index.html`).
+- Testattiin: `s58/fartest2.mjs` (massiivin laelta kolmeen suuntaan siluetit päällä ja pois), eslint, ei virheitä konsolissa.
+
+**Kesken / tiedossa**
+- Siluettiruudut ovat omia piirtokutsujaan (noin 100). Jos ruudunpäivitys heikkenee, ne voi yhdistää isommiksi verkoiksi.
+- Usvan ja taivaan raja horisontissa on suora viiva (ennallaan).
+
+**Seuraavaksi**
+- Käyttäjän palaute kaukaisista vuorista ja asetuksesta.
+
 ## 2026-10-28 (sessio 58, jatko)
 **Tehtiin**
 - Käyttäjän palaute (kuva sademetsästä):

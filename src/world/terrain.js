@@ -508,6 +508,12 @@ function sampleBase(x, z, out) {
   return out;
 }
 
+// Sessio 58: kaukaisten vuorten siluetit (render/farTerrain.js): maa ja
+// muodostumat ilman vesistöjä (kevyempi kuin sampleTerrain).
+export function sampleRelief(x, z, out = {}) {
+  return sampleBase(x, z, out);
+}
+
 // --- Joet ja purot: valumaverkko ---------------------------------------------------
 // Saari jaetaan RIV_CELL-ruudukkoon, jonka jokaisessa ruudussa on yksi solmu
 // (väristetty keskipiste). Naapureita ovat neljä suoraa suuntaa ja jokaisen

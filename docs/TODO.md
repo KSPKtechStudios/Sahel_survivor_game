@@ -15,6 +15,7 @@
   - pelaaja ei enää kävele pystyseinää ylös: tuntuuko raja (n. 51°) hyvältä;
   - liaanien paksuus, muodot ja uusi varsitekstuuri;
   - kaatuvan puun osuma toiseen puuhun, pensaaseen tai kiveen.
+- [ ] Käyttäjä testaa: kaukaiset vuoret usvassa (esim. massiivin laelta) ja asetus "Kaukaiset vuoret"; tuntuuko ruudunpäivitys samalta?
 - [ ] Vastaus: vesiputouksia on nyt 2–3 maailmaa kohden (karstiseinillä 30–50 m korkeita). Riittääkö, vai lisätäänkö?
 - [ ] Vastaus: sopiiko karstin määrä (noin kolmannes sademetsästä) ja massiivien korkeus (20–60 m)?
 - [ ] Käyttäjä testaa session 57 (sademetsä):

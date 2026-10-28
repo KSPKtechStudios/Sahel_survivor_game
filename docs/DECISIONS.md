@@ -2,6 +2,11 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-28 (sessio 58, jatko 2)
+- **Sumu muutettiin korkeusriippuvaiseksi kaikille materiaaleille** (`render/fogPatch.js`: Three.js:n `fog_*`-palat korvataan ennen materiaalien kääntämistä). Usvan yläraja on yhteinen uniform (`fogMist`, sama olio kaikissa materiaaleissa), ja main.js asettaa sen 18 m laakson pohjan yläpuolelle (pelaajan kohdalla maasto miinus karstin korotus). Syy: vuoret näkyvät usvasta johdonmukaisesti, olivat ne ladattua maastoa tai siluetteja, eikä tarvita uniformia jokaiseen materiaaliin erikseen.
+- **Kaukaiset vuoret ovat oma kevyt kerroksensa** (`render/farTerrain.js`), ei näköetäisyyden kasvatus. Syy: puiden ja esineiden määrä kasvaa näköetäisyyden neliönä, siluetit taas maksavat vain korkeuserojen kohdista. Päällekkäisyys ladattujen palojen kanssa estetään latausruudukon tekstuurilla, ei säteellä (palojen reuna on rosoinen).
+- **Kameran kaukotaso seuraa asetusta** (vähintään 1500 m, muuten etäisyys + 200 m).
+
 ## 2026-10-28 (sessio 58, jatko)
 - **Karstivuoristo on sademetsän sisäinen variantti, joka korvaa session 57 jyrkänteet** (`terrain.js` `escarpment()`, `karstMaskAt`, `karstField`, `rampAt`). Käyttäjä: tasainen viidakko on hyvä, ja karsti on viidakkobiomin sisällä esiintyvä variantti; jyrkänneportaat näyttivät kamalilta. Massiivi on kentän tasa-arvokäyrän sisäpuoli (thaimaalainen tornikarsti), ja laaksonpohja on karstialueella hieman tasaisempi.
 - **Jokiverkko ei näe massiiveja** (`escSoft = 0`, kuten jyrkänteissä), ja joen laaksossa massiivi madaltuu (laakso V + 5 + 2,5·w). Syy: jokigenerointi ei saa hajota (käyttäjä, sessio 57). Tarkistettu: vedenpinnan hyppyjä yli 1 m on vain 2–4 (enintään 1,2 m) ja putousten ympärillä 0 vesiseinää.

@@ -2,6 +2,21 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-28 (sessio 58, jatko 2): kaukaiset vuoret usvassa, säädettävä etäisyys
+
+- **Vuoret näkyvät kaukaa usvaisina siluetteina:**
+  - usva lepää laakson pohjalla (noin 18 m korkeudelle asti), ja sen yläpuolelle nousevat massiivien seinät, laet ja vuorenhuiput häipyvät usvaan vain osittain etäisyyden mukaan (ennen sademetsän sumu peitti kaiken jo noin 200 metrissä);
+  - massiivin laelta näkee alapuolisen latvuston yli muille huipuille;
+  - näköetäisyyden takana näkyvät kevyet siluetit kaikista vuorista, karstimassiiveista ja kallioista (oletuksena 1,4 km asti).
+- **Uusi asetus "Kaukaiset vuoret"** (pois tai 200–2000 m) näköetäisyyden vieressä. Laatutasot: matala 800 m, keskitaso 1200 m, korkea 1400 m, ultra 2000 m. Vanha "Näköetäisyys" (192–512 m) säätää edelleen yksityiskohtaista maastoa, puita ja esineitä.
+- **Siluetit ovat kevyitä:**
+  - vain korkeuserojen kohdat piirretään, tasainen maa ei;
+  - kaukana harvempi verkko (8 / 16 / 32 m);
+  - usvaan kokonaan jäävät ruudut piilotetaan;
+  - ei varjoja;
+  - lasketaan vähitellen 3 ms:n paloissa.
+  Mitattu massiivin laelta 1,4 km:n asetuksella: noin 46 000 kolmiota (sademetsän maasto ja puut noin 6,4 miljoonaa).
+
 ## 2026-10-28 (sessio 58, jatko): karstivuoristo, liaanivariantit, kaatuvan puun osuma
 
 - **Karstivuoristo sademetsän sisälle** (korvaa session 57 jyrkänneportaat):
