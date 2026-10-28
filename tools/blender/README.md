@@ -95,9 +95,9 @@ koodilla tehtyjä puita (`src/models/trees.js`).
 
 ```
 blender -b --factory-startup --python tools/blender/leafgen.py -- /tmp/leaves
-python3 -I tools/blender/pack_leaves.py /tmp/leaves assets/models/trees/leaves.webp tools/blender/leaf_cells.json
+python3 -I tools/blender/pack_leaves.py /tmp/leaves assets/models/trees/leaves.webp assets/models/trees/leaf_cells.json
 python3 -I tools/blender/prep_textures.py --bark <ambientCG-kansio> assets/models/trees
-blender -b --factory-startup --python tools/blender/build_trees.py -- /tmp/trees_raw.glb tools/blender/leaf_cells.json
+blender -b --factory-startup --python tools/blender/build_trees.py -- /tmp/trees_raw.glb assets/models/trees/leaf_cells.json
 node tools/blender/optimize_glb.mjs /tmp/trees_raw.glb assets/models/trees/trees.glb
 ```
 

@@ -2,6 +2,14 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-28 (sessio 57)
+- **Latvusto suljetaan tiheämmillä lehvillä ja isommilla korteilla, ei lisäämällä puita tai kortteja.** Syy: lehtiatlaksen leveälehtiset lehvät peittivät vain noin viidenneksen kortistaan; kortin peitto nousee ilman lisäkolmioita. Puiden tiheyttä sademetsässä ei muutettu.
+- **Lähipuiden varjo piirretään kaukomallilla** (`world.js` varjopoolit, kerros 1 näkyy vain auringon varjokameroille). Syy: lähipuut piirrettiin kuvaan ja varjokarttaan tarkkana; varjossa ero ei näy, ja kolmioita säästyy puolet. Kaukomallissa on neljännes korteista 1,95-kertaisina, joten varjon peitto on sama.
+- **Kaukomalli:** vain runko ja pääoksat, joka toinen rengas, ei juurilohkoja. Syy: kaukaisia puita on näköetäisyydellä 4 noin 5–7 kertaa enemmän kuin lähellä olevia, joten kaukomallin keveys ratkaisee eniten.
+- **Kaatopinnan syykuvio tehdään varjostimessa** (`kitMaterials.js` `endGrain`), ei tekstuurina. Kannen UV kertoo paikan kannen tasossa (100 + säteen yksiköt), väri kertoo puulajin. Syy: ei uusia tekstuureja, ja kuvio sopii kaikkiin rungon kokoihin.
+- **Kannen kiertosuunta tarkistetaan kolmio kerrallaan** (`treeCut.js`). Syy: kannen pinta osoitti alaspäin, mikä ei näkynyt vanhoilla kaksipuolisilla materiaaleilla mutta katosi yksipuolisella kaarnalla.
+- **Liaanien lehdet ovat puiden lehtiatlaksesta** ja atlaksen solutiedot (`leaf_cells.json`) siirrettiin `assets/models/trees/`-kansioon, josta peli lukee ne. Syy: liaanit näyttävät samalta kuin puiden lehdet, eikä tarvita omaa tekstuuria.
+
 ## 2026-10-27 (sessio 56)
 - **Puut tehdään Blenderillä skripteistä** (`tools/blender/build_trees.py`), ei valmiita malleja ladaten. Syy: sama toistettava tapa kuin esineissä, ja puut sopivat pelin kaatoon, kantoihin, loviin ja liaaneihin (runko ensin, tarkka rengas kaatokorkeudella, kaatotiedot solmun extras-kentässä).
 - **Puut muunnetaan pelissä kitin muotoon** (`treeAssets.js`): kolmiot ilman indeksiä, ryhmä per materiaali (kaarna, lehdet), runkokolmiot ensin. Syy: kaato (`splitTree`), lovet ja hakattavat palat toimivat ilman erillistä polkua. `splitTree` säilyttää nyt materiaaliryhmät.

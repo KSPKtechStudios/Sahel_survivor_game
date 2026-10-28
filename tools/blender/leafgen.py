@@ -151,7 +151,8 @@ def acacia_sprig(seed, flowers=False):
     leaf2 = hexc(0x7d8a44)
 
     def bipinnate(p, d, L):
-        pairs = rng.randint(3, 6)
+        # Sessio 57: enemmän ja isompia lehdyköitä (kortti peittää noin puolet).
+        pairs = rng.randint(4, 7)
         rach = [p + d * (L * i / 6) for i in range(7)]
         s.tube(rach, 0.0012, 0.0006, hexc(0x5e5e34), n=3)
         side = V((-d.y, d.x, 0))
@@ -161,13 +162,13 @@ def acacia_sprig(seed, flowers=False):
             for sg in (-1, 1):
                 pd = (side * sg * 0.85 + d * 0.5).normalized()
                 pl = L * rng.uniform(0.35, 0.5)
-                for j in range(8):
-                    tt = (j + 0.5) / 8
+                for j in range(9):
+                    tt = (j + 0.5) / 9
                     lp = q + pd * (pl * tt) + V((0, 0, 0.002 * rng.random()))
                     ps = V((-pd.y, pd.x, 0))
                     for sg2 in (-1, 1):
                         c = mix(leaf, leaf2, rng.random() * 0.7 + 0.15 * tt)
-                        s.leaf(lp, (ps * sg2 + pd * 0.6).normalized(), 0.0065, 0.0021, ellipse, c, rng, fold=0, segs=2, edge=0.9, rib=0.05)
+                        s.leaf(lp, (ps * sg2 + pd * 0.6).normalized(), 0.0105, 0.0036, ellipse, c, rng, fold=0, segs=2, edge=0.9, rib=0.05)
 
     def twig(p, d, L, depth):
         pts = [p]
@@ -182,7 +183,7 @@ def acacia_sprig(seed, flowers=False):
             for sg in (-1, 1):
                 tip = p + (perp * sg * 0.9 + d * 0.3).normalized() * rng.uniform(0.015, 0.028)
                 s.tube([p, tip], 0.0016, 0.0003, thorn, n=3)
-            for k in range(rng.randint(2, 4)):
+            for k in range(rng.randint(3, 5)):
                 ang2 = rng.uniform(-1.6, 1.6)
                 ld = (Matrix.Rotation(ang2, 3, 'Z') @ (perp * 0.6 + d * 0.4)).normalized()
                 bipinnate(p + V((0, 0, 0.004 + 0.01 * depth)), ld, rng.uniform(0.05, 0.085))
@@ -198,9 +199,9 @@ def acacia_sprig(seed, flowers=False):
         s.tube(pts, 0.007 * (1.0 if depth == 0 else 0.6), 0.0025, twig_col)
 
     base = V((0, -0.5, 0))
-    for k in range(4):
-        a = math.pi / 2 + (k - 1.5) * 0.42 + rng.uniform(-0.08, 0.08)
-        twig(base + V((rng.uniform(-0.02, 0.02), 0, 0)), V((math.cos(a), math.sin(a), 0)), rng.uniform(0.62, 0.8), 0)
+    for k in range(5):
+        a = math.pi / 2 + (k - 2) * 0.36 + rng.uniform(-0.08, 0.08)
+        twig(base + V((rng.uniform(-0.02, 0.02), 0, 0)), V((math.cos(a), math.sin(a), 0)), rng.uniform(0.5, 0.62), 0)
     return s
 
 
@@ -266,42 +267,54 @@ def baobab_sprig(seed):
 
 
 def broad_sprig(seed, light=False):
-    """Sademetsän lehvä: muutama oksa, vuorottain isoja soikeita lehtiä tippukärjin."""
+    """Sademetsän lehvä: viuhkana viisi oksaa, joissa isoja soikeita lehtiä
+    tippukärjin kummallakin puolella. Sessio 57: tiheämpi (lehdet peittävät
+    noin puolet kortista), jotta latvusto sulkeutuu ilman lisäkortteja."""
     rng = random.Random(seed)
     s = Sprig()
     bark = hexc(0x5a4a38)
     col = hexc(0x23451a if not light else 0x3a6824)
     col2 = hexc(0x376024 if not light else 0x5a8a32)
-    for b_ in range(3):
+    for b_ in range(5):
         pts = []
         p = V((0, -0.5, 0))
-        d = V(((b_ - 1) * 0.55, 1, 0)).normalized()
+        d = V(((b_ - 2) * 0.42, 1, 0)).normalized()
         for i in range(9):
             pts.append(p.copy())
-            d = (Matrix.Rotation(rng.uniform(-0.12, 0.12) - (b_ - 1) * 0.04, 3, 'Z') @ d).normalized()
-            p = p + d * 0.095
+            d = (Matrix.Rotation(rng.uniform(-0.12, 0.12) - (b_ - 2) * 0.03, 3, 'Z') @ d).normalized()
+            p = p + d * 0.092
         s.tube(pts, 0.008, 0.003, bark)
         for i, q in enumerate(pts[1:]):
-            side = 1 if i % 2 else -1
-            dd = (Matrix.Rotation(side * rng.uniform(0.6, 1.0), 3, 'Z') @ d).normalized()
-            L = rng.uniform(0.17, 0.24) * (1 - 0.3 * i / 8)
-            s.tube([q, q + dd * 0.018 + V((0, 0, 0.005))], 0.0022, 0.0016, hexc(0x5a6a2a), n=3)
-            s.leaf(q + dd * 0.018 + V((0, 0, 0.006 + 0.002 * i + 0.01 * b_)), dd, L, L * 0.22, drip, col, rng, fold=0.12, droop=0.05, segs=12, tip_col=col2, rib=0.2)
-        for k in range(2):
-            dd = (Matrix.Rotation(rng.uniform(-0.5, 0.5), 3, 'Z') @ d).normalized()
-            s.leaf(pts[-1] + V((0, 0, 0.04)), dd, 0.12, 0.028, drip, col2, rng, fold=0.2, segs=10, rib=0.15)
+            for side in (-1, 1):
+                if i < 2 and rng.random() < 0.5:
+                    continue
+                dd = (Matrix.Rotation(side * rng.uniform(0.55, 1.05), 3, 'Z') @ d).normalized()
+                L = rng.uniform(0.17, 0.25) * (1 - 0.25 * i / 8)
+                s.tube([q, q + dd * 0.018 + V((0, 0, 0.005))], 0.0022, 0.0016, hexc(0x5a6a2a), n=3)
+                c = mix(col, col2, rng.random() * 0.6)
+                s.leaf(q + dd * 0.018 + V((0, 0, 0.006 + 0.002 * i + 0.008 * b_ + 0.003 * side)), dd, L, L * 0.3, drip, c, rng, fold=0.12, droop=0.05, segs=12, tip_col=col2, rib=0.2)
+        for k in range(3):
+            dd = (Matrix.Rotation(rng.uniform(-0.6, 0.6), 3, 'Z') @ d).normalized()
+            s.leaf(pts[-1] + V((0, 0, 0.05)), dd, 0.14, 0.04, drip, col2, rng, fold=0.2, segs=10, rib=0.15)
     return s
 
 
 def kapok_sprig(seed):
+    # Sessio 57: viisi oksaa ja leveämmät sormilehdykät (tiheämpi kortti).
     rng = random.Random(seed)
     s = Sprig()
-    tips = fan_twigs(s, rng, 4, 0.5, 0.55, hexc(0x6a6a5a), r0=0.01)
+    tips = fan_twigs(s, rng, 5, 0.6, 0.55, hexc(0x6a6a5a), r0=0.01)
     for t, d in tips:
-        for k in range(6):
-            a = math.atan2(d.y, d.x) + (k - 2.5) * 0.55 + rng.uniform(-0.1, 0.1)
+        for k in range(8):
+            a = math.atan2(d.y, d.x) + (k - 3.5) * 0.45 + rng.uniform(-0.1, 0.1)
             dd = V((math.cos(a), math.sin(a), 0))
-            palmate(s, rng, t, dd, rng.uniform(0.08, 0.14), rng.choice((5, 7, 7)), 0.12, 0.02, hexc(0x325a1c), hexc(0x4e782a), lance)
+            palmate(s, rng, t, dd, rng.uniform(0.06, 0.14), rng.choice((5, 7, 7)), 0.13, 0.03, hexc(0x325a1c), hexc(0x4e782a), lance)
+        # Lehtiä myös oksan puolivälissä, ettei viuhkan keskelle jää aukkoa.
+        m = V((0, -0.5, 0)).lerp(t, 0.5)
+        for k in range(4):
+            a = math.atan2(d.y, d.x) + (k - 1.5) * 0.9 + rng.uniform(-0.15, 0.15)
+            dd = V((math.cos(a), math.sin(a), 0))
+            palmate(s, rng, m + V((0, 0, -0.01)), dd, rng.uniform(0.04, 0.08), 5, 0.11, 0.028, hexc(0x2e5418), hexc(0x46702a), lance)
     return s
 
 

@@ -133,17 +133,54 @@ normal = normalize( vNormal );`);
 }
 // Kaarnan verteksiväri on valkoinen; lovet ja kuoriminen (treeCut.js,
 // breakables.js) värjäävät sen tuoreen puun väriseksi, joka näkyy tekstuurin päällä.
+// Sessio 57: kaatopinnan (kannon ja rungon pään) syykuvio. Kannen UV on
+// 100 + paikka kannen tasossa säteen yksiköissä (treeCut.js), väri = puulaji.
+const END_GRAIN = `
+vec3 endGrain( vec2 q, vec3 wood ) {
+  float r = length( q );
+  float a = atan( q.y, q.x );
+  float rr = r * ( 1.0 + 0.035 * sin( a * 3.0 + 1.7 ) + 0.02 * sin( a * 7.0 + r * 9.0 ) + 0.012 * sin( a * 13.0 ) );
+  float rings = pow( 0.5 + 0.5 * cos( rr * 6.2832 * 17.0 ), 5.0 );
+  vec3 sap = wood * 1.1;
+  vec3 heart = wood * vec3( 0.66, 0.52, 0.42 );
+  vec3 c = mix( heart, sap, smoothstep( 0.48, 0.7, rr + 0.03 * sin( a * 5.0 + 2.0 ) ) );
+  c *= 1.0 - 0.24 * rings;
+  c *= mix( 0.5, 1.0, smoothstep( 0.015, 0.06, r ) );
+  float ck = pow( max( 0.0, cos( a * 3.0 + 0.6 + 1.2 * sin( r * 5.0 ) ) ), 900.0 ) * smoothstep( 0.1, 0.35, r ) * ( 1.0 - smoothstep( 0.55, 0.75, r ) );
+  c *= 1.0 - 0.55 * ck;
+  c *= 0.92 + 0.08 * sin( ( q.x * 0.8 + q.y * 0.6 ) * 46.0 + sin( q.y * 9.0 ) * 2.0 );
+  c = mix( c, wood * vec3( 0.34, 0.27, 0.22 ), smoothstep( 0.9, 0.97, r ) );
+  return c;
+}
+`;
+
 function freshWood(material) {
   const prev = material.onBeforeCompile;
   material.onBeforeCompile = (shader, renderer) => {
     if (prev) prev(shader, renderer);
-    shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `#if defined( USE_COLOR )
+    shader.fragmentShader = shader.fragmentShader
+      .replace('void main() {', `${END_GRAIN}\nvoid main() {`)
+      // Kannen pinnalla ei kaarnan kohoumia.
+      .replace('#include <normal_fragment_maps>', `#if defined( USE_MAP )
+  if ( vMapUv.x < 50.0 ) {
+#endif
+#include <normal_fragment_maps>
+#if defined( USE_MAP )
+  }
+#endif`)
+      .replace('#include <color_fragment>', `#if defined( USE_COLOR )
   float freshK = clamp( ( 2.97 - ( vColor.r + vColor.g + vColor.b ) ) * 6.0, 0.0, 1.0 );
-  diffuseColor.rgb = mix( diffuseColor.rgb, vColor.rgb, freshK );
+  vec3 freshC = vColor.rgb;
+#if defined( USE_MAP )
+  // Lovessa syyt pitkittäin (kuitujuovat).
+  freshC *= 0.86 + 0.14 * sin( vMapUv.x * 230.0 + sin( vMapUv.y * 9.0 ) * 3.0 );
+  if ( vMapUv.x > 50.0 ) { freshC = endGrain( vMapUv - 100.0, vColor.rgb ); freshK = 1.0; }
+#endif
+  diffuseColor.rgb = mix( diffuseColor.rgb, freshC, freshK );
 #endif`);
   };
   const prevKey = material.customProgramCacheKey;
-  material.customProgramCacheKey = () => `${prevKey ? prevKey.call(material) : ''}-fresh`;
+  material.customProgramCacheKey = () => `${prevKey ? prevKey.call(material) : ''}-fresh2`;
   return material;
 }
 function treeBark(key, tint = 0xffffff) {

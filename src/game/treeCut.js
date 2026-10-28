@@ -6,6 +6,12 @@ import { WHITE_UV } from '../models/util.js';
 
 const INNER = new THREE.Color(0xd2ad78); // tuore puu loven kohdalla
 const RING = new THREE.Color(0xb88f5c);
+// Sessio 57: puulajin puuaineen väri kaatopinnalle (Blender-puut, syykuvio
+// varjostimessa: kitMaterials.js endGrain).
+const WOOD = {
+  acacia: 0xc8955e, shea: 0xc9a272, baobab: 0xd9c9a3, canopy: 0xd4b183,
+  jungle: 0xe2d2ac, emergent: 0xc89a66, sapling: 0xd8c39a,
+};
 
 export function trunkAxis(meta) {
   const base = new THREE.Vector3().fromArray(meta.base);
@@ -202,28 +208,54 @@ export function splitTree(geo) {
       const qa = Math.atan2(q.clone().sub(center).dot(w), q.clone().sub(center).dot(u));
       return pa - qa;
     });
-    const cap = (side, up) => {
+    // Sessio 57: Blender-puiden kansi on hakattu, epätasainen pinta (välirengas
+    // hieman koholla ja kuopalla), ja sen UV kertoo paikan kannen tasossa,
+    // josta varjostin piirtää vuosirenkaat (kitMaterials.js endGrain).
+    const grain = !!(geo.userData.kit && geo.userData.kit.some((m) => m.startsWith('treeBark')));
+    const wood = new THREE.Color(WOOD[meta.kind] ?? 0xd2ad78);
+    let R = 0;
+    for (const p of ring) R += p.distanceTo(center);
+    R = Math.max(1e-3, R / ring.length);
+    const mid = ring.map((p, i) => center.clone().lerp(p, 0.55).addScaledVector(ax.axis, R * (0.03 * Math.sin(i * 2.7 + 1.3) + 0.02 * Math.sin(i * 5.1))));
+    const peak = center.clone().addScaledVector(ax.axis, R * 0.02);
+    const uvOf = (p) => {
+      if (!grain) return WHITE_UV;
+      _v.subVectors(p, center);
+      return [100 + _v.dot(u) / R, 100 + _v.dot(w) / R];
+    };
+    // Kolmio kiertosuunnalla, jonka normaali osoittaa suuntaan sgn * akseli
+    // (kanto ylös, kaatunut osa alas). Sessio 57: ennen kannen kiertosuunta oli
+    // kaksipuolisen materiaalin varassa; kaarnamateriaali on yksipuolinen.
+    const tri = (tgt, A, B, C, sgn, col) => {
+      _n.subVectors(C, B).cross(_v.subVectors(A, B));
+      const t = _n.dot(ax.axis) * sgn >= 0 ? [A, B, C] : [A, C, B];
+      // Syykuvioidussa kannessa pehmeä normaali (akselin suunta), muuten tahkon.
+      if (grain) _n.copy(ax.axis).multiplyScalar(sgn);
+      else _n.subVectors(t[2], t[1]).cross(_v.subVectors(t[0], t[1])).normalize();
+      t.forEach((p) => {
+        tgt.p.push(p.x, p.y, p.z);
+        tgt.n.push(_n.x, _n.y, _n.z);
+        const c = col || (p === center ? RING : INNER);
+        tgt.c.push(c.r, c.g, c.b);
+        if (uvA) { const uv = uvOf(p); tgt.u.push(uv[0], uv[1]); }
+        if (aoA) tgt.a.push(1);
+      });
+    };
+    const cap = (side, sgn) => {
       const tgt = into(side, trunkMat);
       for (let i = 0; i < ring.length; i++) {
-        const a = ring[i];
-        const b = ring[(i + 1) % ring.length];
-        const tri = up ? [center, a, b] : [center, b, a];
-        _n.subVectors(tri[2], tri[1]).cross(_v.subVectors(tri[0], tri[1])).normalize();
-        tri.forEach((p, k) => {
-          tgt.p.push(p.x, p.y, p.z);
-          tgt.n.push(_n.x, _n.y, _n.z);
-          const c = k === 0 ? RING : INNER;
-          tgt.c.push(c.r, c.g, c.b);
-          if (uvA) tgt.u.push(WHITE_UV[0], WHITE_UV[1]);
-          if (aoA) tgt.a.push(1);
-        });
+        const j = (i + 1) % ring.length;
+        if (!grain) {
+          tri(tgt, center, ring[i], ring[j], sgn, null);
+          continue;
+        }
+        tri(tgt, peak, mid[i], mid[j], sgn, wood);
+        tri(tgt, mid[i], ring[i], ring[j], sgn, wood);
+        tri(tgt, mid[i], ring[j], mid[j], sgn, wood);
       }
     };
-    // Tarkista kiertosuunta: kannon kannen normaalin pitää osoittaa akselin suuntaan.
-    _n.subVectors(ring[1], ring[0]).cross(_v.subVectors(center, ring[0]));
-    const upFirst = _n.dot(ax.axis) < 0;
-    cap(stump, upFirst);
-    cap(top, !upFirst);
+    cap(stump, 1);
+    cap(top, -1);
   }
 
   const build = (side, offset) => {

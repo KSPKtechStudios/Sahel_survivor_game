@@ -128,6 +128,9 @@ export class Environment {
     sh.bias = -0.0003;
     sh.normalBias = 0.05;
     sh.radius = 2;
+    // Sessio 57: kerros 1 = vain varjoon piirrettävät kevyet puiden varjokopiot (world.js).
+    sh.camera.layers.enable(1);
+    for (let i = 0; sh.getCamera && sh.getCamera(i); i++) sh.getCamera(i).layers.enable(1);
     scene.add(this.sun);
 
     this.hemi = new THREE.HemisphereLight(0xffffff, 0x886644, 1);

@@ -124,15 +124,19 @@ class Tree:
         latvus), 'up' = ylöspäin kallistuvat (litteä sademetsän latvus)."""
         for k in range(n):
             p, d, r = b.at(lerp(t0, t1, (k + self.u(0.0, 1.0)) / n))
+            m = mode
+            if mode == 'mix':
+                # Sessio 57: osa korteista vaakaan, jotta latvusto peittää alhaalta katsottuna.
+                m = 'up' if self.rng.random() < 0.6 else 'out'
             hz = V((d.x, d.y, 0))
             hz = hz.normalized() if hz.length > 1e-3 else V((1, 0, 0))
-            if mode == 'flat':
+            if m == 'flat':
                 tilt = self.u(0.0, 0.8)
                 az = self.u(0, 2 * math.pi)
                 nrm = (UP * math.cos(tilt) + V((math.cos(az), math.sin(az), 0)) * math.sin(tilt)).normalized()
                 up = (hz + V((self.u(-0.4, 0.4), self.u(-0.4, 0.4), 0))).normalized()
                 p = p + V((0, 0, self.u(-0.1, 0.18)))
-            elif mode == 'up':
+            elif m == 'up':
                 nrm = (UP * 1.3 + (p - C).normalized() * 0.5 + V((self.u(-0.4, 0.4), self.u(-0.4, 0.4), 0))).normalized()
                 up = (d + hz).normalized()
             else:
@@ -168,6 +172,11 @@ def trunk_line(tree, base, top, r0, r1, cutZ, flare=1.4, rings=14, lobes=None, f
         nb = 8
         for k in range(nb + 1):
             marks[tz(root_top * (k / nb) ** 1.5)] = 2 if k == nb else 1
+    # Sessio 57: tiheämmät renkaat kaatokohdan ympärillä (lovi saa muodon).
+    for off in (-0.45, -0.3, -0.17, -0.08, 0.08, 0.17, 0.3, 0.45):
+        z = cutZ + off * min(1.0, r0 / 0.3) ** 0.5
+        if base.z < z < top.z - 0.2 and z > root_top + 0.03:
+            marks.setdefault(tz(z), 1)
     step = 1 / rings
     for i in range(1, rings + 1):
         t = i / rings
@@ -217,7 +226,7 @@ def acacia(seed):
         for b2 in l2:
             l3 = T.children(b2, T.rng.randint(3, 4), (0.3, 1.0), (0.5, 1.0), (0.6, 1.0), 0.55, 3, 3, 0.15, steer, tip_r=0.4)
             for b3 in l3:
-                T.foliage(b3, 5, 0.3, 1.0, (1.2, 1.8), ('acacia_a', 'acacia_b'), 'flat')
+                T.foliage(b3, 5, 0.3, 1.0, (1.3, 1.9), ('acacia_a', 'acacia_b'), 'flat')
             T.foliage(b2, 3, 0.6, 1.0, (1.1, 1.6), ('acacia_a', 'acacia_b'), 'flat')
             # Latvuksen reunalle pystympiä kortteja, ettei latvus näytä sivulta ohuelta.
             p, d, r = b2.at(1.0)
@@ -285,15 +294,15 @@ def rainforest(seed, kind):
     T = Tree(seed)
     if kind == 'canopy':
         Ht, r0, r1, H = T.u(6.4, 8.0), 0.32, 0.2, 0
-        nl, lenl, cells, cut = (5, 7), (2.8, 3.9), ('broad_a', 'broad_b'), 0.8
+        nl, lenl, cells, cut = (5, 7), (3.9, 5.2), ('broad_a', 'broad_b'), 0.8
         lobes, bz = (T.rng.randint(4, 5), (0.45, 0.75), (0.5, 0.72), (0.16, 0.22)), -0.6
     elif kind == 'jungle':
         Ht, r0, r1 = T.u(8.8, 10.2), 0.55, 0.36
-        nl, lenl, cells, cut = (6, 8), (3.4, 4.8), ('kapok',), 1.9
+        nl, lenl, cells, cut = (6, 8), (4.4, 6.0), ('kapok',), 1.9
         lobes, bz = (T.rng.randint(5, 6), (1.1, 1.7), (1.2, 1.75), (0.11, 0.15)), -0.8
     else:  # emergent
         Ht, r0, r1 = T.u(15.0, 18.5), 0.85, 0.48
-        nl, lenl, cells, cut = (7, 9), (5.0, 7.2), ('broad_a', 'broad_b'), 2.6
+        nl, lenl, cells, cut = (7, 9), (6.8, 9.2), ('broad_a', 'broad_b'), 2.6
         lobes, bz = (T.rng.randint(6, 7), (1.6, 2.4), (1.7, 2.4), (0.085, 0.11)), -1.0
     base = V((0, 0, bz))
     top = V((T.u(-0.15, 0.15), T.u(-0.15, 0.15), Ht))
@@ -314,10 +323,10 @@ def rainforest(seed, kind):
     limbs.append(T.grow(top - V((0, 0, 0.3)), V((T.u(-0.15, 0.15), T.u(-0.15, 0.15), 1)), lenl[0] * 0.7, r1 * 0.7, r1 * 0.25, 1, 5, 0.08, steer))
     for lb in limbs:
         for b2 in T.children(lb, T.rng.randint(3, 4), (0.4, 1.0), (0.5, 0.9), (lenl[0] * 0.4, lenl[1] * 0.45), 0.55, 2, 4, 0.12, steer, tip_r=0.45):
-            sz = {'canopy': (1.4, 2.0), 'jungle': (1.8, 2.5), 'emergent': (2.2, 3.0)}[kind]
-            mode = 'up' if kind == 'jungle' else 'out'
+            sz = {'canopy': (2.1, 2.9), 'jungle': (2.3, 3.1), 'emergent': (3.0, 3.9)}[kind]
+            mode = 'up' if kind == 'jungle' else 'mix'
             for b3 in T.children(b2, T.rng.randint(2, 3), (0.4, 1.0), (0.5, 1.0), (0.6, 1.1), 0.5, 3, 3, 0.14, steer, tip_r=0.4):
-                T.foliage(b3, 6, 0.25, 1.0, sz, cells, mode, C)
+                T.foliage(b3, 7, 0.2, 1.0, sz, cells, mode, C)
             T.foliage(b2, 3, 0.45, 1.0, sz, cells, mode, C)
             if T.rng.random() < 0.35:
                 p, d, r = b2.at(T.u(0.3, 0.8))
@@ -410,6 +419,12 @@ def build_branch(M, T, b, sides, far):
     """Putki kaarnatekstuurilla (oksat). Runko: build_trunk."""
     if b.trunk:
         return build_trunk(M, T, b, sides, far)
+    if (far or b.level >= 2) and len(b.pts) > 3:
+        # Joka toinen rengas (ohuet oksat ja kaukomalli).
+        idx = list(range(0, len(b.pts), 2))
+        if idx[-1] != len(b.pts) - 1:
+            idx.append(len(b.pts) - 1)
+        b = Branch([b.pts[i] for i in idx], [b.radii[i] for i in idx], b.level, b.trunk)
     fr = frames(b.pts)
     rings = []
     acc = 0.0
@@ -484,10 +499,16 @@ def build_trunk(M, T, b, sides, far):
     tavallinen putki sen yläpuolella; osat ommellaan yhteen kolmioilla.
     Kaarnan U kulkee lohkojen kyljillä ylös ja alas (peilautuu harjalla, ei
     venymistä), V mitataan tyvessä pintaa pitkin ylhäältä alas."""
-    lobes = getattr(T, 'lobes', [])
+    lobes = [] if far else getattr(T, 'lobes', [])
     fl = getattr(b, 'flare', 1.0)
     root_top = getattr(b, 'root_top', 0.0)
     TAU = 2 * math.pi
+    if far:
+        n = len(b.pts)
+        idx = [i for i in range(n) if i in (0, n - 1) or i % 3 == 0]
+        b2 = Branch([b.pts[i] for i in idx], [b.radii[i] for i in idx], 0, True)
+        b2.flare, b2.flute, b2.seed = fl, getattr(b, 'flute', 0.0), b.seed
+        b = b2
     fr = frames(b.pts)
     sparse = [TAU * k / sides for k in range(sides + 1)]
     dense = lobe_angles(lobes, sides, far) if lobes else sparse
@@ -620,15 +641,18 @@ def build_tree(name, idx, fn, bark_key, cells, mats):
     for lod in ('near', 'far'):
         far = lod == 'far'
         M = Mesh()
+        # Sessio 57: kevyemmät mallit (kaukaisia puita on moninkertaisesti
+        # lähellä oleviin nähden): kaukana vain runko ja pääoksat ja harvemmat,
+        # isommat kortit; lähellä pienimmät oksat kolmi- ja nelikulmaisina.
         for b in T.branches:
-            if far and b.level >= 3:
+            if far and b.level >= 2:
                 continue
             if b.trunk:
-                sides = 8 if far else (18 if b.radii[0] > 0.5 else 14)
+                sides = 6 if far else (14 if b.radii[0] > 0.5 else 12)
             else:
-                sides = [12, 7, 5, 4][min(3, b.level)] if not far else [6, 4, 3, 3][min(3, b.level)]
+                sides = [12, 7, 4, 3][min(3, b.level)] if not far else [6, 4, 3, 3][min(3, b.level)]
             build_branch(M, T, b, sides, far)
-        build_leaves(M, T, cells, far, keep=3 if far else 1, grow=1.6 if far else 1.0)
+        build_leaves(M, T, cells, far, keep=4 if far else 1, grow=1.95 if far else 1.0)
         ob = make_object(f'{name}_{idx}_{lod}', M, bark_mat, leaf_mat, tree_meta if not far else None,
                          [game(p) for p in T.vines] if not far else None)
         objs.append(ob)

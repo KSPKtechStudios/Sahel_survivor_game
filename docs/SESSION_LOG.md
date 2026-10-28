@@ -2,6 +2,21 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-28 (sessio 57)
+**Tehtiin**
+- Käyttäjän palaute (kuvat sademetsästä): kaatojälki pelkkää valkoista, liaanit huonoja malleja, latvuston läpi tulee liikaa valoa (korjattava ilman suurta fps-pudotusta), viidakkoon kallioita, jyrkänteitä ja ehkä vesiputouksia (jokigenerointi ei saa hajota); lisäksi savannin akasioiden lehvästöt liian harvoja.
+- Lehtiatlas tiheämmäksi (`leafgen.py`: akasia, leveälehtiset, kapokki), sademetsäpuiden latvukset leveämmiksi ja korttien suunta osin vaakaan (`build_trees.py` `foliage(mode='mix')`).
+- Kevyemmät mallit (`build_trees.py`): kaukomalli vain runko ja pääoksat; pienet oksat harvemmilla renkailla. Varjokopiot (`world.js`, `instancePool.js` `layer`, `environment.js`).
+- Kaatojälki: `treeCut.js` (kansi, kiertosuunta, välirengas, UV), `kitMaterials.js` (`endGrain`, kuitujuovat lovessa), `build_trees.py` (renkaat kaatokohdan ympärillä).
+- Liaanit: `vines.js` (uusi piirto), `treeAssets.js` (`vineSpecs`, `leafCell`).
+- Testattiin: esikatselu kannoista (`shots/s56/trees.html?cut=1`), sademetsän kuvat pelissä, kolmiomittaus (scratchpad `s56/perf.mjs`).
+
+**Kesken / tiedossa**
+- Jyrkänteet ja vesiputoukset (seuraavaksi).
+
+**Seuraavaksi**
+- Jyrkänteet sademetsään jokiverkkoa rikkomatta, vesiputoukset erillisinä lähteinä.
+
 ## 2026-10-27 (sessio 56)
 **Tehtiin**
 - Käyttäjän pyynnöt:

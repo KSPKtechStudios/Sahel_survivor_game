@@ -1,5 +1,5 @@
 # Sessio 56: lehtiatlaksen kokoaminen leafgen.py:n ruuduista.
-# Ajo: python3 -I tools/blender/pack_leaves.py <ruutukansio> assets/models/trees/leaves.webp tools/blender/leaf_cells.json
+# Ajo: python3 -I tools/blender/pack_leaves.py <ruutukansio> assets/models/trees/leaves.webp assets/models/trees/leaf_cells.json
 # Jokaisesta ruudusta mitataan lehvän alue (alfa > 0); puiden kortit käyttävät
 # vain sitä (ei tyhjää tilaa). UV:t Blenderin tavalla (v = 0 alhaalla).
 import json

@@ -8,10 +8,11 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from '../../vendor/meshopt/meshopt_decoder.module.js';
-import { lianaSpec } from './ancient.js';
 import { mulberry32 } from '../noise.js';
 
 const GLB = 'assets/models/trees/trees.glb';
+const CELLS = 'assets/models/trees/leaf_cells.json';
+let cells = {};
 // Lehtien keskiväri (lineaarinen) sirpaleille ja muille värejä käyttäville.
 const LEAF_AVG = [0.11, 0.18, 0.05];
 let trees = {};
@@ -108,16 +109,51 @@ function convert(node) {
   if (ex.vines) {
     const pts = typeof ex.vines === 'string' ? JSON.parse(ex.vines) : ex.vines;
     const rng = mulberry32(pts.length * 977 + Math.round(geo.boundingSphere.radius * 100));
-    geo.userData.vines = pts.map((p) => lianaSpec(new THREE.Vector3(p[0], p[1], p[2]), rng));
+    geo.userData.vines = vineSpecs(pts, rng);
   }
   return geo;
+}
+
+// Sessio 57: liaanit kiinnityskohdista (render/vines.js). Osa kaartuu kahden
+// oksan välillä (loop), useimmat laskeutuvat vinosti maahan, osa riippuu
+// vapaana mutta ei maahan asti (ennen moni riippui suorana pystyviivana).
+function vineSpecs(pts, rng) {
+  const out = [];
+  pts.forEach((p, i) => {
+    const top = new THREE.Vector3(p[0], p[1], p[2]);
+    const u = rng();
+    if (u < 0.28 && pts.length > 1) {
+      const q = pts[(i + 1 + Math.floor(rng() * (pts.length - 1))) % pts.length];
+      const end = new THREE.Vector3(q[0], q[1], q[2]);
+      const d = top.distanceTo(end);
+      if (d > 1.5 && d < 10) {
+        out.push({ top: top.toArray(), end: end.toArray(), onTree: true, len: d * (1.15 + rng() * 0.3), r: 0.035 + rng() * 0.03 });
+        return;
+      }
+    }
+    if (u < 0.8) {
+      const a = rng() * Math.PI * 2, drift = 1.5 + rng() * 3.5;
+      const end = [top.x + Math.cos(a) * drift, -0.05, top.z + Math.sin(a) * drift];
+      const d = Math.hypot(end[0] - top.x, end[1] - top.y, end[2] - top.z);
+      out.push({ top: top.toArray(), end, len: d * (1.02 + rng() * 0.08), r: 0.04 + rng() * 0.035 });
+      return;
+    }
+    out.push({ top: top.toArray(), end: null, len: Math.max(1.5, Math.min(top.y - 1.2, 2.5 + rng() * 4)), r: 0.03 + rng() * 0.02 });
+  });
+  return out;
+}
+
+// Lehtiatlaksen solu: { uv: [u0, v0, u1, v1] (Blenderin tapa), aspect } tai null.
+export function leafCell(name) {
+  return cells[name] || null;
 }
 
 export async function loadTreeAssets() {
   try {
     const loader = new GLTFLoader();
     loader.setMeshoptDecoder(MeshoptDecoder);
-    const gltf = await loader.loadAsync(GLB);
+    const [gltf, cj] = await Promise.all([loader.loadAsync(GLB), fetch(CELLS).then((r) => r.json()).catch(() => ({}))]);
+    cells = cj;
     const out = {};
     for (const node of gltf.scene.children) out[node.name] = convert(node);
     trees = out;

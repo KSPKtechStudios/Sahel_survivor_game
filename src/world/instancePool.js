@@ -11,12 +11,15 @@ import * as THREE from 'three';
 const _arr = new Float32Array(16);
 
 export class InstancePool {
-  constructor(scene, geometry, material, { capacity = 256, castShadow = false, receiveShadow = true } = {}) {
+  // layer: kerros, jolla verkko näkyy (sessio 57: 1 = vain varjokamerat, ks.
+  // world.js varjokopiot).
+  constructor(scene, geometry, material, { capacity = 256, castShadow = false, receiveShadow = true, layer = 0 } = {}) {
     this.scene = scene;
     this.geometry = geometry;
     this.material = material;
     this.castShadow = castShadow;
     this.receiveShadow = receiveShadow;
+    this.layer = layer;
     this.owners = [];
     this.used = 0;
     this.mesh = this._createMesh(capacity);
@@ -29,6 +32,7 @@ export class InstancePool {
     mesh.frustumCulled = false;
     mesh.castShadow = this.castShadow;
     mesh.receiveShadow = this.receiveShadow;
+    if (this.layer) mesh.layers.set(this.layer);
     this.scene.add(mesh);
     return mesh;
   }
