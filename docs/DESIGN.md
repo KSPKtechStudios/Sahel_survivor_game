@@ -236,6 +236,14 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
   - **Vuoret saisivat erottua jo kauempaa,** mutta usvaisina, kaukaisina hahmoina.
   - **Näköetäisyys (render distance) säädettäväksi asetuksista,** ja se on toteutettava niin, ettei mitään turhaa piirretä eikä fps putoa pohjamutiin.
   - **Vuorten huippujen lähellä aivan kevyt höyry tai pieni usva,** pieni pilviverho, joka leijailee ja tuo huipuille suuruuden ja korkeuden tunnetta ("oho"-elämys yksinäiselle viidakontutkijalle). Ei överiksi.
+- **Jatkopalaute (kuvat, session 58 jatko 3):**
+  - Sademetsäpuu ja sen oksisto näyttävät tosi typeriltä ja epäluonnollisilta, latvus on tosi harva.
+  - Kannot (puun tyvi ja juuret) eivät näytä vieläkään oikeilta.
+  - "Ikivanhat juuret" nimetään uudelleen: **"Muinainen juurakko"**. Sen tekstuurien ja 3D-mallin pitää olla paljon parempia.
+  - Sammaloituneen rungon mallia parannettava huomattavasti.
+  - Tiheikköpensaan lehtien vieressä näkyy edelleen mustia pikseleitä, kun katsoo tarkasti.
+  - Pilviverho ei toimi, kun pelaaja on sen tasolla: oikeasti pilven sisällä ollessa pilveä ei näe, vain pientä usvaa näkökentässä. Usva ei muutenkaan vakuuta realistisuudella; sitä voi twiikata.
+  - **Aurinkoon katsominen sokaisee (vanha ongelma):** halutaan, että ensimmäiset pari sekuntia aurinkoon katsoessa on mahdottoman kirkasta, mutta sitten silmä tottuu ja alkaa nähdä.
 
 ## Sessio 56 (käyttäjän kertoma, 2026-10-27): kaikki esineet paremmiksi, puut
 - **Paranna kaikki esinemallit**, paitsi soihtu, nuija ja muut käyttäjän valmiit mallit.

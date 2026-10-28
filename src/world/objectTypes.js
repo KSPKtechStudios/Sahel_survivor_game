@@ -415,7 +415,7 @@ export const OBJECT_TYPES = {
     scale: [0.8, 1.3], maxSlope: 1, collider: 0, hit: null, nearWater: true, decorDist: 44,
   },
   ancientRoots: {
-    name: 'Ikivanhat juuret', model: 'ancientRoots', kind: 'static', material: 'solid', surface: 'wood', castShadow: true,
+    name: 'Muinainen juurakko', model: 'ancientRoots', kind: 'static', material: 'solid', surface: 'wood', castShadow: true,
     density: { rainforest: 3.5, oasis: 0.6, mare: 0.4, woodland: 0.3 },
     scale: [0.8, 1.4], maxSlope: 0.5, collider: 0, hit: { y: 0.3, r: 1.3 }, drawDist: 3,
   },

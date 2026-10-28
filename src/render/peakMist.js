@@ -71,8 +71,10 @@ export class PeakMist {
       this.work[J.i] = k <= 0 ? 0 : Math.min(1, k / 16);
     }
     if (J.i < N * N) return;
-    // Laajennus yhdellä ruudulla: verho kietoutuu huippujen ympärille.
+    // Laajennus yhdellä ruudulla (verho kietoutuu huippujen ympärille) ja
+    // pehmennys, ettei kartan ruudukko näy verhon reunoissa.
     let any = false;
+    const dil = new Float32Array(N * N);
     for (let j = 0; j < N; j++) {
       for (let i = 0; i < N; i++) {
         let m = 0;
@@ -84,6 +86,21 @@ export class PeakMist {
             if (w > m) m = w;
           }
         }
+        dil[j * N + i] = m;
+      }
+    }
+    for (let j = 0; j < N; j++) {
+      for (let i = 0; i < N; i++) {
+        let sum = 0, ws = 0;
+        for (let dj = -2; dj <= 2; dj++) {
+          for (let di = -2; di <= 2; di++) {
+            const ii = i + di, jj = j + dj;
+            if (ii < 0 || jj < 0 || ii >= N || jj >= N) continue;
+            const w = 1 / (1 + di * di + dj * dj);
+            sum += dil[jj * N + ii] * w; ws += w;
+          }
+        }
+        const m = Math.min(1, (sum / ws) * 1.3);
         this.data[j * N + i] = Math.round(m * 255);
         if (m > 0.05) any = true;
       }

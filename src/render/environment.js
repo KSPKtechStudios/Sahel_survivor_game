@@ -152,6 +152,9 @@ export class Environment {
     this.w = { ...WEATHER.clear, tint: new THREE.Color(WEATHER.clear.tint) };
     this.humid = 0;
     this.humidTarget = 0;
+    // Sessio 58: 1 = latvuston alla, 0 = latvuston yläpuolella (karstimassiivin
+    // laella: avoin taivas, ei vihertävää usvaa eikä himmeää aurinkoa). main.js.
+    this.canopy = 1;
     this.wet = 0;      // pintojen märkyys 0..1 (materials.js: wetUniforms)
     this.puddleWet = 0; // sadeveden lammikot 0..1 (kuivuvat hitaasti)
     this.heat = 0;     // kuumuusväreily 0..1 (post.js): aavikko, selkeä keskipäivä
@@ -495,24 +498,25 @@ export class Environment {
 
     // Sumu
     const fogC = tinted(lerpC('fog', this.scene.fog.color));
+    const hc = this.humid * this.canopy;
     // Sessio 38: latvuston alla usva on päivällä tummempaa (ennen kirkas usva
     // ylivalotti sademetsän).
-    if (this.humid > 0.001) {
+    if (hc > 0.001) {
       // Sessio 47: usva sävyttyy latvuston vihertävään hajavaloon.
-      fogC.lerp(_c2.copy(CANOPY_GREEN).multiplyScalar(dayLum), this.humidFogTint * this.humid * this.daylight);
-      fogC.multiplyScalar(1 - this.humidFogDark * this.humid * this.daylight);
+      fogC.lerp(_c2.copy(CANOPY_GREEN).multiplyScalar(dayLum), this.humidFogTint * hc * this.daylight);
+      fogC.multiplyScalar(1 - this.humidFogDark * hc * this.daylight);
     }
     u.uFogColor.value.copy(fogC);
     // Selkeällä/pilvisellä säällä näkyvyys = näköetäisyys, usvassa ja myrskyssä sään oma.
     let vis = Math.min(w.vis >= 290 ? this.maxVis : w.vis, this.maxVis);
     // Sademetsässä näkyvyys on lyhyt (tiheä kasvillisuus ja kosteus).
     // Sessio 26: selkeällä säällä sademetsässä vähemmän usvaa (ennen 95 m).
-    if (this.humid > 0.001) vis = lerp(vis, Math.min(vis, 200), this.humid * 0.8);
+    if (hc > 0.001) vis = lerp(vis, Math.min(vis, 200), hc * 0.8);
     this.scene.fog.far = vis;
     // Sessio 28: selkeällä säällä sumu alkaa vasta noin kolmanneksen päästä
     // (käyttäjä: hieman vähemmän sumua, kauas ei silti näe täysin selkeästi).
     const clearK = Math.min(1, Math.max(0, (w.vis - 200) / 100)) * (1 - 0.6 * this.humid);
-    this.scene.fog.near = vis < 100 ? 0 : vis * (0.12 + 0.2 * clearK) * (1 - this.humidFogNear * this.humid * this.daylight);
+    this.scene.fog.near = vis < 100 ? 0 : vis * (0.12 + 0.2 * clearK) * (1 - this.humidFogNear * hc * this.daylight);
 
     // Valot: päivällä aurinko, yöllä kuu.
     const sunUp = this.sunDir.y > 0;
@@ -529,8 +533,8 @@ export class Environment {
     // Latvusto varjostaa sademetsässä.
     // Sessio 47: päivällä himmennys pienempi ja sävy lämpimämpi: auringon
     // läikät ja valokeilat erottuvat varjosta (yö ennallaan).
-    intensity *= 1 - lerp(0.45, this.humidSunDim, this.daylight) * this.humid;
-    if (sunUp && this.humid > 0.001) this.sun.color.lerp(_warmSun, this.humidSunWarm * this.humid * this.daylight);
+    intensity *= 1 - lerp(0.45, this.humidSunDim, this.daylight) * hc;
+    if (sunUp && hc > 0.001) this.sun.color.lerp(_warmSun, this.humidSunWarm * hc * this.daylight);
     this.sun.intensity = intensity;
     this.lightColor.copy(this.sun.color);
     this.lightIntensity = intensity;
@@ -549,9 +553,9 @@ export class Environment {
     // Sessio 38: sademetsässä yöllä enemmän hajavaloa (käyttäjä: ilman
     // soihtua ei nähnyt mitään); päivällä latvusto varjostaa kuten ennen.
     // Sessio 47: päivällä hajavaloa vähemmän (0,2 -> humidDayAmb): syvemmät varjot.
-    const humAmb = 1 - this.humidDayAmb * this.humid * this.daylight + this.humidNightAmb * this.humid * nightK;
+    const humAmb = 1 - this.humidDayAmb * hc * this.daylight + this.humidNightAmb * this.humid * nightK;
     this.hemi.intensity = hemiI * ambK * (1 + (greyAmt * 0.25 + w.haze * 0.15) * this.daylight) * humAmb * nightDark + this.flash * 1.6;
-    if (this.humid > 0.001) this.hemi.color.lerp(_c2.copy(CANOPY_GREEN).multiplyScalar(dayLum), 0.35 * this.humid * this.daylight);
+    if (hc > 0.001) this.hemi.color.lerp(_c2.copy(CANOPY_GREEN).multiplyScalar(dayLum), 0.35 * hc * this.daylight);
 
     // Valon suunta (SunLight valaisee sijainnistaan origoa kohti).
     this.sun.position.copy(dir);

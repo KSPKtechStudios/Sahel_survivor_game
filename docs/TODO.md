@@ -1,6 +1,15 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 58 jatko 4:
+  - katso suoraan aurinkoon (avoimella paikalla): sokaiseeko ensin ja tottuuko silmä parissa sekunnissa;
+  - nouse massiivin laelle pilviverhon korkeudelle: pitäisi näkyä vain kevyt usva, ei verhoa silmien edessä;
+  - usva laella ja viidakon pohjalla; "Muinainen juurakko" -nimi.
+- [ ] Mustat pikselit tiheikköpensaan lehtien vieressä (HDR-kuvan negatiiviset pisteet): etsi lähde ja korjaa. Älä muuta mäkäräisiä.
+- [ ] Muinainen juurakko: paljon parempi 3D-malli ja tekstuurit.
+- [ ] Sammaloitunut runko: huomattavasti parempi malli.
+- [ ] Sademetsäpuu: luonnollisempi haarautuminen ja tuuheampi latvus.
+- [ ] Kannot ja tyven pönkkäjuuret: pyöreämmät ja luonnollisemmat.
 - [ ] Käyttäjä testaa session 58:
   - kalliot: jyrkänteiden kalkkikiviseinät, lohkareet ja köynnökset sademetsässä;
   - kalkkikivitornit sademetsässä (kartalla tai [F3]): ulkonäkö, koko ja määrä;

@@ -2,6 +2,12 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-28 (sessio 58, jatko 4)
+- **Aurinkoon tottuminen on oma hidas tila automaattisen valotuksen rinnalla** (`post.js`: luminanssikuvan G-kanava). Häikäisytavoite lasketaan auringon näkyvyydestä (syvyysnäytteet auringon kohdalta) ja etäisyydestä kuvan keskeltä; nousu noin 1,8 s, lasku noin 2,5 s. Tottuminen laskee valotusta ja himmentää säteitä, linssiheijastusta ja bloomia. Syy: käyttäjä halusi, että ensin sokaisee ja sitten silmä tottuu; tavallinen automaattinen valotus mittaa koko kuvan keskiarvoa, joten pieni aurinko ei sitä juuri muuta.
+- **Kun kamera on pilviverhon korkeudella, verho vaihdetaan kevyeksi usvaksi** (`inside`-kerroin). Syy: käyttäjä: pilven sisällä pilveä ei oikeasti näe, vain pieni usva näkökentässä.
+- **Sademetsän kostea sumu riippuu latvuston alla olemisesta** (`env.canopy`, 1 = latvuston alla; main.js laskee sen korkeudesta laakson pohjan yläpuolella, 16–30 m). Latvuston yläpuolella sumu on vaaleampi ja kauemmas näkyvä, ja horisonttiin lisätään kevyt usva (`post.horizon`). Syy: käyttäjä: usva ei vakuuta realistisuudella; massiivin laella ilma ei ole sama kuin viidakon pohjalla.
+- **Mustia pisteitä (käyttäjä: pikseleitä, ei mäkäräisiä) ei korjata hyönteisiä muuttamalla.** Syy: käyttäjä kielsi koskemasta mäkäräisiin; diagnostiikka löysi HDR-kuvasta negatiivisia kuvapisteitä, joita selvitetään erikseen.
+
 ## 2026-10-28 (sessio 58, jatko 3)
 - **Huippujen pilviverho tehdään jälkikäsittelyssä korkeusvyöhykkeenä** (`post.js` `uVeil`, `render/peakMist.js`), ei sprite-pilvinä. Syy: syvyyspuskurin ansiosta verho loppuu pehmeästi maaston ja puiden kohdalla (spritet leikkaisivat kallioon teräviä reunoja), eikä uusia piirtokutsuja tule. Missä verhoa on, kertoo 48 × 48 ruudun kartta (64 m ruutu) massiivien korotuksesta, laajennettuna yhdellä ruudulla. Kartta lasketaan vähitellen pelaajan siirtyessä.
 

@@ -958,12 +958,15 @@ function frame(now) {
     const mistTop = Math.max(CONFIG.waterLevel, floorY) + 18;
     fogMist.x += (mistTop - camera.position.y - fogMist.x) * Math.min(1, rawDt * 2);
     farTerrain.mistTop = mistTop;
+    // Latvuston yläpuolella (massiivin laella) avoin taivas: environment.js.
+    env.canopy += ((1 - _sm(16, 30, camera.position.y - floorY)) - env.canopy) * Math.min(1, rawDt * 1.5);
+    post.horizon = 0.75 * (1 - env.canopy * env.humid);
     peakMist.update(Math.min(0.25, rawDt), player.position, Math.max(CONFIG.waterLevel, floorY), env.windDir, 0.12 + 0.88 * env.daylight, inGame && state !== 'menu');
     hf.falloff = 0.1 + 0.06 * (1 - env.humid);
     hf.color.copy(scene.fog.color);
     // Sessio 26: valokeilojen ilman tiheys (sademetsän kostea ilma, aamu-usva, utu).
     post.shafts = inGame && state !== 'menu'
-      ? Math.min(1.0, env.humid * env.humidShafts + dawn * 0.45 * dryK + env.w.haze * 0.3 + env.w.rain * 0.3)
+      ? Math.min(1.0, env.humid * env.canopy * env.humidShafts + dawn * 0.45 * dryK + env.w.haze * 0.3 + env.w.rain * 0.3)
       : 0;
   }
   world.grass.update(camera.position, player.position, env);

@@ -2,6 +2,13 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-28 (sessio 58, jatko 4): aurinkoon katsominen, usva pilven sisällä
+
+- **Silmä tottuu aurinkoon:** kun katsoo suoraan aurinkoon, ensimmäiset pari sekuntia häikäisee kuten ennenkin, mutta sitten silmä tottuu: valotus laskee, ja säteet, linssiheijastus ja hehku himmenevät, joten maisema alkaa erottua. Kun katse kääntyy pois, tottuminen palautuu muutamassa sekunnissa. Toimii vain, kun automaattinen valotus on päällä.
+- **Pilven sisällä ei näy pilveä:** kun pelaaja on pilviverhon korkeudella, verhoa ei piirretä enää vyönä silmien eteen, vaan näkökenttään tulee vain kevyt, etäisyyden mukaan kasvava usva. Verhon reunat ovat nyt vaihtelevan paksuisia ja korkuisia (ei tasainen vyö), ja verho kietoutuu pehmeämmin huippujen ympärille.
+- **Usva uskottavammaksi:** latvuston alla sademetsän kostea, tumma sumu säilyy, mutta massiivin laella (latvuston yläpuolella) ilma on kirkkaampi ja valoisampi, ja horisontti häipyy kevyeen usvaan (ilmaperspektiivi). Siirtymä on pehmeä noustessa ja laskeutuessa.
+- "Ikivanhat juuret" on nyt **"Muinainen juurakko"**.
+
 ## 2026-10-28 (sessio 58, jatko 3): pilviverho karstihuipuilla
 
 - **Ohut pilviverho karstihuippujen tuntumassa:**
