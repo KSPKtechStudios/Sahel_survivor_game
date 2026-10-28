@@ -107,13 +107,17 @@ void main() {
     for (int x = 0; x < 16; x++) {
       vec2 uv = (vec2(float(x), float(y)) + 0.5) / vec2(16.0, 9.0);
       vec3 c = texture2D(tColor, uv).rgb;
-      float l = min(dot(c, vec3(0.2126, 0.7152, 0.0722)), 4.0);
+      // Sessio 58: kirkas taivas saa vaikuttaa enemmän (yläraja 4 -> 8).
+      float l = min(dot(c, vec3(0.2126, 0.7152, 0.0722)), 8.0);
       float sky = step(0.99999, texture2D(tDepth, uv).r);
       // Sessio 27: taivas painaa enemmän (0,15 -> 0,4): ylös kirkkaaseen
       // katsottaessa metsä tummuu ja alas katsottaessa silmä tottuu taas.
       // Sessio 39: taivas painaa vielä enemmän (0,4 -> 0,75): aurinkoon ja
       // kirkkaaseen taivaaseen katsottaessa valotus laskee, eikä taivas puhkea.
-      float w = (1.25 - length(uv - 0.5)) * mix(1.0, 0.75, sky);
+      // Sessio 58: 0,75 -> 1,1 (käyttäjä: ylös katsoessa taivasta ei erottanut
+      // valon seasta): latvuston aukkojen taivas laskee valotusta, ja taivas
+      // säilyttää värinsä.
+      float w = (1.25 - length(uv - 0.5)) * mix(1.0, 1.1, sky);
       sl += w * log(l + 0.0005);
       sm += w * l;
       ws += w;
@@ -988,7 +992,7 @@ export class PostFX {
     this.vignette = true;
     // Sessio 38: korkeampi kynnys ja tiiviimpi, heikompi hehku (käyttäjä: kuva
     // näytti sumealta; kirkas taivas ja usva hehkuivat koko kuvan yli).
-    this.bloomCfg = { threshold: 2.0, knee: 0.7, intensity: 0.2, clamp: 12, spread: 0.65 };
+    this.bloomCfg = { threshold: 2.0, knee: 0.7, intensity: 0.16, clamp: 12, spread: 0.65 }; // sessio 58: 0,2 -> 0,16
     this.handAE = 0.3; // sessio 39: kädelle vain osa silmän mukautumisesta (eksponentti); sessio 40: 0,4 -> 0,3
     this.skyDim = 0.22; // sessio 40: taivas päivällä 22 % tummempi
     this.gradeCfg = { contrast: 1.1, saturation: 1.12, warmth: 1 };
@@ -1132,8 +1136,13 @@ export class PostFX {
       const w = env.w;
       // Matala aurinko, usva ja kosteus vahvistavat säteitä.
       const low = 1 - THREE.MathUtils.smoothstep(env.sunDir.y, 0.15, 0.75) * 0.6;
+      // Sessio 58: kosteus vahvisti säteitä lähes kaksinkertaisiksi (0,9),
+      // ja latvuston aukoista syntyi koko kuvan peittävä "jumalallinen valo"
+      // (käyttäjä: taivasta ei erottanut). Nyt kosteuden vaikutus pieni ja
+      // latvuston alla säteitä vähemmän.
+      const hcR = (env.humid || 0) * (env.canopy ?? 1);
       rays = THREE.MathUtils.smoothstep(facing, 0.0, 0.35) * onScreen * env.daylight * low
-        * (0.55 + w.haze * 0.8 + env.humid * 0.9) * (1 - w.cloud * 0.5) * (w.vis < 80 ? 0.3 : 1);
+        * (0.45 + w.haze * 0.5 + env.humid * 0.25) * (1 - 0.35 * hcR) * (1 - w.cloud * 0.5) * (w.vis < 80 ? 0.3 : 1);
       if (rays > 0.01) {
         const sun = _sun.set(_v.x * 0.5 + 0.5, _v.y * 0.5 + 0.5);
         this.maskMat.uniforms.tColor.value = this.sceneRT.texture;
@@ -1151,7 +1160,7 @@ export class PostFX {
       }
     }
     cu.uUseRays.value = rays > 0.01 ? 1 : 0;
-    cu.uRayStrength.value = rays * 0.95; // sessio 39: 1,35 -> 0,95 (liian valoisa)
+    cu.uRayStrength.value = rays * 0.7; // sessio 39: 1,35 -> 0,95; sessio 58: 0,7 (yhä liian valoisa)
 
     // --- Volumetriset valokeilat varjokartasta
     const sh = env.sun.shadow;
@@ -1173,7 +1182,7 @@ export class PostFX {
       vu.uFrame.value = this.frame;
       this._pass(this.volMat, this.volRT);
       cu.tVol.value = this.volRT.texture;
-      cu.uVolCol.value.copy(env.sun.color).multiplyScalar(env.sun.intensity * 0.0075 * shaft);
+      cu.uVolCol.value.copy(env.sun.color).multiplyScalar(env.sun.intensity * 0.0055 * shaft); // sessio 58: 0,0075 -> 0,0055
     } else {
       cu.uVolCol.value.setRGB(0, 0, 0);
     }
@@ -1228,8 +1237,11 @@ export class PostFX {
     cu.uSunColor.value.copy(env.sky.uniforms.uSunColor.value).multiplyScalar(env.sky.uniforms.uSunVisible.value);
     // Sessio 39: auringon suuntaan hohtava sironta miedommaksi (0,9 -> 0,5,
     // sademetsässä vielä vähemmän): ennen koko kuva hukkui kultaiseen hehkuun.
-    cu.uSkyK.value = 1 - this.skyDim * env.daylight;
-    cu.uInscatter.value = 0.5 * env.daylight * (1 - env.w.cloud * 0.6) * (1 - 0.4 * (env.humid || 0));
+    // Sessio 58: latvuston alla taivas vielä himmeämpi (aukoista näkyy
+    // taivaan väri eikä valkoista hehkua) ja sironta miedompi (0,5 -> 0,32).
+    const hcS = (env.humid || 0) * (env.canopy ?? 1);
+    cu.uSkyK.value = 1 - (this.skyDim + 0.25 * hcS) * env.daylight;
+    cu.uInscatter.value = 0.32 * env.daylight * (1 - env.w.cloud * 0.6) * (1 - 0.5 * (env.humid || 0));
     cu.uFogNear.value = env.scene.fog.near;
     cu.uFogFar.value = env.scene.fog.far;
     const hf = this.hfog;

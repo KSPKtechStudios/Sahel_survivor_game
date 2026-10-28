@@ -2,6 +2,18 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-28 (sessio 58, jatko 6)
+**Tehtiin**
+- Käyttäjän kuva (sademetsä illalla, sateessa): valon määrä on yhä överi, ja ylös katsoessa taivasta ei erota valon seasta. Häikäisyyn tottuminen toimii.
+- `post.js`: valonsäteet, taivaan himmennys latvuston alla, sironta, valokeilat, bloom ja automaattisen valotuksen taivaspaino (0,75 → 1,1); `sky.js`: auringon hehku.
+- Testattiin `s58/glowtest.mjs`: sademetsä klo 17.4, katse aurinkoa kohti ja ylös, ennen ja jälkeen.
+
+**Kesken / tiedossa**
+- Ohjelmistorenderöinti ei ylivalota yhtä rajusti kuin näytönohjain, joten lopullinen arvio jää käyttäjälle.
+
+**Seuraavaksi**
+- Käyttäjän palaute valon määrästä ja jatkon 5 malleista.
+
 ## 2026-10-28 (sessio 58, jatko 4–5)
 **Tehtiin**
 - Käyttäjän kuvapalaute:

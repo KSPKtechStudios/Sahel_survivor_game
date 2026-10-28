@@ -2,6 +2,15 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-28 (sessio 58, jatko 6): vähemmän "jumalallista valoa"
+
+- **Auringonvaloa ja hehkua vähemmän** (käyttäjä: valon määrä on yhä överi, taivasta ei erota, kun katsoo ylös):
+  - valonsäteet heikommat (kosteus ja sade eivät enää lähes kaksinkertaista niitä, ja latvuston alla niitä on vähemmän);
+  - taivas on latvuston alla himmeämpi, joten aukoista näkyy taivaan väri eikä valkoista hehkua;
+  - sumun hehku auringon suuntaan, taivaan hehku auringon ympärillä, valokeilat ja bloom ovat miedompia.
+  - kun katsoo ylös latvuston aukkoihin, silmä mukautuu kirkkaaseen taivaaseen enemmän, joten taivas erottuu.
+- Silmän tottuminen aurinkoon toimii kuten ennenkin.
+
 ## 2026-10-28 (sessio 58, jatko 5): sademetsäpuut, juurakko ja lahopuu uusiksi
 
 - **Sademetsäpuiden oksisto ja latvus:**

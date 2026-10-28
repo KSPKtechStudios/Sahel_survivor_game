@@ -70,9 +70,11 @@ void main() {
   float g = 0.76;
   float mie = (1.0 - g * g) / pow(1.0 + g * g - 2.0 * g * mu, 1.5);
   float lowSun = 1.0 - smoothstep(0.0, 0.45, uSunDir.y);
-  col += uSunColor * (pow(sd, 6.0) * 0.25 + pow(sd, 64.0) * 0.5) * uSunVisible;
-  col += uSunColor * mie * 0.012 * uSunVisible;
-  col += uSunColor * pow(sd, 3.0) * pow(1.0 - clamp(y, 0.0, 1.0), 6.0) * 0.45 * lowSun * uSunVisible;
+  // Sessio 58: hehku miedommaksi (käyttäjä: taivasta ei erottanut, koko
+  // taivas oli valon peitossa): 0,25 / 0,5 / 0,012 / 0,45 -> 0,14 / 0,32 / 0,008 / 0,3.
+  col += uSunColor * (pow(sd, 6.0) * 0.14 + pow(sd, 64.0) * 0.32) * uSunVisible;
+  col += uSunColor * mie * 0.008 * uSunVisible;
+  col += uSunColor * pow(sd, 3.0) * pow(1.0 - clamp(y, 0.0, 1.0), 6.0) * 0.3 * lowSun * uSunVisible;
   float disc = smoothstep(0.99955, 0.99975, sd);
 
   // Tähdet ja linnunrata (selkeinä öinä)

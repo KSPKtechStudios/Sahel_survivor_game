@@ -2,6 +2,19 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-28 (sessio 58, jatko 6)
+- **Hehkua vähennetään kaikista lähteistä kerralla, ei poisteta yhtä.** Muutokset:
+  - valonsäteet: kosteuden kerroin 0,9 → 0,25, latvuston alla −35 %, voimakkuus 0,95 → 0,7;
+  - taivas latvuston alla 25 % lisää himmeämpi;
+  - sironta 0,5 → 0,32, ja kosteudessa vielä vähemmän;
+  - taivaan aurinkohehku noin 35–45 % pienempi;
+  - valokeilat 0,0075 → 0,0055;
+  - bloom 0,2 → 0,16.
+
+  Lisäksi automaattisessa valotuksessa taivaan paino 0,75 → 1,1 ja kirkkauden yläraja 4 → 8, jolloin ylös katsoessa valotus laskee ja taivas erottuu.
+
+  Syy: käyttäjän mukaan valon määrä on yhä överi ja taivas hukkuu "jumalalliseen valoon". Valo kasautui monesta lähteestä yhtä aikaa (kuvassa satoi, ja kosteus vahvisti säteitä). Silmän tottuminen säilyy ennallaan.
+
 ## 2026-10-28 (sessio 58, jatko 5)
 - **Juurakko ja sammaloitunut runko mallinnetaan etäisyyskentästä** (`models/sdfMesh.js`, `models/organic.js`): juuret ja oksat ovat kartiomaisia kapseleita, jotka liitetään pehmeästi toisiinsa, ja pinta poimitaan "surface nets" -menetelmällä. Syy: putkista kootuissa malleissa liitokset näyttivät irrallisilta, ja käyttäjä halusi paljon paremmat mallit; kentästä saadaan myös varjostus koloihin.
 - **Mallit lasketaan valmiiksi tiedostoon** (`assets/models/organic.bin`, työkalu `tools/organic/build.mjs`). Ne lasketaan tarkalla ruudukolla ja harvennetaan meshoptimizerilla: lähimalli 9000 / 6500 kolmiota, kaukomalli noin 1600 / 1100 kolmiota. Syy: tarkka laskenta kestää sekunteja ja tuottaisi 30–70 tuhatta kolmiota mallia kohden; juurakoita on noin 3,5 ja runkoja 2,4 jokaisessa 64 metrin ruudussa sademetsää. Jos tiedosto ei lataudu, mallit lasketaan käynnistyksessä karkeammalla ruudukolla.
