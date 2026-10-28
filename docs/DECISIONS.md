@@ -2,6 +2,16 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-28 (sessio 58, jatko)
+- **Karstivuoristo on sademetsän sisäinen variantti, joka korvaa session 57 jyrkänteet** (`terrain.js` `escarpment()`, `karstMaskAt`, `karstField`, `rampAt`). Käyttäjä: tasainen viidakko on hyvä, ja karsti on viidakkobiomin sisällä esiintyvä variantti; jyrkänneportaat näyttivät kamalilta. Massiivi on kentän tasa-arvokäyrän sisäpuoli (thaimaalainen tornikarsti), ja laaksonpohja on karstialueella hieman tasaisempi.
+- **Jokiverkko ei näe massiiveja** (`escSoft = 0`, kuten jyrkänteissä), ja joen laaksossa massiivi madaltuu (laakso V + 5 + 2,5·w). Syy: jokigenerointi ei saa hajota (käyttäjä, sessio 57). Tarkistettu: vedenpinnan hyppyjä yli 1 m on vain 2–4 (enintään 1,2 m) ja putousten ympärillä 0 vesiseinää.
+- **Loivat rinteet ovat massiivin reunan osa** (`rampAt`): kentän reunan alapuolinen kaista nousee lineaarisesti laelle. Syy: solat ja rinteet syntyvät luonnostaan samasta kentästä, joten ylös pääsee aina jostakin, eikä erillisiä ramppeja tarvitse sijoitella.
+- **Pelaajalle jyrkkyysraja** (`player.js` `MAX_CLIMB` = 1,25, n. 51°). Syy: ilman sitä pystyseinä ei olisi este, koska pelaaja nousi aina maanpinnan korkeudelle. Raja koskee kaikkia biomeja; vuoristossa vain todella jyrkät kohdat pysäyttävät.
+- **Karstissa tiukempi rinneraja puille (n. 40°) ja koristekasveille (n. 48°)** vain karstialueella (`chunkGen.js`). Syy: muiden biomien kasvillisuus ei muutu.
+- **Vesiputoukset siirrettiin karstiseinille** (`tryFall`): Newtonin haku seinän puoliväliin, ei loivan rinteen kohdalle, lähdepuro 26–50 m. Niitä on nyt vähemmän; avoin kysymys käyttäjälle.
+- **Liaanien muototyypit ja paksuus tehdään puun liaanimäärittelyssä** (`treeAssets.js` `vineSpecs`, `kind`), ja piirto lukee ne (`vines.js` `STYLE`). Varsitekstuuri on tehty ohjelmallisesti (`tools/blender/vinetex.py`, FFT-kohina, jaksollinen), joten ulkopuolista lisenssiä ei tarvita.
+- **Osumaefekti tehdään kaatuvan rungon murskaustarkistuksessa** (`fallen.js` `_crush` → `_hitFx`): samat törmäystarkistukset kuin puiden ketjukaadossa ja kasvien murskauksessa, yksi efekti kohdetta kohti. Syy: ei uusia törmäyslaskuja.
+
 ## 2026-10-28 (sessio 58)
 - **Akasioissa vanhat proseduraaliset ja uudet Blender-mallit sekaisin** (`models.js` `MIXED_TREES`): Blender-variantit ovat listan alussa, vanhat perässä, ja tarkka malli (`hi`) haetaan vanhoille oikealla siemenellä. Syy: käyttäjä piti vanhoja parempina ja uusia "orvon näköisinä", mutta ei pyytänyt uusien poistamista.
 - **Rungon liaani tehdään Blender-puuhun omana materiaalinaan** (`build_trees.py` `climbing_vine`, materiaali `treeVine`). Sillä on oma satunnaislukujono, jotta puiden muoto ei muuttunut. Syy: se kaatuu, heiluu ja katkeaa rungon mukana ilman erillistä logiikkaa.

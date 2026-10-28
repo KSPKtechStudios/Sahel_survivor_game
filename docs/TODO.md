@@ -9,7 +9,14 @@
   - palmujen lehvästöt ja lehtien mattapinta;
   - eivät puut tai muinaiset juuret enää roiku kielekkeiden reunoilla (kaikki biomit).
 - [ ] Vastaus: sopiiko tornien korkeus (25–48 m) ja määrä (35–54 koko maailmassa)?
-- [ ] Sessio 58, kesken: kun kaatuva puu osuu johonkin (toinen puu, pensas, kivi; ei pelkkä maa), pieni pölähdys ja partikkeliroiske osumakohtaan.
+- [x] Sessio 58: kaatuvan puun osumaefekti (pölähdys ja partikkelit, kun puu osuu johonkin).
+- [ ] Käyttäjä testaa session 58 jatkon:
+  - karstivuoristo sademetsässä (kartalla tai [F3]): massiivien ulkonäkö, laaksot, rinteet ja solat ylös, joet rotkoissa;
+  - pelaaja ei enää kävele pystyseinää ylös: tuntuuko raja (n. 51°) hyvältä;
+  - liaanien paksuus, muodot ja uusi varsitekstuuri;
+  - kaatuvan puun osuma toiseen puuhun, pensaaseen tai kiveen.
+- [ ] Vastaus: vesiputouksia on nyt 2–3 maailmaa kohden (karstiseinillä 30–50 m korkeita). Riittääkö, vai lisätäänkö?
+- [ ] Vastaus: sopiiko karstin määrä (noin kolmannes sademetsästä) ja massiivien korkeus (20–60 m)?
 - [ ] Käyttäjä testaa session 57 (sademetsä):
   - latvusto ylös katsoessa (näkyykö vielä liikaa taivasta) ja ruudunpäivitys;
   - kaatojälki kannossa ja kaatuneen rungon päässä;

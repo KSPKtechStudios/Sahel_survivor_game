@@ -2,6 +2,35 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-28 (sessio 58, jatko)
+**Tehtiin**
+- Käyttäjän palaute (kuva sademetsästä):
+  - roikkuvat liaanit olivat liian paksuja ja samanlaisia, tekstuurina puu;
+  - jyrkänneportaat näyttivät kamalilta, eikä niille päässyt ylös;
+  - generointi oli vain kahden tason vaihtelua;
+  - pyydettiin kunnollista vuoristoa (Geminin ehdotus: thaimaalainen karsti);
+  - tarkennus: tasainen viidakko on hyvä, ja karsti on viidakon sisäinen variantti;
+  - tarkistettava, toimiiko kasvillisuus maaston kanssa.
+- Liaanit: `treeAssets.js` (`vineSpecs`: `kind`, ohuemmat säteet, ilmajuuriverho), `vines.js` (`STYLE`: kierre, korkkiruuvi, litteä nauha, lehtimäärät), `tools/blender/vinetex.py` → `vine_stem_c/n.webp`, `kitMaterials.js` (`vineTex`, rungon liaani).
+- Karsti: `terrain.js` (`escarpment()` uusiksi: `karstMaskAt`, `karstField`, `rampAt`; laaksonpohja tasaisempi; kalkkikiven väri kaikille karstin jyrkille rinteille; joen laakso massiivin läpi; putoukset karstiseinille; tornit laaksoihin).
+- Pelaajan jyrkkyysraja: `player.js` (`MAX_CLIMB`).
+- Kasvillisuus: `chunkGen.js` (puiden ja koristekasvien rinneraja karstissa).
+- Kaatuvan puun osuma: `fallen.js` (`_hitFx`).
+- Testattiin (scratchpad `s58/`):
+  - `karstmap.mjs`/`.py` (kartta ylhäältä), `shots/s58/terrain3d.html` (3D-esikatselu, git-ignoroitu);
+  - `vegcheck.mjs`: puut jyrkillä rinteillä 39 → 4, koristekasvit seinillä 1115 → 122, leijuvia 0;
+  - `s57/rivcheck.mjs`: vedenpinnan hyppyjä yli 1 m 2–4 kpl (enintään 1,2 m);
+  - `s57/fallcheck.mjs`, `fallwall.mjs`: 2–3 putousta, 0 vesiseinää;
+  - pelikuvat: `karstshot2/3.mjs` (seinä, laki, rinne, ilmakuva), `s57/vineshot2.mjs` (liaanit), `fallshot58.mjs` (kaatuvan puun osuma).
+
+**Kesken / tiedossa**
+- Vesiputouksia on vähemmän kuin ennen (2–3 / maailma); kysytty käyttäjältä.
+- Sademetsän usva peittää kaukaiset massiivit; voisi harkita usvan vähentämistä karstialueella, jos käyttäjä haluaa nähdä vuoret kauempaa.
+- Olennot eivät noudata pelaajan jyrkkyysrajaa (eläimet voivat nousta seinää).
+
+**Seuraavaksi**
+- Käyttäjän palaute karstista, liaaneista ja osumaefektistä.
+
 ## 2026-10-28 (sessio 58)
 **Tehtiin**
 - Käyttäjän palaute (kuvat):

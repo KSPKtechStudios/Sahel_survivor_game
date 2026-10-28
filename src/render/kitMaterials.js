@@ -111,6 +111,17 @@ Object.assign(BUILD, {
 const TREE_DIR = 'assets/models/trees';
 const TREE_WIND = 0.0045;
 const treeTexCache = {};
+// Liaanin varsiatlaksen oikea (puutunut) puolisko: oma tekstuuri-instanssi,
+// jossa u siirretään puoliskon alkuun (Blenderin UV u 0..0,3).
+function vineTex(file, srgb = true) {
+  const t = loader.load(`${TREE_DIR}/${file}`);
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.offset.set(0.5, 0);
+  return t;
+}
+
 function treeTex(file, srgb = true) {
   if (treeTexCache[file]) return treeTexCache[file];
   const t = file.startsWith('leaves') ? loadAlphaTexture(`${TREE_DIR}/${file}`, { cutoff: 0.5, srgb }) : loader.load(`${TREE_DIR}/${file}`);
@@ -204,10 +215,11 @@ Object.assign(BUILD, {
   treeBark_kapok: treeBark('kapok', 0xd8d8d0),
   treeBark_emergent: treeBark('emergent', 0xe0dcd4),
   treeBark_sapling: treeBark('sapling', 0xa89a80),
-  // Sessio 58: rungon ympäri kiertävä liaani (hieman vihertävä nuori kaarna;
-  // tumma sävy x tekstuuri x AO teki siitä varjopuolella täysin mustan).
+  // Sessio 58: rungon ympäri kiertävä liaani: liaanien varsiatlaksen puutunut
+  // puolisko (render/vines.js, tools/blender/vinetex.py). Tumma sävy x
+  // tekstuuri x AO teki siitä ensin varjopuolella täysin mustan.
   treeVine: () => addWet(addAO(addWind(new THREE.MeshStandardMaterial({
-    map: treeTex('bark_sapling_c.webp'), normalMap: treeTex('bark_sapling_n.webp', false), color: 0xf2eedc, roughness: 0.95, metalness: 0,
+    map: vineTex('vine_stem_c.webp'), normalMap: vineTex('vine_stem_n.webp', false), color: 0xf2eedc, roughness: 0.92, metalness: 0,
   }), TREE_WIND)), 0.6, 0.2),
 });
 // Sessio 58: kalkkikivi (karstiseinämät ja -tornit, models/karst.js).

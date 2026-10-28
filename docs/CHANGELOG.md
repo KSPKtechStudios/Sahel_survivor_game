@@ -2,6 +2,24 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-28 (sessio 58, jatko): karstivuoristo, liaanivariantit, kaatuvan puun osuma
+
+- **Karstivuoristo sademetsän sisälle** (korvaa session 57 jyrkänneportaat):
+  - tavallinen sademetsä on ennallaan tasaista viidakkoa;
+  - laikuittain, noin kolmanneksessa sademetsää, tasaisesta laaksonpohjasta nousee 20–60 m korkeita pystyseinäisiä kalkkikivimassiiveja (Krabin ja Phang Ngan tapaan). Niiden laki on kumpuileva ja huippuinen, ja siellä kasvaa metsää;
+  - massiivien välissä on tasaiset laaksot ja solat, ja joet kulkevat laaksoissa tai rotkoissa massiivien läpi (jokiverkko ennallaan);
+  - noin kolmanneksessa massiivien reunoista on loiva rinne tai satula, jota pitkin pääsee ylös;
+  - kaikki karstin jyrkät seinät ovat vaaleaa kalkkikiveä, jossa on oransseja ja tummia valumajuovia (ennen tummanruskea seinä).
+- **Jyrkkä seinä pysäyttää pelaajan:** yli noin 51° rinnettä ei voi kävellä ylös, vaan pelaaja liukuu seinän suuntaisesti. Ennen pelaaja nousi minkä tahansa seinän päälle hetkessä.
+- **Kasvillisuus karstissa:** puita ei kasva yli noin 40° rinteillä, eikä ruohoa tai aluskasveja pystyseinillä. Mitattu karstialueella: jyrkillä rinteillä puita 39 → 4, seinillä koristekasveja 1115 → 122, leijuvia tai maan sisällä olevia esineitä 0.
+- **Vesiputoukset** putoavat nyt karstimassiivin seinältä, 30–50 m korkeina. Niitä on 2–3 maailmaa kohden (ennen noin 10–19 matalampaa).
+- **Kalkkikivitornit** seisovat karstin laaksonpohjilla, eivät massiivien päällä.
+- **Roikkuvat liaanit:**
+  - ohuempia: säde 0,4–3,8 cm (ennen 3–7,5 cm);
+  - eri muotoja: ohut sileä varsi, kierteinen kaksisäikeinen, korkkiruuvi, vanha puutunut liaani, litteä aaltoileva "apinanportaat" sekä ohuiden ilmajuurien verho;
+  - kasvimainen varsitekstuuri: vihreä varsi kuituineen ja solmukohtineen tai vihertävänharmaa puutunut varsi sammaleineen (ennen puun kaarna). Rungon ympäri kiertävä liaani käyttää puutunutta versiota.
+- **Kaatuvan puun osuma:** kun kaatuva puu osuu toiseen puuhun, pensaaseen, kiveen tai termiittikekoon, osumakohtaan tulee pieni pölähdys ja muutama roiskahtava partikkeli (lehtiä, kaarnaa, kiveä tai multaa osuman mukaan). Pelkkään maahan kaatuessa tätä ei tule.
+
 ## 2026-10-28 (sessio 58): karstikalliot, rungon liaani, tuuheammat palmut, mattalehdet
 
 - **Kalliot kalkkikiveksi:** jyrkänteen seinä on vaaleaa, oranssin ja tumman juovaista kalkkikiveä (ennen vihreä "ruohoseinä"). Jyrkkiin kohtiin on upotettu kalliolohkareita, joissa on kerroksia, halkeamia, sammalta päällä ja roikkuvia köynnöksiä.

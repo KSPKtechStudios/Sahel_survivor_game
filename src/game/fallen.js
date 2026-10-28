@@ -289,27 +289,57 @@ export class FallenTrees {
             if (segDist2D(_a, _b, o.x, o.z) > r + crownR * 0.8 + 0.4) continue;
             if (segMinY(_a, _b, o.x, o.z) > (o.y ?? 0) + 1.4 + crownR * 0.5) continue;
             log.crushed.add(o);
+            this._hitFx(o.x, (o.y ?? 0) + 0.5, o.z, 'plant');
             if (Math.random() < 0.25 + 0.75 * power) this.crushPlant(o, power, _a);
           }
         });
       }
     }
-    // Pystyssä olevat puut rungon tiellä
-    if (!this.knockTree || (log.chainDepth || 0) >= 3) return;
+    // Pystyssä olevat puut ja kivet rungon tiellä
     const mx = (_a.x + _b.x) / 2, mz = (_a.z + _b.z) / 2;
     this.world.collidersNear(mx, mz, log.L * 0.5 + 2, _cols);
     for (const c of _cols) {
       const o = c.obj;
       if (!o || c.seg || o.stump || o === log.src || log.crushed.has(o)) continue;
       const def = OBJECT_TYPES[o.type];
-      if (!def || def.kind !== 'tree') continue;
+      if (!def) continue;
+      if (def.kind === 'rock' || def.kind === 'static') {
+        // Sessio 58: osuma kiveen, termiittikekoon tms. (vain pölähdys).
+        const top = (o.y ?? 0) + (def.hit ? (def.hit.y + def.hit.r) * o.scale : 1);
+        if (segDist2D(_a, _b, o.x, o.z) > c.r + r + 0.3 || segMinY(_a, _b, o.x, o.z) > top + crownR * 0.3) continue;
+        log.crushed.add(o);
+        this._hitFx(o.x, Math.min(top, segMinY(_a, _b, o.x, o.z)), o.z, def.surface || 'rock');
+        continue;
+      }
+      if (def.kind !== 'tree') continue;
       // Rungon on oltava puun kohdalla vielä ilmassa (latvuksen korkeudella).
       if (segDist2D(_a, _b, o.x, o.z) > c.r + r + 0.8) continue;
-      if (segMinY(_a, _b, o.x, o.z) < (o.y ?? 0) + 1.2) continue;
+      const hy = segMinY(_a, _b, o.x, o.z);
+      if (hy < (o.y ?? 0) + 1.2) continue;
       log.crushed.add(o);
-      // Iso runko kaataa todennäköisemmin.
-      if (Math.random() < Math.min(0.9, 0.35 + log.L / 18)) this.knockTree(o, log.dir, (log.chainDepth || 0) + 1);
+      this._hitFx(o.x, hy, o.z, 'tree');
+      // Iso runko kaataa todennäköisemmin (ketjussa enintään 3 puuta).
+      if (this.knockTree && (log.chainDepth || 0) < 3 && Math.random() < Math.min(0.9, 0.35 + log.L / 18)) {
+        this.knockTree(o, log.dir, (log.chainDepth || 0) + 1);
+      }
     }
+  }
+
+  // Sessio 58: kun kaatuva puu osuu johonkin (toinen puu, pensas, kivi; ei
+  // pelkkä maa), osumakohtaan pieni pölähdys ja vähän roiskahtavia
+  // partikkeleita, ikään kuin puu rikkoisi jotain. Maahan osuminen on _impact.
+  _hitFx(x, y, z, kind) {
+    _w.set(x, y, z);
+    const FX = {
+      tree: { puff: 0xa7ad7c, bits: [0x5b7a2e, 0x6e8a35, 0x5b4838, 0xd2ad78], n: 10 },
+      plant: { puff: 0x9fae6a, bits: [0x4f7a2a, 0x6a9a3a, 0x7d6a40], n: 7 },
+      rock: { puff: 0xb8b2a6, bits: [0x8a8478, 0x6f6a60, 0xa49d90], n: 6 },
+      earth: { puff: 0xb08a62, bits: [0x8a6440, 0x6e4e32], n: 6 },
+      wood: { puff: 0xc9a77a, bits: [0xd2ad78, 0x5b4838], n: 7 },
+    };
+    const f = FX[kind] || FX.rock;
+    this.bursts.spawn(_w, f.puff, 9, 1.3, { size: 0.16, life: 0.9, gravity: 1.5, opacity: 0.45 });
+    this.debris.splinters(_w, null, f.bits, f.n, 0.9, 0.75);
   }
 
   _impact(log) {

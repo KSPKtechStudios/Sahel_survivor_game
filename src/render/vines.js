@@ -16,6 +16,10 @@
 // kaarnatekstuurilla ja kaksisäikeisenä kierteenä; lehdet ovat puiden
 // lehtiatlaksen kortteja. Osa liaaneista kaartuu kahden oksan välillä
 // (spec.onTree: molemmat päät puussa, treeAssets.vineSpecs).
+//
+// Sessio 58 (käyttäjä: liaanit liian paksuja, kaikki samanlaisia ja
+// puutekstuurilla): muototyypit (STYLE, spec.kind) ja kasvin varsitekstuuri
+// (tools/blender/vinetex.py: vasen puolisko vihreä varsi, oikea puutunut).
 import * as THREE from 'three';
 import { windUniforms } from './materials.js';
 import { OBJECT_TYPES } from '../world/objectTypes.js';
@@ -27,7 +31,7 @@ const SUB = 2;           // piirtorenkaita fysiikkavälin sisällä
 const RINGS = (N - 1) * SUB + 1;
 const SIDES = 6;         // putken sivut
 const LEAVES = 9;        // lehtikortteja köyttä kohti
-const MAX_VINES = 260;
+const MAX_VINES = 380;  // ilmajuuriverhot lisäävät säikeitä
 const RADIUS = 46;       // m: näin lähellä olevien puiden liaanit näytetään
 const SIM_RADIUS = 26;   // m: näin lähellä simuloidaan joka ruudulla
 const GRAV = -9.8;
@@ -45,6 +49,19 @@ const _n = new THREE.Vector3();
 const _b = new THREE.Vector3();
 const _up = new THREE.Vector3(0, 1, 0);
 const _pn = new THREE.Vector3();
+
+// Muototyypit: twist = kaksisäikeisen kierteen syvyys, flat = poikkileikkauksen
+// litteys (1 = pyöreä), coil = korkkiruuvin säde (köyden säteinä), wave =
+// litteän nauhan aaltoilu, wood = todennäköisyys puutuneelle tekstuurille,
+// leaves = lehtien määrä, taper = kapeneminen kärkeä kohti.
+const STYLE = {
+  thin: { twist: 0, flat: 1, coil: 0, wave: 0, wood: 0, leaves: 3, leafW: 0.22, taper: 0.4, tint: [0.92, 1, 0.8] },
+  medium: { twist: 0.2, flat: 1, coil: 0, wave: 0, wood: 0.35, leaves: 9, leafW: 0.35, taper: 0.3, tint: [0.95, 0.97, 0.86] },
+  coil: { twist: 0.05, flat: 1, coil: 2.4, wave: 0, wood: 0.15, leaves: 6, leafW: 0.28, taper: 0.3, tint: [0.92, 1, 0.82] },
+  thick: { twist: 0.24, flat: 1, coil: 0, wave: 0, wood: 1, leaves: 4, leafW: 0.4, taper: 0.25, tint: [0.96, 0.94, 0.86] },
+  ladder: { twist: 0, flat: 0.3, coil: 0, wave: 1.5, wood: 1, leaves: 3, leafW: 0.35, taper: 0.2, tint: [0.98, 0.94, 0.84] },
+  curtain: { twist: 0, flat: 1, coil: 0, wave: 0, wood: 0, leaves: 0, leafW: 0, taper: 0.55, tint: [0.85, 0.9, 0.72] },
+};
 
 function hash(n) {
   const s = Math.sin(n * 127.1) * 43758.5453;
@@ -66,6 +83,9 @@ class Rope {
     this.free = false;     // yläpää irti (puu pilkottu)
     this.age = 0;
     this.sleep = 0;
+    this.style = STYLE[spec.kind] || STYLE.medium;
+    this.wood = hash(seed + 21) < this.style.wood;
+    this.pitch = 0.28 + 0.25 * hash(seed + 23); // korkkiruuvin nousu (m / kierros)
   }
 }
 
@@ -111,7 +131,7 @@ export class Vines {
       return t;
     };
     this.material = new THREE.MeshStandardMaterial({
-      map: tex('bark_sapling_c.webp', true), normalMap: tex('bark_sapling_n.webp', false), vertexColors: true, roughness: 0.9, metalness: 0,
+      map: tex('vine_stem_c.webp', true), normalMap: tex('vine_stem_n.webp', false), vertexColors: true, roughness: 0.88, metalness: 0,
     });
     this.mesh = new THREE.Mesh(geo, this.material);
     this.mesh.frustumCulled = false;
@@ -384,7 +404,10 @@ export class Vines {
     }
     const e = (N - 1) * 3, eo = (RINGS - 1) * 3;
     pts[eo] = p[e]; pts[eo + 1] = p[e + 1]; pts[eo + 2] = p[e + 2];
-    const moss = 0.35 * hash(seed + 5);
+    const st = rope.style;
+    const moss = (rope.wood ? 0.5 : 0.15) * hash(seed + 5);
+    const uOff = rope.wood ? 0.5 : 0;
+    const ra = st.wave ? 1.35 : 1; // litteän nauhan leveys
     let len = 0;
     let havePrev = false;
     for (let k = 0; k < RINGS; k++) {
@@ -401,23 +424,41 @@ export class Vines {
       havePrev = true;
       _b.crossVectors(_t, _n);
       const f = k / (RINGS - 1);
-      const r0 = rope.r * (1 - 0.3 * f) * shrink * (1 + 0.12 * Math.max(0, Math.sin(len * 2.7 + seed)) ** 8);
-      // Väri kertoo kaarnatekstuurin: vaihtelua ja paikoin sammalta.
+      const r0 = rope.r * (1 - st.taper * f) * shrink * (1 + 0.12 * Math.max(0, Math.sin(len * 2.7 + seed)) ** 8);
+      // Keskilinjan siirto: korkkiruuvi tai litteän nauhan aaltoilu.
+      let cxo = 0, cyo = 0, czo = 0;
+      if (st.coil) {
+        const ph = (len / rope.pitch) * Math.PI * 2 + seed;
+        const A = st.coil * r0, c = Math.cos(ph) * A, sn = Math.sin(ph) * A;
+        cxo = _n.x * c + _b.x * sn; cyo = _n.y * c + _b.y * sn; czo = _n.z * c + _b.z * sn;
+      } else if (st.wave) {
+        const A = Math.sin((len / 0.3) * Math.PI * 2 + seed) * st.wave * r0;
+        cxo = _n.x * A; cyo = _n.y * A; czo = _n.z * A;
+      }
+      // Väri: vaihtelua ja paikoin sammalta (puutuneessa enemmän).
       const sh = 0.8 + 0.2 * hash(seed + Math.floor(len * 2));
       const mz = moss * (0.5 + 0.5 * Math.sin(len * 0.9 + seed));
       for (let s = 0; s <= SIDES; s++) {
         const ang = (s / SIDES) * Math.PI * 2;
         // Kaksisäikeinen kierre: säde vaihtelee kulman ja pituuden mukaan.
-        const r = r0 * (1 + 0.2 * Math.sin(2 * ang - len * 9 + seed));
-        const cx = Math.cos(ang), sx = Math.sin(ang);
-        const nx = _n.x * cx + _b.x * sx, ny = _n.y * cx + _b.y * sx, nz = _n.z * cx + _b.z * sx;
+        const r = r0 * (1 + st.twist * Math.sin(2 * ang - len * 9 + seed));
+        const ca = Math.cos(ang), sa = Math.sin(ang);
+        // Poikkileikkaus: ellipsi (ra, flat); normaali ellipsin pinnasta.
+        let pa = ca / ra, pb = sa / st.flat;
+        const pl = Math.hypot(pa, pb) || 1;
+        pa /= pl; pb /= pl;
+        const nx = _n.x * pa + _b.x * pb, ny = _n.y * pa + _b.y * pb, nz = _n.z * pa + _b.z * pb;
+        const ex = ca * ra * r, eb = sa * st.flat * r;
         const vi = base + k * (SIDES + 1) + s;
         const o = vi * 3;
-        P[o] = pts[i] + nx * r; P[o + 1] = pts[i + 1] + ny * r; P[o + 2] = pts[i + 2] + nz * r;
+        P[o] = pts[i] + cxo + _n.x * ex + _b.x * eb;
+        P[o + 1] = pts[i + 1] + cyo + _n.y * ex + _b.y * eb;
+        P[o + 2] = pts[i + 2] + czo + _n.z * ex + _b.z * eb;
         Nn[o] = nx; Nn[o + 1] = ny; Nn[o + 2] = nz;
-        const groove = 0.82 + 0.18 * Math.sin(2 * ang - len * 9 + seed + 1.2);
-        C[o] = sh * groove * (1 - mz * 0.45); C[o + 1] = sh * groove * (1 - mz * 0.15); C[o + 2] = sh * groove * (1 - mz * 0.6);
-        U[vi * 2] = (s / SIDES) * 0.35;
+        const groove = 1 - st.twist * 0.9 * (0.5 - 0.5 * Math.sin(2 * ang - len * 9 + seed + 1.2));
+        const g = sh * groove;
+        C[o] = g * st.tint[0] * (1 - mz * 0.45); C[o + 1] = g * st.tint[1] * (1 - mz * 0.15); C[o + 2] = g * st.tint[2] * (1 - mz * 0.6);
+        U[vi * 2] = uOff + (s / SIDES) * 0.47;
         U[vi * 2 + 1] = len / 1.6;
       }
     }
@@ -425,13 +466,14 @@ export class Vines {
     const cell = leafCell(hash(seed + 9) < 0.5 ? 'broad_b' : 'sapling');
     const LP = this.lpos, LN = this.lnrm, LC = this.lcol, LU = this.luv;
     const lb = v * LPR;
+    const nLeaves = Math.min(LEAVES, Math.round(st.leaves * (0.6 + 0.6 * hash(seed + 31))));
     for (let l = 0; l < LEAVES; l++) {
-      const f = 0.06 + 0.7 * (l / (LEAVES - 1)) * (0.6 + 0.4 * hash(seed + l));
+      const f = 0.06 + 0.7 * (l / Math.max(1, nLeaves - 1)) * (0.6 + 0.4 * hash(seed + l));
       const k = Math.min(RINGS - 2, Math.floor(f * (RINGS - 1)));
       const i = k * 3;
       const ang = rope.phase * 3 + l * 2.4;
       _n.set(Math.cos(ang), 0, Math.sin(ang));
-      const w = (0.35 + 0.25 * hash(seed + l * 7)) * shrink * (cell ? 1 : 0);
+      const w = l < nLeaves ? (st.leafW + 0.25 * st.leafW * hash(seed + l * 7)) * shrink * (cell ? 1 : 0) : 0;
       const h = w * (cell ? cell.aspect : 1);
       // Kortin "ylös" (lehvän kärki) ulos ja alas, leveys vaakasuoraan.
       const ux = _n.x * 0.55, uy = -0.85, uz = _n.z * 0.55;

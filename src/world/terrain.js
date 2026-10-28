@@ -231,39 +231,68 @@ function coastHeight(x, z, c) {
   return h;
 }
 
-// --- Sessio 57: sademetsän jyrkänteet ---------------------------------------------
-// Laikuittain kaksi porrasta (6-10 m korkeat kallioreunat) kohinakentän
-// tasa-arvokäyrillä. sharp = todellinen maasto, soft = sama loivana rampina:
-// jokiverkko ja joen vertailukorkeus käyttävät loivaa, ja joen laaksossa
-// maasto liukuu loivaan (applyRivers), joten joet kulkevat jyrkänteen läpi
-// rotkona eivätkä hajoa. face = jyrkänteen seinämän osuus (kalliopinta).
+// --- Sessio 58: karstivuoristo sademetsän sisällä ----------------------------------
+// Korvaa session 57 jyrkänteet (käyttäjä: kahden tason portaat näyttivät
+// kamalilta, eikä niiden päälle päässyt). Sademetsä on enimmäkseen ennallaan
+// tasaista viidakkoa; laikuittain (karstMaskAt, noin kolmannes sademetsästä)
+// tasaisesta laaksonpohjasta nousee 20–60 m korkeita jyrkkäseinäisiä
+// kalkkikivimassiiveja kuten Thaimaan Krabissa ja Phang Ngassa. Kentän F
+// tasa-arvokäyrä karstLevel() on massiivin reuna:
+// - seinämä on lähes pystysuora (KARST_E), laki kumpuileva ja huippuinen;
+// - paikoin (rampAt) reunalla on loiva rinne tai satula laaksosta laelle,
+//   jota pitkin pääsee ylös (jyrkkä seinä pysäyttää pelaajan, player.js);
+// - sharp = todellinen korotus, soft = 0: jokiverkko ei näe massiiveja, ja joen
+//   laaksossa massiivi madaltuu (applyRivers), joten joet kulkevat laaksoissa
+//   ja rotkoissa eivätkä hajoa (sama tapa kuin jyrkänteissä);
+// - face = jyrkän seinämän osuus (kalkkikiven väri, ei puita).
 const _esc = { sharp: 0, soft: 0, face: 0 };
-function escarpment(x, z) {
+const KARST_T = 0.13;   // massiivin reuna kentässä F, kun maski = 1
+const KARST_E = 0.014;  // jyrkän seinämän leveys F-yksiköissä (n. 3 m)
+const KARST_W = 0.2;    // loivan rinteen leveys F-yksiköissä (n. 40–60 m)
+function karstMaskAt(x, z) {
+  return smoothstep(0.02, 0.2, fbm(N.escMask, x / 1700, z / 1700, 2));
+}
+// Reunan taso nousee maskin reunoilla: massiivit pienenevät ja loppuvat.
+function karstLevel(m) {
+  return KARST_T + (1 - m) * 0.45;
+}
+function karstField(x, z) {
+  const wx = x + N.warp(x / 260 + 5.1, z / 260 - 3.3) * 50;
+  const wz = z + N.warp(x / 260 - 7.7, z / 260 + 2.9) * 50;
+  return fbm(N.esc, wx / 300, wz / 300, 3) + 0.045 * N.detail(x / 38 + 3.3, z / 38 - 1.7);
+}
+function rampAt(x, z) {
+  // Noin kolmannes reunasta saa rinteen, noin kahdeksasosa täyden loivan rinteen.
+  return smoothstep(0.58, 0.7, N.escH(x / 230 + 9.1, z / 230 - 4.3) * 0.5 + 0.5);
+}
+function escarpment(x, z, m) {
   const o = _esc;
   o.sharp = 0; o.soft = 0; o.face = 0;
-  const m = escMaskAt(x, z);
   if (m <= 0) return o;
-  const f = escField(x, z);
-  const S = (6 + 4 * (N.escH(x / 700, z / 700) * 0.5 + 0.5)) * m;
-  for (const c of ESC_LEVELS) {
-    const st = smoothstep(c - ESC_EDGE, c + ESC_EDGE, f);
-    o.sharp += S * st;
-    o.soft += S * smoothstep(c - 0.16, c + 0.16, f);
-    o.face = Math.max(o.face, m * (1 - Math.abs(2 * st - 1)));
+  const F = karstField(x, z);
+  const t = karstLevel(m);
+  if (F < t - KARST_W) return o;
+  const H = (20 + 40 * (N.escH(x / 700, z / 700) * 0.5 + 0.5)) * (0.55 + 0.45 * m);
+  const sc = smoothstep(t, t + KARST_E, F);
+  const u = Math.min(1, Math.max(0, (F - (t - KARST_W)) / (KARST_W + KARST_E)));
+  const sr = rampAt(x, z) * u * (0.9 + 0.1 * u);
+  const sh = Math.max(sc, sr);
+  // Laki: kumpuja ja teräviä huippuja kauempana reunasta.
+  const inner = smoothstep(t + KARST_E, t + 0.32, F);
+  let top = 1;
+  if (inner > 0) {
+    const r = 1 - sabs(N.mount2(x / 48, z / 48), 0.16);
+    top += inner * (0.1 + 0.42 * r * r + 0.08 * N.detail(x / 14, z / 14));
   }
-  // Rosoinen kallioseinämä.
-  if (o.face > 0) o.sharp += o.face * N.detail(x / 3.5, z / 3.5) * 0.9;
+  o.sharp = H * sh * top;
+  // Seinämä: kallion osuus myös hieman reunan ylä- ja alapuolella, jotta koko
+  // seinä saa kiven värin (verkon väli 1,33 m).
+  if (sc > sr) {
+    o.face = m * smoothstep(t - 0.008, t + 0.004, F) * (1 - smoothstep(t + KARST_E - 0.002, t + KARST_E + 0.01, F));
+    // Rosoinen, kerroksellinen kallioseinä.
+    o.sharp += o.face * (N.detail(x / 3.2, z / 3.2) * 0.9 + N.detail(x / 9, z / 9) * 0.8);
+  }
   return o;
-}
-const ESC_LEVELS = [-0.18, 0.12];
-const ESC_EDGE = 0.006; // terävän portaan puolileveys kentän f yksiköissä
-function escMaskAt(x, z) {
-  return smoothstep(0.1, 0.28, fbm(N.escMask, x / 1300, z / 1300, 2));
-}
-function escField(x, z) {
-  const wx = x + N.warp(x / 260 + 5.1, z / 260 - 3.3) * 45;
-  const wz = z + N.warp(x / 260 - 7.7, z / 260 + 2.9) * 45;
-  return fbm(N.esc, wx / 520, wz / 520, 3);
 }
 
 // Maa ilman erikoismuodostumia ja vesistöjä.
@@ -321,7 +350,7 @@ function sampleLand(x, z, out) {
 
   // --- Aavikko ja sademetsä
   let desert = 0, rainforest = 0, oasis = 0, hDesert = 0, hRain = 0;
-  let escSharp = 0, escSoft = 0, cliff = 0;
+  let escSharp = 0, escSoft = 0, cliff = 0, karstM = 0;
   if (t2 > 0.0005) {
     desert = out.zDesert * landW;
     rainforest = out.zRain * landW;
@@ -345,8 +374,10 @@ function sampleLand(x, z, out) {
     }
     if (rainforest > 0.0005) {
       // Kumpuileva, rosoinen maasto. (Kuivat uomat tulevat nyt valumaverkosta.)
-      hRain = 5.5 + fbm(N.hills, x / 320, z / 320, 4) * 11 + sabs(N.detail(x / 30, z / 30), 0.18) * 1.2;
-      const e = escarpment(x, z);
+      // Sessio 58: karstialueella laaksonpohja on tasaisempi.
+      karstM = karstMaskAt(x, z);
+      hRain = 5.5 + fbm(N.hills, x / 320, z / 320, 4) * 11 * (1 - 0.5 * karstM) + sabs(N.detail(x / 30, z / 30), 0.18) * 1.2;
+      const e = escarpment(x, z, karstM);
       hRain += e.sharp;
       escSharp = rainforest * e.sharp;
       escSoft = rainforest * e.soft;
@@ -400,6 +431,7 @@ function sampleLand(x, z, out) {
   out.cliff = cliff;
   out.escSharp = escSharp;
   out.escSoft = escSoft;
+  out.karstM = karstM;
   out.wl = WATER_LEVEL;
   out.wtype = WATER.SEA;
   out.lakeR = 0;
@@ -790,7 +822,7 @@ function smoothRef(x, z, s) {
     hs += (-2.0 - hs) * s.basin;
     h += s.t1 * hs;
   }
-  if (s.rainforest > 0.001) h += s.rainforest * (5.5 + fbm(N.hills, x / 320, z / 320, 2) * 11) + (s.escSoft || 0);
+  if (s.rainforest > 0.001) h += s.rainforest * (5.5 + fbm(N.hills, x / 320, z / 320, 2) * 11 * (1 - 0.5 * (s.karstM || 0))) + (s.escSoft || 0);
   if (s.desert + s.oasis > 0.001) h += (s.desert + s.oasis) * s.hDesert;
   if (s.mountains > 0.001) h += s.mountains * (6 + ridged(x / 650, z / 650, 2) * 110 * s.rise);
   if (s.coastW > 0.001) h += s.coastW * s.hCoast;
@@ -834,8 +866,9 @@ function applyRivers(x, z, out) {
   const c = cj * RIV_G + ci;
   const a = R.start[c], b = R.start[c + 1];
   if (a === b) return;
-  // Sessio 57: jyrkänne liukuu joen laaksossa loivaksi rampiksi (sama kuin
-  // jokiverkon vertailukorkeudessa), joten joki ei törmää kallioseinään.
+  // Sessio 57/58: karstimassiivi madaltuu joen laaksossa (jokiverkon
+  // vertailukorkeus ei näe massiiveja), joten joki kulkee laaksoa tai rotkoa
+  // pitkin eikä törmää kallioseinään. Isompien jokien laakso on leveämpi.
   const escD = (out.escSharp || 0) - (out.escSoft || 0);
   if (escD > 0.02 || escD < -0.02) {
     let fade = 1;
@@ -846,7 +879,7 @@ function applyRivers(x, z, out) {
       const w = Math.max(R.pw[pi * 5], R.pw[pi * 5 + 1]);
       if (w < 0.3) continue;
       const V = rivValley(w);
-      fade = Math.min(fade, smoothstep(V * 0.55, V + 2, pieceDist(R, pi, qx, qz)));
+      fade = Math.min(fade, smoothstep(V * 0.6, V + 5 + w * 2.5, pieceDist(R, pi, qx, qz)));
     }
     if (fade < 1) {
       out.h -= escD * (1 - fade);
@@ -1106,7 +1139,7 @@ function lakeNear(x, z, margin) {
 // Sopiiko piste putouksen ympäristöksi (sademetsää, ei kalliomuodostumia).
 function fallGround(x, z) {
   sampleBase(x, z, _fb);
-  return _fb.rainforest > 0.97 && _fb.rock < 0.02 && _fb.mesa < 0.02;
+  return _fb.rainforest > 0.9 && _fb.rock < 0.02 && _fb.mesa < 0.02;
 }
 
 // Murtoviiva tasavälisiksi (n. 2 m) pisteiksi.
@@ -1123,15 +1156,20 @@ function densify(cx, cz, step) {
   return [Float32Array.from(ox), Float32Array.from(oz)];
 }
 
+// Sessio 58: putous karstimassiivin seinämältä. Kenttä G = 0 on seinämän
+// puolivälissä (F = reunan taso + KARST_E / 2).
+function karstG(x, z) {
+  return karstField(x, z) - karstLevel(karstMaskAt(x, z)) - KARST_E / 2;
+}
 function tryFall(x, z, c, rand) {
-  if (escMaskAt(x, z) < 0.6) return null;
-  // Newtonin askelin jyrkänteen tasa-arvokäyrälle.
+  if (karstMaskAt(x, z) < 0.6) return null;
+  // Newtonin askelin seinämän tasa-arvokäyrälle.
   let gx = 0, gz = 0;
   const e = 1.5;
-  for (let i = 0; i < 10; i++) {
-    const f = escField(x, z);
-    gx = (escField(x + e, z) - escField(x - e, z)) / (2 * e);
-    gz = (escField(x, z + e) - escField(x, z - e)) / (2 * e);
+  for (let i = 0; i < 16; i++) {
+    const f = karstG(x, z) + c;
+    gx = (karstG(x + e, z) - karstG(x - e, z)) / (2 * e);
+    gz = (karstG(x, z + e) - karstG(x, z - e)) / (2 * e);
     const g2 = gx * gx + gz * gz;
     if (g2 < 1e-12) return null;
     let s = (f - c) / g2;
@@ -1141,11 +1179,12 @@ function tryFall(x, z, c, rand) {
     z -= gz * s;
     if (Math.abs(f - c) < 2e-5) break;
   }
-  if (Math.abs(escField(x, z) - c) > 3e-4) return null;
+  if (Math.abs(karstG(x, z)) > 3e-4) return null;
   const g = Math.hypot(gx, gz);
-  // Seinämän vaakasuora puolileveys: vain jyrkät kallioreunat kelpaavat.
-  const half = ESC_EDGE / g;
-  if (half > 3.2) return null;
+  // Seinämän vaakasuora puolileveys: vain jyrkät kallioreunat kelpaavat
+  // (ei loivan rinteen kohdalla).
+  const half = KARST_E / 2 / g + 1.2;
+  if (half > 8 || rampAt(x, z) > 0.02) return null;
   const nx = gx / g, nz = gz / g;   // ylös rinnettä (kallion päälle)
   const dx = -nx, dz = -nz;         // putoamissuunta
   const tx = -nz, tz = nx;          // reunan suuntainen
@@ -1160,10 +1199,10 @@ function tryFall(x, z, c, rand) {
   for (const s of [-7, 7]) {
     const a = sampleBase(lipX + nx * 0.4 + tx * s, lipZ + nz * 0.4 + tz * s, _fb).h;
     const b = sampleBase(footX + tx * s, footZ + tz * s, _fb).h;
-    if (a - b < 4 || Math.abs(a - hTop) > 2.5) return null;
+    if (a - b < 4 || Math.abs(a - hTop) > 3.5) return null;
   }
   // Kaukana joista ja järvistä (jokiverkko ei muutu).
-  if (nearChannel(x, z, 70) || nearChannel(footX + dx * 40, footZ + dz * 40, 50)) return null;
+  if (nearChannel(x, z, 50) || nearChannel(footX + dx * 40, footZ + dz * 40, 40)) return null;
   if (lakeNear(x, z, 70)) return null;
 
   // Allas kallion juurella. Takareuna on vähintään 1,3 m reunasta, jotta
@@ -1188,7 +1227,7 @@ function tryFall(x, z, c, rand) {
   const depth = 1.8 + rand() * 0.8;
 
   // Lähdepuro kallion päällä: lähteestä reunalle, loiva mutka.
-  const Ls = 40 + rand() * 35;
+  const Ls = 26 + rand() * 24; // massiivin laki kumpuilee kauempana reunasta
   const bend = (rand() - 0.5) * 16;
   const cx = [], cz = [];
   for (let k = 0; k <= 12; k++) {
@@ -1273,12 +1312,12 @@ function fallInCell(ix, iz) {
   const rand = mulberry32((Math.imul(ix, 2246822519) ^ Math.imul(iz, 1103515245) ^ Math.imul(SEED + 29, 374761393)) >>> 0);
   sampleBase((ix + 0.5) * FALL_CELL, (iz + 0.5) * FALL_CELL, _fb);
   if (_fb.rainforest > 0.3 && rand() < FALL_CHANCE) {
-    for (let k = 0; k < 10 && !fall; k++) {
+    for (let k = 0; k < 24 && !fall; k++) {
       const x = (ix + 0.15 + rand() * 0.7) * FALL_CELL;
       const z = (iz + 0.15 + rand() * 0.7) * FALL_CELL;
-      const c = ESC_LEVELS[rand() < 0.5 ? 0 : 1];
       const r2 = mulberry32((rand() * 4294967296) >>> 0);
-      fall = tryFall(x, z, c, r2);
+      if (karstMaskAt(x, z) < 0.6) continue;
+      fall = tryFall(x, z, 0, r2);
     }
   }
   fallCache.set(key, fall);
@@ -1385,16 +1424,17 @@ function karstInCell(ix, iz) {
       const variant = Math.floor(rand() * KARST_DIMS.length);
       const scale = 0.85 + rand() * 0.35;
       const rot = rand() * Math.PI * 2;
-      if (escMaskAt(x, z) < 0.45) continue;
+      if (karstMaskAt(x, z) < 0.45) continue;
       sampleTerrainRaw(x, z, _kb);
-      if (_kb.rainforest < 0.95 || _kb.h < _kb.wl + 0.5 || _kb.chan > 0.01 || _kb.cliff > 0.1) continue;
+      // Sessio 58: torni seisoo laaksonpohjalla, ei massiivin päällä tai rinteellä.
+      if (_kb.rainforest < 0.95 || _kb.h < _kb.wl + 0.5 || _kb.chan > 0.01 || _kb.cliff > 0.1 || _kb.escSharp > 0.3) continue;
       const R = KARST_DIMS[variant].R * scale;
       let lo = _kb.h, hi = _kb.h, ok = true;
       for (let i = 0; i < 12 && ok; i++) {
         const ang = (i / 12) * Math.PI * 2;
         for (const f of [0.7, 1.0, 1.6]) {
           sampleTerrainRaw(x + Math.cos(ang) * R * f, z + Math.sin(ang) * R * f, _kb);
-          if (_kb.h < _kb.wl + 0.4 || _kb.chan > 0.01 || _kb.rainforest < 0.9 || _kb.cliff > 0.15) { ok = false; break; }
+          if (_kb.h < _kb.wl + 0.4 || _kb.chan > 0.01 || _kb.rainforest < 0.9 || _kb.cliff > 0.15 || _kb.escSharp > 0.5) { ok = false; break; }
           if (f <= 1) { lo = Math.min(lo, _kb.h); hi = Math.max(hi, _kb.h); }
         }
       }
@@ -1769,14 +1809,17 @@ export function groundColor(x, z, s, slope, out) {
   // Sessio 57: sademetsän jyrkänteet. Sessio 58: vaaleaa kalkkikiveä, jossa
   // oransseja ja tummia valumajuovia (käyttäjän kuvat karstiseinämistä).
   // Kohina riippuu vain x:stä ja z:sta, joten jyrkällä seinällä juovat ovat pystysuoria.
-  if (s.cliff > 0) {
+  // Karstialueella kaikki jyrkät rinteet (myös rotkojen seinät) ovat kalkkikiveä
+  // (ennen jyrkkä rinne oli sademetsässä tummanruskeaa).
+  const limeW = Math.min(1, Math.max(s.cliff * 2, cliffT * s.rainforest * Math.min(1, (s.karstM || 0) * 2.5)));
+  if (limeW > 0) {
     const sOr = smoothstep(0.1, 0.6, N.detail(x / 2.4 + 17, z / 2.4 - 9) * 0.6 + N.color(x / 9, z / 9) * 0.4);
     const sDk = smoothstep(0.35, 0.85, N.detail(x / 0.9 - 5, z / 0.9 + 3));
     mix3(_c1, C.limePale, C.limeOrange, sOr * 0.75);
     mix3(_c1, _c1, C.limeDark, sDk * 0.7);
     // Loivemmissa kohdissa (hyllyt, reunat) sammalta.
     mix3(_c1, _c1, C.limeMoss, (1 - smoothstep(0.45, 0.75, slope)) * 0.7);
-    mix3(out, out, _c1, Math.min(1, s.cliff * 2));
+    mix3(out, out, _c1, limeW);
   }
   // Graniittikalliot: harmaata kiveä ja jäkälää.
   if (s.rock > 0) {

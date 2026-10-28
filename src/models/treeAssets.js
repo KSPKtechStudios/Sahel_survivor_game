@@ -117,8 +117,22 @@ function convert(node) {
 // Sessio 57: liaanit kiinnityskohdista (render/vines.js). Osa kaartuu kahden
 // oksan välillä (loop), useimmat laskeutuvat vinosti maahan, osa riippuu
 // vapaana mutta ei maahan asti (ennen moni riippui suorana pystyviivana).
+//
+// Sessio 58 (käyttäjä: liaanit liian paksuja ja kaikki samanlaisia): säde
+// 0,5–4 cm (ennen 3–7,5 cm) ja muototyyppi `kind` (render/vines.js):
+// thin = ohut sileä vihreä varsi, medium = kierteinen kaksisäikeinen,
+// coil = korkkiruuvi, thick = vanha puutunut liaani, ladder = litteä
+// aaltoileva "apinanportaat", curtain = vapaana riippuva ilmajuurien verho
+// (useita ohuita säikeitä samasta kohdasta).
+function pickKind(rng, table) {
+  let u = rng();
+  for (const [k, p] of table) { if ((u -= p) < 0) return k; }
+  return table[table.length - 1][0];
+}
+const R_KIND = { thin: [0.006, 0.011], medium: [0.012, 0.02], coil: [0.01, 0.016], thick: [0.022, 0.038], ladder: [0.02, 0.03], curtain: [0.004, 0.007] };
 function vineSpecs(pts, rng) {
   const out = [];
+  const radius = (kind) => R_KIND[kind][0] + rng() * (R_KIND[kind][1] - R_KIND[kind][0]);
   pts.forEach((p, i) => {
     const top = new THREE.Vector3(p[0], p[1], p[2]);
     const u = rng();
@@ -127,7 +141,8 @@ function vineSpecs(pts, rng) {
       const end = new THREE.Vector3(q[0], q[1], q[2]);
       const d = top.distanceTo(end);
       if (d > 1.5 && d < 10) {
-        out.push({ top: top.toArray(), end: end.toArray(), onTree: true, len: d * (1.15 + rng() * 0.3), r: 0.035 + rng() * 0.03 });
+        const kind = pickKind(rng, [['medium', 0.4], ['thick', 0.3], ['ladder', 0.15], ['coil', 0.15]]);
+        out.push({ top: top.toArray(), end: end.toArray(), onTree: true, len: d * (1.15 + rng() * 0.3), r: radius(kind), kind });
         return;
       }
     }
@@ -135,10 +150,18 @@ function vineSpecs(pts, rng) {
       const a = rng() * Math.PI * 2, drift = 1.5 + rng() * 3.5;
       const end = [top.x + Math.cos(a) * drift, -0.05, top.z + Math.sin(a) * drift];
       const d = Math.hypot(end[0] - top.x, end[1] - top.y, end[2] - top.z);
-      out.push({ top: top.toArray(), end, len: d * (1.02 + rng() * 0.08), r: 0.04 + rng() * 0.035 });
+      const kind = pickKind(rng, [['thin', 0.38], ['medium', 0.27], ['coil', 0.13], ['thick', 0.14], ['ladder', 0.08]]);
+      out.push({ top: top.toArray(), end, len: d * (1.02 + rng() * 0.08), r: radius(kind), kind });
       return;
     }
-    out.push({ top: top.toArray(), end: null, len: Math.max(1.5, Math.min(top.y - 1.2, 2.5 + rng() * 4)), r: 0.03 + rng() * 0.02 });
+    // Ilmajuuriverho: 3–5 ohutta säiettä hieman eri kohdista ja eri pituisina.
+    const len = Math.max(1.5, Math.min(top.y - 1.2, 2.5 + rng() * 4));
+    const n = 3 + Math.floor(rng() * 3);
+    for (let k = 0; k < n; k++) {
+      const a = rng() * Math.PI * 2, o = 0.05 + rng() * 0.25;
+      const t = [top.x + Math.cos(a) * o, top.y - rng() * 0.15, top.z + Math.sin(a) * o];
+      out.push({ top: t, end: null, len: len * (0.55 + rng() * 0.6), r: radius('curtain'), kind: 'curtain' });
+    }
   });
   return out;
 }

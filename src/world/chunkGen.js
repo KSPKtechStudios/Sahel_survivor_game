@@ -160,7 +160,10 @@ export function generateChunk(cx, cz, variantCounts) {
         // Vain vesirajassa (joet, järvet, lammet, meren ranta)
         if (s.h < s.wl - 0.1 || s.h > s.wl + 1.0) continue;
       } else if (s.h < s.wl + 0.15) continue;
-      if (def.maxSlope < 1 && slope(x, z, s.h) > def.maxSlope) continue;
+      // Sessio 58: karstialueella puut vain alle n. 40° rinteille (massiivien
+      // kumpuilevat laet ja huiput ovat paikoin hyvin jyrkkiä).
+      const maxSlope = def.kind === 'tree' && s.karstM > 0.05 ? Math.min(def.maxSlope, 0.24) : def.maxSlope;
+      if (maxSlope < 1 && slope(x, z, s.h) > maxSlope) continue;
       if (insideStructure(x, z, def.kind === 'pickup' ? 0 : 2)) continue;
       if (karst.length && insideKarst(x, z, def.kind === 'pickup' ? 0.3 : 1.5)) continue;
       const scale = def.scale[0] + r3 * (def.scale[1] - def.scale[0]);
@@ -230,6 +233,8 @@ export function generateChunk(cx, cz, variantCounts) {
       const h = gridHeight(x - x0, z - z0);
       let y = def.lift !== undefined ? h + def.lift : h - 0.03;
       if (def.slopeCheck && 1 - normals[vi * 3 + 1] > def.maxSlope) continue;
+      // Sessio 58: ei ruohoa tai aluskasveja karstin pystyseinillä (yli n. 48°).
+      if (!def.density.cliff && sv.karstM > 0.05 && 1 - normals[vi * 3 + 1] > 0.33) continue;
       if (def.onWater) {
         // Kelluu tyynellä vedellä (ei joissa eikä meressä), 0.3..2.2 m syvyydessä.
         const depth = sv.wl - h;

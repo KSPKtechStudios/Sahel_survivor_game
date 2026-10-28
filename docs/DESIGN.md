@@ -226,6 +226,13 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Jyrkänteen kallio on tympeän näköinen, pelkkä ruohoseinä.** Tavoite on kuvien kaltainen karstimaisema: jyrkkiä kalkkikiviseinämiä, joissa on kivenlohkareita ja köynnöksiä, ja ylhäällä kasvillisuutta. Käyttäjä piti erityisesti yksittäisestä kalkkikivitornista ("ompas hieno").
 - **Kun puu kaatuu jonkin päälle** (toinen puu, pensas, kivi tms., ei pelkkä maa), osumakohtaan tulee aivan pieni pölähdys (ei liikaa) ja vähän roiskahtavia partikkeleita, ikään kuin puu rikkoisi jotakin. Pelkkään maahan kaatuessa tätä efektiä ei ole.
 - Avoimet kysymykset: kuinka korkeita ja yleisiä kalkkikivitornien ja -seinämien pitää olla (aiemmin: Kongon sademetsä on melko tasainen, ei liikaa maastonmuotoja)?
+- **Jatkopalaute (kuva sademetsästä, session 58 versio):**
+  - Roikkuvat köynnökset ovat liian paksuja ja kaikki samanlaisia: halutaan eri paksuisia ja eri mallisia variantteja. Tekstuuri on puuta; tilalle jotain kasvimaista.
+  - Maastonmuodot ja niiden generointi näyttävät kamalilta. Pelaaja ei pääse jyrkänteen päälle: tarvitaan pieniä solia ("mountain pass") tai kohtia, joissa rinne loivenee niin, että ylös pääsee.
+  - Nykyinen generointi on käytännössä vain maanpinnan tason vaihtelua parilla tasolla. Halutaan kunnollinen maastogeneraatio: välillä tasaista viidakkoa, välillä kunnon vuoristoa.
+  - Käyttäjän välittämä ehdotus (Gemini): thaimaalainen karstivuoristo (Phang Nga, Krabi). Tasaiset laaksot ja jyrkät kalliot (porrastettu tai harjanteinen kohina), matala kohina tekee tasaisen viidakon pohjan ja jokilaaksot. Korkeat kohdat nousevat jyrkästi pystysuoriksi kalliopylväiksi ja -seinämiksi, ei pyöreiksi kukkuloiksi. Siirtymä tasaiselta pohjalta kallioseinään näyttää luonnolliselta, ja kasvillisuutta on rinteillä tiettyyn jyrkkyyteen asti.
+  - Tarkistettava, miten puut ja kasvit toimivat maastogeneraation kanssa ja toimivatko ylipäätään.
+  - **Tarkennus:** perus tasainen viidakko on ihan hyvä sellaisenaan. Karstivuoristo on sademetsäbiomin sisällä paikoittain esiintyvä variantti, ei koko viidakon korvaaja.
 
 ## Sessio 56 (käyttäjän kertoma, 2026-10-27): kaikki esineet paremmiksi, puut
 - **Paranna kaikki esinemallit**, paitsi soihtu, nuija ja muut käyttäjän valmiit mallit.
