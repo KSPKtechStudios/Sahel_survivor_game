@@ -17,7 +17,7 @@ Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
   - lähellä kuuluu kohina, joka voimistuu ja kirkastuu lähestyessä;
   - altaassa voi uida, ja kartalla paikan nimi on Vesiputous;
   - putouksia on maailmassa noin kymmenkunta (siemenellä 777 13 kpl), aina kaukana joista ja järvistä.
-- **Latvusto umpeen, toinen kierros:** sademetsäpuiden latvukset ovat noin kaksi kertaa leveämpiä (kapokki 1,35, jättiläispuu 1,2 kertaa) samalla määrällä lehtiä, joten latvusten väliin ei jää enää isoja aukkoja. Mittaus pelissä on kesken.
+- **Latvusto umpeen, toinen kierros:** sademetsäpuiden latvukset ovat noin kaksi kertaa leveämpiä (kapokki 1,35, jättiläispuu 1,2 kertaa) samalla määrällä lehtiä, joten latvusten väliin ei jää enää isoja aukkoja. Suoraan ylös katsoessa taivasta näkyy keskimäärin 14 % (8 kohtaa sademetsässä; aamupäivällä ennen tätä muutosta 38 %, session 55 versiossa 23 %).
 - Vanhoissa maailmoissa sademetsän maasto muuttuu jyrkännealueilla, ja joet voivat siirtyä niissä hieman. Puut ja rakennelmat pysyvät muualla paikoillaan.
 - **Sademetsän latvusto umpeen:** lehvät peittävät korteista noin kaksinkertaisen alan (leveälehtiset 20 % → 42–50 %, kapokki 26 % → 45 %), latvukset ovat leveämpiä ja osa lehtikorteista on vaakatasossa, joten taivasta näkyy alhaalta katsottuna paljon vähemmän.
 - **Savannin akasiat tuuheammiksi:** akasian lehvät ovat tiheää hienolehtistä massaa (peitto 36 % → 49 %).
