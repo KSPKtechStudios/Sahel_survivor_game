@@ -158,7 +158,7 @@ export const OBJECT_TYPES = {
   },
   boulder: {
     name: 'Lohkare', model: 'boulder', kind: 'rock', material: 'solid', surface: 'rock', castShadow: true,
-    density: { savanna: 0.9, woodland: 0.6, mare: 0.4, laterite: 5, dunes: 0.3, desert: 0.9, rainforest: 0.8, mountains: 10, beach: 0.6, rock: 22, mesa: 5 },
+    density: { savanna: 0.9, woodland: 0.6, mare: 0.4, laterite: 5, dunes: 0.3, desert: 0.9, rainforest: 0.8, mountains: 10, beach: 0.6, rock: 22, mesa: 5, cliff: 16 },
     scale: [0.7, 1.6], maxSlope: 1, collider: 1.05, hit: { y: 0.5, r: 1.25 }, drawDist: 99,
     harvest: { tool: 'pickaxe', hp: 4, drops: [['stone', 4]], needMsg: 'Liian kovaa!' },
   },
@@ -228,7 +228,7 @@ export const OBJECT_TYPES = {
   },
   scree: {
     name: 'Kivikko', model: 'scree', kind: 'decor', material: 'solid', surface: 'rock', castShadow: false, decorative: true,
-    density: { mountains: 30, rock: 25, mesa: 20, beach: 4 },
+    density: { mountains: 30, rock: 25, mesa: 20, beach: 4, cliff: 30 },
     scale: [0.8, 1.6], maxSlope: 1, collider: 0, hit: null,
   },
   reeds: {

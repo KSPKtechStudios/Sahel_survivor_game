@@ -13,6 +13,7 @@ import { Ambient } from './render/ambient.js';
 import { Debris } from './render/debris.js';
 import { Footprints } from './render/footprints.js';
 import { Vines } from './render/vines.js';
+import { Waterfalls } from './render/waterfalls.js';
 import { Coconuts } from './game/coconuts.js';
 import { createWaterMaterial, updateWaterMaterial } from './render/water.js';
 import { Ripples } from './render/ripples.js';
@@ -118,6 +119,7 @@ const ruins = new Ruins({ scene, world, drops, bursts });
 const ripples = new Ripples(renderer);
 const post = new PostFX(renderer);
 const splashes = new Splashes(scene);
+const waterfalls = new Waterfalls(scene, splashes, ripples);
 const fire = new FireFx(scene);
 const blood = new Blood(scene);
 const rain = new Rain(scene, renderer);
@@ -402,6 +404,7 @@ function clearWorldState(seed) {
   drops.clear();
   fallen.clear();
   vines.clear();
+  waterfalls.clear();
   coconuts.clear();
   debris.clear();
   tumbleweeds.clear();
@@ -752,6 +755,7 @@ function updateSfx(game, rainAmt, realDt) {
       // Raju tuuli: merellä ukkosella ja hiekkamyrskyssä puuskittain.
       stormWind: Math.max(thunder * _sm(0.2, 0.7, _s.ocean || 0), sand * Math.max(0, Math.sin(elapsed * 0.21) * Math.sin(elapsed * 0.077 + 1)) * 1.6),
     });
+    sfx.waterfall(waterfalls.sound.level, waterfalls.sound.pan, realDt);
     // Linnut (sessio 12d): välillä viidakossa, savannilla harvemmin; päivällä
     // eikä kovassa sateessa.
     birdT -= realDt;
@@ -763,6 +767,7 @@ function updateSfx(game, rainAmt, realDt) {
     }
   } else {
     sfx.setLevels({});
+    sfx.waterfall(0, 0, realDt);
   }
   sfx.update(realDt);
 }
@@ -980,6 +985,7 @@ function frame(now) {
   materials.water.uniforms.uRipple.value = ripples.texture;
   materials.water.uniforms.uRippleRect.value = ripples.rect;
   splashes.update(simDt, env.lightColor, materials.water.uniforms.uAmbient.value);
+  if (inGame) waterfalls.update(simDt, player.position, player.yaw, env.lightColor, materials.water.uniforms.uAmbient.value);
   fire.update(simDt, materials.water.uniforms.uAmbient.value);
   blood.update(simDt, 0.35 + 0.65 * env.daylight);
   footprints.update(simDt, env.sun.position, env.hemi.intensity / Math.max(0.05, env.sun.intensity) * 0.9);
@@ -1165,5 +1171,5 @@ window.sahel = {
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
   ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, sfx, blood,
   startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
-  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient, vines, flies,
+  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient, vines, flies, waterfalls,
 };

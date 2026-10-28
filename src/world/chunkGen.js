@@ -11,7 +11,7 @@ import { openFactor } from './waves.js';
 import { generateCover } from './groundCover.js';
 
 // Tiheyden avaimet: biomit sekä muodostumat (graniittikallio, pöytävuori).
-const DENSITY_KEYS = [...BIOME_KEYS, 'rock', 'mesa'];
+const DENSITY_KEYS = [...BIOME_KEYS, 'rock', 'mesa', 'cliff']; // cliff: sessio 57, sademetsän jyrkänteet
 const SIZE = CONFIG.chunkSize;
 const SEG = CONFIG.chunkSegments;
 const STEP = SIZE / SEG;
@@ -120,6 +120,7 @@ export function generateChunk(cx, cz, variantCounts) {
       for (const b of DENSITY_KEYS) p += (def.density[b] || 0) * s[b];
       // Kalliolla ja pöytävuorella kasvaa vähemmän (paitsi niille tarkoitetut).
       if (!def.density.rock) p *= 1 - s.rock * 0.85;
+      if (!def.density.cliff) p *= 1 - Math.min(1, (s.cliff || 0) * 1.5); // ei puita kallioseinämälle
       if (!def.density.mesa) p *= 1 - s.mesa * 0.75;
       if (r1 >= p / maxD) continue;
       if (def.nearWater) {
@@ -158,7 +159,8 @@ export function generateChunk(cx, cz, variantCounts) {
       const vi = Math.min(SEG, Math.max(0, Math.round((z - z0) / STEP))) * row + Math.min(SEG, Math.max(0, Math.round((x - x0) / STEP)));
       const sv = samples[vi];
       let p = 0;
-      for (const b of DENSITY_KEYS) p += (def.density[b] || 0) * sv[b];
+      for (const b of DENSITY_KEYS) p += (def.density[b] || 0) * (sv[b] || 0);
+      if (!def.density.cliff) p *= 1 - Math.min(1, (sv.cliff || 0) * 1.5);
       if (r1 >= p / maxD) continue;
       const h = gridHeight(x - x0, z - z0);
       let y = def.lift !== undefined ? h + def.lift : h - 0.03;

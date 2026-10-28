@@ -294,15 +294,15 @@ def rainforest(seed, kind):
     T = Tree(seed)
     if kind == 'canopy':
         Ht, r0, r1, H = T.u(6.4, 8.0), 0.32, 0.2, 0
-        nl, lenl, cells, cut = (5, 7), (3.9, 5.2), ('broad_a', 'broad_b'), 0.8
+        nl, lenl, cells, cut = (5, 7), (6.1, 7.9), ('broad_a', 'broad_b'), 0.8
         lobes, bz = (T.rng.randint(4, 5), (0.45, 0.75), (0.5, 0.72), (0.16, 0.22)), -0.6
     elif kind == 'jungle':
         Ht, r0, r1 = T.u(8.8, 10.2), 0.55, 0.36
-        nl, lenl, cells, cut = (6, 8), (4.4, 6.0), ('kapok',), 1.9
+        nl, lenl, cells, cut = (6, 8), (6.0, 7.9), ('kapok',), 1.9
         lobes, bz = (T.rng.randint(5, 6), (1.1, 1.7), (1.2, 1.75), (0.11, 0.15)), -0.8
     else:  # emergent
         Ht, r0, r1 = T.u(15.0, 18.5), 0.85, 0.48
-        nl, lenl, cells, cut = (7, 9), (6.8, 9.2), ('broad_a', 'broad_b'), 2.6
+        nl, lenl, cells, cut = (7, 9), (8.0, 10.5), ('broad_a', 'broad_b'), 2.6
         lobes, bz = (T.rng.randint(6, 7), (1.6, 2.4), (1.7, 2.4), (0.085, 0.11)), -1.0
     base = V((0, 0, bz))
     top = V((T.u(-0.15, 0.15), T.u(-0.15, 0.15), Ht))
@@ -315,9 +315,9 @@ def rainforest(seed, kind):
         if kind == 'emergent':
             # Leveä sateenvarjolatvus: oksat leviävät ja nousevat vasta kärjissä.
             return UP * (0.03 + 0.1 * t)
-        return UP * 0.14
+        return UP * 0.11
 
-    ang = {'jungle': (1.15, 1.45), 'canopy': (0.75, 1.15), 'emergent': (0.9, 1.25)}[kind]
+    ang = {'jungle': (1.15, 1.45), 'canopy': (0.95, 1.3), 'emergent': (0.95, 1.3)}[kind]
     at = (0.62, 1.0) if kind == 'jungle' else (0.78, 1.0)
     limbs = T.children(tr, T.rng.randint(*nl), at, ang, lenl, 0.5, 1, 7, 0.08, steer, tip_r=0.4)
     limbs.append(T.grow(top - V((0, 0, 0.3)), V((T.u(-0.15, 0.15), T.u(-0.15, 0.15), 1)), lenl[0] * 0.7, r1 * 0.7, r1 * 0.25, 1, 5, 0.08, steer))

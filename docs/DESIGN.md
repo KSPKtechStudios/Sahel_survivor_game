@@ -227,6 +227,8 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
   - liaanit näyttävät huonoilta malleilta ja irrallisilta, ne pitää päivittää;
   - uusien lehvästöjen läpi pääsee liikaa valoa, sademetsä on menettänyt umpinaisen latvuston: korjattava ilman että fps putoaa paljon;
   - viidakkoon maastonmuotoja, ei liikaa (Kongon sademetsä on melko tasainen), mutta kallioita ja jyrkänteitä siellä täällä, ehkä vesiputouksia; jokigenerointi ei saa mennä rikki.
+  - savannin akasioiden lehvästöt ovat liian harvoja.
+  - Avoimet kysymykset: kuinka monta vesiputousta maailmassa saa olla (nyt noin kymmenkunta)? Myös vuoristoon?
 - **Kannot ja juuret eivät saa olla kulmikkaita** (käyttäjän kuvat: sademetsäpuun terävät kolmiolevyt tyvessä vs. oikea kanto). Oikea kanto: tyvi levenee pyöreästi, paksut juuret kaartuvat maahan, kaarna jatkuu juuria pitkin.
 
 ## Sessio 55 (käyttäjän kertoma, 2026-10-27): esinemallien jatko

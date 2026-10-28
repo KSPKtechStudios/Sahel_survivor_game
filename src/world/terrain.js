@@ -66,6 +66,7 @@ const cellCache = new Map();
 const structCache = new Map();
 const lakeCache = new Map();
 const featCache = new Map();
+const fallCache = new Map();
 
 // Merkkijono tai luku -> 32-bittinen siemen.
 export function seedFromString(text) {
@@ -89,11 +90,13 @@ export function setWorldSeed(seed) {
     bigDune: n(15), hills: n(16), mount: n(17), mount2: n(18), oasis: n(19), gully: n(20), strata: n(21),
     river: n(22), rwarp: n(23), stream: n(24), swarp: n(25), lakeShape: n(26), coast: n(27),
     island: n(28), wet: n(29), hills2: n(30), feat: n(31), width: n(32),
+    esc: n(33), escMask: n(34), escH: n(35),
   };
   cellCache.clear();
   structCache.clear();
   lakeCache.clear();
   featCache.clear();
+  fallCache.clear();
 }
 
 export function getWorldSeed() {
@@ -226,6 +229,41 @@ function coastHeight(x, z, c) {
   return h;
 }
 
+// --- Sessio 57: sademetsän jyrkänteet ---------------------------------------------
+// Laikuittain kaksi porrasta (6-10 m korkeat kallioreunat) kohinakentän
+// tasa-arvokäyrillä. sharp = todellinen maasto, soft = sama loivana rampina:
+// jokiverkko ja joen vertailukorkeus käyttävät loivaa, ja joen laaksossa
+// maasto liukuu loivaan (applyRivers), joten joet kulkevat jyrkänteen läpi
+// rotkona eivätkä hajoa. face = jyrkänteen seinämän osuus (kalliopinta).
+const _esc = { sharp: 0, soft: 0, face: 0 };
+function escarpment(x, z) {
+  const o = _esc;
+  o.sharp = 0; o.soft = 0; o.face = 0;
+  const m = escMaskAt(x, z);
+  if (m <= 0) return o;
+  const f = escField(x, z);
+  const S = (6 + 4 * (N.escH(x / 700, z / 700) * 0.5 + 0.5)) * m;
+  for (const c of ESC_LEVELS) {
+    const st = smoothstep(c - ESC_EDGE, c + ESC_EDGE, f);
+    o.sharp += S * st;
+    o.soft += S * smoothstep(c - 0.16, c + 0.16, f);
+    o.face = Math.max(o.face, m * (1 - Math.abs(2 * st - 1)));
+  }
+  // Rosoinen kallioseinämä.
+  if (o.face > 0) o.sharp += o.face * N.detail(x / 3.5, z / 3.5) * 0.9;
+  return o;
+}
+const ESC_LEVELS = [-0.18, 0.12];
+const ESC_EDGE = 0.006; // terävän portaan puolileveys kentän f yksiköissä
+function escMaskAt(x, z) {
+  return smoothstep(0.1, 0.28, fbm(N.escMask, x / 1300, z / 1300, 2));
+}
+function escField(x, z) {
+  const wx = x + N.warp(x / 260 + 5.1, z / 260 - 3.3) * 45;
+  const wz = z + N.warp(x / 260 - 7.7, z / 260 + 2.9) * 45;
+  return fbm(N.esc, wx / 520, wz / 520, 3);
+}
+
 // Maa ilman erikoismuodostumia ja vesistöjä.
 function sampleLand(x, z, out) {
   zones(x, z, out);
@@ -281,6 +319,7 @@ function sampleLand(x, z, out) {
 
   // --- Aavikko ja sademetsä
   let desert = 0, rainforest = 0, oasis = 0, hDesert = 0, hRain = 0;
+  let escSharp = 0, escSoft = 0, cliff = 0;
   if (t2 > 0.0005) {
     desert = out.zDesert * landW;
     rainforest = out.zRain * landW;
@@ -305,6 +344,11 @@ function sampleLand(x, z, out) {
     if (rainforest > 0.0005) {
       // Kumpuileva, rosoinen maasto. (Kuivat uomat tulevat nyt valumaverkosta.)
       hRain = 5.5 + fbm(N.hills, x / 320, z / 320, 4) * 11 + sabs(N.detail(x / 30, z / 30), 0.18) * 1.2;
+      const e = escarpment(x, z);
+      hRain += e.sharp;
+      escSharp = rainforest * e.sharp;
+      escSoft = rainforest * e.soft;
+      cliff = rainforest * e.face;
     }
   }
 
@@ -351,10 +395,14 @@ function sampleLand(x, z, out) {
   out.hDesert = hDesert;
   out.rock = 0;
   out.mesa = 0;
+  out.cliff = cliff;
+  out.escSharp = escSharp;
+  out.escSoft = escSoft;
   out.wl = WATER_LEVEL;
   out.wtype = WATER.SEA;
   out.lakeR = 0;
   out.chan = 0;
+  out.fall = 0;
   out.flowX = 0;
   out.flowZ = 0;
   return out;
@@ -740,7 +788,7 @@ function smoothRef(x, z, s) {
     hs += (-2.0 - hs) * s.basin;
     h += s.t1 * hs;
   }
-  if (s.rainforest > 0.001) h += s.rainforest * (5.5 + fbm(N.hills, x / 320, z / 320, 2) * 11);
+  if (s.rainforest > 0.001) h += s.rainforest * (5.5 + fbm(N.hills, x / 320, z / 320, 2) * 11) + (s.escSoft || 0);
   if (s.desert + s.oasis > 0.001) h += (s.desert + s.oasis) * s.hDesert;
   if (s.mountains > 0.001) h += s.mountains * (6 + ridged(x / 650, z / 650, 2) * 110 * s.rise);
   if (s.coastW > 0.001) h += s.coastW * s.hCoast;
@@ -784,6 +832,25 @@ function applyRivers(x, z, out) {
   const c = cj * RIV_G + ci;
   const a = R.start[c], b = R.start[c + 1];
   if (a === b) return;
+  // Sessio 57: jyrkänne liukuu joen laaksossa loivaksi rampiksi (sama kuin
+  // jokiverkon vertailukorkeudessa), joten joki ei törmää kallioseinään.
+  const escD = (out.escSharp || 0) - (out.escSoft || 0);
+  if (escD > 0.02 || escD < -0.02) {
+    let fade = 1;
+    for (let e = a; e < b; e++) {
+      const pi = R.list[e];
+      const bx = pi * 4;
+      if (qx < R.box[bx] || qz < R.box[bx + 1] || qx > R.box[bx + 2] || qz > R.box[bx + 3]) continue;
+      const w = Math.max(R.pw[pi * 5], R.pw[pi * 5 + 1]);
+      if (w < 0.3) continue;
+      const V = rivValley(w);
+      fade = Math.min(fade, smoothstep(V * 0.55, V + 2, pieceDist(R, pi, qx, qz)));
+    }
+    if (fade < 1) {
+      out.h -= escD * (1 - fade);
+      out.cliff *= fade;
+    }
+  }
   const raw = out.h;
   const notRock = 1 - Math.min(1, out.rock * 2 + out.mesa * 2);
   let vary = -1, ref = NaN, n = 0;
@@ -917,20 +984,24 @@ function lakeInCell(ix, iz) {
       const x = (ix + inset + rand() * (1 - 2 * inset)) * LAKE_CELL;
       const z = (iz + inset + rand() * (1 - 2 * inset)) * LAKE_CELL;
       sampleBase(x, z, _lb);
-      if (_lb.rainforest + _lb.mountains < 0.9 || _lb.rock > 0.05) continue;
+      if (_lb.rainforest + _lb.mountains < 0.9 || _lb.rock > 0.05 || _lb.cliff > 0.02) continue;
       if (best && _lb.h >= best.h) continue;
       if (nearChannel(x, z, R * 1.75)) continue;
       best = { x, z, h: _lb.h, mt: _lb.mountains };
     }
     if (best) {
       // Pinta reunan matalimman kohdan alapuolelle, jottei vesi valu yli.
-      let minRim = Infinity, maxRim = -Infinity;
+      let minRim = Infinity, maxRim = -Infinity, escLo = Infinity, escHi = -Infinity;
       for (let a = 0; a < 16; a++) {
         const ang = (a / 16) * Math.PI * 2;
         const h = sampleBase(best.x + Math.cos(ang) * R * 1.3, best.z + Math.sin(ang) * R * 1.3, _lb).h;
         minRim = Math.min(minRim, h);
         maxRim = Math.max(maxRim, h);
+        escLo = Math.min(escLo, _lb.escSharp);
+        escHi = Math.max(escHi, _lb.escSharp);
       }
+      // Sessio 57: ei järveä jyrkänteen kohdalle (vesi valuisi reunan yli).
+      if (escHi - escLo > 0.5) minRim = -Infinity;
       const wl = minRim - 0.35;
       // Vuoristossa järvi saa olla jyrkkärantaisempi (kuten kirkkojärvet).
       const steep = best.mt > 0.5 ? 2 : 1;
@@ -975,11 +1046,328 @@ function applyLakes(x, z, out) {
   }
 }
 
+// --- Sessio 57: vesiputoukset ------------------------------------------------------
+// Sademetsän jyrkänteen päällä alkaa lähdepuro, joka putoaa kallion yli
+// altaaseen ja jatkuu altaasta lyhyenä laskupurona, joka imeytyy maahan.
+// Täysin erillään jokiverkosta: paikat valitaan kaukaa uomista ja järvistä,
+// joten jokiverkko, joet ja niiden pinnat eivät muutu lainkaan.
+
+const FALL_CELL = 520;
+const FALL_CHANCE = 0.75;
+const _fb = {};
+
+// Pisteen etäisyys murtoviivaan: palauttaa etäisyyden ja asettaa _fu (solmuindeksi
+// + osuus) sekä _fdx/_fdz (palan suunta).
+let _fu = 0, _fdx = 0, _fdz = 0;
+function polyDist(px, pz, x, z) {
+  let best = Infinity;
+  for (let k = 0; k < px.length - 1; k++) {
+    const ax = px[k], az = pz[k];
+    const ex = px[k + 1] - ax, ez = pz[k + 1] - az;
+    const l2 = ex * ex + ez * ez || 1;
+    const t = Math.max(0, Math.min(1, ((x - ax) * ex + (z - az) * ez) / l2));
+    const dx = x - ax - ex * t, dz = z - az - ez * t;
+    const d2 = dx * dx + dz * dz;
+    if (d2 < best) { best = d2; _fu = k + t; _fdx = ex; _fdz = ez; }
+  }
+  return Math.sqrt(best);
+}
+
+// Puron pinta solmuissa (tiheä, n. 2 m väli): laskee alajuoksulle eikä nouse
+// maan pinnan yläpuolelle. Palauttaa kelvollisten solmujen pinnat; lyhyempi
+// kuin reitti, jos uoma pitäisi kaivaa liian syväksi tai maasto putoaa jyrkästi.
+function streamProfile(px, pz, wl0, maxCut, minSlope, maxStep) {
+  const n = px.length;
+  const wl = new Float32Array(n);
+  let prev = wl0, k = 0;
+  for (; k < n; k++) {
+    const h = sampleBase(px[k], pz[k], _fb).h;
+    const step = k ? Math.hypot(px[k] - px[k - 1], pz[k] - pz[k - 1]) : 0;
+    const v = Math.min(prev - step * minSlope, h - 0.35);
+    if (h - v > maxCut || prev - v > maxStep || _fb.cliff > 0.05) break;
+    wl[k] = prev = v;
+  }
+  return k === n ? wl : wl.slice(0, k);
+}
+
+function lakeNear(x, z, margin) {
+  const ix = Math.floor(x / LAKE_CELL), iz = Math.floor(z / LAKE_CELL);
+  for (let j = iz - 1; j <= iz + 1; j++) {
+    for (let i = ix - 1; i <= ix + 1; i++) {
+      const L = lakeInCell(i, j);
+      if (L && Math.hypot(x - L.x, z - L.z) < L.R * 1.75 + margin) return true;
+    }
+  }
+  return false;
+}
+
+// Sopiiko piste putouksen ympäristöksi (sademetsää, ei kalliomuodostumia).
+function fallGround(x, z) {
+  sampleBase(x, z, _fb);
+  return _fb.rainforest > 0.97 && _fb.rock < 0.02 && _fb.mesa < 0.02;
+}
+
+// Murtoviiva tasavälisiksi (n. 2 m) pisteiksi.
+function densify(cx, cz, step) {
+  const ox = [cx[0]], oz = [cz[0]];
+  for (let k = 1; k < cx.length; k++) {
+    const L = Math.hypot(cx[k] - cx[k - 1], cz[k] - cz[k - 1]);
+    const m = Math.max(1, Math.round(L / step));
+    for (let i = 1; i <= m; i++) {
+      ox.push(cx[k - 1] + (cx[k] - cx[k - 1]) * i / m);
+      oz.push(cz[k - 1] + (cz[k] - cz[k - 1]) * i / m);
+    }
+  }
+  return [Float32Array.from(ox), Float32Array.from(oz)];
+}
+
+function tryFall(x, z, c, rand) {
+  if (escMaskAt(x, z) < 0.6) return null;
+  // Newtonin askelin jyrkänteen tasa-arvokäyrälle.
+  let gx = 0, gz = 0;
+  const e = 1.5;
+  for (let i = 0; i < 10; i++) {
+    const f = escField(x, z);
+    gx = (escField(x + e, z) - escField(x - e, z)) / (2 * e);
+    gz = (escField(x, z + e) - escField(x, z - e)) / (2 * e);
+    const g2 = gx * gx + gz * gz;
+    if (g2 < 1e-12) return null;
+    let s = (f - c) / g2;
+    const sl = Math.abs(s) * Math.sqrt(g2);
+    if (sl > 60) s *= 60 / sl;
+    x -= gx * s;
+    z -= gz * s;
+    if (Math.abs(f - c) < 2e-5) break;
+  }
+  if (Math.abs(escField(x, z) - c) > 3e-4) return null;
+  const g = Math.hypot(gx, gz);
+  // Seinämän vaakasuora puolileveys: vain jyrkät kallioreunat kelpaavat.
+  const half = ESC_EDGE / g;
+  if (half > 3.2) return null;
+  const nx = gx / g, nz = gz / g;   // ylös rinnettä (kallion päälle)
+  const dx = -nx, dz = -nz;         // putoamissuunta
+  const tx = -nz, tz = nx;          // reunan suuntainen
+  const lipX = x + nx * half, lipZ = z + nz * half;
+  const footX = x - nx * (half + 0.6), footZ = z - nz * (half + 0.6);
+  if (!fallGround(lipX + nx * 0.4, lipZ + nz * 0.4)) return null;
+  const hTop = _fb.h;
+  if (!fallGround(footX, footZ)) return null;
+  const hFoot = _fb.h;
+  if (hTop - hFoot < 5) return null;
+  // Reuna on suora myös sivuilla (ei kärki eikä sisäkulma).
+  for (const s of [-7, 7]) {
+    const a = sampleBase(lipX + nx * 0.4 + tx * s, lipZ + nz * 0.4 + tz * s, _fb).h;
+    const b = sampleBase(footX + tx * s, footZ + tz * s, _fb).h;
+    if (a - b < 4 || Math.abs(a - hTop) > 2.5) return null;
+  }
+  // Kaukana joista ja järvistä (jokiverkko ei muutu).
+  if (nearChannel(x, z, 70) || nearChannel(footX + dx * 40, footZ + dz * 40, 50)) return null;
+  if (lakeNear(x, z, 70)) return null;
+
+  // Allas kallion juurella. Takareuna on vähintään 1,3 m reunasta, jotta
+  // ylä- ja alapinnan väliin jää kuivaa seinämää (ei vesiseinää).
+  const R = 4.5 + rand() * 3;
+  const pc = Math.max(1.3 + R, 2 * half + 1 + R * 0.4);
+  const poolX = lipX + dx * pc, poolZ = lipZ + dz * pc;
+  let minRim = Infinity, lo = Infinity, hi = -Infinity;
+  for (let a = 0; a < 16; a++) {
+    const ang = (a / 16) * Math.PI * 2;
+    const rx = Math.cos(ang), rz = Math.sin(ang);
+    if (rx * dx + rz * dz < -0.2) continue;  // kallion puoli ei rajoita
+    for (const r of [0.5, 1.3, 1.9]) {
+      if (!fallGround(poolX + rx * R * r, poolZ + rz * R * r) || _fb.cliff > 0.1) return null;
+      lo = Math.min(lo, _fb.h);
+      hi = Math.max(hi, _fb.h);
+      if (r === 1.3) minRim = Math.min(minRim, _fb.h);
+    }
+  }
+  if (hi - lo > 3.5) return null;
+  const poolWl = Math.min(minRim - 0.3, hFoot - 0.15);
+  const depth = 1.8 + rand() * 0.8;
+
+  // Lähdepuro kallion päällä: lähteestä reunalle, loiva mutka.
+  const Ls = 40 + rand() * 35;
+  const bend = (rand() - 0.5) * 16;
+  const cx = [], cz = [];
+  for (let k = 0; k <= 12; k++) {
+    const t = k / 12;
+    const sb = Math.sin(Math.PI * t);
+    const off = bend * sb * sb;
+    cx.push(lipX + nx * Ls * (1 - t) + tx * off);
+    cz.push(lipZ + nz * Ls * (1 - t) + tz * off);
+  }
+  const [tpx, tpz] = densify(cx, cz, 2);
+  const nt = tpx.length;
+  const tw = new Float32Array(nt);
+  const wTop = 1.35 + rand() * 0.5;
+  for (let k = 0; k < nt; k++) {
+    const t = k / (nt - 1);
+    tw[k] = wTop * smoothstep(0, 0.35, t) + 0.25 * (1 - smoothstep(0, 0.35, t));
+    if (!fallGround(tpx[k], tpz[k])) return null;
+  }
+  const h0 = sampleBase(tpx[0], tpz[0], _fb).h;
+  // Viimeiset solmut ovat reunalla (seinämän kallio sallitaan).
+  const twl = streamProfile(tpx.subarray(0, nt - 2), tpz.subarray(0, nt - 2), h0 - 0.3, 2.6, 0.012, 0.6);
+  if (twl.length < nt - 2) return null;
+  const twlAll = new Float32Array(nt);
+  twlAll.set(twl);
+  twlAll[nt - 2] = twl[nt - 3] - 0.03;
+  twlAll[nt - 1] = twl[nt - 3] - 0.06;
+  const lipWl = twlAll[nt - 1];
+  if (poolWl < WATER_LEVEL + 0.4 || hFoot - poolWl > 3 || lipWl - poolWl < 4.5) return null;
+
+  // Laskupuro: altaasta jyrkimmän laskun suuntaan; lopussa kapenee ja imeytyy
+  // maahan. Ei koskaan uoman, järven tai jyrkänteen lähelle.
+  const ox = [poolX + dx * R * 0.6], oz = [poolZ + dz * R * 0.6];
+  let ux = dx, uz = dz;
+  const Lo = 45 + rand() * 50;
+  for (let len = 0; len < Lo; len += 6) {
+    const lx = ox[ox.length - 1], lz = oz[oz.length - 1];
+    let bh = Infinity, bx = 0, bz = 0;
+    for (const a of [-0.9, -0.45, 0, 0.45, 0.9]) {
+      const ca = Math.cos(a), sa = Math.sin(a);
+      const qx = ux * ca - uz * sa, qz = ux * sa + uz * ca;
+      const h = sampleBase(lx + qx * 6, lz + qz * 6, _fb).h + Math.abs(a) * 0.08;
+      if (h < bh) { bh = h; bx = qx; bz = qz; }
+    }
+    const qx = lx + bx * 6, qz = lz + bz * 6;
+    if (!fallGround(qx, qz) || _fb.cliff > 0.05 || nearChannel(qx, qz, 30) || lakeNear(qx, qz, 30)) break;
+    ox.push(qx); oz.push(qz);
+    ux = bx; uz = bz;
+  }
+  const streams = [{ px: tpx, pz: tpz, wl: twlAll, w: tw, top: true }];
+  if (ox.length >= 4) {
+    const [px, pz] = densify(ox, oz, 2);
+    const wl = streamProfile(px, pz, poolWl - 0.05, 2.2, 0.012, 0.45);
+    const n = wl.length;
+    if (n >= 10) {
+      const w = new Float32Array(n);
+      const wOut = 0.95 + rand() * 0.3;
+      for (let k = 0; k < n; k++) w[k] = wOut * (1 - smoothstep(0.55, 1, k / (n - 1)));
+      streams.push({ px: px.slice(0, n), pz: pz.slice(0, n), wl, w, top: false });
+    }
+  }
+  let x0 = poolX - R * 1.8, z0 = poolZ - R * 1.8, x1 = poolX + R * 1.8, z1 = poolZ + R * 1.8;
+  for (const S of streams) {
+    for (let k = 0; k < S.px.length; k++) {
+      const m = rivValley(Math.max(S.w[k], 0.6)) + 2;
+      x0 = Math.min(x0, S.px[k] - m); z0 = Math.min(z0, S.pz[k] - m);
+      x1 = Math.max(x1, S.px[k] + m); z1 = Math.max(z1, S.pz[k] + m);
+    }
+  }
+  return {
+    x, z, dx, dz, tx, tz,
+    lipX, lipZ, lipWl, width: wTop * 2,
+    footX, footZ, hTop, hFoot,
+    poolX, poolZ, poolR: R, poolWl, depth,
+    streams, box: [x0, z0, x1, z1],
+  };
+}
+
+function fallInCell(ix, iz) {
+  const key = ix * 131071 + iz;
+  if (fallCache.has(key)) return fallCache.get(key);
+  let fall = null;
+  const rand = mulberry32((Math.imul(ix, 2246822519) ^ Math.imul(iz, 1103515245) ^ Math.imul(SEED + 29, 374761393)) >>> 0);
+  sampleBase((ix + 0.5) * FALL_CELL, (iz + 0.5) * FALL_CELL, _fb);
+  if (_fb.rainforest > 0.3 && rand() < FALL_CHANCE) {
+    for (let k = 0; k < 10 && !fall; k++) {
+      const x = (ix + 0.15 + rand() * 0.7) * FALL_CELL;
+      const z = (iz + 0.15 + rand() * 0.7) * FALL_CELL;
+      const c = ESC_LEVELS[rand() < 0.5 ? 0 : 1];
+      const r2 = mulberry32((rand() * 4294967296) >>> 0);
+      fall = tryFall(x, z, c, r2);
+    }
+  }
+  fallCache.set(key, fall);
+  return fall;
+}
+
+function applyFall(F, x, z, out) {
+  const raw = out.h;
+  let h = raw;
+  // Altaan painanne (kallion puolella seinämä säilyy jyrkkänä).
+  const pd = Math.hypot(x - F.poolX, z - F.poolZ);
+  if (pd < F.poolR * 1.8) {
+    const R = F.poolR;
+    const back = (x - F.poolX) * F.dx + (z - F.poolZ) * F.dz < 0;
+    const Rw = R * (1 + (back ? 0 : 0.12 * N.lakeShape(x / 9, z / 9)));
+    const t = pd / Rw;
+    const target = t < 1 ? F.poolWl - F.depth * (1 - t * t) : F.poolWl + (t - 1) * R * (back ? 10 : 0.45);
+    let hp = Math.min(h, target);
+    if (t >= 1 && !back && hp < F.poolWl + 0.15) hp += (F.poolWl + 0.15 - hp) * (1 - smoothstep(1.15, 1.4, t));
+    h = hp + (h - hp) * smoothstep(1.35, 1.8, t);
+    if (t < 1.25 && F.poolWl > out.wl) {
+      out.wl = F.poolWl;
+      out.wtype = WATER.LAKE;
+      out.lakeR = R;
+      out.flowX = 0;
+      out.flowZ = 0;
+    }
+    out.fall = Math.max(out.fall || 0, 1 - smoothstep(R, R * 1.8, pd));
+  }
+  // Purot (lähdepuro ja laskupuro).
+  for (const S of F.streams) {
+    const dc = polyDist(S.px, S.pz, x, z);
+    const k = Math.min(S.px.length - 2, Math.floor(_fu)), u = _fu - k;
+    const w = S.w[k] + (S.w[k + 1] - S.w[k]) * u;
+    const V = rivValley(Math.max(w, 0.6));
+    if (dc >= V) continue;
+    const wl = S.wl[k] + (S.wl[k + 1] - S.wl[k]) * u;
+    const ds = smoothstep(0.3, 0.9, w);
+    const depth = (0.3 + w * 0.12) * ds - 0.15 * (1 - ds);
+    const hc = carveH(raw, dc, Math.max(w, 0.3), V, wl, depth);
+    if (hc < h) h = hc;
+    out.chan = Math.max(out.chan, 1 - smoothstep(w, V, dc));
+    // Lähdepuron vesi loppuu reunalle (seinämän päällä ei roiku vettä).
+    const edge = S.top ? (x - F.lipX) * F.dx + (z - F.lipZ) * F.dz : -1;
+    if (dc < w + 1.5 && edge < -1.5 && ds > 0 && wl > out.wl - 0.01) {
+      out.wl = Math.max(out.wl, wl);
+      out.wtype = WATER.STREAM;
+      const len = Math.hypot(_fdx, _fdz) || 1;
+      const sp = S.top ? 0.6 + 1.0 * smoothstep(0.75, 1, _fu / (S.px.length - 1)) : 0.7;
+      out.flowX = (_fdx / len) * sp;
+      out.flowZ = (_fdz / len) * sp;
+    }
+    if (S.top) out.fall = Math.max(out.fall || 0, (1 - smoothstep(0, 18, Math.hypot(x - F.lipX, z - F.lipZ))));
+  }
+  out.h = h;
+}
+
+function applyFalls(x, z, out) {
+  if (out.rainforest < 0.5) return;
+  const ix = Math.floor(x / FALL_CELL), iz = Math.floor(z / FALL_CELL);
+  for (let j = iz - 1; j <= iz + 1; j++) {
+    for (let i = ix - 1; i <= ix + 1; i++) {
+      const F = fallInCell(i, j);
+      if (!F) continue;
+      const b = F.box;
+      if (x < b[0] || z < b[1] || x > b[2] || z > b[3]) continue;
+      applyFall(F, x, z, out);
+    }
+  }
+}
+
+// Putoukset lähellä pistettä (piirto, äänet).
+export function fallsNear(x, z, r) {
+  const res = [];
+  const n = Math.ceil(r / FALL_CELL);
+  const ix = Math.floor(x / FALL_CELL), iz = Math.floor(z / FALL_CELL);
+  for (let j = iz - n; j <= iz + n; j++) {
+    for (let i = ix - n; i <= ix + n; i++) {
+      const F = fallInCell(i, j);
+      if (F && Math.hypot(F.x - x, F.z - z) < r) res.push(F);
+    }
+  }
+  return res;
+}
+
 // Kenttä, josta korkeus, biomipainot ja vesi lasketaan (ilman rakennelmien tasoitusta).
 function sampleTerrainRaw(x, z, out) {
   sampleBase(x, z, out);
   applyRivers(x, z, out);
   applyLakes(x, z, out);
+  applyFalls(x, z, out);
   return out;
 }
 
@@ -1041,7 +1429,7 @@ export function structureInCell(ix, iz) {
       const x = (ix + 0.15 + rand() * 0.7) * STRUCT_CELL;
       const z = (iz + 0.15 + rand() * 0.7) * STRUCT_CELL;
       sampleTerrainRaw(x, z, _sraw);
-      if (_sraw.h < _sraw.wl + 0.8 || _sraw.dEdge > 0.97 || _sraw.rock > 0.05 || _sraw.mesa > 0.05 || _sraw.chan > 0.01) continue;
+      if (_sraw.h < _sraw.wl + 0.8 || _sraw.dEdge > 0.97 || _sraw.rock > 0.05 || _sraw.mesa > 0.05 || _sraw.chan > 0.01 || _sraw.cliff > 0.05) continue;
       const h0 = _sraw.h;
       const onBeach = _sraw.beach > 0.5;
       let rough = 0;
@@ -1188,6 +1576,7 @@ export function biomeAt(x, z) {
 
 // Paikan nimi minikarttaan: vedessä vesistön nimi, muuten biomi.
 export function placeName(s) {
+  if ((s.fall || 0) > 0.6) return 'Vesiputous';
   if (s.wl - s.h > 0.5) {
     if (s.wtype === WATER.LAKE) return s.lakeR < 35 ? 'Lampi' : 'Järvi';
     if (s.wtype === WATER.RIVER) return 'Joki';
@@ -1305,6 +1694,12 @@ export function groundColor(x, z, s, slope, out) {
     mix3(_c1, C.cliff, C.cliffRock, Math.min(1, s.mountains + s.rainforest * 0.5 + s.beach + s.ocean));
     mix3(out, out, _c1, cliffT * 0.85);
   }
+  // Sessio 57: sademetsän jyrkänteet: tummaa, märkää kiveä ja sammalta.
+  if (s.cliff > 0) {
+    mix3(_c1, C.graniteDark, C.cliffRock, n1 * 0.7);
+    mix3(_c1, _c1, C.lichen, smoothstep(0.5, 0.85, n2) * 0.45);
+    mix3(out, out, _c1, Math.min(1, s.cliff * 1.3));
+  }
   // Graniittikalliot: harmaata kiveä ja jäkälää.
   if (s.rock > 0) {
     mix3(_c1, C.granite, C.graniteDark, n1 * 0.6 + slope * 0.4);
@@ -1350,6 +1745,7 @@ export function groundWeights(x, z, s, slope, out) {
   const over = (t) => { sand *= 1 - t; soil *= 1 - t; forest *= 1 - t; rock = rock * (1 - t) + t; };
   over(smoothstep(0.35, 0.7, slope) * 0.85);
   if (s.rock > 0) over(s.rock * (0.55 + 0.45 * slope));
+  if (s.cliff > 0) over(Math.min(1, s.cliff * 1.3));
   if (s.mesa > 0) over(s.mesa * Math.min(1, 0.35 + slope * 1.5));
   out[0] = sand; out[1] = soil; out[2] = forest; out[3] = rock;
   return out;
@@ -1382,6 +1778,7 @@ export function mapColorRGB(x, z, out) {
     r += (200 - r) * k * 0.6; g += (190 - g) * k * 0.6; b += (180 - b) * k * 0.6;
   }
   if (s.rock > 0) { r += (150 - r) * s.rock; g += (146 - g) * s.rock; b += (138 - b) * s.rock; }
+  if (s.cliff > 0) { const k = Math.min(1, s.cliff * 1.3); r += (92 - r) * k; g += (94 - g) * k; b += (86 - b) * k; }
   if (s.mesa > 0) { r += (170 - r) * s.mesa * 0.6; g += (112 - g) * s.mesa * 0.6; b += (78 - b) * s.mesa * 0.6; }
   out[0] = r; out[1] = g; out[2] = b;
   return s;

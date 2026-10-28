@@ -1,6 +1,13 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 57 (sademetsä):
+  - latvusto ylös katsoessa (näkyykö vielä liikaa taivasta) ja ruudunpäivitys;
+  - kaatojälki kannossa ja kaatuneen rungon päässä;
+  - liaanit läheltä (paksuus, lehdet, kaaret oksien välillä);
+  - jyrkänteet ja vesiputoukset: [F3] tai kartta; putouksen kohina, allas (uiminen), laskupuro;
+  - savannin akasioiden lehvästöt.
+- [ ] Vastaus: putouksia on noin kymmenkunta koko maailmassa. Sopiiko määrä, ja tehdäänkö niitä myös vuoristoon?
 - [ ] Leopardin ja gorillan animaatiot eivät ole vieläkään täysin kunnossa (käyttäjä, sessio 54). Palataan myöhemmin: kysy, mikä on vielä vialla.
 - [ ] Käyttäjä testaa session 54: uudet esinemallit.
   - Kuvakkeet repussa ja valmistuksessa.

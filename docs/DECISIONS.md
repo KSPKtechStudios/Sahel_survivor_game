@@ -9,6 +9,22 @@ Muoto: päivä, päätös, syy.
 - **Kaatopinnan syykuvio tehdään varjostimessa** (`kitMaterials.js` `endGrain`), ei tekstuurina. Kannen UV kertoo paikan kannen tasossa (100 + säteen yksiköt), väri kertoo puulajin. Syy: ei uusia tekstuureja, ja kuvio sopii kaikkiin rungon kokoihin.
 - **Kannen kiertosuunta tarkistetaan kolmio kerrallaan** (`treeCut.js`). Syy: kannen pinta osoitti alaspäin, mikä ei näkynyt vanhoilla kaksipuolisilla materiaaleilla mutta katosi yksipuolisella kaarnalla.
 - **Liaanien lehdet ovat puiden lehtiatlaksesta** ja atlaksen solutiedot (`leaf_cells.json`) siirrettiin `assets/models/trees/`-kansioon, josta peli lukee ne. Syy: liaanit näyttävät samalta kuin puiden lehdet, eikä tarvita omaa tekstuuria.
+- **Latvusten väliset aukot suljetaan leventämällä latvuksia samalla korttimäärällä** (`build_trees.py`: oksien pituus ja kulma). Syy, mitattu Blenderissä:
+  - sademetsäpuun latvuksen jalanjälki oli vain noin 57 m², mutta sen sisällä lehtikortteja oli noin 25 kerrosta päällekkäin;
+  - latvukset olivat siis umpinaisia, mutta niiden väliin jäi aukkoja (ylös katsoessa noin 35–38 % taivasta);
+  - nyt jalanjälki on noin 110 m² (kapokki 112 → 150, jättiläispuu 206 → 244), kerroksia on edelleen yli kymmenen, eikä kolmioita tule lisää.
+- **Jyrkänteet ovat kohinakentän tasa-arvokäyrillä kaksi porrasta** (`terrain.js` `escarpment`), ja niistä on kaksi versiota:
+  - terävä (`escSharp`): todellinen maasto;
+  - loiva ramppi (`escSoft`): jokiverkon vertailukorkeus (`smoothRef`); joen laaksossa maasto liukuu terävästä loivaan (`applyRivers`).
+
+  Syy: jokiverkko näkee vain loivan rampin, joten joet kulkevat jyrkänteen läpi rotkona eivätkä hajoa.
+- **Loivan rampin leveys on ±0,16 kentän yksikköä** (ensin ±0,07). Syy: jyrkkä ramppi teki pienten purojen pintaan jopa 1,9 m:n hyppyjä (13 kohtaa, siemen 777). Leveämmällä rampilla hyppyjä on 4, kuten ennen jyrkänteitä (3), eikä yksikään ole jyrkänteellä (scratchpad `s57/rivcheck.mjs`).
+- **Vesiputoukset ovat jokiverkosta erillisiä lähdepuroja** (`terrain.js` `fallInCell`, `applyFalls`; `render/waterfalls.js`). Syy: käyttäjä pyysi varomaan, ettei jokigenerointi hajoa. Putous ei muuta jokiverkkoa eikä jokien pintoja; paikka valitaan vähintään 70 m:n päästä uomista ja järvistä.
+  - Paikka haetaan Newtonin askelin jyrkänteen tasa-arvokäyrälle. Seinämän pitää olla jyrkkä (puolileveys enintään 3,2 m), vähintään 5 m korkea ja suora 7 m kumpaankin suuntaan.
+  - Purojen solmut ovat 2 m:n välein, ja pinta laskee aina alavirtaan. Laskupuro katkaistaan jyrkkään pudotukseen tai jyrkänteeseen, ja se kapenee ja imeytyy maahan.
+  - Yläpuron vesi loppuu 1,5 m ennen reunaa, ja altaan takareuna on vähintään 1,3 m reunasta. Väliin jää siis kuivia ruudukon pisteitä, eikä vesiseinää synny (tarkistettu: 0 seinäparia, scratchpad `s57/fallwall.mjs`).
+  - Putoava vesi on oma verkkonsa: kaari reunan yli ja seinämää pitkin, jos kallio on loivempi kuin putoamiskaari. Juovien UV on lentoaika, joten juovat venyvät vauhdin kasvaessa.
+- **Putouksen ääni on proseduraalista kohinaa** (`sfx.js` `waterfall`), ei äänitiedosto. Syy: ei uutta tiedostoa eikä lisenssiä, ja kohina sopii vesiputoukseen hyvin; lähellä ääni on kirkkaampi (alipäästön raja nousee).
 
 ## 2026-10-27 (sessio 56)
 - **Puut tehdään Blenderillä skripteistä** (`tools/blender/build_trees.py`), ei valmiita malleja ladaten. Syy: sama toistettava tapa kuin esineissä, ja puut sopivat pelin kaatoon, kantoihin, loviin ja liaaneihin (runko ensin, tarkka rengas kaatokorkeudella, kaatotiedot solmun extras-kentässä).

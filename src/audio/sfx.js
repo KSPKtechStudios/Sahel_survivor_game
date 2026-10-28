@@ -80,6 +80,8 @@ const CLAP_LEVEL = 0.65;
 const GHOST_LEVEL = { ghostSpawn: 0.25, ghostIdle: 0.21, ghostIdle2: 0.2, ghostAttack: 0.23 };
 const GHOST_REF = 22, GHOST_RANGE = 95;
 const CLICK_LEVEL = 0.45;  // tiedosto on hiljainen (n. −31 LUFS); sessio 12e hiljemmaksi
+// Vesiputous lähellä (proseduraalinen kohina, sessio 57).
+const FALL_LEVEL = 0.5;
 const CHOP_LEVEL = 0.1;    // puun lyönti: hiljaa (väistö auttaa erottumaan)
 // Isku elävään olentoon (sessio 12e): terävä, joten hiljaa ja tummennettuna.
 const PUNCH_LEVEL = { punch1: 0.11, punch2: 0.13 };
@@ -258,6 +260,59 @@ export class Sfx {
     for (const [k, b] of Object.entries(this.beds)) {
       b.target = this.levels[k];
       b.update(dt);
+    }
+  }
+
+  // Vesiputouksen kohina (sessio 57): proseduraalinen silmukka (ruskea + valkoinen
+  // kohina), taso ja suunta päivitetään joka ruudulla. Pysähtyy hiljaisena.
+  waterfall(level, pan = 0, dt = 0) {
+    const ctx = this.ctx;
+    if (!ctx || ctx.state !== 'running') return;
+    let f = this.fallNode;
+    if (!f) {
+      if (level < 0.003) return;
+      const n = ctx.sampleRate * 4;
+      const fade = Math.floor(ctx.sampleRate * 0.25);
+      const buf = ctx.createBuffer(2, n, ctx.sampleRate);
+      for (let c = 0; c < 2; c++) {
+        const d = buf.getChannelData(c);
+        let b = 0;
+        for (let i = 0; i < n + fade; i++) {
+          const w = Math.random() * 2 - 1;
+          b = (b + 0.02 * w) / 1.02;
+          const v = w * 0.3 + b * 3.2;
+          // Silmukan sauma ristiinhäivytetään (ei napsahdusta).
+          if (i < n) d[i] = v;
+          else { const k = (i - n) / fade; d[i - n] = d[i - n] * k + v * (1 - k); }
+        }
+      }
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
+      const hp = ctx.createBiquadFilter();
+      hp.type = 'highpass';
+      hp.frequency.value = 90;
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 1500;
+      const g = ctx.createGain();
+      g.gain.value = 0;
+      const p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+      src.connect(hp).connect(lp).connect(g);
+      if (p) g.connect(p).connect(this.bedBus); else g.connect(this.bedBus);
+      src.start();
+      f = this.fallNode = { src, g, p, lp, idle: 0 };
+    }
+    const now = ctx.currentTime;
+    f.g.gain.setTargetAtTime(level * FALL_LEVEL, now, 0.3);
+    if (f.p) f.p.pan.setTargetAtTime(pan, now, 0.25);
+    // Lähellä kirkkaampi (enemmän korkeita taajuuksia).
+    f.lp.frequency.setTargetAtTime(900 + level * 3600, now, 0.3);
+    f.idle = level < 0.003 ? f.idle + dt : 0;
+    if (f.idle > 6) {
+      f.src.stop();
+      f.g.disconnect();
+      this.fallNode = null;
     }
   }
 
