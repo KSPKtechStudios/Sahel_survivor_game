@@ -14,6 +14,7 @@ Muoto: päivä, päätös, syy.
   - latvukset olivat siis umpinaisia, mutta niiden väliin jäi aukkoja (ylös katsoessa noin 35–38 % taivasta);
   - nyt jalanjälki on noin 110 m² (kapokki 112 → 150, jättiläispuu 206 → 244), kerroksia on edelleen yli kymmenen, eikä kolmioita tule lisää.
   - mitattu pelissä (siemen 4242, 8 kohtaa, kuva suoraan ylös): taivasta 38 % → 14 % (session 55 versio 23 %; scratchpad `s57/cover.mjs`).
+  - kolmioita ruudussa sademetsässä (näköetäisyys 4, sama paikka): 6,5 M → 6,4 M, eli leventäminen ei maksa mitään.
 - **Jyrkänteet ovat kohinakentän tasa-arvokäyrillä kaksi porrasta** (`terrain.js` `escarpment`), ja niistä on kaksi versiota:
   - terävä (`escSharp`): todellinen maasto;
   - loiva ramppi (`escSoft`): jokiverkon vertailukorkeus (`smoothRef`); joen laaksossa maasto liukuu terävästä loivaan (`applyRivers`).

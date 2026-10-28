@@ -4,18 +4,34 @@ Uusin merkintä ylimpänä.
 
 ## 2026-10-28 (sessio 57)
 **Tehtiin**
-- Käyttäjän palaute (kuvat sademetsästä): kaatojälki pelkkää valkoista, liaanit huonoja malleja, latvuston läpi tulee liikaa valoa (korjattava ilman suurta fps-pudotusta), viidakkoon kallioita, jyrkänteitä ja ehkä vesiputouksia (jokigenerointi ei saa hajota); lisäksi savannin akasioiden lehvästöt liian harvoja.
-- Lehtiatlas tiheämmäksi (`leafgen.py`: akasia, leveälehtiset, kapokki), sademetsäpuiden latvukset leveämmiksi ja korttien suunta osin vaakaan (`build_trees.py` `foliage(mode='mix')`).
+- Käyttäjän palaute (kuvat sademetsästä):
+  - kaatojälki pelkkää valkoista;
+  - liaanit huonoja malleja;
+  - latvuston läpi tulee liikaa valoa (korjattava ilman suurta fps-pudotusta);
+  - viidakkoon kallioita, jyrkänteitä ja ehkä vesiputouksia (jokigenerointi ei saa hajota);
+  - lisäksi savannin akasioiden lehvästöt liian harvoja.
+- Lehtiatlas tiheämmäksi (`leafgen.py`: akasia, leveälehtiset, kapokki), korttien suunta osin vaakaan (`build_trees.py` `foliage(mode='mix')`).
+- Latvukset leveämmiksi samalla korttimäärällä (`build_trees.py`: oksien pituus ja kulma). Mitattu: ylös katsoessa taivasta 38 % → 14 % (session 55 versio 23 %), kolmiot sademetsässä 6,5 M → 6,4 M.
 - Kevyemmät mallit (`build_trees.py`): kaukomalli vain runko ja pääoksat; pienet oksat harvemmilla renkailla. Varjokopiot (`world.js`, `instancePool.js` `layer`, `environment.js`).
 - Kaatojälki: `treeCut.js` (kansi, kiertosuunta, välirengas, UV), `kitMaterials.js` (`endGrain`, kuitujuovat lovessa), `build_trees.py` (renkaat kaatokohdan ympärillä).
 - Liaanit: `vines.js` (uusi piirto), `treeAssets.js` (`vineSpecs`, `leafCell`).
-- Testattiin: esikatselu kannoista (`shots/s56/trees.html?cut=1`), sademetsän kuvat pelissä, kolmiomittaus (scratchpad `s56/perf.mjs`).
+- Jyrkänteet (`terrain.js` `escarpment`, `chunkGen.js` tiheysavain `cliff`, `objectTypes.js` lohkareet ja kivirouhe).
+- Vesiputoukset: `terrain.js` (`fallInCell`, `applyFalls`, `fallsNear`), `render/waterfalls.js`, `sfx.js` (`waterfall`), `main.js`.
+- Testattiin (scratchpad `s57/`):
+  - `rivcheck.mjs`: jokien pinnan hypyt ennallaan;
+  - `fallcheck.mjs` ja `fallwall.mjs`: 13–19 putousta siementä kohden, ei vesiseiniä;
+  - `cover.mjs`: latvuston peitto;
+  - `fallshot.mjs`: putoukset pelissä (sivulta, ylhäältä), ääni;
+  - `vineshot.mjs`: liaanit;
+  - `s56/perf.mjs`: kolmiot (savanni 1,07 M, metsäsavanni 1,23 M, sademetsä 6,4 M).
 
 **Kesken / tiedossa**
-- Jyrkänteet ja vesiputoukset (seuraavaksi).
+- Ensimmäinen putouskuva alavirrasta jäi puiden taakse (kuvakulma, ei vika). Sivulta putous ja allas näkyvät hyvin.
+- Jyrkänteiden kallio on ruskeaa; sammalta tai märkiä juovia voisi lisätä, jos käyttäjä haluaa.
+- Pysäytyskoukku vertaa vanhaan `origin`-remoteen (KSPKtech/sahel, jäädytetty); kaikki on pushattu `studios`-remoteen.
 
 **Seuraavaksi**
-- Jyrkänteet sademetsään jokiverkkoa rikkomatta, vesiputoukset erillisinä lähteinä.
+- Käyttäjän palaute: latvusto, liaanit, kaatojälki, jyrkänteet ja putoukset (määrä, myös vuoristoon?).
 
 ## 2026-10-27 (sessio 56)
 **Tehtiin**

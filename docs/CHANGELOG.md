@@ -23,7 +23,7 @@ Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 - **Savannin akasiat tuuheammiksi:** akasian lehvät ovat tiheää hienolehtistä massaa (peitto 36 % → 49 %).
 - **Kaatojälki:** kannossa ja kaatuneen rungon päässä on vuosirenkaat, tumma sydänpuu, vaalea pintapuu, ydin, pieniä halkeamia ja kaarnareuna (ennen pelkkä valkoinen kiekko). Pinta on hieman epätasainen kuin kirveellä hakattu, ja lovessa näkyvät puun syyt. Lovelle on rungossa tiheämmin renkaita, joten se saa muodon.
 - **Liaanit uusiksi:** kierteinen, kaksisäikeinen varsi kaarnatekstuurilla ja pehmeä kaari (ennen suora, tasavärinen viiva). Lehdet ovat puiden lehtiatlaksesta. Osa liaaneista kaartuu kahden oksan välillä, useimmat laskeutuvat vinosti maahan ja vain osa riippuu vapaana (ennen moni riippui suorana pystyviivana). Fysiikka (tuuli, törmäys, kaatuminen) ennallaan.
-- **Suorituskyky:** puiden kaukomallit ovat 4–5 kertaa kevyempiä, ja lähellä olevat puut piirretään varjoon kevyenä kaukomallina (ennen tarkka malli piirrettiin kahdesti). Kolmioita ruudussa (näköetäisyys 4): sademetsä 13,7 M → 6,5 M (ennen session 56 puita 6,2 M), savanni 2,1 M → 1,0 M (0,86 M), metsäsavanni 2,8 M → 1,3 M (1,1 M).
+- **Suorituskyky:** puiden kaukomallit ovat 4–5 kertaa kevyempiä, ja lähellä olevat puut piirretään varjoon kevyenä kaukomallina (ennen tarkka malli piirrettiin kahdesti). Kolmioita ruudussa (näköetäisyys 4): sademetsä 13,7 M → 6,4 M (ennen session 56 puita 6,2 M; leveämmät latvukset mukana), savanni 2,1 M → 1,0 M (0,86 M), metsäsavanni 2,8 M → 1,3 M (1,1 M).
 
 ## 2026-10-27 (sessio 56): puut Blenderillä, pyöreät kannot ja juuret, tiheämpi savanni, paremmat esineet
 
