@@ -14,6 +14,7 @@ import os
 import random
 import sys
 from mathutils import Vector, Matrix, noise
+from mathutils.kdtree import KDTree
 
 V = Vector
 UP = V((0, 0, 1))
@@ -126,31 +127,35 @@ class Tree:
         latvus), 'up' = ylöspäin kallistuvat (litteä sademetsän latvus)."""
         for k in range(n):
             p, d, r = b.at(lerp(t0, t1, (k + self.u(0.0, 1.0)) / n))
-            m = mode
-            if mode == 'mix':
-                # Sessio 57: osa korteista vaakaan, jotta latvusto peittää alhaalta katsottuna.
-                m = 'up' if self.rng.random() < 0.6 else 'out'
-            hz = V((d.x, d.y, 0))
-            hz = hz.normalized() if hz.length > 1e-3 else V((1, 0, 0))
-            if m == 'flat':
-                tilt = self.u(0.0, 0.8)
-                az = self.u(0, 2 * math.pi)
-                nrm = (UP * math.cos(tilt) + V((math.cos(az), math.sin(az), 0)) * math.sin(tilt)).normalized()
-                up = (hz + V((self.u(-0.4, 0.4), self.u(-0.4, 0.4), 0))).normalized()
-                p = p + V((0, 0, self.u(-0.1, 0.18)))
-            elif m == 'up':
-                nrm = (UP * 1.3 + (p - C).normalized() * 0.5 + V((self.u(-0.4, 0.4), self.u(-0.4, 0.4), 0))).normalized()
-                up = (d + hz).normalized()
-            else:
-                out = (p - C).normalized() if C is not None else hz
-                nrm = (out + UP * 0.45 + V((self.u(-0.5, 0.5), self.u(-0.5, 0.5), self.u(-0.3, 0.3)))).normalized()
-                up = d
-            self.leaf(p, up, nrm, self.u(*size), self.rng.choice(cells))
+            self.leaf_card(p, d, size, cells, mode, C)
+
+    def leaf_card(self, p, d, size, cells, mode, C=None):
+        """Yksi lehtikortti kohtaan p (oksan suunta d), suunta kuten foliage."""
+        m = mode
+        if mode == 'mix':
+            # Sessio 57: osa korteista vaakaan, jotta latvusto peittää alhaalta katsottuna.
+            m = 'up' if self.rng.random() < 0.6 else 'out'
+        hz = V((d.x, d.y, 0))
+        hz = hz.normalized() if hz.length > 1e-3 else V((1, 0, 0))
+        if m == 'flat':
+            tilt = self.u(0.0, 0.8)
+            az = self.u(0, 2 * math.pi)
+            nrm = (UP * math.cos(tilt) + V((math.cos(az), math.sin(az), 0)) * math.sin(tilt)).normalized()
+            up = (hz + V((self.u(-0.4, 0.4), self.u(-0.4, 0.4), 0))).normalized()
+            p = p + V((0, 0, self.u(-0.1, 0.18)))
+        elif m == 'up':
+            nrm = (UP * 1.3 + (p - C).normalized() * 0.5 + V((self.u(-0.4, 0.4), self.u(-0.4, 0.4), 0))).normalized()
+            up = (d + hz).normalized()
+        else:
+            out = (p - C).normalized() if C is not None else hz
+            nrm = (out + UP * 0.45 + V((self.u(-0.5, 0.5), self.u(-0.5, 0.5), self.u(-0.3, 0.3)))).normalized()
+            up = d
+        self.leaf(p, up, nrm, self.u(*size), self.rng.choice(cells))
 
 
 # --- Lajit ---------------------------------------------------------------------------------------
 
-def trunk_line(tree, base, top, r0, r1, cutZ, flare=1.4, rings=14, lobes=None, flute=0.0, profile=None):
+def trunk_line(tree, base, top, r0, r1, cutZ, flare=1.4, rings=14, lobes=None, flute=0.0, profile=None, curl=None):
     """Suora runko tyvestä latvaan; yksi rengas tarkasti kaatokorkeudella.
     profile(t) = säteen kerroin (esim. baobabin pullo). lobes = (määrä,
     ulottuma m, korkeus m, kulmaleveys rad): tyven pyöreät juurilohkot, jotka
@@ -162,8 +167,12 @@ def trunk_line(tree, base, top, r0, r1, cutZ, flare=1.4, rings=14, lobes=None, f
         a0 = tree.u(0, 2 * math.pi)
         for k in range(n):
             a = (a0 + 2 * math.pi * (k + tree.u(-0.28, 0.28)) / n) % (2 * math.pi)
-            tree.lobes.append((a, tree.u(*out), min(tree.u(*hgt), cutZ - 0.05), tree.u(*wid)))
-    root_top = max([h for _, _, h, _ in tree.lobes], default=0.0)
+            tree.lobes.append((a, tree.u(*out), min(tree.u(*hgt), cutZ - 0.05), tree.u(*wid), 0.0))
+        if curl:
+            # Sessio 58: mutkittelevat juuret (oma satunnaisjono, muut lajit ennallaan).
+            cr = random.Random(int(a0 * 1e6))
+            tree.lobes = [(a, o, h, w, cr.uniform(-curl, curl)) for a, o, h, w, _ in tree.lobes]
+    root_top = max([h for _, _, h, _, _ in tree.lobes], default=0.0)
     L = (top - base).length
     d = (top - base).normalized()
     span = top.z - base.z
@@ -322,11 +331,11 @@ def climbing_vine(T, tr, seed, kind):
         return
     fr = frames(tr.pts)
     z_top = tr.pts[-1].z
-    root_top = max([h for _, _, h, _ in T.lobes], default=0.3)
+    root_top = max([h for _, _, h, _, _ in T.lobes], default=0.3)
     # Aloituskulma: kahden juurilohkon välin keskeltä.
     a0 = vr.uniform(0, 2 * math.pi)
     if T.lobes:
-        angs = sorted(a for a, _, _, _ in T.lobes)
+        angs = sorted(a for a, _, _, _, _ in T.lobes)
         gaps = [((angs[(i + 1) % len(angs)] - angs[i]) % (2 * math.pi), angs[i]) for i in range(len(angs))]
         g, a_start = max(gaps)
         a0 = a_start + g / 2
@@ -388,48 +397,193 @@ def build_climber(M, T, pts, rv):
             M.face([A[k][0], A[k + 1][0], B[k + 1][0], B[k][0]], [A[k][1], A[k + 1][1], B[k + 1][1], B[k][1]], 2)
 
 
+def colonize(T, roots, att, seg, kill, infl, tropism, max_iter=220):
+    """Sessio 58: oksisto "space colonization" -menetelmällä. Latvuksen
+    muotoon sijoitetut houkutinpisteet vetävät lähintä oksan kärkeä puoleensa;
+    oksa kasvaa askeleen kerrallaan, kunnes houkuttimet on käytetty.
+    Haarautuminen syntyy itsestään sinne, minne houkuttimia riittää, joten
+    latvus täyttyy tasaisesti eikä oksia lähde yhdestä kohdasta.
+    roots = [(paikka, suunta)], kiinteät solmut rungolla."""
+    nodes = [{'p': p.copy(), 'par': -1, 'ch': [], 'fixed': True, 'd': d.normalized()} for p, d in roots]
+    att = list(att)
+    for _ in range(max_iter):
+        if not att:
+            break
+        kd = KDTree(len(nodes))
+        for i, n in enumerate(nodes):
+            kd.insert(n['p'], i)
+        kd.balance()
+        pull, rest = {}, []
+        for a in att:
+            co, i, dist = kd.find(a)
+            if dist < kill:
+                continue
+            rest.append(a)
+            if dist < infl:
+                pull.setdefault(i, []).append(a)
+        att = rest
+        if not pull:
+            break
+        for i, al in pull.items():
+            n = nodes[i]
+            d = V()
+            for a in al:
+                d += (a - n['p']).normalized()
+            if d.length < 1e-3:
+                d = n['d'].copy()
+            d = (d.normalized() + tropism(n['p'], d)).normalized()
+            # Kiinteä solmu (runko) ei kasva alaspäin.
+            if n['fixed'] and d.z < -0.2:
+                continue
+            q = n['p'] + d * seg
+            if any((nodes[c]['p'] - q).length < seg * 0.35 for c in n['ch']):
+                continue
+            nodes.append({'p': q, 'par': i, 'ch': [], 'fixed': False, 'd': d})
+            n['ch'].append(len(nodes) - 1)
+    return nodes
+
+
+def colonized_branches(T, nodes, r_top, r_min, lvl_r, smooth_n=2):
+    """Solmuista oksaputket: paksuus putkimallilla (lasten säteiden summa),
+    ketjut seuraavat suurinta alipuuta, muut lapset alkavat uuden ketjun.
+    Palauttaa kärkisolmut ja (solmu, säde) -parit lehtiä varten."""
+    N = len(nodes)
+    size = [1] * N
+    rad = [1.0] * N
+    for i in range(N - 1, -1, -1):
+        n = nodes[i]
+        if n['ch']:
+            rad[i] = sum(rad[c] ** 2.3 for c in n['ch']) ** (1 / 2.3)
+        if n['par'] >= 0:
+            size[n['par']] += size[i]
+    top = max(rad[i] for i in range(N) if nodes[i]['fixed'])
+    k = r_top / top
+    rad = [max(r_min, r * k) for r in rad]
+    stack = []
+    for i, n in enumerate(nodes):
+        if n['fixed']:
+            for c in n['ch']:
+                stack.append((i, c))
+    while stack:
+        a, c = stack.pop()
+        pts = [nodes[a]['p'].copy()]
+        rs = [rad[c]]
+        cur = c
+        while True:
+            pts.append(nodes[cur]['p'].copy())
+            rs.append(rad[cur])
+            ch = nodes[cur]['ch']
+            if not ch:
+                break
+            main = max(ch, key=lambda x: size[x])
+            for o in ch:
+                if o != main:
+                    stack.append((cur, o))
+            cur = main
+        # Pehmennys: kulmikas askelpolku kaartuvaksi (päät paikallaan).
+        for _ in range(smooth_n):
+            pts = [pts[0]] + [pts[j] * 0.5 + (pts[j - 1] + pts[j + 1]) * 0.25 for j in range(1, len(pts) - 1)] + [pts[-1]]
+        lvl = 1 if rs[0] >= lvl_r[0] else (2 if rs[0] >= lvl_r[1] else 3)
+        b = Branch(pts, rs, lvl)
+        b.terminal = True
+        T.branches.append(b)
+    return rad
+
+
+def crown_points(T, n, C, R, z_min, shell=0.45, clump=0.55, flat_top=0.0, lumps=4):
+    """Houkuttimet latvuksen muotoon: useamman alalatvuksen yhdistelmä
+    (kumpupilvimäinen, ei säännöllinen pallo), painottuu kuoreen (sisällä
+    vähemmän lehtiä), ja kohinalla ryhmiksi (latvuksessa on pienempiä
+    lehvästöpaakkuja ja aukkoja kuten oikeassa puussa)."""
+    out = []
+    seed = T.u(0, 100)
+    subs = []
+    for k in range(lumps):
+        a = 2 * math.pi * (k + T.u(-0.3, 0.3)) / lumps
+        rr = T.u(0.35, 0.55)
+        c = V((math.cos(a) * rr, math.sin(a) * rr, T.u(-0.15, 0.35)))
+        subs.append((c, V((T.u(0.5, 0.65), T.u(0.5, 0.65), T.u(0.55, 0.75)))))
+    subs.append((V((0, 0, T.u(0.1, 0.3))), V((0.55, 0.55, 0.7))))
+    tries = 0
+    while len(out) < n and tries < n * 80:
+        tries += 1
+        q = V((T.u(-1, 1), T.u(-1, 1), T.u(-1, 1)))
+        if q.length > 1:
+            continue
+        # Etäisyys lähimmän alalatvuksen keskeltä (1 = sen pinta).
+        e = min(V(((q.x - c.x) / r.x, (q.y - c.y) / r.y, (q.z - c.z) / r.z)).length for c, r in subs)
+        if e > 1:
+            continue
+        p = V((C.x + q.x * R.x, C.y + q.y * R.y, C.z + q.z * R.z))
+        if p.z < z_min:
+            continue
+        if flat_top and q.z > flat_top:
+            continue
+        if e < shell and T.rng.random() < 0.8:
+            continue
+        nz = noise.noise(V((p.x * 0.28 + seed, p.y * 0.28, p.z * 0.35)))
+        if nz < -clump * 0.5 and T.rng.random() < 0.85:
+            continue
+        out.append(p)
+    return out
+
+
 def rainforest(seed, kind):
     T = Tree(seed)
+    # Sessio 58: pönkkäjuuret leveitä ja pyöreitä, mutkittelevia (käyttäjä:
+    # tyvet eivät näyttäneet oikeilta; ohuet evät olivat kuin levyjä).
     if kind == 'canopy':
-        Ht, r0, r1, H = T.u(6.4, 8.0), 0.32, 0.2, 0
-        nl, lenl, cells, cut = (5, 7), (6.1, 7.9), ('broad_a', 'broad_b'), 0.8
-        lobes, bz = (T.rng.randint(4, 5), (0.45, 0.75), (0.5, 0.72), (0.16, 0.22)), -0.6
+        Ht, r0, r1 = T.u(6.4, 8.0), 0.32, 0.2
+        cells, cut = ('broad_a', 'broad_b'), 0.8
+        lobes, bz, curl = (T.rng.randint(4, 5), (0.35, 0.55), (0.45, 0.65), (0.24, 0.3)), -0.6, 0.35
+        crown = dict(n=650, R=(6.2, 6.2, 4.8), dz=3.2, seg=0.6, kill=1.05, infl=4.2, up=0.1, rmin=0.016, sz=(2.0, 2.8), flat=0.0)
     elif kind == 'jungle':
         Ht, r0, r1 = T.u(8.8, 10.2), 0.55, 0.36
-        nl, lenl, cells, cut = (6, 8), (6.0, 7.9), ('kapok',), 1.9
-        lobes, bz = (T.rng.randint(5, 6), (1.1, 1.7), (1.2, 1.75), (0.11, 0.15)), -0.8
+        cells, cut = ('kapok',), 1.9
+        lobes, bz, curl = (T.rng.randint(5, 6), (0.75, 1.15), (1.0, 1.45), (0.19, 0.24)), -0.8, 0.45
+        crown = dict(n=780, R=(7.0, 7.0, 4.2), dz=2.4, seg=0.65, kill=1.15, infl=4.5, up=0.04, rmin=0.02, sz=(2.2, 3.0), flat=0.85)
     else:  # emergent
         Ht, r0, r1 = T.u(15.0, 18.5), 0.85, 0.48
-        nl, lenl, cells, cut = (7, 9), (8.0, 10.5), ('broad_a', 'broad_b'), 2.6
-        lobes, bz = (T.rng.randint(6, 7), (1.6, 2.4), (1.7, 2.4), (0.085, 0.11)), -1.0
+        cells, cut = ('broad_a', 'broad_b'), 2.6
+        lobes, bz, curl = (T.rng.randint(6, 7), (1.0, 1.5), (1.4, 2.0), (0.17, 0.21)), -1.0, 0.5
+        crown = dict(n=950, R=(9.0, 9.0, 5.4), dz=3.0, seg=0.8, kill=1.45, infl=5.5, up=0.06, rmin=0.026, sz=(2.8, 3.7), flat=0.8)
     base = V((0, 0, bz))
     top = V((T.u(-0.15, 0.15), T.u(-0.15, 0.15), Ht))
-    tr = trunk_line(T, base, top, r0, r1, cut, flare=1.15, lobes=lobes, rings=20)
+    tr = trunk_line(T, base, top, r0, r1, cut, flare=1.15, lobes=lobes, rings=20, curl=curl)
     climbing_vine(T, tr, seed, kind)
-    C = top + V((0, 0, 1.5))
+    # Latvus: kupoli rungon yläpuolella, hieman sivuun siirtynyt (epäsymmetria).
+    C = top + V((T.u(-0.8, 0.8), T.u(-0.8, 0.8), crown['dz']))
+    R = V(crown['R']) * T.u(0.9, 1.1)
+    att = crown_points(T, crown['n'], C, R, top.z + 0.3, flat_top=crown['flat'], lumps={'canopy': 4, 'jungle': 5, 'emergent': 6}[kind])
 
-    def steer(p, d, t):
-        if kind == 'jungle':
-            return UP * (0.05 + 0.15 * t) + V((0, 0, -0.06))
-        if kind == 'emergent':
-            # Leveä sateenvarjolatvus: oksat leviävät ja nousevat vasta kärjissä.
-            return UP * (0.03 + 0.1 * t)
-        return UP * 0.11
+    def trop(p, d):
+        hz = V((p.x - top.x, p.y - top.y, 0))
+        out = hz.normalized() * 0.08 if hz.length > 1e-3 else V()
+        return UP * crown['up'] + out
 
-    ang = {'jungle': (1.15, 1.45), 'canopy': (0.95, 1.3), 'emergent': (0.95, 1.3)}[kind]
-    at = (0.62, 1.0) if kind == 'jungle' else (0.78, 1.0)
-    limbs = T.children(tr, T.rng.randint(*nl), at, ang, lenl, 0.5, 1, 7, 0.08, steer, tip_r=0.4)
-    limbs.append(T.grow(top - V((0, 0, 0.3)), V((T.u(-0.15, 0.15), T.u(-0.15, 0.15), 1)), lenl[0] * 0.7, r1 * 0.7, r1 * 0.25, 1, 5, 0.08, steer))
-    for lb in limbs:
-        for b2 in T.children(lb, T.rng.randint(3, 4), (0.4, 1.0), (0.5, 0.9), (lenl[0] * 0.4, lenl[1] * 0.45), 0.55, 2, 4, 0.12, steer, tip_r=0.45):
-            sz = {'canopy': (2.1, 2.9), 'jungle': (2.3, 3.1), 'emergent': (3.0, 3.9)}[kind]
-            mode = 'up' if kind == 'jungle' else 'mix'
-            for b3 in T.children(b2, T.rng.randint(2, 3), (0.4, 1.0), (0.5, 1.0), (0.6, 1.1), 0.5, 3, 3, 0.14, steer, tip_r=0.4):
-                T.foliage(b3, 7, 0.2, 1.0, sz, cells, mode, C)
-            T.foliage(b2, 3, 0.45, 1.0, sz, cells, mode, C)
-            if T.rng.random() < 0.35:
-                p, d, r = b2.at(T.u(0.3, 0.8))
-                T.vines.append(p.copy())
+    # Kiinteät solmut: rungon latva ja pari kohtaa sen alla (alimmat suuret
+    # haarat lähtevät rungon yläosan kyljestä, eivät kaikki samasta kohdasta).
+    roots = [(top.copy(), UP)]
+    for f in (0.8, 0.9):
+        roots.append((base.lerp(top, f), UP))
+    nodes = colonize(T, roots, att, crown['seg'], crown['kill'], crown['infl'], trop)
+    rad = colonized_branches(T, nodes, r1 * 0.95, crown['rmin'], (r1 * 0.3, 0.045))
+    # Lehdet: kärkien ja niiden lähisolmujen ympärille, latvuksen kuoreen.
+    mode = 'up' if kind == 'jungle' else 'mix'
+    C2 = C - V((0, 0, R.z * 0.4))
+    for i, n in enumerate(nodes):
+        if n['fixed']:
+            continue
+        if not n['ch']:
+            for _ in range(5):
+                p = n['p'] + V((T.u(-0.6, 0.6), T.u(-0.6, 0.6), T.u(-0.25, 0.4)))
+                T.leaf_card(p, n['d'], crown['sz'], cells, mode, C2)
+        elif rad[i] < crown['rmin'] * 2.6:
+            for _ in range(2):
+                p = n['p'] + V((T.u(-0.4, 0.4), T.u(-0.4, 0.4), T.u(-0.15, 0.3)))
+                T.leaf_card(p, n['d'], crown['sz'], cells, mode, C2)
+        if crown['rmin'] * 2.5 < rad[i] < 0.14 and T.rng.random() < 0.035:
+            T.vines.append(n['p'].copy())
     if kind == 'emergent':
         # Keskikerros (sessio 48, käyttäjän referenssikuva): lyhyitä sivuoksia
         # ja lehtiryppäitä rungon varrella 6-14 m:ssä.
@@ -438,6 +592,9 @@ def rainforest(seed, kind):
             p, d, r = tr.at((z - base.z) / (top.z - base.z))
             a = T.u(0, 2 * math.pi)
             out = V((math.cos(a), math.sin(a), 0))
+
+            def steer(p, d, t):
+                return UP * (0.03 + 0.1 * t)
             sb = T.grow(p + out * r * 0.8, (out + UP * T.u(0.3, 0.7)).normalized(), T.u(1.0, 2.2), 0.09, 0.03, 2, 4, 0.12, steer)
             T.foliage(sb, 10, 0.25, 1.0, (1.4, 2.0), cells, 'out', p)
     T.meta = dict(kind=kind, r0=r0, r1=r1, cutZ=cut, base=base, top=top, logR=r0 * 0.9, fallPad=1.4)
@@ -560,10 +717,14 @@ def lobe_angles(lobes, sides, far):
     TAU = 2 * math.pi
     out = [TAU * k / sides for k in range(sides)]
     offs = (0.0, 1.0, 2.0) if far else (0.0, 0.4, 0.8, 1.25, 1.8, 2.6)
-    for a, o, h, w in lobes:
-        for f in offs:
-            for sg in ((1,) if f == 0 else (-1, 1)):
-                out.append((a + sg * f * w) % TAU)
+    for a, o, h, w, c in lobes:
+        # Mutkittelevan juuren keskiviiva siirtyy alaspäin mentäessä: tiheät
+        # kulmat koko matkalle.
+        centers = [a] if not c else [a + c * s for s in (0.0, 0.35, 0.7, 1.0)]
+        for ca in centers:
+            for f in offs:
+                for sg in ((1,) if f == 0 else (-1, 1)):
+                    out.append((ca + sg * f * w * (1.4 if c else 1.0)) % TAU)
     out.sort()
     keep = [0.0]
     for a in out[1:]:
@@ -580,11 +741,17 @@ def lobe_shape(lobes, a, g):
     tot = 0.0
     uex = 0.0
     crest = 0.0
-    for la, o, h, w in lobes:
+    for la, o, h, w, c in lobes:
         x = g / h
         if x >= 1:
             continue
         f = (1 - x) ** 2.4 if x >= 0 else 1 - x * 1.2
+        if c:
+            # Sessio 58: pyöreä, mutkitteleva juuri: keskiviiva kiertyy ja
+            # juuri levenee maata kohti (ei ohut evä).
+            k = (1 - max(0.0, x)) ** 1.2
+            la = la + c * k
+            w = w * (0.75 + 0.6 * k)
         da = (a - la + math.pi) % (2 * math.pi) - math.pi
         e = math.exp(-(da / w) ** 2)
         tot += o * f * e

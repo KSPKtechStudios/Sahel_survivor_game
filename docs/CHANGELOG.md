@@ -2,6 +2,27 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-28 (sessio 58, jatko 5): sademetsäpuut, juurakko ja lahopuu uusiksi
+
+- **Sademetsäpuiden oksisto ja latvus:**
+  - oksat kasvavat nyt luonnollisesti haarautuen kohti latvuksen muotoa (ennen kaikki pääoksat lähtivät yhdestä kohdasta rungon latvasta kuin sateenvarjon puolat);
+  - latvus on tuuhea ja epäsäännöllinen, kuin useasta pienemmästä lehvästöpaakusta koottu, ja oksat näkyvät latvuksen sisällä;
+  - lehtikortteja on noin puolitoista kertaa aiempaa enemmän (kaukomalleissa vähemmän ja isompina).
+- **Puiden tyvet (pönkkäjuuret):** ohuiden, terävien evien sijaan pyöreähköjä, mutkittelevia juuria, joiden väliin jää notkot.
+- **Muinainen juurakko**, kolme muunnelmaa:
+  - ontto, katkennut kanto, jonka uurteisesta tyvestä lähtee paksuja juuria;
+  - kuristajaviikunan juurihäkki: juuret kiertyvät onton lieriön muotoon, isäntäpuu on lahonnut pois;
+  - matala laho kanto ja laaja juurimatto.
+  
+  Juuret haarautuvat, kaartuvat ja sukeltavat maan alle. Pinnassa on kaarnan uurteet, sammalpatjoja, jäkälää ja lahoa punaruskeaa puuta, ja koloissa on tummempaa.
+- **Sammaloitunut runko**, kolme muunnelmaa:
+  - kaatunut, lahoava runko, jonka latvapää on katkennut ontoksi;
+  - tyvessä joko irti revennyt juuripaakku multineen tai katkeama;
+  - painunut ja halkeillut kylki, kuoriutuneita kohtia, katkenneita oksantynkiä, kääpiä ja laikukas sammal.
+- Molemmilla on oikea kaarna- ja sammaltekstuuri.
+- **Mustat pikselit lehtien reunoilla korjattu:** reunanpehmennyksessä reunapikselin väri saattoi laskeutua negatiiviseksi (lehtikortin ulkopuolelle ekstrapoloitu väri), ja koko pikseli näkyi mustana. Nyt värit rajataan nollaan kaikissa materiaaleissa. Mittaus samasta näkymästä: ennen 10–11 tällaista pikseliä ruudussa, nyt 0. Mäkäräisiin ei koskettu.
+- Muinaisen juurakon läpi ei enää voi kävellä.
+
 ## 2026-10-28 (sessio 58, jatko 4): aurinkoon katsominen, usva pilven sisällä
 
 - **Silmä tottuu aurinkoon:** kun katsoo suoraan aurinkoon, ensimmäiset pari sekuntia häikäisee kuten ennenkin, mutta sitten silmä tottuu: valotus laskee, ja säteet, linssiheijastus ja hehku himmenevät, joten maisema alkaa erottua. Kun katse kääntyy pois, tottuminen palautuu muutamassa sekunnissa. Toimii vain, kun automaattinen valotus on päällä.

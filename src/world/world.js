@@ -79,7 +79,9 @@ export class World {
       const near = models.world[def.model];
       const far = models.far[def.model];
       variantCounts[def.model] = near.length;
-      const mat = (def.surface && materials[`${def.material}_${def.surface}`]) || materials[def.material];
+      // look (sessio 58) = oma ulkoasu, jos se poikkeaa pinnan tyypistä (surface ohjaa myös osumaefektejä).
+      const look = def.look || def.surface;
+      const mat = (look && materials[`${def.material}_${look}`]) || materials[def.material];
       // Sessio 23: skannatuilla malleilla on oma tekstuurimateriaalinsa;
       // sessio 24: kitin malleilla omat materiaalit ryhmittäin.
       const matFor = (geo) => (geo.userData.kit ? kitMaterials(geo.userData.kit) : geo.userData.tex ? scannedMaterial(geo.userData.tex) : mat);

@@ -11,7 +11,10 @@ import { makeGroundStick, makeStone, makeTermiteMound, makeOutcrop, makeSpire } 
 import { makeCliffRock, makeKarstTower } from './karst.js';
 import { scannedBoulder, SCANNED_BOULDER_COUNT } from './scanned/build.js';
 import { kitModel } from './kit/build.js';
-import { makeAncientPillar, makeRustyShield, makeAncientRoots, makeTwigs } from './ancient.js';
+import { makeAncientPillar, makeRustyShield, makeTwigs } from './ancient.js';
+// Sessio 58: juurakko ja sammaloitunut runko etäisyyskentästä.
+import { makeAncientRoots, makeMossyLog } from './organic.js';
+import { organicAsset } from './organicAssets.js';
 import { makeKelp, makeSeabedRocks, makeShoreRocks, makeBeachStones } from './shore.js';
 import { ensureUv } from './util.js';
 import { treeAsset, treeVariantCount } from './treeAssets.js';
@@ -95,7 +98,7 @@ const VARIANTS = {
   doum: [makeDoumPalm, 3, 161],
   coconut: [makeCoconutPalm, 3, 171],
   log: [(s) => makeLog(s, false), 2, 181],
-  mossyLog: [(s) => makeLog(s, true), 2, 191],
+  mossyLog: [(s, q) => organicAsset('mossyLog', s, q) || makeMossyLog(s, q), 3, 191],
   // Sessio 49: käyttäjän tuoma banaanipuu, 0–2 sivuversoa (ennen makeBanana).
   banana: kit(['Banana_A', 'Banana_B', 'Banana_C'], 201),
   desertShrub: [makeDesertShrub, 3, 211],
@@ -134,7 +137,7 @@ const VARIANTS = {
   // Sessio 24: ympäristön tarinankerronta
   ancientPillar: [makeAncientPillar, 4, 761],
   rustyShield: [makeRustyShield, 3, 771],
-  ancientRoots: [makeAncientRoots, 3, 781],
+  ancientRoots: [(s, q) => organicAsset('ancientRoots', s, q) || makeAncientRoots(s, q), 3, 781],
   twigs: [makeTwigs, 3, 791],
   // Sessio 25: rannat ja merenpohja
   kelp: [makeKelp, 3, 801],
@@ -153,7 +156,7 @@ const VARIANTS = {
   karstTower: [(s, q) => makeKarstTower(Math.round((s - 1501) / 101), s, q), 3, 1501],
 };
 // Mallit, joilla on kevyt kaukoversio (ilman varjoa).
-const HAS_FAR = new Set(['cliffRock', 'karstTower', 'emergent', 'bambooBush', 'bamboo', 'banana', 'acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);
+const HAS_FAR = new Set(['ancientRoots', 'mossyLog', 'cliffRock', 'karstTower', 'emergent', 'bambooBush', 'bamboo', 'banana', 'acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);
 // Mallit, joista tehdään tiheärunkoinen versio hakkaamista varten.
 const HAS_HI = new Set(['emergent', 'acacia', 'jungle', 'palm', 'canopy', 'shea', 'doum', 'coconut', 'baobab']);
 

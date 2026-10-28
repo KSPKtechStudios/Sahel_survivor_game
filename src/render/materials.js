@@ -329,6 +329,13 @@ export function createSharedMaterials(groundDetail) {
     { layer: 'mossrock', scale: 1.8, strength: 0.95, normal: 1.0 },
     { layer: 'moss', mask: 'top', scale: 1.2, strength: 1.0, cover: true },
   ]);
+  // Sessio 58: sammaloitunut puu (muinainen juurakko, sammaloitunut runko):
+  // kaarna ruskeissa kohdissa, sammal vihreäksi väritetyissä.
+  const solidMossy = addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.93, metalness: 0 }), [
+    { layer: 'bark', mask: 'notGreen', scale: 0.7, strength: 0.95, normal: 1.0 },
+    { layer: 'moss', mask: 'green', scale: 0.55, strength: 0.9, normal: 0.8 },
+  ]);
+  addWet(solidMossy, 0.8, 0.45);
   addWet(solidAncient, 0.9, 0.6);
   addWet(solidRock, 0.8, 0.6);
   addWet(solidWood, 0.8, 0.5);
@@ -348,5 +355,5 @@ export function createSharedMaterials(groundDetail) {
   const puddle = createPuddleMaterial();
 
   // Vesi luodaan erikseen (render/water.js), koska se tarvitsee taivaan värit.
-  return { terrain, vegetation, bush, grass, tall, solid, solid_rock: solidRock, solid_wood: solidWood, solid_earth: solidEarth, solid_ancient: solidAncient, puddle };
+  return { terrain, vegetation, bush, grass, tall, solid, solid_rock: solidRock, solid_wood: solidWood, solid_earth: solidEarth, solid_ancient: solidAncient, solid_mossy: solidMossy, puddle };
 }

@@ -2,6 +2,44 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-28 (sessio 58, jatko 4–5)
+**Tehtiin**
+- Käyttäjän kuvapalaute:
+  - sademetsäpuun oksisto typerä ja harva;
+  - kannot eivät näytä oikeilta;
+  - "Muinainen juurakko" -nimi ja paljon paremmat mallit ja tekstuurit;
+  - sammaloitunut runko paremmaksi;
+  - mustat pikselit tiheikköpensaan vieressä;
+  - usva pilven tasolla;
+  - aurinkoon katsominen: ensin sokaisee, sitten silmä tottuu.
+- Jatko 4 (commit 3f5a925):
+  - silmän tottuminen aurinkoon (`post.js`);
+  - pilven sisällä vain kevyt usva;
+  - latvuston yläpuolella kirkkaampi ilma ja horisonttiusva (`environment.js` `canopy`, `main.js`);
+  - nimenmuutos.
+- Jatko 5:
+  - juurakko ja sammaloitunut runko etäisyyskentästä (`models/sdfMesh.js`, `models/organic.js`), laskettu valmiiksi tiedostoon `assets/models/organic.bin` (`tools/organic/build.mjs`, meshoptimizer);
+  - materiaali `solid_mossy`;
+  - sademetsäpuut: oksisto "space colonization" -menetelmällä, alalatvuksista koottu latvus, pyöreät mutkittelevat pönkkäjuuret (`build_trees.py`);
+  - muiden puulajien mallit tarkistettiin samoiksi.
+- Testattiin:
+  - esikatselusivut `shots/s58/props.html` ja `shots/s56/trees.html`;
+  - aurinkotesti aavikolla (häikäisyarvo nousee 0 → 0,56 ja himmentää säteet);
+  - savutesti ilman virheitä;
+  - eslint.
+
+**Kesken / tiedossa**
+- Mustat pikselit:
+  - merkkitesti (`s58/negfind.mjs`, `s58/negid.mjs`) löysi ilman korjausta 10–11 negatiivista fragmenttia ruudussa tiheikön lähellä;
+  - sekoitus ei ollut syy;
+  - korjaus `render/shaderSafety.js` rajaa värit nollaan, ja sen jälkeen 7 ruudussa löytyi 0;
+  - testi on hidas (noin 5 minuuttia ruutua kohden), joten kaikkia kulmia ei ajettu loppuun.
+- Työkalu `tools/organic` tarvitsee meshoptimizerin (`npm install` kansiossa).
+
+**Seuraavaksi**
+- Käyttäjän palaute puista, juurakoista ja rungoista sekä aurinko- ja usvamuutoksista.
+- Käyttäjän vahvistus, että mustat pikselit ovat poissa.
+
 ## 2026-10-28 (sessio 58, jatko 3)
 **Tehtiin**
 - Käyttäjän idea: kevyt höyry tai pilviverho vuorten huippujen tuntumaan ("oho"-elämys, ei överiksi).

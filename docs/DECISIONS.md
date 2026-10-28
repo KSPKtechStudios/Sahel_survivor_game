@@ -2,6 +2,17 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-28 (sessio 58, jatko 5)
+- **Juurakko ja sammaloitunut runko mallinnetaan etäisyyskentästä** (`models/sdfMesh.js`, `models/organic.js`): juuret ja oksat ovat kartiomaisia kapseleita, jotka liitetään pehmeästi toisiinsa, ja pinta poimitaan "surface nets" -menetelmällä. Syy: putkista kootuissa malleissa liitokset näyttivät irrallisilta, ja käyttäjä halusi paljon paremmat mallit; kentästä saadaan myös varjostus koloihin.
+- **Mallit lasketaan valmiiksi tiedostoon** (`assets/models/organic.bin`, työkalu `tools/organic/build.mjs`). Ne lasketaan tarkalla ruudukolla ja harvennetaan meshoptimizerilla: lähimalli 9000 / 6500 kolmiota, kaukomalli noin 1600 / 1100 kolmiota. Syy: tarkka laskenta kestää sekunteja ja tuottaisi 30–70 tuhatta kolmiota mallia kohden; juurakoita on noin 3,5 ja runkoja 2,4 jokaisessa 64 metrin ruudussa sademetsää. Jos tiedosto ei lataudu, mallit lasketaan käynnistyksessä karkeammalla ruudukolla.
+- **Uusi materiaali `solid_mossy` ja tyypin kenttä `look`:**
+  - `solid_mossy`: kaarnatekstuuri ruskeissa, sammaltekstuuri vihreissä kohdissa;
+  - `look` valitsee materiaalin. `surface` ohjaa yhä osumaefektejä ('wood').
+- **Sademetsäpuiden oksisto "space colonization" -menetelmällä** (`build_trees.py` `colonize`). Latvuksen muodon houkutinpisteet ovat useamman alalatvuksen yhdistelmä. Oksien paksuus lasketaan putkimallilla, ja ketju seuraa suurinta alipuuta. Kaukomallin taso määräytyy oksan paksuudesta. Syy: käyttäjän mukaan oksisto näytti typerältä ja epäluonnolliselta ja latvus oli harva. Muiden lajien satunnaisjonot pidettiin ennallaan, ja niiden mallit tarkistettiin samoiksi.
+- **Mustien pikselien korjaus: väri ja lopullinen valo rajataan nollaan kaikissa materiaaleissa** (`render/shaderSafety.js`: Three.js:n `color_fragment`- ja `opaque_fragment`-palat). Syy: merkkitestissä negatiiviset fragmentit värjättiin; niitä oli 10–11 ruudussa tiheikön lähellä. Läpikuultavien hiukkasten sekoitus ei ollut syy (sekoituksen negatiivisia oli 0). Korjauksen jälkeen 7 ruudussa samoista kulmista 0. Todennäköinen mekanismi: reunanpehmennyksen reunapikselissä varjostin ajetaan kolmion ulkopuolella, jolloin kärkipisteiden arvot ekstrapoloituvat. Mäkäräisiin ei koskettu (käyttäjän ohje).
+- **Muinaiselle juurakolle törmäyssäde 0,7 m** (ennen 0). Syy: uusi kanto ja juurihäkki ovat 1,5–3 m korkeita, eikä niiden läpi pidä voida kävellä.
+- **Pönkkäjuuret pyöreiksi ja mutkitteleviksi** (`lobes`: viides arvo on kierre, ja juuri levenee maata kohti). Kulmaleveys valittiin niin, että juurten väliin jää notko eikä tyvestä tule yhtenäistä helmaa. Syy: käyttäjän mukaan tyvet eivät näyttäneet oikeilta.
+
 ## 2026-10-28 (sessio 58, jatko 4)
 - **Aurinkoon tottuminen on oma hidas tila automaattisen valotuksen rinnalla** (`post.js`: luminanssikuvan G-kanava). Häikäisytavoite lasketaan auringon näkyvyydestä (syvyysnäytteet auringon kohdalta) ja etäisyydestä kuvan keskeltä; nousu noin 1,8 s, lasku noin 2,5 s. Tottuminen laskee valotusta ja himmentää säteitä, linssiheijastusta ja bloomia. Syy: käyttäjä halusi, että ensin sokaisee ja sitten silmä tottuu; tavallinen automaattinen valotus mittaa koko kuvan keskiarvoa, joten pieni aurinko ei sitä juuri muuta.
 - **Kun kamera on pilviverhon korkeudella, verho vaihdetaan kevyeksi usvaksi** (`inside`-kerroin). Syy: käyttäjä: pilven sisällä pilveä ei oikeasti näe, vain pieni usva näkökentässä.

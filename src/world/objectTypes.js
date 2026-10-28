@@ -110,7 +110,7 @@ export const OBJECT_TYPES = {
     harvest: { tool: 'axe', hp: 3, drops: [['wood', 2], ['stick', 1]], needMsg: 'Tarvitset kirveen' },
   },
   mossyLog: {
-    name: 'Sammaloitunut runko', model: 'mossyLog', kind: 'bush', material: 'solid', surface: 'wood', castShadow: false,
+    name: 'Sammaloitunut runko', model: 'mossyLog', kind: 'bush', material: 'solid', surface: 'wood', look: 'mossy', castShadow: false,
     density: { rainforest: 2.4 },
     scale: [0.9, 1.3], maxSlope: 0.5, collider: 0, hit: { y: 0.3, r: 1.0 }, drawDist: 3,
     harvest: { tool: 'axe', hp: 3, drops: [['wood', 2], ['fiber', 1]], needMsg: 'Tarvitset kirveen' },
@@ -415,9 +415,9 @@ export const OBJECT_TYPES = {
     scale: [0.8, 1.3], maxSlope: 1, collider: 0, hit: null, nearWater: true, decorDist: 44,
   },
   ancientRoots: {
-    name: 'Muinainen juurakko', model: 'ancientRoots', kind: 'static', material: 'solid', surface: 'wood', castShadow: true,
+    name: 'Muinainen juurakko', model: 'ancientRoots', kind: 'static', material: 'solid', surface: 'wood', look: 'mossy', castShadow: true,
     density: { rainforest: 3.5, oasis: 0.6, mare: 0.4, woodland: 0.3 },
-    scale: [0.8, 1.4], maxSlope: 0.5, collider: 0, hit: { y: 0.3, r: 1.3 }, drawDist: 3,
+    scale: [0.8, 1.4], maxSlope: 0.5, collider: 0.7, hit: { y: 0.4, r: 1.3 }, drawDist: 3,
   },
   // --- Sessio 48: sademetsän latvuskatto ja tiheikkö (listan lopussa, jotta
   // vanhojen esineiden siemenet ja sijainnit eivät muutu).

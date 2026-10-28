@@ -1,6 +1,7 @@
 // Sahel: käynnistys, tilat (päävalikko / lataus / peli / tauko / reppu) ja pääsilmukka.
 import * as THREE from 'three';
 import { fogMist } from './render/fogPatch.js'; // sessio 58: korkeusriippuvainen sumu (ennen materiaalien kääntämistä)
+import './render/shaderSafety.js'; // sessio 58: ei negatiivisia värejä (mustat pikselit lehtien reunoilla)
 import { FarTerrain } from './render/farTerrain.js';
 import { PeakMist } from './render/peakMist.js';
 import { loadSurfaces, addSurfaceDetail, leafTexture, surfaceUniforms } from './render/surfaces.js';
@@ -58,6 +59,7 @@ import { renderItemIcons } from './ui/icons.js';
 import { loadItemAssets } from './models/itemAssets.js';
 import { userTexturesReady } from './models/userItems.js';
 import { loadTreeAssets } from './models/treeAssets.js';
+import { loadOrganicAssets } from './models/organicAssets.js';
 import { Hud, RESPAWN_WAIT } from './ui/hud.js';
 import { Nameplates } from './ui/nameplates.js';
 import { Minimap } from './ui/minimap.js';
@@ -97,7 +99,7 @@ const activeMaterial = softFoliage(addTranslucency(addWet(addSurfaceDetail(new T
 loadSurfaces(renderer);
 // Sessio 54: Blenderissä tehdyt esinemallit ladataan ennen mallikirjastoa.
 await loadItemAssets();
-await loadTreeAssets(); // sessio 56: Blenderillä tehdyt puut
+await Promise.all([loadTreeAssets(), loadOrganicAssets()]); // sessio 56: Blenderillä tehdyt puut; sessio 58: juurakot ja rungot
 const models = createModelLibrary();
 const sky = new Sky(scene);
 materials.water = createWaterMaterial(sky);

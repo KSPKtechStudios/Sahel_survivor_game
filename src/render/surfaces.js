@@ -223,6 +223,8 @@ const MASKS = {
   grey: '(1.0 - sDark) * sNotGreen * (1.0 - smoothstep(1.6, 2.4, sRB))',
   // Sessio 24: yläpinnat (sammal kasvaa sinne, minne sade ja lehdet kertyvät).
   top: 'sNotGreen * smoothstep(0.35, 0.85, n0.y)',
+  // Sessio 58: vihreäksi väritetyt kohdat (sammal juurakossa ja lahopuussa).
+  green: '(1.0 - sNotGreen)',
 };
 
 export function addSurfaceDetail(material, layerOrList, opts = {}) {

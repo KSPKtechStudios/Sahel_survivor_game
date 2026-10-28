@@ -5,11 +5,18 @@
   - katso suoraan aurinkoon (avoimella paikalla): sokaiseeko ensin ja tottuuko silmä parissa sekunnissa;
   - nouse massiivin laelle pilviverhon korkeudelle: pitäisi näkyä vain kevyt usva, ei verhoa silmien edessä;
   - usva laella ja viidakon pohjalla; "Muinainen juurakko" -nimi.
-- [ ] Mustat pikselit tiheikköpensaan lehtien vieressä (HDR-kuvan negatiiviset pisteet): etsi lähde ja korjaa. Älä muuta mäkäräisiä.
-- [ ] Muinainen juurakko: paljon parempi 3D-malli ja tekstuurit.
-- [ ] Sammaloitunut runko: huomattavasti parempi malli.
-- [ ] Sademetsäpuu: luonnollisempi haarautuminen ja tuuheampi latvus.
-- [ ] Kannot ja tyven pönkkäjuuret: pyöreämmät ja luonnollisemmat.
+- [x] Mustat pikselit tiheikköpensaan lehtien vieressä: korjattu rajaamalla värit nollaan (jatko 5).
+- [ ] Käyttäjä testaa: näkyykö mustia pikseleitä vielä tiheikköpensaan lehtien vieressä.
+- [x] Muinainen juurakko: paljon parempi 3D-malli ja tekstuurit (jatko 5).
+- [x] Sammaloitunut runko: huomattavasti parempi malli (jatko 5).
+- [x] Sademetsäpuu: luonnollisempi haarautuminen ja tuuheampi latvus (jatko 5).
+- [x] Kannot ja tyven pönkkäjuuret: pyöreämmät ja luonnollisemmat (jatko 5).
+- [ ] Käyttäjä testaa jatko 5:
+  - sademetsäpuiden latvukset ja oksisto (läheltä ja kaukaa);
+  - puiden tyvet;
+  - muinaisen juurakon kolme muunnelmaa (kanto, juurihäkki, juurimatto);
+  - sammaloituneet rungot;
+  - ruudunpäivitys sademetsässä (latvuksissa on enemmän lehtiä).
 - [ ] Käyttäjä testaa session 58:
   - kalliot: jyrkänteiden kalkkikiviseinät, lohkareet ja köynnökset sademetsässä;
   - kalkkikivitornit sademetsässä (kartalla tai [F3]): ulkonäkö, koko ja määrä;
