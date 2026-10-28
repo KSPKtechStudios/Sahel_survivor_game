@@ -8,6 +8,7 @@ Tekstuurit (assets/textures/), ambientCG (https://ambientcg.com), CC0:
   sand    = Ground054      soil   = Ground072      forest = Ground078
   rock    = Rock030        bark   = Bark014        planks = Planks012
   moss    = Moss002        mossrock = Rock064 (sessio 24)
+  limestone = Rock026 (sessio 58, karstikalliot ja -tornit)
   (1K-JPG; väri- ja normaalikartta, uudelleenpakattu JPEG:ksi)
   leaves.png = LeafSet019, LeafSet024, LeafSet022 (koottu atlakseksi)
   grass.png = Clauden piirtämä ruohoatlas (sessio 24, CC0)

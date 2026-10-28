@@ -67,6 +67,7 @@ const structCache = new Map();
 const lakeCache = new Map();
 const featCache = new Map();
 const fallCache = new Map();
+const karstCache = new Map();
 
 // Merkkijono tai luku -> 32-bittinen siemen.
 export function seedFromString(text) {
@@ -97,6 +98,7 @@ export function setWorldSeed(seed) {
   lakeCache.clear();
   featCache.clear();
   fallCache.clear();
+  karstCache.clear();
 }
 
 export function getWorldSeed() {
@@ -1362,6 +1364,74 @@ export function fallsNear(x, z, r) {
   return res;
 }
 
+// --- Sessio 58: kalkkikivitornit (karstitornit) ---------------------------------------
+// Harvinaisia 25–45 m:n kalkkikivitorneja sademetsän jyrkännealueilla (käyttäjän
+// kuva). Paikka, koko ja malli tulevat siemenestä. chunkGen lisää tornin
+// esineeksi ja pitää muut esineet sen ulkopuolella; world.js lisää törmäyksen.
+// Mittojen pitää vastata mallia (models/karst.js käyttää samoja).
+export const KARST_DIMS = [{ R: 7.5, H: 34 }, { R: 8.5, H: 40 }, { R: 6.8, H: 29 }];
+const KARST_CELL = 640;
+const _kb = {};
+
+function karstInCell(ix, iz) {
+  const key = ix * 131071 + iz;
+  if (karstCache.has(key)) return karstCache.get(key);
+  let k = null;
+  const rand = mulberry32((Math.imul(ix, 3266489917) ^ Math.imul(iz, 668265263) ^ Math.imul(SEED + 37, 374761393)) >>> 0);
+  if (rand() < 0.7) {
+    for (let a = 0; a < 6 && !k; a++) {
+      const x = (ix + 0.2 + rand() * 0.6) * KARST_CELL;
+      const z = (iz + 0.2 + rand() * 0.6) * KARST_CELL;
+      const variant = Math.floor(rand() * KARST_DIMS.length);
+      const scale = 0.85 + rand() * 0.35;
+      const rot = rand() * Math.PI * 2;
+      if (escMaskAt(x, z) < 0.45) continue;
+      sampleTerrainRaw(x, z, _kb);
+      if (_kb.rainforest < 0.95 || _kb.h < _kb.wl + 0.5 || _kb.chan > 0.01 || _kb.cliff > 0.1) continue;
+      const R = KARST_DIMS[variant].R * scale;
+      let lo = _kb.h, hi = _kb.h, ok = true;
+      for (let i = 0; i < 12 && ok; i++) {
+        const ang = (i / 12) * Math.PI * 2;
+        for (const f of [0.7, 1.0, 1.6]) {
+          sampleTerrainRaw(x + Math.cos(ang) * R * f, z + Math.sin(ang) * R * f, _kb);
+          if (_kb.h < _kb.wl + 0.4 || _kb.chan > 0.01 || _kb.rainforest < 0.9 || _kb.cliff > 0.15) { ok = false; break; }
+          if (f <= 1) { lo = Math.min(lo, _kb.h); hi = Math.max(hi, _kb.h); }
+        }
+      }
+      if (!ok || hi - lo > 3) continue;
+      if (fallsNear(x, z, R + 60).length || lakeNear(x, z, R + 15)) continue;
+      k = { x, z, y: lo - 0.3, R, H: KARST_DIMS[variant].H * scale, scale, rot, variant };
+    }
+  }
+  karstCache.set(key, k);
+  return k;
+}
+
+// Tornit, joiden keskipiste on enintään r + säde päässä.
+export function karstNear(x, z, r) {
+  const res = [];
+  const n = Math.ceil((r + 12) / KARST_CELL);
+  const ix = Math.floor(x / KARST_CELL), iz = Math.floor(z / KARST_CELL);
+  for (let j = iz - n; j <= iz + n; j++) {
+    for (let i = ix - n; i <= ix + n; i++) {
+      const k = karstInCell(i, j);
+      if (k && Math.hypot(k.x - x, k.z - z) < r + k.R) res.push(k);
+    }
+  }
+  return res;
+}
+
+export function insideKarst(x, z, margin = 0) {
+  const ix = Math.floor(x / KARST_CELL), iz = Math.floor(z / KARST_CELL);
+  for (let j = iz - 1; j <= iz + 1; j++) {
+    for (let i = ix - 1; i <= ix + 1; i++) {
+      const k = karstInCell(i, j);
+      if (k && Math.hypot(k.x - x, k.z - z) < k.R + margin) return true;
+    }
+  }
+  return false;
+}
+
 // Kenttä, josta korkeus, biomipainot ja vesi lasketaan (ilman rakennelmien tasoitusta).
 function sampleTerrainRaw(x, z, out) {
   sampleBase(x, z, out);
@@ -1430,6 +1500,7 @@ export function structureInCell(ix, iz) {
       const z = (iz + 0.15 + rand() * 0.7) * STRUCT_CELL;
       sampleTerrainRaw(x, z, _sraw);
       if (_sraw.h < _sraw.wl + 0.8 || _sraw.dEdge > 0.97 || _sraw.rock > 0.05 || _sraw.mesa > 0.05 || _sraw.chan > 0.01 || _sraw.cliff > 0.05) continue;
+      if (_sraw.rainforest > 0.5 && insideKarst(x, z, 14)) continue; // sessio 58
       const h0 = _sraw.h;
       const onBeach = _sraw.beach > 0.5;
       let rough = 0;
@@ -1615,6 +1686,7 @@ const C = {
   cliff: srgb(0x8a4a2c), cliffRock: srgb(0x5e5049),
   sandA: srgb(0xe9d6a8), sandB: srgb(0xd8c08e), sandWet: srgb(0xa8916a), seaFloor: srgb(0xbca67a),
   granite: srgb(0x9a948b), graniteDark: srgb(0x6f6a63), lichen: srgb(0x8c8a6a),
+  limePale: srgb(0xb3ab9a), limeOrange: srgb(0xb47c4c), limeDark: srgb(0x4e4c45), limeMoss: srgb(0x52653a), // sessio 58: kalkkikivi
   mud: srgb(0x4b3f2e), mudGreen: srgb(0x4a4a2c), pebble: srgb(0x7a746c),
 };
 
@@ -1694,11 +1766,17 @@ export function groundColor(x, z, s, slope, out) {
     mix3(_c1, C.cliff, C.cliffRock, Math.min(1, s.mountains + s.rainforest * 0.5 + s.beach + s.ocean));
     mix3(out, out, _c1, cliffT * 0.85);
   }
-  // Sessio 57: sademetsän jyrkänteet: tummaa, märkää kiveä ja sammalta.
+  // Sessio 57: sademetsän jyrkänteet. Sessio 58: vaaleaa kalkkikiveä, jossa
+  // oransseja ja tummia valumajuovia (käyttäjän kuvat karstiseinämistä).
+  // Kohina riippuu vain x:stä ja z:sta, joten jyrkällä seinällä juovat ovat pystysuoria.
   if (s.cliff > 0) {
-    mix3(_c1, C.graniteDark, C.cliffRock, n1 * 0.7);
-    mix3(_c1, _c1, C.lichen, smoothstep(0.5, 0.85, n2) * 0.45);
-    mix3(out, out, _c1, Math.min(1, s.cliff * 1.3));
+    const sOr = smoothstep(0.1, 0.6, N.detail(x / 2.4 + 17, z / 2.4 - 9) * 0.6 + N.color(x / 9, z / 9) * 0.4);
+    const sDk = smoothstep(0.35, 0.85, N.detail(x / 0.9 - 5, z / 0.9 + 3));
+    mix3(_c1, C.limePale, C.limeOrange, sOr * 0.75);
+    mix3(_c1, _c1, C.limeDark, sDk * 0.7);
+    // Loivemmissa kohdissa (hyllyt, reunat) sammalta.
+    mix3(_c1, _c1, C.limeMoss, (1 - smoothstep(0.45, 0.75, slope)) * 0.7);
+    mix3(out, out, _c1, Math.min(1, s.cliff * 2));
   }
   // Graniittikalliot: harmaata kiveä ja jäkälää.
   if (s.rock > 0) {
@@ -1745,7 +1823,7 @@ export function groundWeights(x, z, s, slope, out) {
   const over = (t) => { sand *= 1 - t; soil *= 1 - t; forest *= 1 - t; rock = rock * (1 - t) + t; };
   over(smoothstep(0.35, 0.7, slope) * 0.85);
   if (s.rock > 0) over(s.rock * (0.55 + 0.45 * slope));
-  if (s.cliff > 0) over(Math.min(1, s.cliff * 1.3));
+  if (s.cliff > 0) over(Math.min(1, s.cliff * 2));
   if (s.mesa > 0) over(s.mesa * Math.min(1, 0.35 + slope * 1.5));
   out[0] = sand; out[1] = soil; out[2] = forest; out[3] = rock;
   return out;
@@ -1778,7 +1856,9 @@ export function mapColorRGB(x, z, out) {
     r += (200 - r) * k * 0.6; g += (190 - g) * k * 0.6; b += (180 - b) * k * 0.6;
   }
   if (s.rock > 0) { r += (150 - r) * s.rock; g += (146 - g) * s.rock; b += (138 - b) * s.rock; }
-  if (s.cliff > 0) { const k = Math.min(1, s.cliff * 1.3); r += (92 - r) * k; g += (94 - g) * k; b += (86 - b) * k; }
+  if (s.cliff > 0) { const k = Math.min(1, s.cliff * 2); r += (176 - r) * k; g += (168 - g) * k; b += (150 - b) * k; }
+  // Sessio 58: kalkkikivitornit kartalla vaaleana kivenä.
+  if (s.rainforest > 0.5 && insideKarst(x, z, 0)) { r = 196; g = 190; b = 176; }
   if (s.mesa > 0) { r += (170 - r) * s.mesa * 0.6; g += (112 - g) * s.mesa * 0.6; b += (78 - b) * s.mesa * 0.6; }
   out[0] = r; out[1] = g; out[2] = b;
   return s;

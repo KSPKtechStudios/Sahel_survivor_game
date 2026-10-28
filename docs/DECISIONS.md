@@ -2,6 +2,16 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-28 (sessio 58)
+- **Akasioissa vanhat proseduraaliset ja uudet Blender-mallit sekaisin** (`models.js` `MIXED_TREES`): Blender-variantit ovat listan alussa, vanhat perässä, ja tarkka malli (`hi`) haetaan vanhoille oikealla siemenellä. Syy: käyttäjä piti vanhoja parempina ja uusia "orvon näköisinä", mutta ei pyytänyt uusien poistamista.
+- **Rungon liaani tehdään Blender-puuhun omana materiaalinaan** (`build_trees.py` `climbing_vine`, materiaali `treeVine`). Sillä on oma satunnaislukujono, jotta puiden muoto ei muuttunut. Syy: se kaatuu, heiluu ja katkeaa rungon mukana ilman erillistä logiikkaa.
+- **Liaanin materiaali on vaalea (0xf2eedc) ja AO 0,88.** Syy: tumma sävy kertaa taimikaarnan tekstuuri kertaa AO teki siitä varjopuolella täysin mustan (albedo noin 4 %).
+- **Kielekkeiden tarkistus tehdään juuren säteellä** (`chunkGen.js` `footRadius`, `footOk`): maan korkeus mitataan 8 suunnasta, ja liian iso pudotus tai nousu hylkää paikan. Syy: pelkkä keskipisteen kaltevuus ei huomannut jyrkänteen reunaa, joten puu jäi puoliksi ilmaan. Hylkäys ei kuluta satunnaislukuja, joten muut esineet pysyvät paikoillaan.
+- **Karstitornit ovat deterministinen 640 m:n soluruudukko** (`terrain.js` `karstInCell`, `karstNear`, `insideKarst`), kuten järvet ja putoukset. Tornin törmäys lisätään jokaiseen chunkiin, johon se ulottuu. Syy: torni on chunkia isompi, ja pelaajan törmäys käy läpi vain lähimmät chunkit.
+- **Kalliolohkareet ovat oma esinetyyppinsä** (`cliffRock`), ja ne asetetaan 2,6 m:n maailmanruudukkoon vain jyrkkään seinään (kaltevuus noin 37° tai enemmän), etupuoli alamäkeen. Uudet tyypit lisättiin `OBJECT_TYPES`:n loppuun. Syy: vanhojen maailmojen esineet pysyvät paikoillaan.
+- **Kalkkikiven tekstuuri: ambientCG Rock026 (CC0).** Syy: vaalea, pystyjuovainen kalkkikivi on lähinnä käyttäjän karstikuvaa.
+- **Lehtien karheus 0,93–0,97 ja märkyyden kiilto 0,08–0,1.** Syy: käyttäjän mukaan lehdet kiilsivät muovisesti.
+
 ## 2026-10-28 (sessio 57)
 - **Latvusto suljetaan tiheämmillä lehvillä ja isommilla korteilla, ei lisäämällä puita tai kortteja.** Syy: lehtiatlaksen leveälehtiset lehvät peittivät vain noin viidenneksen kortistaan; kortin peitto nousee ilman lisäkolmioita. Puiden tiheyttä sademetsässä ei muutettu.
 - **Lähipuiden varjo piirretään kaukomallilla** (`world.js` varjopoolit, kerros 1 näkyy vain auringon varjokameroille). Syy: lähipuut piirrettiin kuvaan ja varjokarttaan tarkkana; varjossa ero ei näy, ja kolmioita säästyy puolet. Kaukomallissa on neljännes korteista 1,95-kertaisina, joten varjon peitto on sama.

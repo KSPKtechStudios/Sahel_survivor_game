@@ -2,7 +2,20 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
-## 2026-10-28 (sessio 57): umpinainen latvusto, realistinen kaatojälki, uudet liaanit
+## 2026-10-28 (sessio 58): karstikalliot, rungon liaani, tuuheammat palmut, mattalehdet
+
+- **Kalliot kalkkikiveksi:** jyrkänteen seinä on vaaleaa, oranssin ja tumman juovaista kalkkikiveä (ennen vihreä "ruohoseinä"). Jyrkkiin kohtiin on upotettu kalliolohkareita, joissa on kerroksia, halkeamia, sammalta päällä ja roikkuvia köynnöksiä.
+- **Kalkkikivitornit sademetsään:** käyttäjän kuvan kaltaisia 25–48 m korkeita pylväitä, joiden laella ja kielekkeillä kasvaa puustoa ja kasvillisuutta. Seinillä kasvaa pensaita ja köynnöksiä, ja juurella on sammalta.
+  - Torneja on koko maailmassa 35–54 (siemenellä 777: 54).
+  - Tornien läpi ei kävellä, eikä niiden kohdalle synny puita tai rakennelmia.
+- **Puut eivät enää synny kielekkeille:** puu, muinainen juuri, kivi ja muut isot esineet syntyvät vain, jos maa on koko niiden juurella suunnilleen samalla tasolla. Tämä koskee kaikkia biomeja (ennen ne saattoivat jäädä roikkumaan jyrkänteen reunalle).
+- **Liaani rungon ympärillä:** noin kolmea neljästä sademetsäpuusta kiertää taas liaani. Se nousee juurilohkojen välistä ja kiertyy 1,5–3 kierrosta ylös kohti latvusta, ja varressa on lehtiä.
+- **Akasiat:** vanhat akasiamallit ovat taas mukana uusien rinnalla sekaisin.
+- **Palmut tuuheammiksi:**
+  - lehtiä on 19–22 (ennen 14–16), kookospalmussa 17–19 (13–15);
+  - lehdykköjä on 36 lehteä kohden (ennen 21–22), ja ne ovat leveämpiä;
+  - kaukomalleissa lehdykköjä on 13 (ennen 9).
+- **Lehdet mattapintaisiksi:** puiden, palmujen, banaanien, pensaiden ja aluskasvien lehdet eivät enää kiillä muovisesti. Märkyyden kiilto lehdissä on enää hyvin pieni.
 
 ## 2026-10-28 (sessio 57): umpinainen latvusto, realistinen kaatojälki, uudet liaanit, jyrkänteet ja vesiputoukset
 

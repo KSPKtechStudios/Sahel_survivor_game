@@ -96,7 +96,7 @@ function pinnateFrond(m, crown, a, elev, len, droop, rand, q, o = {}) {
     );
   }
   // Lehdykät
-  const nL = q ? (o.leaflets ?? 26) : 9;
+  const nL = q ? (o.leaflets ?? 26) : 13;
   const maxL = o.leafLen ?? len * 0.32;
   const lw = (o.leafW ?? 0.045) * (q ? 1 : 2.2);
   const vAng = old ? -0.9 : (o.vAngle ?? 0.35);
@@ -253,8 +253,9 @@ export function makePalm(seed, q = 1) {
   const fruit = coconutPoints(crown, fj, 4 + Math.floor(fj() * 4));
   const m = new Mesher();
   frondSet(m, crown, jr(), q, {
-    count: 14 + Math.floor(rand() * 3), oldEvery: 6, elev: [0.25, 0.7], len: [2.7, 3.5], droop: 0.42,
-    frond: { green: [0x3f7a2a, 0x4a8530, 0x56903a][seed % 3], leaflets: 21, leafW: 0.06, vAngle: 0.45 },
+    // Sessio 58: tiheämmät lehvät (käyttäjä: aivan liian harvoja); ennen 14–16 lehteä, 21 lehdykkää à 6 cm.
+    count: 19 + Math.floor(rand() * 4), oldEvery: 7, elev: [0.25, 0.7], len: [2.7, 3.5], droop: 0.42,
+    frond: { green: [0x3f7a2a, 0x4a8530, 0x56903a][seed % 3], leaflets: 36, leafW: 0.085, vAngle: 0.45 },
   });
   parts.push(m.geometry());
   const geo = treeMeta(merge(parts), {
@@ -292,8 +293,8 @@ export function makeCoconutPalm(seed, q = 1) {
   const fruit = coconutPoints(crown, cj, 6 + Math.floor(cj() * 5));
   const m = new Mesher();
   frondSet(m, crown, jr(), q, {
-    count: 13 + Math.floor(rand() * 3), oldEvery: 6, elev: [0.15, 0.55], len: [3.2, 4.1], droop: 0.55,
-    frond: { green: [0x4f8a2e, 0x5a9434, 0x62993a][seed % 3], leaflets: 22, leafW: 0.05, vAngle: 0.2 },
+    count: 17 + Math.floor(rand() * 3), oldEvery: 7, elev: [0.15, 0.55], len: [3.2, 4.1], droop: 0.55,
+    frond: { green: [0x4f8a2e, 0x5a9434, 0x62993a][seed % 3], leaflets: 36, leafW: 0.075, vAngle: 0.2 },
   });
   parts.push(m.geometry());
   const geo = treeMeta(merge(parts), {

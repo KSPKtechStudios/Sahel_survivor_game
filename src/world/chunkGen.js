@@ -5,6 +5,7 @@ import { CONFIG } from '../config.js';
 import { mulberry32, hashSeed } from '../noise.js';
 import {
   sampleTerrain, heightAt, groundColor, groundWeights, getWorldSeed, BIOME_KEYS, insideStructure, mapColorRGB,
+  karstNear, insideKarst,
 } from './terrain.js';
 import { OBJECT_TYPES, OBJECT_TYPE_KEYS, DECOR_TYPES } from './objectTypes.js';
 import { openFactor } from './waves.js';
@@ -29,6 +30,15 @@ function meshHeight(x, z) {
   if (fx + fz <= 1) return ha + (hb - ha) * fx + (hc - ha) * fz;
   const hd = heightAt(X + STEP, Z + STEP);
   return hd + (hc - hd) * (1 - fx) + (hb - hd) * (1 - fz);
+}
+
+// Sessio 58: jalanjäljen säde (m), jonka alla pitää olla maata. Kivet saavat
+// olla rinteessä ja kallioseinällä (maxSlope 1), poimittavat ja koristeet ovat pieniä.
+function footRadius(def) {
+  if (def.kind === 'pickup' || def.decorative || def.maxSlope >= 1) return 0;
+  if (def.kind === 'tree') return Math.max(1.2, (def.collider || 0.3) * 2.5);
+  if (def.hit) return Math.max(0.5, def.hit.r * 0.9);
+  return Math.max(0.4, def.collider || 0);
 }
 
 function slope(x, z, h) {
@@ -99,14 +109,37 @@ export function generateChunk(cx, cz, variantCounts) {
 
   const water = buildWater(samples, row);
 
+  // Maaston korkeus palan ruudukosta (reunojen ulkopuolella maastofunktiosta).
+  const groundAt = (wx, wz) => {
+    const fi = (wx - x0) / STEP + 1, fj = (wz - z0) / STEP + 1;
+    if (fi < 0 || fj < 0 || fi > B - 1.001 || fj > B - 1.001) return heightAt(wx, wz);
+    const gi = Math.floor(fi), gj = Math.floor(fj), fx = fi - gi, fz = fj - gj;
+    const a = gj * B + gi;
+    return (heights[a] * (1 - fx) + heights[a + 1] * fx) * (1 - fz) + (heights[a + B] * (1 - fx) + heights[a + B + 1] * fx) * fz;
+  };
+  // Sessio 58: koko jalanjäljen alla maata. Ennen tarkistettiin vain metrin
+  // päästä kahteen suuntaan, joten jyrkänteen ja pöytävuoren reunalle syntyi
+  // puita ja juurakoita, joiden alta puuttui maa (käyttäjän kuva).
+  const footOk = (x, z, h, R) => {
+    const drop = 0.6 + 0.5 * R, rise = 1.4 + 0.8 * R;
+    for (let k = 0; k < 8; k++) {
+      const a = k * Math.PI / 4;
+      const g = groundAt(x + Math.cos(a) * R, z + Math.sin(a) * R) - h;
+      if (g < -drop || g > rise) return false;
+    }
+    return true;
+  };
+
   // --- Esineet
   const seed = getWorldSeed();
   const objs = [];
   const s = {};
+  const foot = OBJECT_TYPE_KEYS.map((k) => footRadius(OBJECT_TYPES[k]));
+  const karst = rain > 1 ? karstNear(x0 + SIZE / 2, z0 + SIZE / 2, SIZE * 0.75) : [];
   for (let t = 0; t < OBJECT_TYPE_KEYS.length; t++) {
     const type = OBJECT_TYPE_KEYS[t];
     const def = OBJECT_TYPES[type];
-    if (def.decorative) continue;
+    if (def.decorative || def.special) continue;
     const rand = mulberry32(hashSeed(seed, cx, cz, t + 1));
     const maxD = Math.max(...Object.values(def.density));
     const candidates = Math.floor(maxD) + (rand() < maxD % 1 ? 1 : 0);
@@ -129,8 +162,40 @@ export function generateChunk(cx, cz, variantCounts) {
       } else if (s.h < s.wl + 0.15) continue;
       if (def.maxSlope < 1 && slope(x, z, s.h) > def.maxSlope) continue;
       if (insideStructure(x, z, def.kind === 'pickup' ? 0 : 2)) continue;
+      if (karst.length && insideKarst(x, z, def.kind === 'pickup' ? 0.3 : 1.5)) continue;
       const scale = def.scale[0] + r3 * (def.scale[1] - def.scale[0]);
+      if (foot[t] && !footOk(x, z, s.h, foot[t] * scale)) continue;
       objs.push(t, i, x, s.h - (def.kind === 'pickup' ? 0.02 : 0.05), z, r2 * Math.PI * 2, scale, Math.floor(r4 * nv));
+    }
+  }
+
+  // Sessio 58: karstimaisema. Kalkkikivitornit (keskipiste tässä chunkissa)
+  // ja jyrkänteen seinään upotetut lohkareet: yksi ehdokas 2,6 m:n
+  // maailmanruutua kohden (sama ruudukko kaikissa chunkeissa), etupuoli
+  // alamäkeen. Ennen seinä oli pelkkä sileä rinne (käyttäjä: "ruohoseinä").
+  const tTower = OBJECT_TYPE_KEYS.indexOf('karstTower');
+  for (const k of karst) {
+    if (k.x < x0 || k.z < z0 || k.x >= x0 + SIZE || k.z >= z0 + SIZE) continue;
+    objs.push(tTower, 0, k.x, k.y, k.z, k.rot, k.scale, k.variant);
+  }
+  if (rain > 1) {
+    const tCliff = OBJECT_TYPE_KEYS.indexOf('cliffRock');
+    const nCliff = variantCounts.cliffRock || 1;
+    const CELL = 2.6;
+    const ci0 = Math.floor(x0 / CELL), cj0 = Math.floor(z0 / CELL);
+    for (let cj = cj0; cj <= Math.floor((z0 + SIZE) / CELL); cj++) {
+      for (let ci = ci0; ci <= Math.floor((x0 + SIZE) / CELL); ci++) {
+        const r = mulberry32(hashSeed(seed, ci, cj, 9001));
+        const x = (ci + 0.1 + r() * 0.8) * CELL, z = (cj + 0.1 + r() * 0.8) * CELL;
+        const keep = r(), jr = r(), sc = r(), va = r();
+        if (x < x0 || z < z0 || x >= x0 + SIZE || z >= z0 + SIZE) continue;
+        const sv = samples[Math.round((z - z0) / STEP) * row + Math.round((x - x0) / STEP)];
+        if (!(sv.cliff > 0.25) || keep > 0.3 + sv.cliff * 0.7 || sv.h < sv.wl + 0.3) continue;
+        const gx = groundAt(x + 1, z) - groundAt(x - 1, z), gz = groundAt(x, z + 1) - groundAt(x, z - 1);
+        if (Math.hypot(gx, gz) < 1.5) continue; // vain jyrkkä seinä (n. 37° ja yli)
+        if (karst.length && insideKarst(x, z, 1)) continue;
+        objs.push(tCliff, 100000 + (cj - cj0) * 64 + (ci - ci0), x, groundAt(x, z), z, Math.atan2(-gx, -gz) + (jr - 0.5) * 0.5, 0.75 + sc * 0.5, Math.floor(va * nCliff));
+      }
     }
   }
 

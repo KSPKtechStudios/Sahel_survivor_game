@@ -18,6 +18,7 @@ import { GenPool } from './genPool.js';
 import { OBJ_STRIDE, DECOR_STRIDE } from './chunkGen.js';
 import { splitTree } from '../game/treeCut.js';
 import { GrassField } from '../render/grassField.js';
+import { karstNear } from './terrain.js';
 
 const SIZE = CONFIG.chunkSize;
 const SEG = CONFIG.chunkSegments;
@@ -336,6 +337,11 @@ export class World {
       chunk.objects.push(obj);
       const cr = isStump ? 0.25 : def.collider;
       if (cr > 0) chunk.colliders.push({ x: obj.x, z: obj.z, r: cr * obj.scale, obj });
+    }
+    // Sessio 58: kalkkikivitornin törmäys jokaiseen chunkiin, johon se ulottuu
+    // (pelaajan törmäys käy läpi vain lähimmät chunkit).
+    if (data.rain > 0.0005) {
+      for (const k of karstNear(cx * SIZE + SIZE / 2, cz * SIZE + SIZE / 2, SIZE * 0.75)) chunk.colliders.push({ x: k.x, z: k.z, r: k.R * 0.95 });
     }
     this.chunks.set(this.key(cx, cz), chunk);
     this.grass.addChunk(chunk, data.cover, data.coverCells);

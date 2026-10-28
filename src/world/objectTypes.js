@@ -450,6 +450,17 @@ export const OBJECT_TYPES = {
     scale: [0.75, 1.2], maxSlope: 0.6, collider: 0.2, hit: { y: 1.0, r: 0.7 }, drawDist: 2,
     harvest: { tool: null, hp: 3, drops: [['bamboo', 1], ['fiber', 1]] },
   },
+  // --- Sessio 58: karstimaisema (käyttäjän kuvat kalkkikiviseinämistä ja
+  // -tornista). Paikat tulevat suoraan maastosta (special: chunkGen), ei
+  // tiheydestä: lohkareet upotetaan jyrkänteen seinään, tornit terrain.js:stä.
+  cliffRock: {
+    name: 'Kalkkikivi', model: 'cliffRock', kind: 'static', material: 'solid', surface: 'rock', castShadow: true, special: true,
+    density: {}, scale: [0.75, 1.25], maxSlope: 1, collider: 0, hit: null, drawDist: 99,
+  },
+  karstTower: {
+    name: 'Kalkkikivitorni', model: 'karstTower', kind: 'static', material: 'solid', surface: 'rock', castShadow: true, special: true,
+    density: {}, scale: [0.85, 1.2], maxSlope: 1, collider: 0, hit: { y: 3, r: 6.5 }, drawDist: 99,
+  },
 };
 
 export const OBJECT_TYPE_KEYS = Object.keys(OBJECT_TYPES);

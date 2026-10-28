@@ -1,6 +1,15 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 58:
+  - kalliot: jyrkänteiden kalkkikiviseinät, lohkareet ja köynnökset sademetsässä;
+  - kalkkikivitornit sademetsässä (kartalla tai [F3]): ulkonäkö, koko ja määrä;
+  - liaani sademetsäpuiden rungon ympärillä;
+  - vanhat ja uudet akasiat sekaisin savannilla;
+  - palmujen lehvästöt ja lehtien mattapinta;
+  - eivät puut tai muinaiset juuret enää roiku kielekkeiden reunoilla (kaikki biomit).
+- [ ] Vastaus: sopiiko tornien korkeus (25–48 m) ja määrä (35–54 koko maailmassa)?
+- [ ] Sessio 58, kesken: kun kaatuva puu osuu johonkin (toinen puu, pensas, kivi; ei pelkkä maa), pieni pölähdys ja partikkeliroiske osumakohtaan.
 - [ ] Käyttäjä testaa session 57 (sademetsä):
   - latvusto ylös katsoessa (näkyykö vielä liikaa taivasta) ja ruudunpäivitys;
   - kaatojälki kannossa ja kaatuneen rungon päässä;

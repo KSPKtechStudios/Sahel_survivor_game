@@ -8,6 +8,7 @@ import { makeAcacia, makeBaobab, makeJungleTree, makeCanopyTree, makeEmergentTre
 import { makePalm, makeCoconutPalm, makeDoumPalm } from './palms.js';
 import { makeBush, makeTumbleweed, makeGrassTuft, makeThicket, makeEuphorbia, makeReeds } from './plants.js';
 import { makeGroundStick, makeStone, makeTermiteMound, makeOutcrop, makeSpire } from './rocks.js';
+import { makeCliffRock, makeKarstTower } from './karst.js';
 import { scannedBoulder, SCANNED_BOULDER_COUNT } from './scanned/build.js';
 import { kitModel } from './kit/build.js';
 import { makeAncientPillar, makeRustyShield, makeAncientRoots, makeTwigs } from './ancient.js';
@@ -147,9 +148,12 @@ const VARIANTS = {
   sapling: [makeSapling, 4, 1201],
   // Sessio 49: käyttäjän tuoma bambupensas (kenttäkerros).
   bambooBush: kit(['BambooBush_A'], 1301),
+  // Sessio 58: karstimaisema (kalkkikivilohkareet seinässä ja kalkkikivitornit).
+  cliffRock: [makeCliffRock, 6, 1401],
+  karstTower: [(s, q) => makeKarstTower(Math.round((s - 1501) / 101), s, q), 3, 1501],
 };
 // Mallit, joilla on kevyt kaukoversio (ilman varjoa).
-const HAS_FAR = new Set(['emergent', 'bambooBush', 'bamboo', 'banana', 'acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);
+const HAS_FAR = new Set(['cliffRock', 'karstTower', 'emergent', 'bambooBush', 'bamboo', 'banana', 'acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);
 // Mallit, joista tehdään tiheärunkoinen versio hakkaamista varten.
 const HAS_HI = new Set(['emergent', 'acacia', 'jungle', 'palm', 'canopy', 'shea', 'doum', 'coconut', 'baobab']);
 
@@ -157,6 +161,9 @@ const HAS_HI = new Set(['emergent', 'acacia', 'jungle', 'palm', 'canopy', 'shea'
 // proseduraaliset puut, jos ne latautuivat. Kaukomalli on mukana, ja
 // hakattava malli on sama kuin lähimalli (rungossa on tiheät renkaat).
 const ASSET_TREES = ['acacia', 'shea', 'baobab', 'canopy', 'jungle', 'emergent', 'sapling'];
+// Sessio 58: akasioissa uudet ja vanhat proseduraaliset mallit sekaisin
+// (käyttäjä piti vanhoja parempina; uudet yksinään näyttivät orvoilta).
+const MIXED_TREES = new Set(['acacia']);
 
 function seedsFor(model) {
   const [, n, base] = VARIANTS[model];
@@ -172,13 +179,15 @@ export function createModelLibrary() {
     near[model] = seeds.map((s) => ensureUv(fn(s, 1)));
     far[model] = HAS_FAR.has(model) ? seeds.map((s) => ensureUv(fn(s, 0))) : null;
   }
-  const assetTrees = new Set();
+  const assetTrees = new Map(); // malli -> Blender-varianttien määrä (ne ovat listan alussa)
   for (const model of ASSET_TREES) {
     const n = treeVariantCount(model);
     if (!n || !VARIANTS[model]) continue;
-    near[model] = Array.from({ length: n }, (_, v) => treeAsset(model, v, 'near'));
-    far[model] = Array.from({ length: n }, (_, v) => treeAsset(model, v, 'far') || near[model][v]);
-    assetTrees.add(model);
+    const an = Array.from({ length: n }, (_, v) => treeAsset(model, v, 'near'));
+    const af = Array.from({ length: n }, (_, v) => treeAsset(model, v, 'far') || an[v]);
+    near[model] = MIXED_TREES.has(model) ? [...an, ...near[model]] : an;
+    far[model] = MIXED_TREES.has(model) ? [...af, ...far[model]] : af;
+    assetTrees.set(model, n);
   }
   const hiCache = {};
   return {
@@ -186,9 +195,11 @@ export function createModelLibrary() {
     far,
     // Hakattava versio luodaan vasta tarvittaessa.
     hi(model, variant) {
-      if (assetTrees.has(model) || !HAS_HI.has(model)) return near[model][variant];
-      const key = `${model}:${variant}`;
-      if (!hiCache[key]) hiCache[key] = ensureUv(VARIANTS[model][0](seedsFor(model)[variant], 2));
+      const na = assetTrees.get(model) || 0;
+      if (variant < na || !HAS_HI.has(model)) return near[model][variant];
+      const pv = variant - na;
+      const key = `${model}:${pv}`;
+      if (!hiCache[key]) hiCache[key] = ensureUv(VARIANTS[model][0](seedsFor(model)[pv], 2));
       return hiCache[key];
     },
     tumbleweed: makeTumbleweed(42),

@@ -217,6 +217,16 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
 
+## Sessio 58 (käyttäjän kertoma, 2026-10-28): puut, palmut ja kalliot (kuvat)
+- **Vanhat akasiamallit olivat parempia;** sekoitetaan vanhat ja uudet akasiat keskenään, koska uudet näyttävät orvoilta.
+- **Viidakkopuista puuttuu rungon ympäri kiertävä liaani,** joka vanhoissa puissa oli hieno.
+- **Palmujen lehvät ovat aivan liian harvoja;** niiden pitää olla tiheämpiä.
+- **Lehtien materiaali kiiltää muovisen näköisesti** (kuvissa banaanin ja puiden lehdet).
+- **Ikivanhat juuret ja puut syntyvät kallioiden kielekkeille bugisesti, kaikissa biomeissa** (ei vain viidakossa).
+- **Jyrkänteen kallio on tympeän näköinen, pelkkä ruohoseinä.** Tavoite on kuvien kaltainen karstimaisema: jyrkkiä kalkkikiviseinämiä, joissa on kivenlohkareita ja köynnöksiä, ja ylhäällä kasvillisuutta. Käyttäjä piti erityisesti yksittäisestä kalkkikivitornista ("ompas hieno").
+- **Kun puu kaatuu jonkin päälle** (toinen puu, pensas, kivi tms., ei pelkkä maa), osumakohtaan tulee aivan pieni pölähdys (ei liikaa) ja vähän roiskahtavia partikkeleita, ikään kuin puu rikkoisi jotakin. Pelkkään maahan kaatuessa tätä efektiä ei ole.
+- Avoimet kysymykset: kuinka korkeita ja yleisiä kalkkikivitornien ja -seinämien pitää olla (aiemmin: Kongon sademetsä on melko tasainen, ei liikaa maastonmuotoja)?
+
 ## Sessio 56 (käyttäjän kertoma, 2026-10-27): kaikki esineet paremmiksi, puut
 - **Paranna kaikki esinemallit**, paitsi soihtu, nuija ja muut käyttäjän valmiit mallit.
 - **Puut realistisemmiksi ja tiheämmiksi** (Blenderillä): ne ovat vielä vähän hassuja.

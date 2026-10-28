@@ -56,8 +56,8 @@ diffuseColor.rgb *= vKitAO;`);
 const BUILD = {
   // Sessio 46: softFoliage (pehmeämpi mipmap kaukana, keskitetty alfareuna).
   leaves: () => softFoliage(addTranslucency(addWet(addAO(addWind(new THREE.MeshStandardMaterial({
-    map: tex('leaves.png'), alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, roughness: 0.8, metalness: 0,
-  }), 0.35, 0.6), true), 0.3, 0), 0.3, false)),
+    map: tex('leaves.png'), alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, roughness: 0.95, metalness: 0,
+  }), 0.35, 0.6), true), 0.08, 0), 0.3, false)),
   flowers: () => softFoliage(addAO(addWind(new THREE.MeshStandardMaterial({
     map: tex('flowers.png'), alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, roughness: 0.7, metalness: 0,
   }), 0.35, 0.6), true)),
@@ -76,8 +76,8 @@ const BUILD = {
 // alfaleikkausta): tuuli, läpikuultavuus ja märkyys kuten lehdillä.
 function tropicalLeaf(file, wind = 0.3) {
   return () => addTranslucency(addWet(addAO(addWind(new THREE.MeshStandardMaterial({
-    map: tex(file), side: THREE.DoubleSide, roughness: 0.75, metalness: 0,
-  }), wind, 0.6), true), 0.35, 0), 0.3, false);
+    map: tex(file), side: THREE.DoubleSide, roughness: 0.93, metalness: 0,
+  }), wind, 0.6), true), 0.1, 0), 0.3, false);
 }
 Object.assign(BUILD, {
   calathea: tropicalLeaf('calathea.jpg'),
@@ -86,17 +86,19 @@ Object.assign(BUILD, {
 // Sessio 49: käyttäjän tuomat banaani ja bambut. Nämä ovat maailman
 // esineitä (ei koristeita), joten ne eivät häivy 44 m:ssä. Saman mallin
 // kaikilla osilla sama tuuli, ettei lehdet irtoa varresta.
-function plantCard(file, wind, flutter, { tint = 0xffffff, rough = 0.75 } = {}) {
+// Sessio 58: lehdet mattapintaisiksi (käyttäjä: kiiltävät muovisen näköisesti);
+// märkyys tummentaa lehtiä mutta ei juuri kiillota.
+function plantCard(file, wind, flutter, { tint = 0xffffff, rough = 0.95 } = {}) {
   return () => softFoliage(addTranslucency(addWet(addAO(addWind(new THREE.MeshStandardMaterial({
     map: tex(file), color: tint, alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, roughness: rough, metalness: 0,
-  }), wind, flutter)), 0.35, 0), 0.3, false));
+  }), wind, flutter)), 0.08, 0), 0.3, false));
 }
 function plantSolid(params, wind, flutter, wet = 0.6) {
   return () => addWet(addAO(addWind(new THREE.MeshStandardMaterial({ metalness: 0, ...params() }), wind, flutter)), wet, 0.2);
 }
 Object.assign(BUILD, {
   bananaTrunk: plantSolid(() => ({ map: tex('banana_trunk.jpg'), roughness: 0.85 }), 0.06, 1),
-  bananaLeaf: plantCard('banana_leaf.png', 0.06, 1, { tint: 0xc8d0c0, rough: 0.7 }),
+  bananaLeaf: plantCard('banana_leaf.png', 0.06, 1, { tint: 0xc8d0c0, rough: 0.96 }),
   bananaFruit: plantSolid(() => ({ color: new THREE.Color().setRGB(0.62, 0.46, 0.04), roughness: 0.6 }), 0.06, 1, 0.4),
   bananaFlower: plantSolid(() => ({ color: new THREE.Color().setRGB(0.3, 0.02, 0.14), roughness: 0.55, side: THREE.DoubleSide }), 0.06, 1, 0.4),
   bambooStalk: plantSolid(() => ({ map: tex('bamboo_stalk.jpg'), roughness: 0.55 }), 0.012, 0.15, 0.7),
@@ -193,8 +195,8 @@ function treeBark(key, tint = 0xffffff) {
 }
 Object.assign(BUILD, {
   treeLeaf: () => keepLeafNormal(softFoliage(addTranslucency(addWet(addAO(addWind(new THREE.MeshStandardMaterial({
-    map: treeTex('leaves.webp'), alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, roughness: 0.82, metalness: 0,
-  }), TREE_WIND)), 0.3, 0), 0.35, false))),
+    map: treeTex('leaves.webp'), alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, roughness: 0.97, metalness: 0,
+  }), TREE_WIND)), 0.08, 0), 0.35, false))),
   treeBark_acacia: treeBark('acacia', 0xbcac9c),
   treeBark_shea: treeBark('shea'),
   treeBark_baobab: treeBark('baobab'),
@@ -202,6 +204,33 @@ Object.assign(BUILD, {
   treeBark_kapok: treeBark('kapok', 0xd8d8d0),
   treeBark_emergent: treeBark('emergent', 0xe0dcd4),
   treeBark_sapling: treeBark('sapling', 0xa89a80),
+  // Sessio 58: rungon ympäri kiertävä liaani (hieman vihertävä nuori kaarna;
+  // tumma sävy x tekstuuri x AO teki siitä varjopuolella täysin mustan).
+  treeVine: () => addWet(addAO(addWind(new THREE.MeshStandardMaterial({
+    map: treeTex('bark_sapling_c.webp'), normalMap: treeTex('bark_sapling_n.webp', false), color: 0xf2eedc, roughness: 0.95, metalness: 0,
+  }), TREE_WIND)), 0.6, 0.2),
+});
+// Sessio 58: kalkkikivi (karstiseinämät ja -tornit, models/karst.js).
+// ambientCG Rock026 (CC0); verteksiväri tuo juovat ja sammalen.
+const TEX_DIR = 'assets/textures';
+function rockTex(file, srgb = true) {
+  if (texCache[`T:${file}`]) return texCache[`T:${file}`];
+  const t = loader.load(`${TEX_DIR}/${file}`);
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 16;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  texCache[`T:${file}`] = t;
+  return t;
+}
+Object.assign(BUILD, {
+  limestone: () => addWet(addAO(new THREE.MeshStandardMaterial({
+    map: rockTex('limestone_col.jpg'), normalMap: rockTex('limestone_nrm.jpg', false), normalScale: new THREE.Vector2(0.6, 0.6),
+    vertexColors: true, roughness: 0.93, metalness: 0,
+  })), 0.8, 0.3),
+  // Lehdet kuten puissa, mutta ilman tuulta (tornin huippu on 30–40 m:ssä).
+  karstLeaf: () => keepLeafNormal(softFoliage(addTranslucency(addWet(addAO(new THREE.MeshStandardMaterial({
+    map: treeTex('leaves.webp'), alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, roughness: 0.97, metalness: 0,
+  })), 0.08, 0), 0.35, false))),
 });
 const matCache = {};
 

@@ -2,6 +2,31 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-28 (sessio 58)
+**Tehtiin**
+- Käyttäjän palaute (kuvat):
+  - vanhat akasiat olivat parempia, ja ne halutaan sekaisin uusien kanssa;
+  - viidakkopuiden rungon ympäri kiertävä liaani puuttui;
+  - palmujen lehvät olivat liian harvoja;
+  - lehdet kiilsivät muovisesti;
+  - puut ja muinaiset juuret syntyivät kallion kielekkeille kaikissa biomeissa;
+  - kallio oli tylsä "ruohoseinä", ja tilalle haluttiin karstikallio (kuva kalkkikivitornista: "ompas hieno").
+- Akasiat: `models.js` (`MIXED_TREES`, `hi()` vanhoille varianteille).
+- Liaani: `build_trees.py` (`trunk_surface`, `climbing_vine`, `build_climber`, materiaali `treeVine`), `kitMaterials.js`. Liaani näkyi ensin mustana; syy oli liian tumma materiaali eikä geometria (normaalit ja kiertosuunta tarkistettu).
+- Palmut: `palms.js`. Mattapinta: `kitMaterials.js`, `materials.js`.
+- Kielekkeet: `chunkGen.js` (`footRadius`, `footOk`).
+- Karsti: uusi `models/karst.js` (`makeKarstTower`, `makeCliffRock`), `terrain.js` (tornit, kalkkikiven värit seinässä), `chunkGen.js` (torni- ja lohkarekierrokset), `objectTypes.js`, `world.js` (tornin törmäys), tekstuuri `limestone_col/nrm.jpg` (ambientCG Rock026).
+- Testattiin (scratchpad `s56/`, `s58/`): puiden esikatselu (`shots/s56/trees.html`, git-ignoroitu), `karstcheck.mjs` (tornit siemenillä 777, 1, 42, 12345: 41–54 kpl), eslint, `py_compile`, pelin savutesti ja kuvat tornista ja jyrkänteestä (`karstshot.mjs`).
+
+**Kesken / tiedossa**
+- Kaatuvan puun osumaefekti (pölähdys ja partikkelit, kun puu kaatuu jonkin päälle) on vielä tekemättä.
+- Jokien ja putousten tarkistukset (`s57/rivcheck.mjs`, `fallwall.mjs`) ja suorituskyky (`s56/perf.mjs`) ajamatta tämän session muutosten jälkeen.
+- Käyttäjä kysyi, miksi työ jumitti: liaanin vian etsintä ja hitaat ohjelmistorenderöidyt kuvat veivät paljon aikaa. Jatkossa pushataan välillä, jotta käyttäjä pääsee testaamaan.
+
+**Seuraavaksi**
+- Kaatuvan puun osumaefekti (`game/fallen.js`, partikkelit).
+- Käyttäjän palaute karstista, liaanista, palmuista ja akasioista.
+
 ## 2026-10-28 (sessio 57)
 **Tehtiin**
 - Käyttäjän palaute (kuvat sademetsästä):

@@ -299,7 +299,7 @@ export function createSharedMaterials(groundDetail) {
   // Sessio 23: puiden latvuksissa lehtikortit (lehtiatlas, läpikuultavat
   // kohdat leikataan pois); rungot käyttävät atlaksen valkoista nurkkaa.
   const vegetation = addWind(
-    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0, map: leafTexture, alphaTest: 0.42, side: THREE.DoubleSide , alphaToCoverage: true }),
+    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.97, metalness: 0, map: leafTexture, alphaTest: 0.42, side: THREE.DoubleSide , alphaToCoverage: true }),
     0.0045,
   );
   const bush = addWind(
@@ -336,7 +336,8 @@ export function createSharedMaterials(groundDetail) {
   addWet(terrain);
   // Sessio 26: lehdet eivät saa kiiltää (märkyys teki niistä peilaavia, yöllä
   // kuunvalo heijastui sinisenä); vain lievä tummuminen.
-  for (const m of [vegetation, bush]) addWet(m, 0.3, 0);
+  // Sessio 58: lehdet eivät kiillä märkinäkään muovisesti (ennen 0,3).
+  for (const m of [vegetation, bush]) addWet(m, 0.1, 0);
   addWet(tall, 0.6, 0.2);
   addTranslucency(vegetation, 0.38);
   addTranslucency(bush, 0.3);

@@ -70,6 +70,8 @@ class Tree:
         self.branches = []
         self.leaves = []  # (paikka, kortin ylös-suunta, normaali, leveys, solu)
         self.vines = []
+        self.climbers = []     # sessio 58: rungon ympäri kiertävät liaanit (pisteet, säde)
+        self.vine_leaves = []  # niiden lehdet (vain lähimallissa)
         self.meta = {}
 
     def u(self, a, b):
@@ -290,6 +292,102 @@ def baobab(seed):
     return T
 
 
+def trunk_surface(T, b, fr, g, a):
+    """Rungon pinnan piste korkeudella g kulmassa a (sama kaava kuin build_trunk:
+    tyven levennys ja juurilohkot) sekä ulospäin osoittava suunta."""
+    pts = b.pts
+    i = 0
+    while i < len(pts) - 2 and pts[i + 1].z < g:
+        i += 1
+    k = max(0.0, min(1.0, (g - pts[i].z) / max(1e-6, pts[i + 1].z - pts[i].z)))
+    p = pts[i].lerp(pts[i + 1], k)
+    r = lerp(b.radii[i], b.radii[i + 1], k)
+    d, u, w = fr[i]
+    fl = getattr(b, 'flare', 1.0)
+    rr = r * (1 + (fl - 1) * (1 - smooth((g + 0.3) / 1.3)) ** 2)
+    lobes = getattr(T, 'lobes', [])
+    if lobes and g <= getattr(b, 'root_top', 0.0):
+        rr += lobe_shape(lobes, a, g)[0]
+    out = u * math.cos(a) + w * math.sin(a)
+    return V((p.x, p.y, g)) + out * rr, out
+
+
+def climbing_vine(T, tr, seed, kind):
+    """Sessio 58: liaani kiertää rungon ympäri (vanhoissa puissa oli tällainen,
+    ja käyttäjä kaipasi sitä). Nousee ensin suoraan juurilohkojen välistä ja
+    kiertyy sitten rungon ympäri kohti latvusta. Oma satunnaislukujono, jotta
+    puiden muoto ei muutu."""
+    vr = random.Random(seed * 7919 + 17)
+    if vr.random() > 0.75:
+        return
+    fr = frames(tr.pts)
+    z_top = tr.pts[-1].z
+    root_top = max([h for _, _, h, _ in T.lobes], default=0.3)
+    # Aloituskulma: kahden juurilohkon välin keskeltä.
+    a0 = vr.uniform(0, 2 * math.pi)
+    if T.lobes:
+        angs = sorted(a for a, _, _, _ in T.lobes)
+        gaps = [((angs[(i + 1) % len(angs)] - angs[i]) % (2 * math.pi), angs[i]) for i in range(len(angs))]
+        g, a_start = max(gaps)
+        a0 = a_start + g / 2
+    rv = {'canopy': 0.04, 'jungle': 0.05, 'emergent': 0.065}[kind] * vr.uniform(0.85, 1.2)
+    z0 = root_top + 0.3
+    z1 = z0 + (z_top - z0) * vr.uniform(0.7, 0.95)
+    turns = vr.uniform(1.6, 3.0) * (1 if vr.random() < 0.5 else -1)
+    pts = []
+    n0 = max(3, int((z0 + 0.15) / 0.3))
+    for i in range(n0 + 1):
+        g = -0.15 + (z0 + 0.15) * i / n0
+        q, out = trunk_surface(T, tr, fr, g, a0)
+        pts.append(q + out * rv * 0.8)
+    n1 = int(abs(turns) * 22)
+    for i in range(1, n1 + 1):
+        t = i / n1
+        g = z0 + (z1 - z0) * t
+        a = a0 + turns * 2 * math.pi * t
+        q, out = trunk_surface(T, tr, fr, g, a)
+        pts.append(q + out * rv * 0.8)
+    T.climbers.append((pts, rv))
+    # Lehtiä varressa (ylempänä tiheämmin), kärjet ulos ja hieman alas.
+    acc, nxt = 0.0, 1.2
+    for i in range(1, len(pts)):
+        acc += (pts[i] - pts[i - 1]).length
+        if acc < nxt:
+            continue
+        nxt = acc + vr.uniform(0.28, 0.55)
+        p = pts[i]
+        c = tr.at(max(0.0, min(1.0, (p.z - tr.pts[0].z) / (z_top - tr.pts[0].z))))[0]
+        out = V((p.x - c.x, p.y - c.y, 0))
+        out = out.normalized() if out.length > 1e-4 else V((1, 0, 0))
+        tan = (pts[i] - pts[i - 1]).normalized()
+        up = (out * 0.8 + tan * vr.uniform(-0.5, 0.5) + UP * vr.uniform(-0.6, 0.3)).normalized()
+        nrm = (out + UP * vr.uniform(0.1, 0.5)).normalized()
+        T.vine_leaves.append((p + out * rv, up, nrm, vr.uniform(0.3, 0.48), vr.choice(['broad_b', 'sapling'])))
+
+
+def build_climber(M, T, pts, rv):
+    """Liaanin varsi putkena (materiaali 2 = treeVine)."""
+    fr = frames(pts)
+    sides = 5
+    acc = 0.0
+    rings = []
+    for i, (p, (d, u, w)) in enumerate(zip(pts, fr)):
+        if i:
+            acc += (p - pts[i - 1]).length
+        f = i / (len(pts) - 1)
+        r = rv * (1 - 0.45 * f) * (1 + 0.15 * math.sin(acc * 5.3))
+        ring = []
+        for k in range(sides + 1):
+            a = 2 * math.pi * k / sides
+            pos = p + u * (math.cos(a) * r) + w * (math.sin(a) * r)
+            ring.append((M.v(pos, (0.88, 0.0, 0.0)), (k / sides * 0.3, acc / 1.2)))
+        rings.append(ring)
+    for i in range(len(rings) - 1):
+        for k in range(sides):
+            A, B = rings[i], rings[i + 1]
+            M.face([A[k][0], A[k + 1][0], B[k + 1][0], B[k][0]], [A[k][1], A[k + 1][1], B[k + 1][1], B[k][1]], 2)
+
+
 def rainforest(seed, kind):
     T = Tree(seed)
     if kind == 'canopy':
@@ -307,6 +405,7 @@ def rainforest(seed, kind):
     base = V((0, 0, bz))
     top = V((T.u(-0.15, 0.15), T.u(-0.15, 0.15), Ht))
     tr = trunk_line(T, base, top, r0, r1, cut, flare=1.15, lobes=lobes, rings=20)
+    climbing_vine(T, tr, seed, kind)
     C = top + V((0, 0, 1.5))
 
     def steer(p, d, t):
@@ -603,6 +702,7 @@ def make_object(name, M, bark_mat, leaf_mat, meta=None, vines=None):
         attr.data[i].color = (c[0], c[1], c[2], 1.0)
     me.materials.append(bark_mat)
     me.materials.append(leaf_mat)
+    me.materials.append(bpy.data.materials.get('treeVine') or bpy.data.materials.new('treeVine'))
     ob = bpy.data.objects.new(name, me)
     bpy.context.scene.collection.objects.link(ob)
     if meta:
@@ -653,6 +753,14 @@ def build_tree(name, idx, fn, bark_key, cells, mats):
                 sides = [12, 7, 4, 3][min(3, b.level)] if not far else [6, 4, 3, 3][min(3, b.level)]
             build_branch(M, T, b, sides, far)
         build_leaves(M, T, cells, far, keep=4 if far else 1, grow=1.95 if far else 1.0)
+        if not far:
+            for pts, rv in T.climbers:
+                build_climber(M, T, pts, rv)
+            if T.vine_leaves:
+                saved = T.leaves
+                T.leaves = T.vine_leaves
+                build_leaves(M, T, cells, False)
+                T.leaves = saved
         ob = make_object(f'{name}_{idx}_{lod}', M, bark_mat, leaf_mat, tree_meta if not far else None,
                          [game(p) for p in T.vines] if not far else None)
         objs.append(ob)
