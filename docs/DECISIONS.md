@@ -2,6 +2,13 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-29 (sessio 58, jatko 9)
+- **Auringon hehku tiiviiksi kolmella kerroksella** (`sky.js`: leveä 0,07, kehä 0,16, kiekon reuna 0,55). Linssiheijastuksen hehku ja säteet himmeämmiksi, rengas 0,025 → 0,008, bloomin yläraja 12 → 6. Syy: käyttäjän mukaan aurinko oli yhä aivan liian häikäisevä. Aidossa kuvassa auringon kirkkaus on pieni kiekko, ja laaja hehku ja kehät ovat heikkoja. Silmän tottuminen (jatko 4) hoitaa sokaisun.
+- **Savipeikko ja haamun huppu, kallo ja kädet tehdään etäisyyskentästä** (`clayGolem.js`, `ghost.js`, sama `SdfField` kuin juurakossa). Ne lasketaan valmiiksi tiedostoon `organic.bin` ja harvennetaan noin 15 000 kolmioon olentoa kohti; varalla laskenta käynnistyksessä. Syy: ohuet risut, sormet ja kallon muodot vaativat tarkan ruudukon, ja peli käyttää samaa nivelrakennetta (vartalo, pää, kädet, jalat) kuin ennen, joten animaatiot toimivat ennallaan. Blenderiä ei tarvittu, koska putki on jo olemassa ja tulos on toistettava koodista.
+- **Savipeikon ulkonäkö käyttäjän tarinasta:** savesta muovattu kumara ruumis, kallomaiset kasvot, kiviä, risuja ja juuria. Lisäksi ruukunsiru ja savihelmet merkkeinä alueella eläneistä ihmisistä (oma tulkinta, ks. DESIGN-kysymys).
+- **Haamun huppu ja hartiaviitta käyttävät viitan kangastekstuuria** (UV muodosta, sauman ylittävät kolmiot saavat omat kärkipisteet). Kasvojen musta pallo korvattiin hämärällä kallolla hupun pimeässä sisuksessa (oma tulkinta, ks. DESIGN-kysymys). Osuman välähdys näkyy myös kankaassa (`mobs.js` kopioi kangasmateriaalin olentokohtaisesti).
+- **Kangastekstuuri 512 × 512 ja normaalikartta** (`ghostCloak.js`). Lankojen leveys 4 kuvapistettä ja kohina jaksollinen u-suunnassa, jotta viitan sauma ei näy. Syy: käyttäjä toivoi realistisempia tekstuureja; 256 × 256 kudos oli liian karkea ja tasainen.
+
 ## 2026-10-29 (sessio 58, jatko 8)
 - **Lehtien läpikuultavuus kerrotaan auringon varjolla** (`materials.js` `addTranslucency`). Varjo saadaan valaistuksen jo laskemasta auringon valosta: `directLight` on viimeinen suunnattu valo, ja sen suhde varjottomaan valoon (`directionalLights[0].color`) kertoo varjon. Pieni hajavalo-osuus (0,08) jää varjostamatta, ettei latvus ole musta massa. Syy: ennen jokainen aurinkoa kohti oleva lehti hehkui, myös syvällä latvuston varjossa, ja tiheä latvusto muuttui valkoiseksi valoseinäksi. Käyttäjä huomasi, että avoimella paikalla valo oli kunnossa ja ongelma oli lehvästöissä.
 

@@ -296,11 +296,12 @@ vec3 lensFlare(vec2 uv) {
   float d = length(dv);
   vec3 c = vec3(0.0);
   // Hehku ja tähtimäiset säteet
-  c += uFlareColor * (exp(-d * 7.0) * 0.22 + exp(-d * 26.0) * 0.45);
+  // Sessio 58: tiiviimpi ja himmeämpi (ennen hehku peitti noin 10 % kuvasta).
+  c += uFlareColor * (exp(-d * 13.0) * 0.08 + exp(-d * 42.0) * 0.26);
   float ang = atan(dv.y, dv.x);
-  c += uFlareColor * (pow(abs(cos(ang * 3.0)), 60.0) + pow(abs(cos(ang * 2.0 + 0.6)), 90.0) * 0.6) * exp(-d * 5.0) * 0.12;
+  c += uFlareColor * (pow(abs(cos(ang * 3.0)), 60.0) + pow(abs(cos(ang * 2.0 + 0.6)), 90.0) * 0.6) * exp(-d * 7.0) * 0.06;
   // Vaakajuova
-  c += uFlareColor * exp(-abs(uv.y - sp.y) * 140.0) * exp(-abs(dv.x) * 2.2) * 0.06;
+  c += uFlareColor * exp(-abs(uv.y - sp.y) * 140.0) * exp(-abs(dv.x) * 2.2) * 0.03;
   // Haamut (linssien heijastukset)
   vec2 toC = vec2(0.5) - sp;
   c += vec3(0.55, 0.75, 1.0) * flareGhost(uv, sp, toC, 0.55, 0.035) * 0.10;
@@ -308,8 +309,9 @@ vec3 lensFlare(vec2 uv) {
   c += vec3(0.6, 1.0, 0.7) * flareGhost(uv, sp, toC, 1.45, 0.025) * 0.12;
   c += vec3(0.85, 0.6, 1.0) * flareGhost(uv, sp, toC, 1.85, 0.11) * 0.05;
   c += vec3(1.0, 0.7, 0.5) * flareGhost(uv, sp, toC, 2.2, 0.05) * 0.08;
-  // Heikko rengas auringon ympärillä
-  c += uFlareColor * smoothstep(0.03, 0.0, abs(d - 0.32)) * 0.025;
+  // Heikko rengas auringon ympärillä (sessio 58: 0,025 -> 0,008, näytti
+  // keinotekoiselta kehältä taivaalla)
+  c += uFlareColor * smoothstep(0.03, 0.0, abs(d - 0.32)) * 0.008;
   return c * vis * uFlare;
 }
 
@@ -992,7 +994,7 @@ export class PostFX {
     this.vignette = true;
     // Sessio 38: korkeampi kynnys ja tiiviimpi, heikompi hehku (käyttäjä: kuva
     // näytti sumealta; kirkas taivas ja usva hehkuivat koko kuvan yli).
-    this.bloomCfg = { threshold: 2.0, knee: 0.7, intensity: 0.16, clamp: 12, spread: 0.65 }; // sessio 58: 0,2 -> 0,16
+    this.bloomCfg = { threshold: 2.0, knee: 0.7, intensity: 0.16, clamp: 6, spread: 0.65 }; // sessio 58: 0,2 -> 0,16; yläraja 12 -> 6 (auringon hehku ei leviä)
     this.handAE = 0.3; // sessio 39: kädelle vain osa silmän mukautumisesta (eksponentti); sessio 40: 0,4 -> 0,3
     this.skyDim = 0.22; // sessio 40: taivas päivällä 22 % tummempi
     this.gradeCfg = { contrast: 1.1, saturation: 1.12, warmth: 1 };

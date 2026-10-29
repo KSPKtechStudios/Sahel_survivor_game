@@ -1,4 +1,5 @@
-// Sessio 58: valmiiksi lasketut juurakko- ja runkomallit
+// Sessio 58: valmiiksi lasketut juurakko- ja runkomallit sekä savipeikon ja
+// haamun osat
 // (assets/models/organic.bin, tehty työkalulla tools/organic/build.mjs).
 // Jos tiedosto ei lataudu, models.js laskee mallit käynnistyksessä
 // karkeammalla ruudukolla (organic.js).
@@ -8,6 +9,19 @@ import * as THREE from 'three';
 export const ORGANIC_MODELS = [
   ['ancientRoots', 3, 781],
   ['mossyLog', 3, 191],
+  // Sessio 58: savipeikon osat (clayGolem.js), siemen 1 + muunnelma * 101.
+  ['golem_torso', 3, 1],
+  ['golem_head', 3, 1],
+  ['golem_armL', 3, 1],
+  ['golem_armR', 3, 1],
+  ['golem_legL', 3, 1],
+  ['golem_legR', 3, 1],
+  // Haamun huppu, hartiaviitta, kallo ja kädet (ghost.js), yksi muunnelma.
+  ['ghost_hood', 1, 1],
+  ['ghost_mantle', 1, 1],
+  ['ghost_face', 1, 1],
+  ['ghost_handL', 1, 1],
+  ['ghost_handR', 1, 1],
 ];
 
 const URL_BIN = 'assets/models/organic.bin';
@@ -58,5 +72,5 @@ export function organicAsset(model, seed, q) {
   const spec = ORGANIC_MODELS.find((m) => m[0] === model);
   if (!spec) return null;
   const v = Math.round((seed - spec[2]) / 101);
-  return cache.get(`${model}:${v}:${q ? 0 : 1}`) || null;
+  return cache.get(`${model}:${v}:${q ? 0 : 1}`) || cache.get(`${model}:${v}:0`) || null;
 }

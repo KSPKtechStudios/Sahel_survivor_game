@@ -207,12 +207,22 @@ function instantiate(type, n, eyeMat) {
   }
   const group = t.group.clone(true);
   const material = t.material.clone();
+  // Sessio 58: kloonaus ei kopioi varjostinlaajennuksia (savipeikon pintatekstuuri).
+  if (t.material.onBeforeCompile) {
+    material.onBeforeCompile = t.material.onBeforeCompile;
+    material.customProgramCacheKey = t.material.customProgramCacheKey;
+  }
   const src = [], dst = [];
   t.group.traverse((o) => src.push(o));
   group.traverse((o) => dst.push(o));
   const map = new Map(src.map((o, i) => [o, dst[i]]));
   for (const o of dst) if (o.isMesh && o.material === t.material) o.material = material;
   const out = { group, material, kind: t.kind };
+  // Sessio 58: haamun hupulla ja hartiaviitalla on oma kangasmateriaali.
+  if (t.cloth) {
+    out.cloth = t.cloth.clone();
+    for (const o of dst) if (o.isMesh && o.material === t.cloth) o.material = out.cloth;
+  }
   for (const k of ['body', 'head', 'tail', 'torso', 'glow', 'core', 'hip']) if (t[k]) out[k] = map.get(t[k]);
   for (const k of ['legs', 'arms', 'eyes', 'wings']) if (t[k]) out[k] = t[k].map((o) => map.get(o));
   // Sessio 28: haamun viitta on jokaisella oma (kangas simuloidaan
@@ -3065,6 +3075,7 @@ export class Mobs {
     md.group.rotation.y = m.yaw;
     m.flash *= Math.exp(-dt * 9);
     if (!m.burning) md.material.emissive.setRGB(m.flash * 0.85, m.flash * 0.22, m.flash * 0.12);
+    if (md.cloth) md.cloth.emissive.copy(md.material.emissive);
     const speed = Math.hypot(m.vel.x, m.vel.z);
     const kind = md.kind;
     m.phase += speed * dt * (m.type === 'warthog' ? 4.4 : kind === 'beetle' ? 110 : kind === 'bird' ? 14 : kind === 'guineafowl' ? 9 : m.def.skittish ? 5 : 3.2);

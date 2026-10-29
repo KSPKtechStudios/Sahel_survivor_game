@@ -2,6 +2,26 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-29 (sessio 58, jatko 9): aidompi aurinko, uusi savipeikko ja haamu
+
+- **Aurinko aidommaksi** (käyttäjä: yhä tosi häikäisevä, "kuin toinen tuleminen"):
+  - taivaalla aurinko on nyt pieni, kirkas kiekko ja tiivis kehä; laaja hehku sen ympärillä on paljon heikompi;
+  - linssiheijastuksen hehku on tiiviimpi ja himmeämpi, tähtisäteet ja vaakajuova puolet entisestä;
+  - iso rengas auringon ympärillä lähes pois (näytti keinotekoiselta kehältä);
+  - bloom ei enää levitä auringon hehkua laajalle.
+- **Savipeikolle kunnon 3D-malli käyttäjän tarinan mukaan** (kuolleiden sielut, jotka nousevat yöllä maasta ja ottavat ruumiikseen maan aineksia):
+  - vartalo on muovattu savesta: kumara, laiha ja halkeillut, selässä kyttyrä, kasvoina kallomainen naama syvine silmäkuoppineen ja riippuvine leukoineen;
+  - savessa on kiviä, risuja ja juuria: rintakehän aukosta näkyvät risukylkiluut, sormet päättyvät risukynsiin, juuret roikkuvat jaloista ja hartioista;
+  - ihmisten jäänteitä: ruukunsiru rinnassa ja otsassa, savihelmiä kaulalla;
+  - kolme muunnelmaa; pinnassa maan ja kiven tekstuuri.
+- **Haamun malli ja tekstuurit realistisemmiksi:**
+  - oikea kaapumainen huppu laskoksineen: otsan yli ulottuva lippa, paksumpi käännetty reuna, päälaen sauma ja selkään roikkuva kärki;
+  - hupun pimeydessä erottuu hämärästi riutunut kallo, ja silmät hehkuvat silmäkuopissa;
+  - hartioilla ohut kangasviitta, jonka helma aaltoilee viitan päällä;
+  - hihojen suista roikkuvat luiset, nivelikkäät sormet (näkyvät hyvin, kun haamu nostaa kätensä);
+  - kangas on tarkempaa: toimikaskudos, langat vaihtelevat sävyltään, haalistuneita ja pölyisiä kohtia, kosteita tummia tahroja helmaa kohti, koinsyömiä reikiä ja rispaantunut helma, josta roikkuu irtonaisia lankoja; kudoksella on myös pinnanmuoto (normaalikartta);
+  - riimukirjailut ovat pistoina ommeltuja.
+
 ## 2026-10-29 (sessio 58, jatko 8): lehdet kuultavat vain auringossa
 
 - **Latvusto ei enää hehku valkoisena seinänä aurinkoa kohti katsottaessa** (käyttäjä: lehvästöt pilaavat, avoimella paikalla valo on ok; aurinko saa kuultaa lehvästön välistä, mutta ei saa sokaista).

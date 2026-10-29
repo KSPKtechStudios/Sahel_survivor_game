@@ -31,9 +31,14 @@ const SLV_S0 = 0.12, SLV_S1 = 0.64;
 const SLV_R0 = 0.095, SLV_R1 = 0.19;
 
 let texCache = null;
+// Sessio 58 (käyttäjä: haamun tekstuurit realistisemmiksi): tarkempi
+// kudos (toimikas, langat vaihtelevat paksuudeltaan ja sävyltään),
+// haalistuneet ja pölyiset kohdat, kosteat tummat tahrat helmaa kohti,
+// rispaantuneet repeämät, joista roikkuu irtonaisia lankoja, ja koinsyömät
+// reiät. Kudoksesta lasketaan myös normaalikartta.
 function cloakTextures() {
   if (texCache) return texCache;
-  const W = 256, H = 256;
+  const W = 512, H = 512;
   const c = document.createElement('canvas');
   c.width = W; c.height = H;
   const g = c.getContext('2d');
@@ -47,67 +52,116 @@ function cloakTextures() {
     const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
     return s - Math.floor(s);
   };
-  const noise = (x, y) => {
+  // Arvokohina, joka kiertää u-suunnassa (jakso p ruutua), jotta sauma ei näy.
+  const noise = (x, y, p = 1e9) => {
     const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
     const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
-    const a = hash(xi, yi), b = hash(xi + 1, yi), cc = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+    const x0 = ((xi % p) + p) % p, x1 = (((xi + 1) % p) + p) % p;
+    const a = hash(x0, yi), b = hash(x1, yi), cc = hash(x0, yi + 1), d = hash(x1, yi + 1);
     return a + (b - a) * u + (cc - a) * v + (a - b - cc + d) * u * v;
   };
+  const fbm = (u, v, f) => 0.5 * noise(u * f, v * f, f) + 0.3 * noise(u * f * 2 + 5, v * f * 2, f * 2) + 0.2 * noise(u * f * 4 + 9, v * f * 4, f * 4);
+  const T = 4; // langan leveys pikseleinä (W jaollinen, ei saumaa)
   // Helman repeämät: kunkin sarakkeen alaraja vaihtelee (u kiertää, joten jatkuva).
-  const hem = (u) => 0.86 + 0.08 * Math.sin(u * Math.PI * 2 * 5 + 1.3) + 0.05 * Math.sin(u * Math.PI * 2 * 13) + 0.04 * (noise(u * 40, 3) - 0.5);
+  const hem = (u) => 0.86 + 0.08 * Math.sin(u * Math.PI * 2 * 5 + 1.3) + 0.05 * Math.sin(u * Math.PI * 2 * 13) + 0.04 * (noise(u * 40, 3, 40) - 0.5);
+  const height = new Float32Array(W * H);
   for (let y = 0; y < H; y++) {
     const v = y / (H - 1);
     for (let x = 0; x < W; x++) {
-      const u = x / (W - 1);
-      // Kudos: hienot pysty- ja vaakalangat + laikukas kuluminen.
-      const weave = 0.92 + 0.08 * Math.sin(x * 2.4) * Math.sin(y * 2.4);
-      const wear = 0.75 + 0.35 * noise(u * 12, v * 12) + 0.15 * noise(u * 40, v * 40);
-      // Laskosten varjo (pystyraidat) ja tummuus helmaa kohti.
-      const fold = 0.8 + 0.2 * Math.sin(u * Math.PI * 2 * 6 + noise(u * 3, v * 2) * 2);
-      const k = weave * wear * fold * (1 - 0.35 * v);
-      let r = 22 * k, gg = 16 * k, b = 34 * k;
+      const u = x / W;
+      // Toimikas: loimi- ja kudelangat vuorottelevat vinossa (2/2).
+      const ti = Math.floor(x / T), tj = Math.floor(y / T);
+      const warp = ((ti + tj) & 3) < 2;
+      const fx = (x % T + 0.5) / T, fy = (y % T + 0.5) / T;
+      const prof = Math.sin(Math.PI * (warp ? fx : fy));
+      const thr = warp ? hash(ti, 7.3) : hash(13.1, tj); // langan oma sävy
+      let h = prof * (0.75 + 0.25 * thr);
+      // Kuluminen: haalistunut, pölyinen ja kostea (tumma) kangas.
+      const wear = fbm(u, v, 6);
+      const dust = Math.max(0, fbm(u + 0.37, v * 1.3, 9) - 0.48) * 2.2 * (0.4 + v);
+      const damp = Math.max(0, fbm(u + 0.71, v, 5) - 0.42) * 1.6 * Math.max(0, v - 0.35);
+      const fold = 0.82 + 0.18 * Math.sin(u * Math.PI * 2 * 6 + noise(u * 3, v * 2, 3) * 2);
+      const k = (0.74 + 0.16 * thr + 0.2 * prof) * (0.75 + 0.45 * wear) * fold * (1 - 0.3 * v) * (1 - 0.45 * damp);
+      let r = 40 * k, gg = 34 * k, b = 46 * k;
+      // Pöly vaalentaa harmaanruskeaksi.
+      r += 34 * dust * prof; gg += 30 * dust * prof; b += 28 * dust * prof;
       let a = 255;
-      const h = hem(u);
-      if (v > h) a = 0;
-      else if (v > h - 0.06) { const t = (v - (h - 0.06)) / 0.06; r *= 1 - 0.5 * t; gg *= 1 - 0.5 * t; b *= 1 - 0.4 * t; }
-      // Reikiä kuluneessa kankaassa helman yläpuolella.
-      if (v > 0.55 && noise(u * 28 + 7, v * 18) > 0.83 - (v - 0.55) * 0.25) a = 0;
+      const hm = hem(u);
+      // Irtonaiset langat roikkuvat repeämän alle.
+      const strand = warp && hash(ti, 91.7) > 0.55 && fx > 0.2 && fx < 0.8 ? 0.02 + 0.07 * hash(ti, 3.9) : 0;
+      if (v > hm + strand) a = 0;
+      else if (v > hm) { h = 0.6; r *= 0.7; gg *= 0.7; b *= 0.7; }
+      else if (v > hm - 0.06) { const t = (v - (hm - 0.06)) / 0.06; r *= 1 - 0.5 * t; gg *= 1 - 0.5 * t; b *= 1 - 0.4 * t; h *= 1 - 0.4 * t; }
+      // Koinsyömät reiät helman yläpuolella; reunat rispaantuneet ja vaaleammat.
+      if (v > 0.5) {
+        const hn = noise(u * 56 + 7, v * 36, 56) + (hash(x, y) - 0.5) * 0.08;
+        const lim = 0.84 - (v - 0.5) * 0.25;
+        if (hn > lim) a = 0;
+        else if (hn > lim - 0.04) { r *= 1.25; gg *= 1.2; b *= 1.15; h *= 0.6; }
+      }
+      height[y * W + x] = h;
       const o = (y * W + x) * 4;
       img.data[o] = r; img.data[o + 1] = gg; img.data[o + 2] = b; img.data[o + 3] = a;
     }
   }
   g.putImageData(img, 0, 0);
-  // Kirjailut: kaksi nauhaa riimumaisia kuvioita, himmeä violetti hehku.
+  // Normaalikartta kudoksen korkeudesta (kankaan y alas = tekstuurin v alas).
+  const nc = document.createElement('canvas');
+  nc.width = W; nc.height = H;
+  const ng = nc.getContext('2d');
+  const nimg = ng.createImageData(W, H);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const hx = height[y * W + ((x + 1) % W)] - height[y * W + ((x + W - 1) % W)];
+      const hy = height[Math.min(H - 1, y + 1) * W + x] - height[Math.max(0, y - 1) * W + x];
+      const nx = -hx * 1.2, ny = hy * 1.2, l = Math.hypot(nx, ny, 1);
+      const o = (y * W + x) * 4;
+      nimg.data[o] = (nx / l * 0.5 + 0.5) * 255;
+      nimg.data[o + 1] = (ny / l * 0.5 + 0.5) * 255;
+      nimg.data[o + 2] = (1 / l * 0.5 + 0.5) * 255;
+      nimg.data[o + 3] = 255;
+    }
+  }
+  ng.putImageData(nimg, 0, 0);
+  // Kirjailut: kaksi nauhaa riimumaisia kuvioita pistoina, himmeä violetti hehku.
   ge.strokeStyle = 'rgba(150,90,255,0.9)';
-  ge.lineWidth = 2;
+  ge.lineWidth = 3;
+  ge.setLineDash([5, 2]);
   for (const band of [0.66, 0.74]) {
     const y0 = band * H;
     for (let i = 0; i < 18; i++) {
-      const x0 = (i / 18) * W + 3;
+      const x0 = (i / 18) * W + 6;
       ge.beginPath();
       const sh = Math.floor(hash(i, band * 10) * 4);
-      if (sh === 0) { ge.moveTo(x0, y0 - 5); ge.lineTo(x0 + 5, y0 + 5); ge.lineTo(x0 + 10, y0 - 5); }
-      else if (sh === 1) { ge.moveTo(x0 + 5, y0 - 6); ge.lineTo(x0 + 5, y0 + 6); ge.moveTo(x0, y0); ge.lineTo(x0 + 10, y0); }
-      else if (sh === 2) { ge.arc(x0 + 5, y0, 4, 0, Math.PI * 2); }
-      else { ge.moveTo(x0, y0 + 5); ge.lineTo(x0 + 5, y0 - 5); ge.lineTo(x0 + 10, y0 + 5); ge.lineTo(x0, y0 + 5); }
+      if (sh === 0) { ge.moveTo(x0, y0 - 10); ge.lineTo(x0 + 10, y0 + 10); ge.lineTo(x0 + 20, y0 - 10); }
+      else if (sh === 1) { ge.moveTo(x0 + 10, y0 - 12); ge.lineTo(x0 + 10, y0 + 12); ge.moveTo(x0, y0); ge.lineTo(x0 + 20, y0); }
+      else if (sh === 2) { ge.arc(x0 + 10, y0, 8, 0, Math.PI * 2); }
+      else { ge.moveTo(x0, y0 + 10); ge.lineTo(x0 + 10, y0 - 10); ge.lineTo(x0 + 20, y0 + 10); ge.lineTo(x0, y0 + 10); }
       ge.stroke();
     }
     ge.fillStyle = 'rgba(120,70,220,0.5)';
-    ge.fillRect(0, y0 - 9, W, 1);
-    ge.fillRect(0, y0 + 8, W, 1);
+    ge.fillRect(0, y0 - 18, W, 2);
+    ge.fillRect(0, y0 + 16, W, 2);
   }
-  // Kirjailut näkyvät myös värikartassa hieman vaaleampina.
-  g.globalCompositeOperation = 'lighter';
-  g.globalAlpha = 0.25;
+  // Kirjailut näkyvät myös värikartassa hieman vaaleampina (ei reikiin).
+  g.globalCompositeOperation = 'source-atop';
+  g.globalAlpha = 0.22;
   g.drawImage(e, 0, 0);
-  const map = new THREE.CanvasTexture(c);
-  map.colorSpace = THREE.SRGBColorSpace;
-  map.wrapS = THREE.RepeatWrapping;
-  const emissiveMap = new THREE.CanvasTexture(e);
-  emissiveMap.colorSpace = THREE.SRGBColorSpace;
-  emissiveMap.wrapS = THREE.RepeatWrapping;
-  texCache = { map, emissiveMap };
+  const tex = (cv, srgb) => {
+    const t = new THREE.CanvasTexture(cv);
+    if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+    t.wrapS = THREE.RepeatWrapping;
+    t.anisotropy = 4;
+    return t;
+  };
+  texCache = { map: tex(c, true), emissiveMap: tex(e, true), normalMap: tex(nc, false) };
   return texCache;
+}
+
+// Hupun ja hartiaviitan kangas (sama tekstuuri kuin viitassa).
+export function ghostClothMaps() {
+  const { map, normalMap } = cloakTextures();
+  return { map, normalMap };
 }
 
 const _m = new THREE.Matrix4();
@@ -144,9 +198,10 @@ function shape(P, T, i, a, max) {
 
 export class GhostCloak {
   constructor(seed = 1) {
-    const { map, emissiveMap } = cloakTextures();
+    const { map, emissiveMap, normalMap } = cloakTextures();
     this.material = new THREE.MeshStandardMaterial({
-      map, emissiveMap, emissive: new THREE.Color(0x6a40ff), emissiveIntensity: 0.6,
+      map, emissiveMap, normalMap, normalScale: new THREE.Vector2(0.5, 0.5),
+      emissive: new THREE.Color(0x6a40ff), emissiveIntensity: 0.6,
       roughness: 0.92, metalness: 0, side: THREE.DoubleSide, alphaTest: 0.5, transparent: false,
     });
     const n = (COLS + 1) * ROWS;

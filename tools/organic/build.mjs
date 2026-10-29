@@ -12,11 +12,23 @@
 import { writeFileSync } from 'node:fs';
 import { MeshoptSimplifier } from 'meshoptimizer';
 import { makeAncientRoots, makeMossyLog } from '../../src/models/organic.js';
+import { buildGolemPart, GOLEM_PARTS } from '../../src/models/clayGolem.js';
+import { buildGhostPart, GHOST_PARTS } from '../../src/models/ghost.js';
 import { ORGANIC_MODELS } from '../../src/models/organicAssets.js';
 
 const BUILDERS = { ancientRoots: makeAncientRoots, mossyLog: makeMossyLog };
-// Kolmioiden tavoitemäärät (lähi- ja kaukomalli).
+// Kolmioiden tavoitemäärät (lähi- ja kaukomalli; savipeikon ja haamun osilla vain yksi).
 const TARGET = { ancientRoots: [9000, 1600], mossyLog: [6500, 1100] };
+const GOLEM_TRIS = { torso: 5200, head: 3200, armL: 2000, armR: 2000, legL: 1900, legR: 1900 };
+for (const part of GOLEM_PARTS) {
+  BUILDERS[`golem_${part}`] = (seed, q) => buildGolemPart(part, Math.round((seed - 1) / 101), q);
+  TARGET[`golem_${part}`] = [GOLEM_TRIS[part]];
+}
+const GHOST_TRIS = { hood: 4200, mantle: 2600, face: 3000, handL: 2400, handR: 2400 };
+for (const part of GHOST_PARTS) {
+  BUILDERS[`ghost_${part}`] = (seed, q) => buildGhostPart(part, q);
+  TARGET[`ghost_${part}`] = [GHOST_TRIS[part]];
+}
 
 await MeshoptSimplifier.ready;
 MeshoptSimplifier.useExperimentalFeatures = true;

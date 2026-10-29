@@ -1,6 +1,13 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa jatko 9:
+  - aurinko avoimella paikalla (savanni tai aavikko): näyttääkö pieneltä kirkkaalta kiekolta ilman valtavaa hehkua;
+  - savipeikko yöllä ([F3] → Savipeikko): muoto, kivet, risut ja juuret, kasvot;
+  - haamu yöllä sademetsässä ([F3] → Haamu): huppu, kallo hupun sisällä, luiset sormet hihoista, viitan kangas läheltä.
+- [x] Aurinko aidommaksi (jatko 9).
+- [x] Savipeikolle kunnon 3D-malli tarinan mukaan (jatko 9).
+- [x] Haamun malli ja tekstuurit realistisemmiksi (jatko 9).
 - [ ] Käyttäjä testaa jatko 8: sademetsässä aurinkoa kohti ja ylös latvustoon katsoen. Kuultaako aurinko lehvästön välistä ilman sokaisevaa valoseinää? Näkyvätkö säteet maltillisina?
 - [ ] Käyttäjä testaa session 58 jatko 4:
   - katso suoraan aurinkoon (avoimella paikalla): sokaiseeko ensin ja tottuuko silmä parissa sekunnissa;

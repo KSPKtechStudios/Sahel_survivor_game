@@ -2,6 +2,27 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-29 (sessio 58, jatko 9)
+**Tehtiin**
+- Käyttäjä: aurinko yhä liian häikäisevä; haamun malli ja tekstuurit realistisemmiksi; savipeikolle kunnon malli. Käyttäjä kertoi savipeikkojen tarinan (kirjattu DESIGN.md:hen).
+- Aurinko (`sky.js`, `post.js`):
+  - pieni kirkas kiekko, tiivis kehä, heikko laaja hehku;
+  - linssiheijastus himmeämpi, rengas lähes pois;
+  - bloomin yläraja 12 → 6.
+  - Testattiin `s58/suntest.mjs`.
+- Savipeikko: `src/models/clayGolem.js` (uusi). Osat torso, pää, kädet ja jalat. Valmiiksi laskettu `organic.bin`:iin, 3 muunnelmaa. Pintatekstuuri `addSurfaceDetail`; `mobs.js` kopioi nyt varjostinlaajennuksen kloonattuun materiaaliin.
+- Haamu: `src/models/ghost.js` (uusi): huppu, hartiaviitta, kallo ja luiset kädet. `ghostCloak.js`: 512 px kangastekstuuri ja normaalikartta. `creatures.js` `makeHaamu` käyttää uusia osia; liitoskohdat ja API ennallaan.
+- Esikatselu `shots/s58/golem.html` (git-ignoroitu).
+- Pelitesti `s58/mobshot.mjs`: savipeikot ja haamu yöllä ja hämärässä savannilla, ei virheitä.
+- Savutesti `s58/karstshot.mjs`: ei virheitä. Lint puhdas.
+
+**Kesken / tiedossa**
+- Ohjelmistorenderöinnissä yökuvat ovat hyvin tummia, joten yksityiskohdat arvioitiin esikatselusta.
+- Haamun luut välähtävät osumasta; kangas välähtää nyt myös.
+
+**Seuraavaksi**
+- Käyttäjän palaute auringosta, savipeikosta ja haamusta (DESIGN-kysymykset: ruukunsirut ja helmet, kallo hupussa).
+
 ## 2026-10-29 (sessio 58, jatko 8)
 **Tehtiin**
 - Käyttäjän havainto (kuvat joelta ja latvuston alta):

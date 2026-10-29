@@ -4,7 +4,11 @@
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
 import { V, displace, paint, limb, flatNormals, merge } from './util.js';
-import { GhostCloak } from './ghostCloak.js';
+import { GhostCloak, ghostClothMaps } from './ghostCloak.js';
+import { buildGhostPart, ghostClothUv, GHOST_EYES } from './ghost.js';
+import { buildGolemPart } from './clayGolem.js';
+import { organicAsset } from './organicAssets.js';
+import { addSurfaceDetail } from '../render/surfaces.js';
 
 function blob(r, sx, sy, sz, x, y, z, hex, rand, { detail = 1, rough = 0.12, jitter = 0.1, shade = null } = {}) {
   let g = new THREE.IcosahedronGeometry(r, detail);
@@ -116,73 +120,48 @@ export function makeWarthog(seed = 1) {
 // --- Savipeikko ----------------------------------------------------------------
 // Pieni, kumara olento punaisesta lateriittisavesta; hehkuvat silmät.
 // Nousee maasta öisin ja murenee aamulla. (Paikkamerkki, ks. DESIGN.md.)
+// Sessio 58: savipeikko uusiksi (clayGolem.js, käyttäjän tarina: maahan
+// kuolleiden sielut, joiden ruumis on savea, risuja ja kiviä). Nivelet ovat
+// samoissa kohdissa kuin ennen, joten animaatiot toimivat ennallaan.
+// Savi ja kivet saavat oikean pintatekstuurin (surfaces.js); verteksiväri
+// kertoo, mikä on savea ja mikä kiveä.
 export function makeClayGolem(seed = 1, eyeMaterial = null) {
-  const rand = mulberry32(seed);
-  const material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
+  const v = ((seed - 1) % 3 + 3) % 3;
+  const material = addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.93, metalness: 0 }), [
+    { layer: 'soil', mask: 'warm', scale: 0.35, strength: 0.75, normal: 1.0 },
+    { layer: 'rock', mask: 'grey', scale: 0.25, strength: 0.9, normal: 1.0 },
+  ]);
+  const geo = (part) => organicAsset(`golem_${part}`, 1 + v * 101, 1) || buildGolemPart(part, v, 1);
   const group = new THREE.Group();
-  const CLAY = 0x9c4a2a, CLAY_D = 0x7a3820, CLAY_L = 0xb35e36;
-  const crack = (x, y, z) => {
-    // Halkeamat: tummempia juovia
-    const v = Math.sin(x * 37 + y * 23) * Math.sin(z * 41 - y * 17);
-    return v > 0.82 ? 0.55 : 1;
-  };
 
-  // Vartalo (nivel lantiossa, kumartuu eteen)
-  const torsoParts = [
-    blob(0.5, 0.3, 0.42, 0.24, 0, 0.24, 0.02, CLAY, rand, { rough: 0.22, shade: crack }),
-    blob(0.3, 0.55, 0.4, 0.5, 0, 0.0, 0, CLAY_D, rand, { rough: 0.25 }),
-  ];
-  // Kiviä ja kuivaa heinää kiinni savessa
-  for (let i = 0; i < 5; i++) {
-    const a = rand() * Math.PI * 2;
-    torsoParts.push(blob(0.035 + rand() * 0.02, 1, 0.8, 1, Math.cos(a) * 0.15, 0.1 + rand() * 0.3, Math.sin(a) * 0.12, 0x6e665c, rand, { detail: 0 }));
-  }
-  for (let i = 0; i < 4; i++) {
-    const x = (rand() - 0.5) * 0.2;
-    torsoParts.push(paint(limb(V(x, 0.42, -0.05), V(x + (rand() - 0.5) * 0.12, 0.56 + rand() * 0.06, -0.1), 0.006, 0.002, 3), 0xc9b37a, { rand }));
-  }
-  const torso = joint(merge(torsoParts), material, 0, 0.5, 0);
+  // Vartalo (nivel lantiossa, kumartuu eteen).
+  const torso = joint(geo('torso'), material, 0, 0.5, 0);
   torso.rotation.x = 0.35;
   group.add(torso);
 
-  // Pää (nivel kaulassa, vartalon mukana)
-  const headGeo = merge([
-    blob(0.16, 1, 0.9, 0.95, 0, 0.1, 0.03, CLAY_L, rand, { rough: 0.25, shade: crack }),
-    // Otsaharjanne silmien yllä
-    blob(0.1, 1.5, 0.45, 0.7, 0, 0.15, 0.12, CLAY_D, rand, { rough: 0.2 }),
-  ]);
-  const head = joint(headGeo, material, 0, 0.5, 0.02);
+  // Pää (nivel kaulassa) ja hiillossilmät silmäkuopissa.
+  const head = joint(geo('head'), material, 0, 0.5, 0.02);
   torso.add(head);
   const eyeMat = eyeMaterial || new THREE.MeshBasicMaterial({ color: 0xffb347 });
   const eyes = [];
   for (const sx of [-1, 1]) {
-    const e = new THREE.Mesh(new THREE.SphereGeometry(0.026, 8, 6), eyeMat);
-    e.position.set(sx * 0.06, 0.1, 0.16);
+    // Pieni hiillos syvällä silmäkuopassa.
+    const e = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 6), eyeMat);
+    e.position.set(sx * 0.045, 0.112, 0.112);
     head.add(e);
     eyes.push(e);
   }
 
-  // Kädet (nivel olkapäässä): pitkät, nyrkit maata viistäen
-  const armGeo = (sx) => merge([
-    paint(limb(V(0, 0, 0), V(sx * 0.04, -0.3, 0.04), 0.06, 0.045, 6), CLAY, { rand, shade: crack }),
-    paint(limb(V(sx * 0.04, -0.3, 0.04), V(sx * 0.05, -0.52, 0.1), 0.045, 0.04, 6), CLAY_D, { rand }),
-    blob(0.075, 1, 1.1, 1, sx * 0.05, -0.58, 0.11, CLAY_L, rand, { rough: 0.3 }),
-  ]);
+  // Kädet (nivel olkapäässä) ja jalat (nivel lonkassa).
   const arms = [];
-  for (const sx of [-1, 1]) {
-    const a = joint(armGeo(sx), material, sx * 0.22, 0.4, 0.0);
+  for (const [sx, part] of [[-1, 'armL'], [1, 'armR']]) {
+    const a = joint(geo(part), material, sx * 0.22, 0.4, 0.0);
     torso.add(a);
     arms.push(a);
   }
-
-  // Lyhyet, paksut jalat
-  const legGeo = merge([
-    paint(limb(V(0, 0, 0), V(0, -0.42, 0.02), 0.075, 0.06, 6), CLAY_D, { rand }),
-    blob(0.08, 1.1, 0.6, 1.4, 0, -0.45, 0.05, CLAY, rand, { rough: 0.2 }),
-  ]);
   const legs = [];
-  for (const sx of [-1, 1]) {
-    const l = joint(legGeo, material, sx * 0.11, 0.5, 0);
+  for (const [sx, part] of [[-1, 'legL'], [1, 'legR']]) {
+    const l = joint(geo(part), material, sx * 0.11, 0.5, 0);
     group.add(l);
     legs.push(l);
   }
@@ -504,60 +483,50 @@ export function haamuGlowMaterial(color = 0x4b34e0, opacity = 0.6) {
 
 export function makeHaamu(seed = 1) {
   const rand = mulberry32(seed);
-  // Kaapu on avoin alhaalta: molemmat puolet piirretään.
-  const material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, side: THREE.DoubleSide });
+  // Sessio 58: huppu, hartiaviitta, kallo ja luiset kädet etäisyyskentästä
+  // (ghost.js). material = luut (osuman välähdys), cloth = huppu ja
+  // hartiaviitta viitan kangastekstuurilla (mobs.js kopioi molemmat).
+  const material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.78 });
+  const cloth = new THREE.MeshStandardMaterial({
+    vertexColors: true, ...ghostClothMaps(), normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95,
+  });
+  const part = (p) => organicAsset(`ghost_${p}`, 1, 1) || buildGhostPart(p, 1);
   const group = new THREE.Group();
-  const CLOAK = 0x16111f, CLOAK_D = 0x0c0912, HAND = 0x5d5468;
+  const CLOAK_D = 0x0c0912;
+  rand(); rand(); rand();
 
   // Sessio 27: kaapu on fysiikkaviitta (ghostCloak.js); vartaloon jää
-  // hartiaviitta, jonka alta kangas laskeutuu. Arvonnat säilyvät.
-  rand(); rand(); rand();
-  const torsoParts = [];
-  // Hartiaviitta
-  torsoParts.push(blob(0.24, 1.1, 0.45, 0.9, 0, 0.56, -0.01, CLOAK_D, rand, { rough: 0.2 }));
-  const torso = joint(merge(torsoParts), material, 0, 0.8, 0);
+  // hartiaviitta, jonka alta kangas laskeutuu.
+  const torso = joint(ghostClothUv(part('mantle'), 0, -0.01, 0.43, 0.66), cloth, 0, 0.8, 0);
   group.add(torso);
 
-  // Huppu: pyöreä, takaa suippeneva. Kasvojen kohdalla musta tyhjyys.
+  // Huppu ja sen pimeydessä riutunut kallo; silmät hehkuvat silmäkuopissa.
   const head = new THREE.Group();
   head.position.set(0, 0.62, 0);
-  const hood = merge([
-    blob(0.2, 1, 1.12, 1.12, 0, 0.14, -0.07, CLOAK, rand, { rough: 0.16 }),
-    paint(limb(V(0, 0.2, -0.12), V(0, 0.33, -0.33), 0.09, 0.012, 6), CLOAK_D, { rand }),
-  ]);
-  const hoodMesh = new THREE.Mesh(hood, material);
+  const hoodMesh = new THREE.Mesh(ghostClothUv(part('hood'), 0, -0.04, -0.1, 0.35), cloth);
   hoodMesh.castShadow = true;
   head.add(hoodMesh);
-  const face = new THREE.Mesh(
-    paint(flatNormals(new THREE.SphereGeometry(0.13, 10, 8).scale(1, 1.15, 0.5).translate(0, 0.12, 0.15)), 0x020104, { rand, jitter: 0 }),
-    material,
-  );
-  head.add(face);
+  head.add(new THREE.Mesh(part('face'), material));
   const eyeMat = new THREE.MeshBasicMaterial({ color: 0xc8a4ff });
   const eyes = [];
-  for (const sx of [-1, 1]) {
-    const e = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 6), eyeMat);
+  for (const p of GHOST_EYES) {
+    const e = new THREE.Mesh(new THREE.SphereGeometry(0.01, 8, 6), eyeMat);
     e.scale.set(1.2, 0.7, 1);
-    e.position.set(sx * 0.052, 0.13, 0.215);
+    e.position.set(...p);
     head.add(e);
     eyes.push(e);
   }
   torso.add(head);
 
-  // Hihat ja luiset sormet (nivel olkapäässä).
-  const armGeo = (sx) => {
-    const parts = [
-      paint(limb(V(0, 0, 0), V(sx * 0.05, -0.46, 0.06), 0.07, 0.115, 7), CLOAK, { rand, jitter: 0.12 }),
-    ];
-    for (let i = 0; i < 3; i++) {
-      const fx = sx * 0.05 + (i - 1) * 0.025;
-      parts.push(paint(limb(V(fx, -0.44, 0.07), V(fx + (i - 1) * 0.02, -0.62, 0.12 + rand() * 0.03), 0.012, 0.005, 4), HAND, { rand }));
-    }
-    return merge(parts);
-  };
+  // Käsivarsi hihan sisällä (tumma) ja luinen käsi hihan suusta (nivel
+  // olkapäässä); kangashihat ovat viitan fysiikkaa.
   const arms = [];
   for (const sx of [-1, 1]) {
-    const a = joint(armGeo(sx), material, sx * 0.2, 0.52, 0.0);
+    const inner = paint(limb(V(0, 0, 0), V(sx * 0.04, -0.38, 0.05), 0.05, 0.045, 6), CLOAK_D, { rand, jitter: 0.05 });
+    const a = joint(inner, material, sx * 0.2, 0.52, 0.0);
+    const h = new THREE.Mesh(part(sx < 0 ? 'handL' : 'handR'), material);
+    h.castShadow = true;
+    a.add(h);
     torso.add(a);
     arms.push(a);
   }
@@ -569,8 +538,8 @@ export function makeHaamu(seed = 1) {
   glow.renderOrder = 2;
   group.add(glow);
   const core = new THREE.Sprite(haamuGlowMaterial(0x7a58e8, 0.45));
-  core.position.set(0, 0.13, 0.17);
-  core.scale.set(0.6, 0.6, 1);
+  core.position.set(0, 0.12, 0.1);
+  core.scale.set(0.38, 0.38, 1);
   core.renderOrder = 2;
   head.add(core);
 
@@ -578,5 +547,5 @@ export function makeHaamu(seed = 1) {
   const cloak = new GhostCloak(seed);
   group.add(cloak.mesh);
 
-  return { group, material, torso, head, arms, legs: [], eyes, glow, core, cloak, kind: 'haamu' };
+  return { group, material, cloth, torso, head, arms, legs: [], eyes, glow, core, cloak, kind: 'haamu' };
 }

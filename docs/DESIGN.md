@@ -244,6 +244,15 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
   - Tiheikköpensaan lehtien vieressä näkyy edelleen mustia pikseleitä, kun katsoo tarkasti.
   - Pilviverho ei toimi, kun pelaaja on sen tasolla: oikeasti pilven sisällä ollessa pilveä ei näe, vain pientä usvaa näkökentässä. Usva ei muutenkaan vakuuta realistisuudella; sitä voi twiikata.
   - **Aurinkoon katsominen sokaisee (vanha ongelma):** halutaan, että ensimmäiset pari sekuntia aurinkoon katsoessa on mahdottoman kirkasta, mutta sitten silmä tottuu ja alkaa nähdä.
+- **Jatkopalaute (session 58 jatko 6–8):**
+  - Valon määrä oli yhä överi; taivasta ei erottanut ylös katsoessa. Säteitä (god rays) saa ja pitää olla, mutta ei överinä.
+  - Avoimella paikalla valo on ok; lehvästöt pilaavat. Aurinko saa kuultaa lehvästön välistä, mutta se ei saa sokaista pelaajaa.
+  - Aurinko on yhä tosi häikäisevä ("kuin toinen tuleminen"). Päiväntasaajan aurinko on kirkas, mutta sen pitää näyttää aidommalta.
+- **Aave (Haamu):** 3D-mallia ja tekstuureja parannettava realistisemmiksi (Blender käytettävissä).
+- **Savipeikko:** kunnon 3D-malli. **Tarina (käyttäjän kertoma):** savipeikot ovat alueella aiemmin eläneiden ihmisten kuolleita sieluja. Ne nousevat yöllä maasta ja ottavat ruumiikseen kaiken, mitä maasta löytyy: savea, risuja, kiviä ja muuta maan materiaalia.
+- Avoimet kysymykset (jatko 9):
+  - Saako savipeikossa olla ihmisten jäänteitä, kuten ruukunsiruja ja savihelmiä? (Tehty, poistetaan jos ei sovi.)
+  - Saako haamun hupun sisällä erottua hämärästi kallo, vai pitäisikö kasvojen olla pelkkää pimeyttä? (Tehty kallo.)
 
 ## Sessio 56 (käyttäjän kertoma, 2026-10-27): kaikki esineet paremmiksi, puut
 - **Paranna kaikki esinemallit**, paitsi soihtu, nuija ja muut käyttäjän valmiit mallit.
