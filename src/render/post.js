@@ -1138,11 +1138,12 @@ export class PostFX {
       const low = 1 - THREE.MathUtils.smoothstep(env.sunDir.y, 0.15, 0.75) * 0.6;
       // Sessio 58: kosteus vahvisti säteitä lähes kaksinkertaisiksi (0,9),
       // ja latvuston aukoista syntyi koko kuvan peittävä "jumalallinen valo"
-      // (käyttäjä: taivasta ei erottanut). Nyt kosteuden vaikutus pieni ja
-      // latvuston alla säteitä vähemmän.
+      // (käyttäjä: taivasta ei erottanut). Ensin vähennettiin liikaa (säteet
+      // katosivat; käyttäjä: niitä pitää olla, mutta ei överinä), nyt
+      // sademetsässä noin puolet alkuperäisestä.
       const hcR = (env.humid || 0) * (env.canopy ?? 1);
       rays = THREE.MathUtils.smoothstep(facing, 0.0, 0.35) * onScreen * env.daylight * low
-        * (0.45 + w.haze * 0.5 + env.humid * 0.25) * (1 - 0.35 * hcR) * (1 - w.cloud * 0.5) * (w.vis < 80 ? 0.3 : 1);
+        * (0.5 + w.haze * 0.6 + env.humid * 0.5) * (1 - 0.15 * hcR) * (1 - w.cloud * 0.5) * (w.vis < 80 ? 0.3 : 1);
       if (rays > 0.01) {
         const sun = _sun.set(_v.x * 0.5 + 0.5, _v.y * 0.5 + 0.5);
         this.maskMat.uniforms.tColor.value = this.sceneRT.texture;
@@ -1160,7 +1161,7 @@ export class PostFX {
       }
     }
     cu.uUseRays.value = rays > 0.01 ? 1 : 0;
-    cu.uRayStrength.value = rays * 0.7; // sessio 39: 1,35 -> 0,95; sessio 58: 0,7 (yhä liian valoisa)
+    cu.uRayStrength.value = rays * 0.8; // sessio 39: 1,35 -> 0,95; sessio 58: 0,8
 
     // --- Volumetriset valokeilat varjokartasta
     const sh = env.sun.shadow;
@@ -1182,7 +1183,7 @@ export class PostFX {
       vu.uFrame.value = this.frame;
       this._pass(this.volMat, this.volRT);
       cu.tVol.value = this.volRT.texture;
-      cu.uVolCol.value.copy(env.sun.color).multiplyScalar(env.sun.intensity * 0.0055 * shaft); // sessio 58: 0,0075 -> 0,0055
+      cu.uVolCol.value.copy(env.sun.color).multiplyScalar(env.sun.intensity * 0.0068 * shaft); // sessio 58: 0,0075 -> 0,0068
     } else {
       cu.uVolCol.value.setRGB(0, 0, 0);
     }

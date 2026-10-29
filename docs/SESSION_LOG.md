@@ -2,6 +2,14 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-29 (sessio 58, jatko 7)
+**Tehtiin**
+- Käyttäjä: jatkon 6 jälkeen valonsäteet katosivat kokonaan; niitä pitää olla, mutta ei överinä.
+- `post.js`: sademetsässä säteet noin puolet alkuperäisestä, valokeilat lähes ennallaan; taivaan himmennys ja valotus jatkon 6 mukaiset.
+
+**Seuraavaksi**
+- Käyttäjän palaute säteiden määrästä.
+
 ## 2026-10-28 (sessio 58, jatko 6)
 **Tehtiin**
 - Käyttäjän kuva (sademetsä illalla, sateessa): valon määrä on yhä överi, ja ylös katsoessa taivasta ei erota valon seasta. Häikäisyyn tottuminen toimii.

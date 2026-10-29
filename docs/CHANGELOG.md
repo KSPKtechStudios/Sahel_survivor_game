@@ -2,6 +2,10 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-29 (sessio 58, jatko 7): valonsäteet takaisin maltillisina
+
+- Edellinen korjaus vei valonsäteet käytännössä kokonaan pois (käyttäjä: säteitä saa ja pitää olla, mutta ei överinä). Nyt sademetsässä säteitä on noin puolet alkuperäisestä, ja latvuston läpi tulevat valokeilat ovat lähes ennallaan. Taivaan himmennys ja valotus pysyvät jatkon 6 mukaisina, joten taivas erottuu edelleen.
+
 ## 2026-10-28 (sessio 58, jatko 6): vähemmän "jumalallista valoa"
 
 - **Auringonvaloa ja hehkua vähemmän** (käyttäjä: valon määrä on yhä överi, taivasta ei erota, kun katsoo ylös):

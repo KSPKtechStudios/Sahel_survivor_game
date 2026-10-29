@@ -2,6 +2,15 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-29 (sessio 58, jatko 7)
+- **Valonsäteet palautettiin noin puoleen alkuperäisestä:**
+  - kosteuden kerroin 0,5;
+  - latvuston alla −15 %;
+  - voimakkuus 0,8;
+  - valokeilat 0,0068.
+
+  Sademetsässä säteiden kokonaiskerroin oli alun perin noin 1,38, jatkossa 6 noin 0,32 ja nyt noin 0,68. Syy: käyttäjän mukaan jatkon 6 jälkeen säteet katosivat kokonaan; niitä pitää olla, mutta ei överinä.
+
 ## 2026-10-28 (sessio 58, jatko 6)
 - **Hehkua vähennetään kaikista lähteistä kerralla, ei poisteta yhtä.** Muutokset:
   - valonsäteet: kosteuden kerroin 0,9 → 0,25, latvuston alla −35 %, voimakkuus 0,95 → 0,7;
