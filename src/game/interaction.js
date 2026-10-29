@@ -116,7 +116,7 @@ export class Interaction {
       const h = d.kind === 'tree' ? (d.collider > 1 ? 3.4 : 2.3) : d.kind === 'rock' || d.kind === 'static' ? Math.min(3.2, 0.6 + 1.1 * sc) : d.kind === 'bush' ? 0.5 + 0.9 * sc : 0.55;
       return a.set(o.x, (o.y ?? 0) + h, o.z);
     }
-    // Muut (arkut, riimukivet, rakennelmat, tumbleweedit): osumakohdan yläpuolella.
+    // Muut (arkut, riimukivet, rakennelmat, arokierijät): osumakohdan yläpuolella.
     this.camera.getWorldDirection(_dir);
     a.copy(this.camera.position).addScaledVector(_dir, t.t);
     return a.setY(a.y + 0.45);
@@ -130,7 +130,7 @@ export class Interaction {
       // Sessio 50: NPC:llä (kuoriainen) ei terveyspalkkia.
       return { name: t.name, action: '', hp: t.npc ? null : Math.max(0, m.hp) / t.hp };
     }
-    if (target.kind === 'tumbleweed') return { name: 'Tumbleweed', action: '[Hiiri 1] Hakkaa' };
+    if (target.kind === 'tumbleweed') return { name: 'Arokierijä', action: '[Hiiri 1] Hakkaa' };
     if (target.kind === 'chest') {
       return target.obj.chest.opened ? { name: 'Tyhjä arkku', action: '' } : { name: 'Arkku', action: '[E] Avaa' };
     }
@@ -258,7 +258,7 @@ export class Interaction {
     if (target.kind === 'tumbleweed') {
       const tw = target.obj;
       tw.mesh.updateMatrixWorld(true);
-      this.debris.shatter(tw.mesh.geometry, tw.mesh.matrixWorld, { pieces: 6, inner: 0xb49c6c, power: 1.5, life: 1.6, closed: false });
+      this.debris.shatter(this.tumbleweeds.shatterGeo, tw.mesh.matrixWorld, { pieces: 6, inner: 0xb49c6c, power: 1.5, life: 1.6, closed: false });
       this.drops.spawn('fiber', 2, tw.mesh.position);
       this.drops.spawn('stick', 1, tw.mesh.position);
       this.drops.spawn('wood', 1, tw.mesh.position);

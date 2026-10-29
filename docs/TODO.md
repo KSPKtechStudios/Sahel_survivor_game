@@ -1,6 +1,8 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa jatko 10: arokierijät aavikolla tuulisella säällä (loikat, ulkonäkö läheltä, nimi "Arokierijä", hakkaaminen).
+- [x] Arokierijä: käyttäjän malli ja loikkiva animaatio peliin, nimi suomeksi (jatko 10).
 - [ ] Käyttäjä testaa jatko 9:
   - aurinko avoimella paikalla (savanni tai aavikko): näyttääkö pieneltä kirkkaalta kiekolta ilman valtavaa hehkua;
   - savipeikko yöllä ([F3] → Savipeikko): muoto, kivet, risut ja juuret, kasvot;

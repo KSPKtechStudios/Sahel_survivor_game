@@ -2,6 +2,16 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-29 (sessio 58, jatko 10): arokierijä
+
+- **Tumbleweedin nimi on nyt Arokierijä**: nimilappu, kun katsoo sitä.
+- **Uusi malli ja loikkiva liike käyttäjän antamasta mallista** ("Tumbleweed Jumping", ThymKruijt, Sketchfab, CC-BY-4.0):
+  - risupallo valokuvatekstuurilla, sisäkerrokset tummempia, jolloin vyyhdissä näkyy syvyyttä;
+  - loikat tulevat mallin animaatiosta: kovemmassa tuulessa arokierijä loikkii noin oman säteensä korkuisia loikkia, hiljaisella tuulella se vain vierii pienin töyssyin;
+  - pyöriminen seuraa vierimistä kuten ennenkin.
+- Hakattaessa lentää risuja kuten ennen, ja saalis on sama.
+- Tekijä lisätty päävalikon Tekijät-sivulle ja tiedostoon `assets/CREDITS.txt`.
+
 ## 2026-10-29 (sessio 58, jatko 9): aidompi aurinko, uusi savipeikko ja haamu
 
 - **Aurinko aidommaksi** (käyttäjä: yhä tosi häikäisevä, "kuin toinen tuleminen"):

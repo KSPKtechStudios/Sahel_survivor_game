@@ -2,6 +2,32 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-29 (sessio 58, jatko 10)
+**Tehtiin**
+- Käyttäjä antoi tumbleweedille uuden mallin ja animaation (`tumbleweed_jumping.glb`, Sketchfab, ThymKruijt, CC-BY-4.0) ja pyysi nimeämään sen suomeksi: Arokierijä.
+- `assets/models/nature/arokierija.glb`:
+  - pakattu skriptillä `s54/pack_tw.mjs` (gltf-transform; scratchpad, ei repossa);
+  - tekstuuri palettikuvaksi PIL:llä.
+- `src/models/arokierija.js` (uusi):
+  - lataus, kvantisoinnin purku ja solmun muunnos geometriaan;
+  - skaalaus maakosketuksen säteestä (animaation alku);
+  - sisäkuorten tummennus;
+  - loikkakäyrä animaatiosta.
+- `world/tumbleweeds.js`: uusi malli ja loikat; vanha risupallo varamalliksi ja sirpaleiksi.
+- `interaction.js`: nimi "Arokierijä".
+- Tekijät: `index.html` ja `assets/CREDITS.txt`.
+- Testit:
+  - `s58/twshot.mjs`: aavikolla; näkyy, vierii ja loikkii;
+  - `s58/twclose.mjs`: lähikuva;
+  - savutesti `karstshot.mjs`: ei virheitä;
+  - lint puhdas.
+
+**Kesken / tiedossa**
+- Ensimmäisessä testissä malli ei näkynyt. Syy: meshopt-pakkaus siirtää sijaintien skaalan solmuun. Korjattu leipomalla solmun muunnos geometriaan.
+
+**Seuraavaksi**
+- Käyttäjän palaute arokierijästä ja jatkon 9 malleista.
+
 ## 2026-10-29 (sessio 58, jatko 9)
 **Tehtiin**
 - Käyttäjä: aurinko yhä liian häikäisevä; haamun malli ja tekstuurit realistisemmiksi; savipeikolle kunnon malli. Käyttäjä kertoi savipeikkojen tarinan (kirjattu DESIGN.md:hen).

@@ -1,4 +1,4 @@
-// Pensaat, saniaiset, tumbleweed ja ruohotupsut.
+// Pensaat, saniaiset, arokierijä (tumbleweed) ja ruohotupsut.
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
 import { leafCards, V, paint, limb, strip, merge } from './util.js';
@@ -55,7 +55,8 @@ export function makeFern(seed) {
   return merge(parts);
 }
 
-// Tumbleweed: pallomainen oksavyyhti.
+// Arokierijä (tumbleweed): pallomainen oksavyyhti. Sessio 58: pelissä käyttäjän
+// malli (arokierija.js); tämä jää varamalliksi ja hakkuun sirpaleiksi.
 export function makeTumbleweed(seed) {
   const rand = mulberry32(seed);
   const parts = [];

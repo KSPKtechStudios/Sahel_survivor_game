@@ -2,6 +2,12 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-29 (sessio 58, jatko 10)
+- **Arokierijän malli `assets/models/nature/arokierija.glb`** (käyttäjän GLB pakattuna: tekstuuri 256 värin palettikuvaksi, toinen UV pois, meshopt; 760 → 159 kt). Materiaali: `alphaTest` 0,5 sekoituksen sijaan, koska läpinäkyvien pintojen järjestysvirheet välttyvät. Verteksiväri tummentaa sisempiä kuoria. Syy: alkuperäinen tekstuuri oli 550 kt; palettikuvassa läpinäkyvyys säilyi samana.
+- **Animaatiosta käytetään vain loikkien korkeuskäyrää** (`arokierija.js` `arokierijaHop`). Animaatio on pelkkä jäykän kappaleen liikerata: vierintä ja kaksi loikkaa, siirto 144 yksikköä/s, säde 26,4 yksikköä. Vaakaliike ja pyöriminen tulevat edelleen tuulesta ja vierimisestä. Käyrää toistetaan vauhdin mukaan (0,25–1,6 × animaation tahti), ja korkeus kerrotaan vauhdin neliöllä (enintään 1). Syy: animaation suoraviivainen rata ei sovi maastoon eikä tuulen suuntaan, mutta loikkien muoto ja tahti säilyvät. Satunnaiset fysiikkapompput poistettiin, ettei loikkia tule kahdesti.
+- **Hakkuun sirpaleet tehdään vanhasta risupallosta** (`tumbleweeds.shatterGeo`). Syy: sirpalointi tarvitsee verteksivärit, ja kuvatekstuurikorteista tulisi tekstuurittomia lappuja. Vanha malli jää myös varamalliksi, jos GLB ei lataudu.
+- **Koodissa nimi pysyy `tumbleweed`-muodossa, pelissä näkyy "Arokierijä".** Syy: koodin tunnisteet ovat muutenkin englanniksi, ja vain näkyvä nimi muuttui.
+
 ## 2026-10-29 (sessio 58, jatko 9)
 - **Auringon hehku tiiviiksi kolmella kerroksella** (`sky.js`: leveä 0,07, kehä 0,16, kiekon reuna 0,55). Linssiheijastuksen hehku ja säteet himmeämmiksi, rengas 0,025 → 0,008, bloomin yläraja 12 → 6. Syy: käyttäjän mukaan aurinko oli yhä aivan liian häikäisevä. Aidossa kuvassa auringon kirkkaus on pieni kiekko, ja laaja hehku ja kehät ovat heikkoja. Silmän tottuminen (jatko 4) hoitaa sokaisun.
 - **Savipeikko ja haamun huppu, kallo ja kädet tehdään etäisyyskentästä** (`clayGolem.js`, `ghost.js`, sama `SdfField` kuin juurakossa). Ne lasketaan valmiiksi tiedostoon `organic.bin` ja harvennetaan noin 15 000 kolmioon olentoa kohti; varalla laskenta käynnistyksessä. Syy: ohuet risut, sormet ja kallon muodot vaativat tarkan ruudukon, ja peli käyttää samaa nivelrakennetta (vartalo, pää, kädet, jalat) kuin ennen, joten animaatiot toimivat ennallaan. Blenderiä ei tarvittu, koska putki on jo olemassa ja tulos on toistettava koodista.

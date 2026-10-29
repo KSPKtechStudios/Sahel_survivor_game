@@ -60,6 +60,7 @@ import { loadItemAssets } from './models/itemAssets.js';
 import { userTexturesReady } from './models/userItems.js';
 import { loadTreeAssets } from './models/treeAssets.js';
 import { loadOrganicAssets } from './models/organicAssets.js';
+import { loadArokierija } from './models/arokierija.js';
 import { Hud, RESPAWN_WAIT } from './ui/hud.js';
 import { Nameplates } from './ui/nameplates.js';
 import { Minimap } from './ui/minimap.js';
@@ -99,7 +100,7 @@ const activeMaterial = softFoliage(addTranslucency(addWet(addSurfaceDetail(new T
 loadSurfaces(renderer);
 // Sessio 54: Blenderissä tehdyt esinemallit ladataan ennen mallikirjastoa.
 await loadItemAssets();
-await Promise.all([loadTreeAssets(), loadOrganicAssets()]); // sessio 56: Blenderillä tehdyt puut; sessio 58: juurakot ja rungot
+await Promise.all([loadTreeAssets(), loadOrganicAssets(), loadArokierija()]); // sessio 56: Blenderillä tehdyt puut; sessio 58: juurakot, rungot ja arokierijä
 const models = createModelLibrary();
 const sky = new Sky(scene);
 materials.water = createWaterMaterial(sky);
