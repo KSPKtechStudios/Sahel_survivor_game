@@ -84,15 +84,26 @@ uniform vec3 uTrSunCol;`)
     vec3 trV = normalize(vViewPosition);
     float trBack = pow(clamp(dot(-trV, trL), 0.0, 1.0), 4.0);
     float trDiff = clamp(-dot(normal, trL), 0.0, 1.0);
+    // Sessio 58: vain auringonvalossa olevat lehdet kuultavat (käyttäjä:
+    // lehvästön läpi aurinkoa kohti katsottaessa koko latvusto hehkui
+    // valkoisena ja sokaisi). Valaistus on jo laskenut auringon varjon
+    // (directLight = viimeinen suunnattu valo eli aurinko); sen suhde
+    // varjottomaan valoon kertoo, osuuko aurinko lehteen. Syvällä latvuston
+    // varjossa olevat lehdet jäävät tummiksi siluetteiksi, ja hehku syntyy
+    // vain aukoista ja lehdistä, joihin valo osuu.
+    float trSh = 1.0;
+#if NUM_DIR_LIGHTS > 0
+    trSh = clamp(dot(directLight.color, vec3(1.0)) / max(dot(directionalLights[ 0 ].color, vec3(1.0)), 1e-4), 0.0, 1.0);
+#endif
     // Läpäisevä valo on vihertävää (lehtivihreä suodattaa).
     vec3 trCol = diffuseColor.rgb * vec3(0.9, 1.15, 0.7);
-    outgoingLight += trCol * uTrSunCol * (trBack * 0.7 + trDiff * 0.45 + 0.1) * ${k.toFixed(3)} * trM;
+    outgoingLight += trCol * uTrSunCol * ((trBack * 0.7 + trDiff * 0.45) * trSh + 0.08) * ${k.toFixed(3)} * trM;
   }
 }
 #include <opaque_fragment>`);
   };
   const prevKey = material.customProgramCacheKey;
-  material.customProgramCacheKey = () => `${prevKey ? prevKey.call(material) : ''}-tr${k}${leafOnly ? 'L' : ''}`;
+  material.customProgramCacheKey = () => `${prevKey ? prevKey.call(material) : ''}-tr${k}${leafOnly ? 'L' : ''}s`;
   return material;
 }
 

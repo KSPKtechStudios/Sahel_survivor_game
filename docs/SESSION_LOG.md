@@ -2,6 +2,17 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-29 (sessio 58, jatko 8)
+**Tehtiin**
+- Käyttäjän havainto (kuvat joelta ja latvuston alta):
+  - avoimella paikalla valo on kunnossa, mutta lehvästöt pilaavat;
+  - toive: aurinko saa kuultaa lehvästön välistä, mutta ei saa sokaista.
+- Syy: lehtien läpikuultavuus ei huomioinut auringon varjoa, joten koko latvusto hehkui. Korjaus `materials.js` `addTranslucency`: kuultavuus kerrotaan auringon varjolla.
+- Testattiin `s58/transtest.mjs` (oletusasetukset, varjot päällä, syvä sademetsä klo 16, aurinkoa kohti ja ylös): varjoiset lehdet ovat tummia, valaistut kuultavat, taivas näkyy, ei virheitä.
+
+**Seuraavaksi**
+- Käyttäjän palaute.
+
 ## 2026-10-29 (sessio 58, jatko 7)
 **Tehtiin**
 - Käyttäjä: jatkon 6 jälkeen valonsäteet katosivat kokonaan; niitä pitää olla, mutta ei överinä.

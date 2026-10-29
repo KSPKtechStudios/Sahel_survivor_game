@@ -2,6 +2,13 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-29 (sessio 58, jatko 8): lehdet kuultavat vain auringossa
+
+- **Latvusto ei enää hehku valkoisena seinänä aurinkoa kohti katsottaessa** (käyttäjä: lehvästöt pilaavat, avoimella paikalla valo on ok; aurinko saa kuultaa lehvästön välistä, mutta ei saa sokaista).
+  - Lehtien läpikuultavuus toimii nyt vain siellä, mihin aurinko oikeasti osuu (auringon varjo otetaan huomioon).
+  - Latvuston varjossa olevat lehdet jäävät tummiksi siluetteiksi, ja auringon valaisemat lehdet ja aukot kuultavat.
+- Koskee kaikkia lehtiä: puut, pensaat, aluskasvillisuus ja karstin kasvit.
+
 ## 2026-10-29 (sessio 58, jatko 7): valonsäteet takaisin maltillisina
 
 - Edellinen korjaus vei valonsäteet käytännössä kokonaan pois (käyttäjä: säteitä saa ja pitää olla, mutta ei överinä). Nyt sademetsässä säteitä on noin puolet alkuperäisestä, ja latvuston läpi tulevat valokeilat ovat lähes ennallaan. Taivaan himmennys ja valotus pysyvät jatkon 6 mukaisina, joten taivas erottuu edelleen.

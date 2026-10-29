@@ -2,6 +2,9 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-29 (sessio 58, jatko 8)
+- **Lehtien läpikuultavuus kerrotaan auringon varjolla** (`materials.js` `addTranslucency`). Varjo saadaan valaistuksen jo laskemasta auringon valosta: `directLight` on viimeinen suunnattu valo, ja sen suhde varjottomaan valoon (`directionalLights[0].color`) kertoo varjon. Pieni hajavalo-osuus (0,08) jää varjostamatta, ettei latvus ole musta massa. Syy: ennen jokainen aurinkoa kohti oleva lehti hehkui, myös syvällä latvuston varjossa, ja tiheä latvusto muuttui valkoiseksi valoseinäksi. Käyttäjä huomasi, että avoimella paikalla valo oli kunnossa ja ongelma oli lehvästöissä.
+
 ## 2026-10-29 (sessio 58, jatko 7)
 - **Valonsäteet palautettiin noin puoleen alkuperäisestä:**
   - kosteuden kerroin 0,5;

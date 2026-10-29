@@ -1,7 +1,7 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
-- [ ] Käyttäjä testaa jatko 7: näkyvätkö valonsäteet taas (maltillisina), ja erottuuko taivas yhä ylös katsoessa?
+- [ ] Käyttäjä testaa jatko 8: sademetsässä aurinkoa kohti ja ylös latvustoon katsoen. Kuultaako aurinko lehvästön välistä ilman sokaisevaa valoseinää? Näkyvätkö säteet maltillisina?
 - [ ] Käyttäjä testaa session 58 jatko 4:
   - katso suoraan aurinkoon (avoimella paikalla): sokaiseeko ensin ja tottuuko silmä parissa sekunnissa;
   - nouse massiivin laelle pilviverhon korkeudelle: pitäisi näkyä vain kevyt usva, ei verhoa silmien edessä;
