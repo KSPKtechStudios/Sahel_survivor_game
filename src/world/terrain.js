@@ -65,6 +65,7 @@ let N = null;
 const cellCache = new Map();
 const structCache = new Map();
 const lakeCache = new Map();
+const klakeCache = new Map(); // sessio 58: vuoristojärvet
 const featCache = new Map();
 const fallCache = new Map();
 const karstCache = new Map();
@@ -96,6 +97,7 @@ export function setWorldSeed(seed) {
   cellCache.clear();
   structCache.clear();
   lakeCache.clear();
+  klakeCache.clear();
   featCache.clear();
   fallCache.clear();
   karstCache.clear();
@@ -1018,10 +1020,9 @@ function lakeInCell(ix, iz) {
   // Sessio 58 (jatko 11, käyttäjä: laaksoihin joskus silmiä hiveleviä
   // vuoristojärviä): karstimassiivien välisissä laaksoissa oma järvityyppi.
   // Ranta saa nojata kallioseinämiin, vesi on kirkkaan turkoosia (chunkGen).
-  if (_lb.rainforest > 0.8 && karstMaskAt(cx, cz) > 0.4) {
-    lake = karstLake(ix, iz, rand);
-    lakeCache.set(key, lake);
-    return lake;
+  if (_lb.rainforest > 0.7 && karstMaskAt(cx, cz) > 0.3) {
+    lakeCache.set(key, null); // karstilaaksoissa omat järvet (karstLakeInCell)
+    return null;
   }
   if (rand() < chance) {
     let R;
@@ -1064,23 +1065,50 @@ function lakeInCell(ix, iz) {
   return lake;
 }
 
+// Vuoristojärvet omassa, tiheämmässä ruudukossa (yksi solua kohden).
+const KLAKE_CELL = 240;
+function karstLakeInCell(ix, iz) {
+  const key = ix * 131071 + iz;
+  if (klakeCache.has(key)) return klakeCache.get(key);
+  let lake = null;
+  const cx = (ix + 0.5) * KLAKE_CELL, cz = (iz + 0.5) * KLAKE_CELL;
+  if (karstMaskAt(cx, cz) > 0.3) {
+    sampleBase(cx, cz, _lb);
+    if (_lb.rainforest > 0.7) lake = karstLake(ix, iz, mulberry32((Math.imul(ix, 2246822519) ^ Math.imul(iz, 3266489917) ^ Math.imul(SEED + 71, 668265263)) >>> 0));
+  }
+  klakeCache.set(key, lake);
+  return lake;
+}
+
 function karstLake(ix, iz, rand) {
-  if (rand() > 0.55) return null;
-  const R = 22 + rand() * 38;
-  const inset = Math.min(0.45, (R * 1.7) / LAKE_CELL);
+  // Sessio 58 (jatko 12, käyttäjä: järvien pitää olla aina vuorten
+  // ympäröimänä, ja niitä saa olla paljon enemmän): solusta etsitään laakson
+  // kohta, jota massiivit ympäröivät eniten, ja järvi täyttää sen.
+  if (rand() > 0.9) return null;
+  const DIRS = 16, REACH = 150;
   let best = null;
-  for (let k = 0; k < 10; k++) {
-    const x = (ix + inset + rand() * (1 - 2 * inset)) * LAKE_CELL;
-    const z = (iz + inset + rand() * (1 - 2 * inset)) * LAKE_CELL;
+  for (let k = 0; k < 24; k++) {
+    const x = (ix + 0.15 + rand() * 0.7) * KLAKE_CELL;
+    const z = (iz + 0.15 + rand() * 0.7) * KLAKE_CELL;
     sampleBase(x, z, _lb);
-    // Laakson pohja: ei massiivin päällä eikä seinämässä.
-    if (_lb.rainforest < 0.8 || _lb.escSharp > 0.02 || _lb.escSoft > 0.15 || _lb.cliff > 0.1) continue;
-    if (best && _lb.h >= best.h) continue;
-    if (nearChannel(x, z, R * 1.6)) continue;
-    best = { x, z, h: _lb.h };
+    if (_lb.rainforest < 0.75 || _lb.escSharp > 0.02 || _lb.escSoft > 0.15 || _lb.cliff > 0.1) continue;
+    const h0 = _lb.h;
+    let hits = 0, near = REACH;
+    for (let a = 0; a < DIRS; a++) {
+      const ang = (a / DIRS) * Math.PI * 2, ca = Math.cos(ang), sa = Math.sin(ang);
+      for (let d = 12; d <= REACH; d += 12) {
+        sampleBase(x + ca * d, z + sa * d, _lb);
+        if (_lb.escSharp > 0.3 || _lb.h > h0 + 12) { hits++; near = Math.min(near, d); break; }
+      }
+    }
+    const enc = hits / DIRS;
+    if (enc < 0.55 || (best && enc <= best.enc)) continue;
+    best = { x, z, h: h0, enc, near };
   }
   if (!best) return null;
-  // Pinta matalimman reunakohdan alle; seinämät nousevat ylös, joten vesi pysyy altaassa.
+  const R = Math.max(32, Math.min(85, best.near * 0.95));
+  if (nearChannel(best.x, best.z, R * 1.3)) return null;
+  // Pinta matalimman reunakohdan alle, jottei vesi valu yli.
   let minRim = Infinity;
   for (let a = 0; a < 20; a++) {
     const ang = (a / 20) * Math.PI * 2;
@@ -1093,10 +1121,12 @@ function karstLake(ix, iz, rand) {
 
 function applyLakes(x, z, out) {
   if (out.rainforest + out.mountains < 0.02) return;
-  const ix = Math.floor(x / LAKE_CELL), iz = Math.floor(z / LAKE_CELL);
+  for (let g = 0; g < 2; g++) {
+  const C = g ? KLAKE_CELL : LAKE_CELL, get = g ? karstLakeInCell : lakeInCell;
+  const ix = Math.floor(x / C), iz = Math.floor(z / C);
   for (let j = iz - 1; j <= iz + 1; j++) {
     for (let i = ix - 1; i <= ix + 1; i++) {
-      const L = lakeInCell(i, j);
+      const L = get(i, j);
       if (!L) continue;
       const d = Math.hypot(x - L.x, z - L.z);
       if (d > L.R * 1.75) continue;
@@ -1121,6 +1151,7 @@ function applyLakes(x, z, out) {
         out.flowZ = 0;
       }
     }
+  }
   }
 }
 
@@ -1169,11 +1200,14 @@ function streamProfile(px, pz, wl0, maxCut, minSlope, maxStep) {
 }
 
 function lakeNear(x, z, margin) {
-  const ix = Math.floor(x / LAKE_CELL), iz = Math.floor(z / LAKE_CELL);
-  for (let j = iz - 1; j <= iz + 1; j++) {
-    for (let i = ix - 1; i <= ix + 1; i++) {
-      const L = lakeInCell(i, j);
-      if (L && Math.hypot(x - L.x, z - L.z) < L.R * 1.75 + margin) return true;
+  for (let g = 0; g < 2; g++) {
+    const C = g ? KLAKE_CELL : LAKE_CELL, get = g ? karstLakeInCell : lakeInCell;
+    const ix = Math.floor(x / C), iz = Math.floor(z / C);
+    for (let j = iz - 1; j <= iz + 1; j++) {
+      for (let i = ix - 1; i <= ix + 1; i++) {
+        const L = get(i, j);
+        if (L && Math.hypot(x - L.x, z - L.z) < L.R * 1.75 + margin) return true;
+      }
     }
   }
   return false;
@@ -1454,7 +1488,7 @@ export function fallsNear(x, z, r) {
 export const KARST_DIMS = [{ R: 7.5, H: 34 }, { R: 8.5, H: 40 }, { R: 6.8, H: 29 }];
 // Sessio 58 (jatko 11, käyttäjä: torneja ei näy enää missään): ruutu
 // 640 -> 300 m ja löysemmät ehdot (loivempi pohja, sademetsän reuna).
-const KARST_CELL = 300;
+const KARST_CELL = 170; // jatko 12: 300 -> 170 (käyttäjä: paljon yleisemmiksi)
 const _kb = {};
 
 function karstInCell(ix, iz) {
@@ -1462,14 +1496,14 @@ function karstInCell(ix, iz) {
   if (karstCache.has(key)) return karstCache.get(key);
   let k = null;
   const rand = mulberry32((Math.imul(ix, 3266489917) ^ Math.imul(iz, 668265263) ^ Math.imul(SEED + 37, 374761393)) >>> 0);
-  if (rand() < 0.85) {
-    for (let a = 0; a < 10 && !k; a++) {
+  if (rand() < 0.92) {
+    for (let a = 0; a < 12 && !k; a++) {
       const x = (ix + 0.2 + rand() * 0.6) * KARST_CELL;
       const z = (iz + 0.2 + rand() * 0.6) * KARST_CELL;
       const variant = Math.floor(rand() * KARST_DIMS.length);
       const scale = 0.85 + rand() * 0.35;
       const rot = rand() * Math.PI * 2;
-      if (karstMaskAt(x, z) < 0.45) continue;
+      if (karstMaskAt(x, z) < 0.3) continue;
       sampleTerrainRaw(x, z, _kb);
       // Sessio 58: torni seisoo laaksonpohjalla, ei massiivin päällä tai rinteellä.
       if (_kb.rainforest < 0.8 || _kb.h < _kb.wl + 0.5 || _kb.chan > 0.01 || _kb.cliff > 0.2 || _kb.escSharp > 0.4) continue;

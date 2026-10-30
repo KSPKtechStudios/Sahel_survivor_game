@@ -2,6 +2,17 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-30 (sessio 58, jatko 12)
+**Tehtiin**
+- Käyttäjä: torneja ja järviä ei juuri löydy; ne saavat olla paljon yleisempiä, ja järvet aina vuorten ympäröiminä.
+- `terrain.js`:
+  - tornien ruutu 170 m (406 tornia 144 km²:llä);
+  - vuoristojärvet omassa 240 m:n ruudukossa ympäröintimittauksella (vähintään 38 järveä 64 km²:llä).
+- Pelikuva `s58/lakeshot.mjs`: siemen 777, järvi (−560, 2210) rannalta; turkoosi vesi ja kallioseinämä takana, ei virheitä.
+
+**Seuraavaksi**
+- Käyttäjän palaute.
+
 ## 2026-10-30 (sessio 58, jatko 11)
 **Tehtiin**
 - Käyttäjä: kalkkikivitorneja ei näy vuoristossa; toive vuoristojärvistä laaksoihin.

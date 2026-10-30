@@ -2,6 +2,11 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-30 (sessio 58, jatko 12): paljon enemmän karstitorneja ja vuoristojärviä
+
+- **Kalkkikivitorneja noin kolme kertaa jatkoa 11 enemmän** (käyttäjä: niitä ei juuri löydy). Ne seisovat laajemmin koko karstivuoristossa.
+- **Vuoristojärviä yli kolme kertaa aiempaa enemmän, ja ne ovat aina vuorten ympäröimiä** (käyttäjä: järvien pitää olla vuorten ympäröimänä). Järvi syntyy laaksotaskuun, jota massiivit ympäröivät vähintään yli puolelta, ja täyttää sen kallioseinämiin asti.
+
 ## 2026-10-30 (sessio 58, jatko 11): karstitorneja enemmän, vuoristojärvet
 
 - **Kalkkikivitorneja on taas karstivuoristossa** (käyttäjä: niitä ei enää näkynyt missään): noin 4–5 kertaa aiempaa enemmän (koealueella 30 → 139). Ne saavat seistä myös loivalla laakson pohjalla ja sademetsän reunalla.

@@ -2,6 +2,10 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-30 (sessio 58, jatko 12)
+- **Karstitornien ruutu 300 → 170 m**, karstimaskin raja 0,45 → 0,3. Tuloksena 406 tornia 144 km²:llä (jatkossa 11: 139).
+- **Vuoristojärvillä oma ruudukko** (`KLAKE_CELL` 240 m, `karstLakeInCell`). Ruudusta etsitään 24 ehdokkaasta se kohta, jota massiivit ympäröivät eniten. Ympäröinti mitataan 16 suuntaan 150 m:n säteellä, ja kohta kelpaa, jos vähintään 55 % suunnista osuu seinämään tai yli 12 m korkeampaan maahan. Säde on 95 % lähimmästä seinämästä (32–85 m). Tavallinen järviruudukko jättää karstialueet näille. Syy: käyttäjä halusi järvet aina vuorten ympäröimiksi ja paljon yleisemmiksi.
+
 ## 2026-10-30 (sessio 58, jatko 11)
 - **Karstitornien ruutu 640 → 300 m, 10 yritystä ja löysemmät ehdot** (sademetsä ≥ 0,8, pohjan korkeusero ≤ 7 m, mallin juuri −8 m). Syy: käyttäjä ei löytänyt torneja. Mittaus: ennen 30 tornia 144 km²:llä; tiukka tasaisuusvaatimus hylkäsi lähes kaikki massiivien väliset paikat.
 - **Karstilaaksojen järvet omana tyyppinä** (`terrain.js` `karstLake`, `lakeK`). Paikkana on laakson pohja (ei massiivin päällä tai seinämässä), pinta on matalimman reunakohdan alla, ja syvyys on enintään 10 m. Väri on turkoosi (`chunkGen.js` `W_COL.karst`). Syy: käyttäjän toive. Tavalliset järvet hylkäsivät kalliot (`cliff`, `rock`), joten karstilaaksoihin ei tullut järviä.

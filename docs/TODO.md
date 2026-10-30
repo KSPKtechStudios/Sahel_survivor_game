@@ -1,7 +1,7 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
-- [ ] Käyttäjä testaa jatko 11: karstitornit vuoristossa ja vuoristojärvet laaksoissa (siemen 777: järvi x −690, z 2210, torneja vieressä).
+- [ ] Käyttäjä testaa jatko 12: karstitornit ja vuoristojärvet karstivuoristossa (siemen 777: järvi x −560, z 2210, kallioseinät ympärillä).
 - [ ] Käyttäjä testaa jatko 10: arokierijät aavikolla tuulisella säällä (loikat, ulkonäkö läheltä, nimi "Arokierijä", hakkaaminen).
 - [x] Arokierijä: käyttäjän malli ja loikkiva animaatio peliin, nimi suomeksi (jatko 10).
 - [ ] Käyttäjä testaa jatko 9:

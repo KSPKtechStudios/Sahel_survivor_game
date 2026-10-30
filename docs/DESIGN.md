@@ -251,6 +251,7 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Aave (Haamu):** 3D-mallia ja tekstuureja parannettava realistisemmiksi (Blender käytettävissä).
 - **Savipeikko:** kunnon 3D-malli. **Tarina (käyttäjän kertoma):** savipeikot ovat alueella aiemmin eläneiden ihmisten kuolleita sieluja. Ne nousevat yöllä maasta ja ottavat ruumiikseen kaiken, mitä maasta löytyy: savea, risuja, kiviä ja muuta maan materiaalia.
 - **Karstivuoristo** (jatko 11): kalkkikivitorneja pitää näkyä vuoristossa; laaksoissa saa joskus olla silmiä hiveleviä vuoristojärviä.
+- Jatko 12: karstipylväät ja turkoosit vuoristojärvet saavat olla aika paljon yleisempiä; vuoristojärvet aina vuorten ympäröimänä.
 - **Arokierijä** (jatko 10): tumbleweedin suomenkielinen nimi pelissä on Arokierijä. Käyttäjä antoi uuden mallin ja animaation ("Tumbleweed Jumping", loikkiva tumbleweed).
 - Avoimet kysymykset (jatko 9):
   - Saako savipeikossa olla ihmisten jäänteitä, kuten ruukunsiruja ja savihelmiä? (Tehty, poistetaan jos ei sovi.)
