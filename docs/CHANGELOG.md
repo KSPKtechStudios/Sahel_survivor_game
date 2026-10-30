@@ -2,6 +2,11 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-10-30 (sessio 58, jatko 11): karstitorneja enemmän, vuoristojärvet
+
+- **Kalkkikivitorneja on taas karstivuoristossa** (käyttäjä: niitä ei enää näkynyt missään): noin 4–5 kertaa aiempaa enemmän (koealueella 30 → 139). Ne saavat seistä myös loivalla laakson pohjalla ja sademetsän reunalla.
+- **Vuoristojärvet karstilaaksoihin** (käyttäjä: silmiä hiveleviä vuoristojärviä): kirkkaan turkoosit järvet massiivien välisten laaksojen pohjalla, ranta saa rajautua kallioseinämiin. Nimilappu "Vuoristojärvi".
+
 ## 2026-10-29 (sessio 58, jatko 10): arokierijä
 
 - **Tumbleweedin nimi on nyt Arokierijä**: nimilappu, kun katsoo sitä.

@@ -348,6 +348,8 @@ const W_COL = {
   sahel: [srgbLin(0x352c1c), srgbLin(0x7e6c45)],
   mount: [srgbLin(0x0e3644), srgbLin(0x4a9a94)],
   oasis: [srgbLin(0x123c3c), srgbLin(0x4c9a7c)],
+  // Sessio 58: karstilaaksojen järvet, kirkas turkoosi kalkkikivivesi.
+  karst: [srgbLin(0x06485a), srgbLin(0x3cc4b2)],
 };
 
 function buildWater(samples, row) {
@@ -410,6 +412,10 @@ function buildWater(samples, row) {
       for (let c = 0; c < 3; c++) {
         deep[v * 3 + c] = W_COL.sea[0][c] * wSea + W_COL.rain[0][c] * wRain + W_COL.mount[0][c] * wMount + W_COL.oasis[0][c] * wOasis + W_COL.sahel[0][c] * wSahel;
         shallow[v * 3 + c] = W_COL.sea[1][c] * wSea + W_COL.rain[1][c] * wRain + W_COL.mount[1][c] * wMount + W_COL.oasis[1][c] * wOasis + W_COL.sahel[1][c] * wSahel;
+        if (s.lakeK) {
+          deep[v * 3 + c] += (W_COL.karst[0][c] - deep[v * 3 + c]) * s.lakeK;
+          shallow[v * 3 + c] += (W_COL.karst[1][c] - shallow[v * 3 + c]) * s.lakeK;
+        }
       }
     }
   }

@@ -155,7 +155,7 @@ export function makeKarstTower(vi, seed, q = 1) {
   const NS = q ? 44 : 14;
   const ys = [];
   const dy = q ? 0.75 : 2.4;
-  for (let y = -4; y < H * TD; y += dy) ys.push(y);
+  for (let y = -8; y < H * TD; y += dy) ys.push(y); // sessio 58: juuri syvemmälle (rinteinen pohja)
   const nd = q ? 9 : 4;
   for (let k = 0; k <= nd; k++) ys.push(H * (TD + (1 - TD) * Math.sin((k / nd) * Math.PI / 2)));
   const tilesU = Math.max(1, Math.round((2 * Math.PI * R0) / 5));

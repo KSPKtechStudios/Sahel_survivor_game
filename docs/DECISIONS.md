@@ -2,6 +2,10 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-10-30 (sessio 58, jatko 11)
+- **Karstitornien ruutu 640 → 300 m, 10 yritystä ja löysemmät ehdot** (sademetsä ≥ 0,8, pohjan korkeusero ≤ 7 m, mallin juuri −8 m). Syy: käyttäjä ei löytänyt torneja. Mittaus: ennen 30 tornia 144 km²:llä; tiukka tasaisuusvaatimus hylkäsi lähes kaikki massiivien väliset paikat.
+- **Karstilaaksojen järvet omana tyyppinä** (`terrain.js` `karstLake`, `lakeK`). Paikkana on laakson pohja (ei massiivin päällä tai seinämässä), pinta on matalimman reunakohdan alla, ja syvyys on enintään 10 m. Väri on turkoosi (`chunkGen.js` `W_COL.karst`). Syy: käyttäjän toive. Tavalliset järvet hylkäsivät kalliot (`cliff`, `rock`), joten karstilaaksoihin ei tullut järviä.
+
 ## 2026-10-29 (sessio 58, jatko 10)
 - **Arokierijän malli `assets/models/nature/arokierija.glb`** (käyttäjän GLB pakattuna: tekstuuri 256 värin palettikuvaksi, toinen UV pois, meshopt; 760 → 159 kt). Materiaali: `alphaTest` 0,5 sekoituksen sijaan, koska läpinäkyvien pintojen järjestysvirheet välttyvät. Verteksiväri tummentaa sisempiä kuoria. Syy: alkuperäinen tekstuuri oli 550 kt; palettikuvassa läpinäkyvyys säilyi samana.
 - **Animaatiosta käytetään vain loikkien korkeuskäyrää** (`arokierija.js` `arokierijaHop`). Animaatio on pelkkä jäykän kappaleen liikerata: vierintä ja kaksi loikkaa, siirto 144 yksikköä/s, säde 26,4 yksikköä. Vaakaliike ja pyöriminen tulevat edelleen tuulesta ja vierimisestä. Käyrää toistetaan vauhdin mukaan (0,25–1,6 × animaation tahti), ja korkeus kerrotaan vauhdin neliöllä (enintään 1). Syy: animaation suoraviivainen rata ei sovi maastoon eikä tuulen suuntaan, mutta loikkien muoto ja tahti säilyvät. Satunnaiset fysiikkapompput poistettiin, ettei loikkia tule kahdesti.

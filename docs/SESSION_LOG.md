@@ -2,6 +2,19 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-10-30 (sessio 58, jatko 11)
+**Tehtiin**
+- Käyttäjä: kalkkikivitorneja ei näy vuoristossa; toive vuoristojärvistä laaksoihin.
+- `terrain.js`:
+  - tornien ruutu 300 m ja löysemmät ehdot (30 → 139 tornia 144 km²:llä, mitattu Nodella);
+  - uusi `karstLake` (noin 30–40 järveä samalla alueella).
+- `chunkGen.js`: turkoosi vesi. `karst.js`: tornin juuri syvemmälle.
+- Pelikuva `s58/lakeshot.mjs`: järvi turkoosi, torni näkyy, ei virheitä.
+- Testipalvelin sammui toistuvasti, ja uudelleenkäynnistykset veivät paljon aikaa (käyttäjä huomautti). Jatkossa palvelimen tila tarkistetaan ensin, eikä sitä käynnistetä silmukassa.
+
+**Seuraavaksi**
+- Käyttäjän palaute.
+
 ## 2026-10-29 (sessio 58, jatko 10)
 **Tehtiin**
 - Käyttäjä antoi tumbleweedille uuden mallin ja animaation (`tumbleweed_jumping.glb`, Sketchfab, ThymKruijt, CC-BY-4.0) ja pyysi nimeämään sen suomeksi: Arokierijä.

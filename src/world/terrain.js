@@ -435,6 +435,7 @@ function sampleLand(x, z, out) {
   out.wl = WATER_LEVEL;
   out.wtype = WATER.SEA;
   out.lakeR = 0;
+  out.lakeK = 0;
   out.chan = 0;
   out.fall = 0;
   out.flowX = 0;
@@ -1014,6 +1015,14 @@ function lakeInCell(ix, iz) {
   const cx = (ix + 0.5) * LAKE_CELL, cz = (iz + 0.5) * LAKE_CELL;
   sampleBase(cx, cz, _lb);
   const chance = _lb.rainforest * 0.75 + _lb.mountains * 0.6;
+  // Sessio 58 (jatko 11, käyttäjä: laaksoihin joskus silmiä hiveleviä
+  // vuoristojärviä): karstimassiivien välisissä laaksoissa oma järvityyppi.
+  // Ranta saa nojata kallioseinämiin, vesi on kirkkaan turkoosia (chunkGen).
+  if (_lb.rainforest > 0.8 && karstMaskAt(cx, cz) > 0.4) {
+    lake = karstLake(ix, iz, rand);
+    lakeCache.set(key, lake);
+    return lake;
+  }
   if (rand() < chance) {
     let R;
     if (_lb.rainforest >= _lb.mountains) R = rand() < 0.15 ? 70 + rand() * 60 : 18 + rand() * 36;
@@ -1055,6 +1064,33 @@ function lakeInCell(ix, iz) {
   return lake;
 }
 
+function karstLake(ix, iz, rand) {
+  if (rand() > 0.55) return null;
+  const R = 22 + rand() * 38;
+  const inset = Math.min(0.45, (R * 1.7) / LAKE_CELL);
+  let best = null;
+  for (let k = 0; k < 10; k++) {
+    const x = (ix + inset + rand() * (1 - 2 * inset)) * LAKE_CELL;
+    const z = (iz + inset + rand() * (1 - 2 * inset)) * LAKE_CELL;
+    sampleBase(x, z, _lb);
+    // Laakson pohja: ei massiivin päällä eikä seinämässä.
+    if (_lb.rainforest < 0.8 || _lb.escSharp > 0.02 || _lb.escSoft > 0.15 || _lb.cliff > 0.1) continue;
+    if (best && _lb.h >= best.h) continue;
+    if (nearChannel(x, z, R * 1.6)) continue;
+    best = { x, z, h: _lb.h };
+  }
+  if (!best) return null;
+  // Pinta matalimman reunakohdan alle; seinämät nousevat ylös, joten vesi pysyy altaassa.
+  let minRim = Infinity;
+  for (let a = 0; a < 20; a++) {
+    const ang = (a / 20) * Math.PI * 2;
+    for (const f of [1.15, 1.45]) minRim = Math.min(minRim, sampleBase(best.x + Math.cos(ang) * R * f, best.z + Math.sin(ang) * R * f, _lb).h);
+  }
+  const wl = minRim - 0.3;
+  if (wl < WATER_LEVEL + 0.4 || best.h - wl > 6) return null;
+  return { x: best.x, z: best.z, R, wl, depth: Math.min(10, Math.max(2.5, R * 0.14)), karst: true };
+}
+
 function applyLakes(x, z, out) {
   if (out.rainforest + out.mountains < 0.02) return;
   const ix = Math.floor(x / LAKE_CELL), iz = Math.floor(z / LAKE_CELL);
@@ -1080,6 +1116,7 @@ function applyLakes(x, z, out) {
         out.wl = L.wl;
         out.wtype = WATER.LAKE;
         out.lakeR = L.R;
+        out.lakeK = L.karst ? 1 : 0;
         out.flowX = 0;
         out.flowZ = 0;
       }
@@ -1415,7 +1452,9 @@ export function fallsNear(x, z, r) {
 // esineeksi ja pitää muut esineet sen ulkopuolella; world.js lisää törmäyksen.
 // Mittojen pitää vastata mallia (models/karst.js käyttää samoja).
 export const KARST_DIMS = [{ R: 7.5, H: 34 }, { R: 8.5, H: 40 }, { R: 6.8, H: 29 }];
-const KARST_CELL = 640;
+// Sessio 58 (jatko 11, käyttäjä: torneja ei näy enää missään): ruutu
+// 640 -> 300 m ja löysemmät ehdot (loivempi pohja, sademetsän reuna).
+const KARST_CELL = 300;
 const _kb = {};
 
 function karstInCell(ix, iz) {
@@ -1423,8 +1462,8 @@ function karstInCell(ix, iz) {
   if (karstCache.has(key)) return karstCache.get(key);
   let k = null;
   const rand = mulberry32((Math.imul(ix, 3266489917) ^ Math.imul(iz, 668265263) ^ Math.imul(SEED + 37, 374761393)) >>> 0);
-  if (rand() < 0.7) {
-    for (let a = 0; a < 6 && !k; a++) {
+  if (rand() < 0.85) {
+    for (let a = 0; a < 10 && !k; a++) {
       const x = (ix + 0.2 + rand() * 0.6) * KARST_CELL;
       const z = (iz + 0.2 + rand() * 0.6) * KARST_CELL;
       const variant = Math.floor(rand() * KARST_DIMS.length);
@@ -1433,19 +1472,19 @@ function karstInCell(ix, iz) {
       if (karstMaskAt(x, z) < 0.45) continue;
       sampleTerrainRaw(x, z, _kb);
       // Sessio 58: torni seisoo laaksonpohjalla, ei massiivin päällä tai rinteellä.
-      if (_kb.rainforest < 0.95 || _kb.h < _kb.wl + 0.5 || _kb.chan > 0.01 || _kb.cliff > 0.1 || _kb.escSharp > 0.3) continue;
+      if (_kb.rainforest < 0.8 || _kb.h < _kb.wl + 0.5 || _kb.chan > 0.01 || _kb.cliff > 0.2 || _kb.escSharp > 0.4) continue;
       const R = KARST_DIMS[variant].R * scale;
       let lo = _kb.h, hi = _kb.h, ok = true;
       for (let i = 0; i < 12 && ok; i++) {
         const ang = (i / 12) * Math.PI * 2;
         for (const f of [0.7, 1.0, 1.6]) {
           sampleTerrainRaw(x + Math.cos(ang) * R * f, z + Math.sin(ang) * R * f, _kb);
-          if (_kb.h < _kb.wl + 0.4 || _kb.chan > 0.01 || _kb.rainforest < 0.9 || _kb.cliff > 0.15 || _kb.escSharp > 0.5) { ok = false; break; }
+          if (_kb.h < _kb.wl + 0.4 || _kb.chan > 0.01 || _kb.rainforest < 0.7 || _kb.cliff > 0.3 || _kb.escSharp > 0.6) { ok = false; break; }
           if (f <= 1) { lo = Math.min(lo, _kb.h); hi = Math.max(hi, _kb.h); }
         }
       }
-      if (!ok || hi - lo > 3) continue;
-      if (fallsNear(x, z, R + 60).length || lakeNear(x, z, R + 15)) continue;
+      if (!ok || hi - lo > 7) continue;
+      if (fallsNear(x, z, R + 40).length || lakeNear(x, z, R + 10)) continue;
       k = { x, z, y: lo - 0.3, R, H: KARST_DIMS[variant].H * scale, scale, rot, variant };
     }
   }
@@ -1695,7 +1734,7 @@ export function biomeAt(x, z) {
 export function placeName(s) {
   if ((s.fall || 0) > 0.6) return 'Vesiputous';
   if (s.wl - s.h > 0.5) {
-    if (s.wtype === WATER.LAKE) return s.lakeR < 35 ? 'Lampi' : 'Järvi';
+    if (s.wtype === WATER.LAKE) return s.lakeK ? 'Vuoristojärvi' : s.lakeR < 35 ? 'Lampi' : 'Järvi';
     if (s.wtype === WATER.RIVER) return 'Joki';
     if (s.wtype === WATER.STREAM) return 'Puro';
     if (s.ocean + s.beach > 0.3) return 'Meri';
