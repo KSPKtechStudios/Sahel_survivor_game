@@ -8,6 +8,12 @@ import { seedFromString, randomSeed } from '../world/terrain.js';
 
 const $ = (id) => document.getElementById(id);
 
+// Sessio 60: liukusäätimen täyttö (menu.css: --p).
+function fillRange(el) {
+  const min = parseFloat(el.min) || 0, max = parseFloat(el.max) || 1;
+  el.style.setProperty('--p', `${((parseFloat(el.value) - min) / (max - min || 1)) * 100}%`);
+}
+
 // Sessio 59: logo (tunnus + nimi) mallista; alaotsikko valinnainen.
 // SVG:n liukuväreille omat tunnisteet joka kopiolle: muuten viittaus osuu
 // piilossa olevan näkymän logoon, eikä logo piirry.
@@ -269,6 +275,7 @@ export class Menu {
       const el = $(id);
       const out = el.parentElement.querySelector('output');
       el.addEventListener('input', () => {
+        fillRange(el);
         s[key] = parseFloat(el.value);
         if (GRAPHICS_KEYS.has(key)) { s.quality = 'custom'; this._syncQuality(); }
         out.textContent = fmt(s[key]);
@@ -340,6 +347,7 @@ export class Menu {
     const set = (id, v, txt) => {
       const el = $(id);
       el.value = v;
+      fillRange(el);
       el.parentElement.querySelector('output').textContent = txt;
     };
     set('set-sens', s.sensitivity, `${(+s.sensitivity).toFixed(2)}×`);

@@ -2,6 +2,26 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-11-01 (sessio 60)
+**Tehtiin**
+- Käyttäjän palaute session 59 valikoista:
+  - bugi: Pelaa → takaisin päävalikkoon, animaatio menee super nopeasti;
+  - leirin maa voisi olla mutaista tai eri väristä;
+  - kohtaus hyvä, mutta valikon elementit ja grafiikka eivät laadukkaita.
+- Nopeusbugi: mitattiin ensin näennäiskellolla (60 kuvaa/s, scratchpad `speed2.mjs`), että pelisilmukka etenee pelaamisen jälkeen yhtä nopeasti. Vika oli kameran siirtymässä (katsepisteen liu'utus läheltä kauas). `main.js` `updateMenuCamera`: ajastettu siirtymä 2,6 s, smootherstep ja kvaternio. Mittaus (`camtest.mjs`): enintään 0,51° kuvaa kohti molempiin suuntiin, yhteensä noin 42°.
+- Tallattu maa: `menuCamp.js` `trampledGround` (väri ja läpinäkyvyys, karheus ja normaalikartta) ja maastoa seuraava verkko. Ensimmäinen versio oli liian vaalea, ja jäljet näyttivät ∞-kuvioilta; korjattu tummemmaksi ja hankaumilla.
+- Valikkoulkoasu uusittu: `menu.css` (keskiosa kokonaan), `index.html` (logo, `sheet`-paneelit, nappien selitteet pois), `menu.js` (liukusäätimen täyttö).
+- Valikon nuotion valo liekin kohdalle (kekopuut näkyivät mustina).
+- Kuvat (scratchpad `shot.mjs`, `shot2.mjs`; 1280 × 720): päävalikko, Maailmat, Asetukset, taukovalikko ja latausruutu. Ei virheitä konsolissa. eslint muutetuille tiedostoille puhdas.
+
+**Kesken / tiedossa**
+- Ulkoasu on oma tulkinta "laadukkaasta"; käyttäjä arvioi.
+- Ohjelmistorenderöinnissä kuva on hidas, joten liikkeitä ei voinut katsoa; kameran siirtymä mitattiin numeroina.
+- Taukovalikon tiivistetty ohjainkortti kuvattiin vasta ennen tiivistystä.
+
+**Seuraavaksi**
+- Käyttäjän palaute uudesta ulkoasusta, maasta ja kamerasta.
+
 ## 2026-11-01 (sessio 59, jatko)
 **Tehtiin**
 - Valikot kokonaan uusiksi käyttäjän vastausten mukaan (DESIGN.md).

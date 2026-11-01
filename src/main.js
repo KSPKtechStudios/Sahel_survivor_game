@@ -895,8 +895,16 @@ function handleHotbar() {
 // Sessio 59: valikon kamera nuotioleirissä. Kuva vaihtuu valikon paneelin
 // mukaan (menu.shot), siirtymä on pehmeä, ja kamera "hengittää" hiljaa.
 // Aika kulkee kultaisesta hetkestä yöhön noin viidessä minuutissa.
-const _camPos = new THREE.Vector3(), _camAt = new THREE.Vector3();
-const _tPos = new THREE.Vector3(), _tAt = new THREE.Vector3();
+// Sessio 60: siirtymä kuvasta toiseen on ajastettu (pehmeä kiihdytys ja
+// jarrutus) ja katsesuunta kääntyy kvaternionina. Ennen katsepistettä
+// liu'utettiin eksponentiaalisesti: kun kamera lähti läheltä katsotusta
+// kartasta kohti kaukaista horisonttia, kuva kääntyi alussa rajusti
+// (käyttäjä: Pelaa → Takaisin, animaatio menee super nopeesti).
+const _camPos = new THREE.Vector3(), _camQ = new THREE.Quaternion();
+const _tPos = new THREE.Vector3(), _tAt = new THREE.Vector3(), _tQ = new THREE.Quaternion();
+const _fromPos = new THREE.Vector3(), _fromQ = new THREE.Quaternion();
+const _lookM = new THREE.Matrix4();
+const MENU_CAM_MOVE = 2.6; // s
 function updateMenuCamera(dt) {
   menuCam.t += dt;
   const t = menuCam.t;
@@ -905,15 +913,42 @@ function updateMenuCamera(dt) {
   camp.world(shot.pos, _tPos);
   camp.world(shot.at, _tAt);
   _tPos.y = Math.max(_tPos.y, heightAt(_tPos.x, _tPos.z) + 0.5);
-  if (!menuCam.ready) { _camPos.copy(_tPos); _camAt.copy(_tAt); menuCam.ready = true; }
-  const k = 1 - Math.exp(-dt * 1.4);
-  _camPos.lerp(_tPos, k);
-  _camAt.lerp(_tAt, k);
+  // Hiljainen "hengitys" kuuluu kohdekuvaan, joten se ei katkea siirtymässä.
+  _tPos.x += Math.sin(t * 0.13) * 0.05;
+  _tPos.y += Math.sin(t * 0.21) * 0.025;
+  _tPos.z += Math.cos(t * 0.11) * 0.05;
+  _tAt.x += Math.sin(t * 0.07) * 0.15;
+  _tAt.y += Math.sin(t * 0.09) * 0.05;
+  _lookM.lookAt(_tPos, _tAt, camera.up);
+  _tQ.setFromRotationMatrix(_lookM);
+  if (!menuCam.ready) {
+    menuCam.ready = true;
+    menuCam.shot = menu.shot;
+    menuCam.move = 1;
+    _camPos.copy(_tPos);
+    _camQ.copy(_tQ);
+  }
+  if (menuCam.shot !== menu.shot) {
+    // Uusi kuva: siirtymä alkaa siitä, missä kamera nyt on (myös kesken edellisen).
+    menuCam.shot = menu.shot;
+    menuCam.move = 0;
+    _fromPos.copy(_camPos);
+    _fromQ.copy(_camQ);
+  }
+  if (menuCam.move < 1) {
+    menuCam.move = Math.min(1, menuCam.move + dt / MENU_CAM_MOVE);
+    const p = menuCam.move;
+    const e = p * p * p * (p * (p * 6 - 15) + 10); // smootherstep
+    _camPos.lerpVectors(_fromPos, _tPos, e);
+    // Pieni kaari ylöspäin, ettei kamera liu'u maata pitkin.
+    _camPos.y += Math.sin(Math.PI * e) * 0.18 * _fromPos.distanceTo(_tPos) / 3;
+    _camQ.slerpQuaternions(_fromQ, _tQ, e);
+  } else {
+    _camPos.copy(_tPos);
+    _camQ.copy(_tQ);
+  }
   camera.position.copy(_camPos);
-  camera.position.x += Math.sin(t * 0.13) * 0.05;
-  camera.position.y += Math.sin(t * 0.21) * 0.025;
-  camera.position.z += Math.cos(t * 0.11) * 0.05;
-  camera.lookAt(_camAt.x + Math.sin(t * 0.07) * 0.15, _camAt.y + Math.sin(t * 0.09) * 0.05, _camAt.z);
+  camera.quaternion.copy(_camQ);
   player.position.set(camp.x, camp.y, camp.z);
 }
 
