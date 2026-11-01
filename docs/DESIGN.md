@@ -6,6 +6,20 @@ Tähän kirjataan käyttäjän kertomat asiat. Prototyypissä tarvittiin lisäks
 paikkamerkkisisältöä (biomit, esineet, reseptit, tehtävät); ne on listattu
 erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 
+## Valikoiden täydellinen uudistus (käyttäjän kertoma, 2026-11-01, sessio 59)
+- Nykyiset valikot ovat "intialaisen mobiilipelin tasoa". Kaikki uusiksi: uudet logot ja ammattimaisempi, Valheim-henkinen ja tunnelmallinen ilme.
+- **Filosofia:** valikon kehittäminen sivuutetaan usein, mutta valikon pitää olla mukava, kotoisa, idyllinen ja taiteellinen paikka, jossa voi viettää aikaa (esim. odottaessa kaveria tai säätäessä asetuksia).
+- Vaikutteita saa ottaa introvideosta (auringonlasku, joki, akaasiat, savitiilikaupunki, kultainen SAHEL-logo).
+- Valinnat (kysymyksiin vastattu):
+  - **Tausta:** 3D-scene; nuotioleiri (kumpare, nuotio, varusteet, taustalla joki, akaasiat ja kaukana kaupunki). Voi tehdä Blenderillä.
+  - **Valo:** hämärä, joka vaihtuu hiljalleen yöksi.
+  - **UI-tyyli:** sahelilainen käsityö: tumma nahka ja pellava, messinki, bògòlanfini-kuviot, kultaiset otsikot; paneeli ruudun reunassa, scene näkyy.
+  - **Logo:** introon pohjautuva uusi logo (kultainen antiikva, viimeistelty, pieni tunnus).
+  - **Hahmo:** ei hahmoa, vain leirin merkit (viltti, reppu, jousi, kattila).
+  - **Valinnat:** paneeli reunassa; kamera liukuu leirin eri kohtiin valikon mukaan (esim. kartta = maailmat).
+  - **Äänet:** tulen rätinä, illan äänet ja valikkomusiikki hiljempaa.
+  - **Laajuus:** kaikki valikot kerralla (päävalikko, maailmat, asetukset, tekijät, taukovalikko).
+
 ## Konsepti (käyttäjän kertoma, 2026-10-06)
 - Valheim- tai Minecraft-tyyppinen **selviytymispeli**, jossa on **reppu (inventory)** ja **valmistusjärjestelmä (crafting)**.
 - Peli pohjautuu **Burkina Fason Sahel-alueeseen**.

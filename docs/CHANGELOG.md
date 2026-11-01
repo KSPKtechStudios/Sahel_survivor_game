@@ -2,6 +2,10 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-11-01 (sessio 59): reunan vesipisarat korjattu
+
+- **Kuvan vasemmassa alakulmassa näkyneet oudot vesipisarat poistettu** (käyttäjä: reunan vesipisarabugi). Syy: keularoiskeiden linssipisaroiden neljä tyhjää paikkaa olivat alusta asti päällä, joten pisaroita piirtyi ilman purjehdusta, myös valikossa.
+
 ## 2026-10-30 (sessio 58, jatko 12): paljon enemmän karstitorneja ja vuoristojärviä
 
 - **Kalkkikivitorneja noin kolme kertaa jatkoa 11 enemmän** (käyttäjä: niitä ei juuri löydy). Ne seisovat laajemmin koko karstivuoristossa.

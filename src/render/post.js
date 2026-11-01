@@ -944,7 +944,9 @@ export class PostFX {
       uNear: { value: 0.1 }, uFar: { value: 1500 }, uCamPos: { value: new THREE.Vector3() },
       uSunDir: { value: new THREE.Vector3() }, uSunColor: { value: new THREE.Color() }, uInscatter: { value: 0 },
       uLens: { value: 0 }, uAspect: { value: 1 },
-      uSplash: { value: [new THREE.Vector4(), new THREE.Vector4(), new THREE.Vector4(), new THREE.Vector4()] }, uSplashOn: { value: 0 },
+      // Sessio 59: w = 0 (Vector4 alustuu w = 1:ksi, jolloin neljä tyhjää roisketta
+      // näkyivät pisaroina kuvan vasemmassa alakulmassa).
+      uSplash: { value: [0, 1, 2, 3].map(() => new THREE.Vector4(0, 0, 0, 0)) }, uSplashOn: { value: 0 },
       uFlare: { value: 0 }, uSunUV: { value: new THREE.Vector2(0.5, 0.5) }, uFlareColor: { value: new THREE.Color(1, 0.92, 0.8) },
       uFogNear: { value: 50 }, uFogFar: { value: 330 },
       uHeat: { value: 0 }, uTime: { value: 0 }, uViewProj: { value: new THREE.Matrix4() },

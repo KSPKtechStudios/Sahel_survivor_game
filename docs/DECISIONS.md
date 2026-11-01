@@ -2,6 +2,9 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-11-01 (sessio 59)
+- **Keularoiskeiden paikat alustetaan `Vector4(0, 0, 0, 0)`.** Syy: `THREE.Vector4()` alustuu w = 1:ksi, ja w on roiskeen voimakkuus, joten neljä "tyhjää" roisketta kohdassa (0, 0) olivat aktiivisia.
+
 ## 2026-10-30 (sessio 58, jatko 12)
 - **Karstitornien ruutu 300 → 170 m**, karstimaskin raja 0,45 → 0,3. Tuloksena 406 tornia 144 km²:llä (jatkossa 11: 139).
 - **Vuoristojärvillä oma ruudukko** (`KLAKE_CELL` 240 m, `karstLakeInCell`). Ruudusta etsitään 24 ehdokkaasta se kohta, jota massiivit ympäröivät eniten. Ympäröinti mitataan 16 suuntaan 150 m:n säteellä, ja kohta kelpaa, jos vähintään 55 % suunnista osuu seinämään tai yli 12 m korkeampaan maahan. Säde on 95 % lähimmästä seinämästä (32–85 m). Tavallinen järviruudukko jättää karstialueet näille. Syy: käyttäjä halusi järvet aina vuorten ympäröimiksi ja paljon yleisemmiksi.

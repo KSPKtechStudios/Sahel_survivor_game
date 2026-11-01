@@ -2,6 +2,16 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-11-01 (sessio 59)
+**Tehtiin**
+- Käyttäjä pyysi valikoiden täydellistä uudistusta (DESIGN.md, sessio 59) ja vastasi kysymyksiin. Työ on kesken.
+- Korjattiin reunan vesipisarabugi (`post.js` `uSplash`-alustus). Varmistettu: valikossa `uSplashOn` = 0, eikä pisaroita näy.
+- Testeille oma sisäänrakennettu palvelin (`scratchpad/serve.mjs`), koska erillinen http-server sammui toistuvasti.
+- Ladattiin Cinzel-fontti (OFL) logoa varten.
+
+**Kesken**
+- Valikkouudistus: nuotioleiri (paikka x −2576, z 662 valikkomaailmassa), logo ja käsityötyylinen UI.
+
 ## 2026-10-30 (sessio 58, jatko 12)
 **Tehtiin**
 - Käyttäjä: torneja ja järviä ei juuri löydy; ne saavat olla paljon yleisempiä, ja järvet aina vuorten ympäröiminä.
