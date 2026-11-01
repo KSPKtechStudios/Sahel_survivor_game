@@ -2,6 +2,31 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-11-01 (sessio 59, jatko)
+**Tehtiin**
+- Valikot kokonaan uusiksi käyttäjän vastausten mukaan (DESIGN.md).
+- Nuotioleiri valikkomaailmaan (`ui/menuCamp.js`, `terrain.js` `MENU_CAMP`, `campProps`, `chunkGen.js`):
+  - leiripaikka valittiin skriptillä (`s59/campfind.mjs`) ja kuvattiin (`s59/spotshot.mjs`);
+  - kamerakuvat paneelin mukaan, ilta vaihtuu yöksi.
+- Käyttäjän palaute kesken työn: nuotio huono ja harva, puu leirin viereen. Tehtiin uusi tuli (`render/campfire.js`) ja uusi nuotiomalli (`items.js` `makeCampfireBase`), ja ne otettiin käyttöön myös pelin nuotioissa ja soihtutelineissä (`structures.js`). Lisäksi akaasia leirin viereen.
+- Uusi UI:
+  - `index.html` (logo-malli, paneelit) ja `menu.css` kokonaan uusi;
+  - `menu.js`: logo, Jatka-nappi, kamerakuva;
+  - Cinzel-fontti ja `assets/ui/bogolan.png`.
+- Äänet: `sfx.campfire` (rätinä ja sirkat).
+- Testit, kaikki ilman virheitä:
+  - `s59/campshot.mjs`, `s59/menushot.mjs` ja `s59/pauseshot2.mjs`: valikko, maailmat, asetukset, tekijät, yö, lataus ja tauko;
+  - `s58/fireshot.mjs`: pelin nuotio ja soihtuteline;
+  - savutesti `karstshot.mjs`.
+- Lint: ei uusia virheitä (9 vanhaa globaalivirhettä).
+
+**Kesken / tiedossa**
+- Logon nimi on työnimi.
+- Ääniä ei voi kuunnella testiympäristössä, joten ne arvioi käyttäjä.
+
+**Seuraavaksi**
+- Käyttäjän palaute valikoista, nuotiosta ja äänistä.
+
 ## 2026-11-01 (sessio 59)
 **Tehtiin**
 - Käyttäjä pyysi valikoiden täydellistä uudistusta (DESIGN.md, sessio 59) ja vastasi kysymyksiin. Työ on kesken.

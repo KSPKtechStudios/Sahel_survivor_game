@@ -2,6 +2,17 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-11-01 (sessio 59, jatko)
+- **Valikon tausta on oikea pelimaailma** (valikkomaailma, siemen 'sahel-valikko'), johon rakennetaan leiri (`ui/menuCamp.js`). Leirin paikka (x −2576, z 662) valittiin skriptillä kumpareista, joiden länsipuolella on vettä. Aukio (`terrain.js` `MENU_CAMP`, `CLEARINGS`) estää puut, pensaat ja ruohon, ja akaasia lisätään chunkiin (`campProps`). Syy: käyttäjä halusi 3D-scenen; erillinen scene olisi vaatinut oman valaistuksen, taivaan ja jälkikäsittelyn, nyt kaikki on pelin omaa.
+- **Leirin varusteet ovat pelin Blender-esinemalleja** (`itemAsset`), tilat `lay`, `flat`, `stand` ja `lean`; rajat lasketaan leirin paikallisissa koordinaateissa. Syy: valmiit, laadukkaat mallit ja yhtenäinen tyyli.
+- **Kamerakuvat paneelin mukaan** (`CAMP_SHOTS`, `menu.shot`), pehmeä siirtymä (1 − e^(−1,4 dt)) ja hiljainen "hengitys". Aika kulkee 17,55 → 20,3 330 sekunnissa ja jää yöhön.
+- **Uusi tuli `render/campfire.js`**: liekki on kohinasävytin (fbm + vääristys) kolmella kameraan kääntyvällä tasolla, joista kaksi on pienempiä sivukieliä. Hiilet sykkivät omissa tahdeissaan, ja kipinät ja savu ovat omat pistejärjestelmät. Valoista huolehtii kutsuja. Syy: entiset liekkikuvat ja pistehiukkaset olivat käyttäjän mukaan harvoja. Sama efekti pelin nuotiossa, soihtutelineessä ja valikossa.
+- **Nuotion tukeille oma materiaali kaarnatekstuurilla** (`structures.fireMaterial`). Syy: yhteinen materiaali antoi tummille puille lautatekstuurin.
+- **UI: Cinzel (OFL) otsikoihin ja logoon, Alegreya leipätekstiin**; bògòlanfini-kuvio piirrettiin itse (Python) saumattomaksi tiiliksi. Cinzel Decorativea kokeiltiin, mutta sen koristeellinen H näytti logossa oudolta.
+- **SVG-logon liukuväreille omat tunnisteet joka kopiolle.** Syy: samat id:t viittasivat piilossa olevaan näkymään, jolloin logo ei piirtynyt.
+- **Rätinä ja sirkat syntetisoidaan WebAudiolla** (`sfx.campfire`). Syy: pelissä ei ollut sopivia äänitiedostoja, eikä uusia tiedostoja tarvita.
+- **Testeille oma sisäänrakennettu palvelin** (`scratchpad/serve.mjs`), ja valikon kuvissa `reducedMotion: 'reduce'`. Syy: erillinen palvelin sammui toistuvasti, ja CSS-animaatiot eivät ehdi edetä hitaassa ohjelmistorenderöinnissä.
+
 ## 2026-11-01 (sessio 59)
 - **Keularoiskeiden paikat alustetaan `Vector4(0, 0, 0, 0)`.** Syy: `THREE.Vector4()` alustuu w = 1:ksi, ja w on roiskeen voimakkuus, joten neljä "tyhjää" roisketta kohdassa (0, 0) olivat aktiivisia.
 

@@ -8,33 +8,26 @@ import { seedFromString, randomSeed } from '../world/terrain.js';
 
 const $ = (id) => document.getElementById(id);
 
-function makeScroll(subtitle = '') {
-  const node = $('tpl-scroll').content.firstElementChild.cloneNode(true);
-  node.querySelector('.scroll-sub').textContent = subtitle;
+// Sessio 59: logo (tunnus + nimi) mallista; alaotsikko valinnainen.
+// SVG:n liukuväreille omat tunnisteet joka kopiolle: muuten viittaus osuu
+// piilossa olevan näkymän logoon, eikä logo piirry.
+let logoN = 0;
+function makeLogo(subtitle = '') {
+  const node = $('tpl-logo').content.firstElementChild.cloneNode(true);
+  const svg = node.querySelector('svg');
+  const n = ++logoN;
+  svg.innerHTML = svg.innerHTML.replace(/lg-(gold|sun|clip)/g, `lg-$1-${n}`);
+  node.querySelector('.logo-sub').textContent = subtitle;
   return node;
 }
 
-function openScroll(scroll, delay = 60) {
-  scroll.classList.remove('open');
-  setTimeout(() => scroll.classList.add('open'), delay);
-}
-
-// Pehmeä hiekkapöllähdys napin painalluksesta.
-function puff(x, y) {
-  const host = $('puffs');
-  for (let i = 0; i < 12; i++) {
-    const p = document.createElement('i');
-    p.className = 'puff';
-    const a = Math.random() * Math.PI * 2;
-    const d = 18 + Math.random() * 30;
-    p.style.left = `${x}px`;
-    p.style.top = `${y}px`;
-    p.style.setProperty('--dx', `${Math.cos(a) * d}px`);
-    p.style.setProperty('--dy', `${Math.sin(a) * d - 8}px`);
-    p.style.setProperty('--s', `${1.2 + Math.random() * 1.6}`);
-    host.appendChild(p);
-    setTimeout(() => p.remove(), 750);
-  }
+// Logon animaatio alkaa alusta (näkymä avautuu uudelleen).
+function replay(el) {
+  el.style.animation = 'none';
+  for (const c of el.querySelectorAll('*')) c.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.animation = '';
+  for (const c of el.querySelectorAll('*')) c.style.animation = '';
 }
 
 function fmtDate(ts) {
@@ -51,21 +44,16 @@ export class Menu {
     this.loading = $('loading');
     this.settingsPanel = $('settings-panel');
 
-    this.mainScroll = makeScroll();
-    this.main.querySelector('.scroll-slot').appendChild(this.mainScroll);
-    this.pauseScroll = makeScroll('Tauko');
-    this.pause.querySelector('.scroll-slot').appendChild(this.pauseScroll);
-    this.loadScroll = makeScroll();
-    this.loading.querySelector('.scroll-slot').appendChild(this.loadScroll);
-    openScroll(this.loadScroll, 30);
+    this.mainLogo = makeLogo();
+    this.main.querySelector('.logo-slot').appendChild(this.mainLogo);
+    this.pauseLogo = makeLogo('Tauko');
+    this.pause.querySelector('.logo-slot').appendChild(this.pauseLogo);
+    this.loadLogo = makeLogo();
+    this.loading.querySelector('.logo-slot').appendChild(this.loadLogo);
 
     this.root = { main: 'main', pause: 'pause' };
+    this.shot = 'main'; // sessio 59: nuotioleirin kamerakuva (main.js)
     this.introDone = false;
-
-    document.addEventListener('pointerdown', (e) => {
-      const b = e.target.closest('.wood-btn, .mini-btn');
-      if (b && !b.disabled) puff(e.clientX, e.clientY);
-    });
 
     // Asetuspaneeli siirretään aina näkyvän valikon sisään, joten kuuntelijat riittävät näkymille.
     for (const screen of [this.main, this.pause]) {
@@ -88,7 +76,17 @@ export class Menu {
     const first = !this.introDone;
     this.introDone = true;
     this._go(this.main, 'main', true, first);
-    openScroll(this.mainScroll, first ? 200 : 40);
+    this._renderContinue();
+    replay(this.main.querySelector('.mm-side'));
+  }
+
+  // Sessio 59: "Jatka" viimeksi pelattuun maailmaan.
+  _renderContinue() {
+    const w = listWorlds().slice().sort((a, b) => (b.lastPlayed || 0) - (a.lastPlayed || 0))[0];
+    const btn = this.main.querySelector('[data-action=continue]');
+    btn.classList.toggle('hidden', !w);
+    this.lastWorld = w || null;
+    if (w) $('mm-continue').textContent = `${w.name} · ${fmtDate(w.lastPlayed)}`;
   }
 
   hideMain() {
@@ -99,7 +97,7 @@ export class Menu {
     this.pause.classList.remove('hidden');
     $('pm-status').textContent = status;
     this._go(this.pause, 'pause', true);
-    openScroll(this.pauseScroll, 20);
+    replay(this.pause.querySelector('.mm-side'));
   }
 
   hidePause() {
@@ -128,7 +126,6 @@ export class Menu {
     $('load-fill').style.width = '0%';
     $('load-fill').parentElement.classList.remove('hidden');
     $('btn-enter').classList.add('hidden');
-    openScroll(this.loadScroll, 30);
   }
 
   setLoading(p) {
@@ -172,10 +169,12 @@ export class Menu {
         setTimeout(() => current.classList.remove('leaving'), 270);
       }
     }
+    if (screenEl === this.main) this.shot = name;
     next.classList.toggle('intro', intro);
     next.classList.add('active');
-    const slot = screenEl.querySelector('.scroll-slot');
-    slot.classList.toggle('shrink', name !== 'main' && name !== 'pause');
+    const sub = name !== 'main' && name !== 'pause';
+    screenEl.querySelector('.logo-slot').classList.toggle('shrink', sub);
+    screenEl.querySelector('.mm-side').classList.toggle('wide', sub);
     if (name === 'worlds') this._renderWorlds();
   }
 
@@ -184,6 +183,7 @@ export class Menu {
     // Pieni viive, jotta painalluksen animaatio ehtii näkyä.
     const later = (fn) => setTimeout(fn, 110);
     switch (action) {
+      case 'continue': if (this.lastWorld) later(() => this.onPlay(this.lastWorld)); break;
       case 'worlds': later(() => this._go(this.main, 'worlds')); break;
       case 'settings': later(() => this._go(screenEl, 'settings')); break;
       case 'credits': later(() => this._go(this.main, 'credits')); break;

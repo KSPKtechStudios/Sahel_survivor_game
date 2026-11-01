@@ -1,6 +1,12 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 59 valikot:
+  - nuotioleiri ja aika: odota valikossa muutama minuutti, jolloin ilta vaihtuu yöksi;
+  - kameran liikkeet paneelien välillä, logo, Jatka-nappi, asetukset, taukovalikko ja latausruutu;
+  - äänet: rätinä ja sirkat;
+  - rakennettu nuotio ja soihtuteline pelissä.
+- [ ] Avoin: logon nimi on yhä työnimi Sahel. Kun nimi päätetään, logo vaihdetaan (index.html `tpl-logo`).
 - [ ] Käyttäjä testaa jatko 12: karstitornit ja vuoristojärvet karstivuoristossa (siemen 777: järvi x −560, z 2210, kallioseinät ympärillä).
 - [ ] Käyttäjä testaa jatko 10: arokierijät aavikolla tuulisella säällä (loikat, ulkonäkö läheltä, nimi "Arokierijä", hakkaaminen).
 - [x] Arokierijä: käyttäjän malli ja loikkiva animaatio peliin, nimi suomeksi (jatko 10).

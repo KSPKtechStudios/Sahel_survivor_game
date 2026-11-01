@@ -20,6 +20,8 @@ erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
   - **Äänet:** tulen rätinä, illan äänet ja valikkomusiikki hiljempaa.
   - **Laajuus:** kaikki valikot kerralla (päävalikko, maailmat, asetukset, tekijät, taukovalikko).
 
+- Jatkopalaute (sessio 59): leirin näkymä on "ihan ok". Nuotion tuli (tekstuuri) on huono ja harva sekä pelissä että valikossa, joten se tehdään täysin uudelleen. Leirintäalueen vieressä saa olla puu tekemässä tunnelmaa.
+
 ## Konsepti (käyttäjän kertoma, 2026-10-06)
 - Valheim- tai Minecraft-tyyppinen **selviytymispeli**, jossa on **reppu (inventory)** ja **valmistusjärjestelmä (crafting)**.
 - Peli pohjautuu **Burkina Fason Sahel-alueeseen**.

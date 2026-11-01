@@ -316,6 +316,95 @@ export class Sfx {
     }
   }
 
+  // Sessio 59: nuotion rätinä ja illan sirkat (proseduraaliset). fire = tulen
+  // läheisyys 0..1 (valikon leiri tai pelin lähin nuotio), night = sirkkojen
+  // voimakkuus 0..1. Rätinä: lyhyitä kohinapoksahduksia satunnaisin välein ja
+  // matala huminapohja; sirkat: korkea siniääni sirityksinä.
+  campfire(fire, night, dt) {
+    const ctx = this.ctx;
+    if (!ctx || ctx.state !== 'running') return;
+    const now = ctx.currentTime;
+    let c = this.campNode;
+    if (!c) {
+      if (fire < 0.01 && night < 0.01) return;
+      const out = ctx.createGain();
+      out.gain.value = 1;
+      out.connect(this.bedBus);
+      // Huminapohja: ruskea kohina alipäästön läpi.
+      const n = ctx.sampleRate * 3;
+      const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      let b = 0;
+      for (let i = 0; i < n; i++) { b = (b + 0.03 * (Math.random() * 2 - 1)) / 1.03; d[i] = b * 4; }
+      const roar = ctx.createBufferSource();
+      roar.buffer = buf;
+      roar.loop = true;
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 380;
+      const rg = ctx.createGain();
+      rg.gain.value = 0;
+      roar.connect(lp).connect(rg).connect(out);
+      roar.start();
+      // Sirkat: kaksi korkeaa siniääntä, joiden voimakkuutta sirityttää ajastus.
+      const crickets = [4650, 5320].map((f, i) => {
+        const o = ctx.createOscillator();
+        o.frequency.value = f;
+        const g = ctx.createGain();
+        g.gain.value = 0;
+        const p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+        o.connect(g);
+        if (p) { p.pan.value = i ? 0.55 : -0.45; g.connect(p).connect(out); } else g.connect(out);
+        o.start();
+        return { g, next: now + 0.3 + i * 0.37, period: 0.62 + i * 0.21 };
+      });
+      c = this.campNode = { out, roar, rg, crickets, pop: 0, fire: 0, night: 0, idle: 0 };
+    }
+    c.fire = fire;
+    c.night = night;
+    c.rg.gain.setTargetAtTime(fire * 0.05, now, 0.4);
+    // Poksahdukset: tiheys ja voimakkuus vaihtelevat.
+    c.pop -= dt;
+    while (fire > 0.01 && c.pop <= 0) {
+      c.pop += 0.04 + Math.random() * Math.random() * 0.45;
+      const t = now + Math.random() * 0.03;
+      const len = 0.006 + Math.random() * 0.03;
+      const src = ctx.createBufferSource();
+      src.buffer = this.noise;
+      const hp = ctx.createBiquadFilter();
+      hp.type = 'bandpass';
+      hp.frequency.value = 1200 + Math.random() * 4200;
+      hp.Q.value = 0.7 + Math.random() * 1.5;
+      const g = ctx.createGain();
+      const big = Math.random() < 0.12 ? 2.4 : 1;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(fire * (0.05 + Math.random() * 0.12) * big, t + 0.002);
+      g.gain.exponentialRampToValueAtTime(0.0005, t + len);
+      src.connect(hp).connect(g).connect(c.out);
+      src.start(t, Math.random() * 0.8, len + 0.02);
+    }
+    // Sirkat: kolmen pulssin siritys jaksoittain, hiukan epäsäännöllisesti.
+    for (const k of c.crickets) {
+      while (night > 0.02 && k.next < now + 0.25) {
+        const t0 = Math.max(k.next, now);
+        for (let i = 0; i < 3; i++) {
+          const t = t0 + i * 0.045;
+          k.g.gain.setValueAtTime(0, t);
+          k.g.gain.linearRampToValueAtTime(0.012 * night, t + 0.008);
+          k.g.gain.linearRampToValueAtTime(0, t + 0.032);
+        }
+        k.next = t0 + k.period * (0.85 + Math.random() * 0.3);
+      }
+      if (night <= 0.02) k.next = now + 0.5;
+    }
+    c.idle = fire < 0.01 && night < 0.01 ? c.idle + dt : 0;
+    if (c.idle > 4) {
+      c.roar.stop();
+      c.out.disconnect();
+      this.campNode = null;
+    }
+  }
+
   // Suunta ja etäisyys kuulijaan: palauttaa { gain, pan, dist }.
   _spatial(x, z, listener, ref = 10, range = 140) {
     const dx = x - listener.x, dz = z - listener.z;

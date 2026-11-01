@@ -2,6 +2,22 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-11-01 (sessio 59, jatko): valikot uusiksi, nuotioleiri ja uusi tuli
+
+- **Kaikki valikot uudistettu** (käyttäjä: entiset "intialaisen mobiilipelin tasoa"; ammattimaisempi, Valheim-henkinen, tunnelmallinen ja kotoisa):
+  - **taustalla elävä 3D-nuotioleiri** valikkomaailman kumpareella joen äärellä: akaasia auringonlaskua vasten, rätisevä nuotio, istumapuut, talja ja kartta, jousi ja nuolet, keihäs, kilpi, kirves ja muhennoskattila sekä tuulessa lepattava bògòlanfini-katos;
+  - **kultaisesta hetkestä yöhön**: valikossa viipyessä aurinko laskee ja tähdet syttyvät (noin 5½ minuutissa);
+  - **kamera liukuu leirin eri kohtiin**: maailmat = kartta taljalla, asetukset = varusteet, tekijät = taivas;
+  - **uusi logo**: kultainen SAHEL-nimi (Cinzel) ja tunnus, jossa baobab laskevaa aurinkoa vasten (introvideon henkeen);
+  - **käsityötyyli**: tumma nahkapaneeli, ommeltu reuna, messinkiniitit ja bògòlanfini-kangasnauha, kultaiset otsikot ja hehkuvat valinnat;
+  - **"Jatka"** viimeksi pelattuun maailmaan suoraan päävalikosta;
+  - uudistettu myös maailmat, asetukset, tekijät, taukovalikko ja latausruutu;
+  - **äänet**: nuotion rätinä ja sirkat, jotka voimistuvat illan pimetessä.
+- **Nuotio kokonaan uusiksi pelissä ja valikossa** (käyttäjä: nuotio huono ja "harva"):
+  - uusi malli: tiivis kivikehä, paksut kekopuut kaarnatekstuurilla ja hiiltyneine päineen, tuhkapohja ja hiilet;
+  - uusi tuli: yhtenäinen, elävä liekki (kolme liekin kieltä), hehkuvat sykkivät hiilet, kipinät ja savu, joka ajautuu tuulen mukana; myös soihtutelineessä;
+  - rakennetun nuotion lähellä kuuluu rätinä.
+
 ## 2026-11-01 (sessio 59): reunan vesipisarat korjattu
 
 - **Kuvan vasemmassa alakulmassa näkyneet oudot vesipisarat poistettu** (käyttäjä: reunan vesipisarabugi). Syy: keularoiskeiden linssipisaroiden neljä tyhjää paikkaa olivat alusta asti päällä, joten pisaroita piirtyi ilman purjehdusta, myös valikossa.

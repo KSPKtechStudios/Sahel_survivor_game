@@ -120,7 +120,9 @@ meshoptimizer (vendor/meshopt/meshopt_decoder.module.js), sessio 54:
   https://github.com/zeux/meshoptimizer, MIT-lisenssi (vendor/meshopt/LICENSE.md).
   Esinemallien pakkaus (EXT_meshopt_compression) ja purku pelissä.
 
-Fontit: ks. assets/fonts (OFL).
+Fontit: ks. assets/fonts (OFL). Sessio 59: Cinzel (The Cinzel Project Authors,
+  SIL Open Font License 1.1, assets/fonts/LICENSE-cinzel.txt) valikon otsikoissa ja logossa.
+Bògòlanfini-kuvio (assets/ui/bogolan.png), sessio 59: piirretty ohjelmallisesti tähän peliin.
 
 Puut (assets/models/trees/; lähde tools/blender/build_trees.py, leafgen.py,
   pack_leaves.py), sessio 56: mallinnettu tässä projektissa Blenderillä

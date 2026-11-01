@@ -61,6 +61,18 @@ export const WATER = { SEA: 1, LAKE: 2, RIVER: 3, STREAM: 4 };
 // --- Siemen ------------------------------------------------------------------
 
 let SEED = 0;
+let CLEARINGS = []; // sessio 59: aukiot ilman kasvillisuutta (MENU_CAMP)
+// Sessio 59: valikon nuotioleiri valikkomaailmassa (siemen 'sahel-valikko').
+// Leirin kohdalle ei generoida puita, pensaita eikä ruohoa (aukio), joten
+// nuotio ja varusteet näkyvät. Sama tieto pää- ja generointisäikeessä, koska
+// se lasketaan siemenestä.
+export const MENU_CAMP = { x: -2576, z: 662, r: 5.5 };
+// Leirin vieressä tunnelmaa luova akaasia (lisätään chunkiin aina, kun
+// valikkomaailma on käytössä; aukio ei poista sitä).
+const MENU_CAMP_PROPS = [{ type: 'acacia', x: MENU_CAMP.x - 5.6, z: MENU_CAMP.z + 3.4, rot: 2.1, scale: 1.18, variant: 1 }];
+export function campProps() {
+  return CLEARINGS.length ? MENU_CAMP_PROPS : [];
+}
 let N = null;
 const cellCache = new Map();
 const structCache = new Map();
@@ -85,6 +97,7 @@ export function randomSeed() {
 
 export function setWorldSeed(seed) {
   SEED = seed >>> 0;
+  CLEARINGS = SEED === seedFromString('sahel-valikko') ? [MENU_CAMP] : [];
   const n = (k) => createNoise2D((SEED + k * 7919) >>> 0);
   N = {
     base: n(1), detail: n(2), duneField: n(3), dune: n(4), ripple: n(5), lat: n(6), rock: n(7),
@@ -1720,9 +1733,11 @@ export function structuresNear(x, z, r) {
 
 // Onko piste rakennelman alueella (esineitä ei sijoiteta sinne).
 export function insideStructure(x, z, margin = 2) {
+  for (const c of CLEARINGS) if (Math.hypot(x - c.x, z - c.z) < c.r + margin) return true;
   const st = structureInCell(Math.floor(x / STRUCT_CELL), Math.floor(z / STRUCT_CELL));
   return !!st && Math.hypot(x - st.x, z - st.z) < st.radius + margin;
 }
+
 
 // --- Kyselyt -----------------------------------------------------------------------
 

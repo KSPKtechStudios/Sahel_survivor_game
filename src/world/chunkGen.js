@@ -5,7 +5,7 @@ import { CONFIG } from '../config.js';
 import { mulberry32, hashSeed } from '../noise.js';
 import {
   sampleTerrain, heightAt, groundColor, groundWeights, getWorldSeed, BIOME_KEYS, insideStructure, mapColorRGB,
-  karstNear, insideKarst,
+  karstNear, insideKarst, campProps,
 } from './terrain.js';
 import { OBJECT_TYPES, OBJECT_TYPE_KEYS, DECOR_TYPES } from './objectTypes.js';
 import { openFactor } from './waves.js';
@@ -180,6 +180,11 @@ export function generateChunk(cx, cz, variantCounts) {
   for (const k of karst) {
     if (k.x < x0 || k.z < z0 || k.x >= x0 + SIZE || k.z >= z0 + SIZE) continue;
     objs.push(tTower, 0, k.x, k.y, k.z, k.rot, k.scale, k.variant);
+  }
+  // Sessio 59: valikon nuotioleirin akaasia.
+  for (const p of campProps()) {
+    if (p.x < x0 || p.z < z0 || p.x >= x0 + SIZE || p.z >= z0 + SIZE) continue;
+    objs.push(OBJECT_TYPE_KEYS.indexOf(p.type), 900001, p.x, groundAt(p.x, p.z) - 0.05, p.z, p.rot, p.scale, Math.min(p.variant, (variantCounts[OBJECT_TYPES[p.type].model] || 1) - 1));
   }
   if (rain > 1) {
     const tCliff = OBJECT_TYPE_KEYS.indexOf('cliffRock');

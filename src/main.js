@@ -72,6 +72,7 @@ import { BuildMenu } from './ui/buildMenu.js';
 import { RunePanel } from './ui/runePanel.js';
 import { BoatHud } from './ui/boatHud.js';
 import { Menu } from './ui/menu.js';
+import { MenuCamp, CAMP_SHOTS } from './ui/menuCamp.js';
 import { DevTools } from './ui/devtools.js';
 
 const $ = (id) => document.getElementById(id);
@@ -79,7 +80,9 @@ const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
 const MENU_SEED = seedFromString('sahel-valikko');
 // Maisemallinen paikka valikon taustalle (savannia, akasioita ja kallioita
 // auringonlaskussa). Sessio 9: siirretty uuden biomijaon mukaan.
-const MENU_SPOT = { x: -2296, z: 582, yaw: 1.6, time: 17.1 };
+// Sessio 59: valikon aika alkaa kultaisesta hetkestä (time) ja hämärtyy yöksi
+// (nightEnd) dusk sekunnissa.
+const MENU_SPOT = { x: -2296, z: 582, yaw: 1.6, time: 17.55, nightEnd: 20.3, dusk: 330 };
 
 // --- Renderöijä ja kamera ----------------------------------------------------
 const canvas = $('game');
@@ -129,6 +132,7 @@ const peakMist = new PeakMist(post); // sessio 58: pilviverho karstihuippujen tu
 const splashes = new Splashes(scene);
 const waterfalls = new Waterfalls(scene, splashes, ripples);
 const fire = new FireFx(scene);
+const camp = new MenuCamp(scene); // sessio 59: valikon nuotioleiri
 const blood = new Blood(scene);
 const rain = new Rain(scene, renderer);
 env.onStrike = (angle, dist, near) => {
@@ -456,13 +460,16 @@ async function enterMenu(first = false) {
   env.setTime(MENU_SPOT.time);
   env.setWeather('menu', true);
   env.setLocalHumidity(0);
-  const sp = MENU_SPOT;
-  menuCam.x = sp.x;
-  menuCam.z = sp.z;
+  // Sessio 59: nuotioleiri valikkomaailman aukiolla; kamera alkaa leirin
+  // yleiskuvasta, ja hämärä vaihtuu hiljalleen yöksi (updateMenuCamera).
+  camp.build();
+  menuCam.x = camp.x;
+  menuCam.z = camp.z;
   menuCam.t = 0;
-  player.teleport(sp.x, sp.z);
+  menuCam.ready = false;
+  player.teleport(camp.x, camp.z);
   if (first) menu.showLoading('Ladataan…');
-  await buildAround(sp.x, sp.z, (p) => menu.setLoading(p));
+  await buildAround(camp.x, camp.z, (p) => menu.setLoading(p));
   state = 'menu';
   if (first && !music.unlocked) {
     // Ensimmäisellä kerralla klikkaus: selain päästää musiikin soimaan vasta sen jälkeen.
@@ -770,6 +777,8 @@ function updateSfx(game, rainAmt, realDt) {
       stormWind: Math.max(thunder * _sm(0.2, 0.7, _s.ocean || 0), sand * Math.max(0, Math.sin(elapsed * 0.21) * Math.sin(elapsed * 0.077 + 1)) * 1.6),
     });
     sfx.waterfall(waterfalls.sound.level, waterfalls.sound.pan, realDt);
+    // Sessio 59: lähimmän nuotion rätinä (illan sirkat vain valikon leirissä).
+    sfx.campfire(Math.max(0, 1 - structures.nearestFire / 14) * 0.8, 0, realDt);
     // Linnut (sessio 12d): välillä viidakossa, savannilla harvemmin; päivällä
     // eikä kovassa sateessa.
     birdT -= realDt;
@@ -781,6 +790,8 @@ function updateSfx(game, rainAmt, realDt) {
     }
   } else {
     sfx.setLevels({});
+    // Sessio 59: valikon nuotioleirin rätinä ja sirkat (voimistuvat illan pimetessä).
+    sfx.campfire(state === 'menu' ? 1 : 0, state === 'menu' ? 0.25 + 0.75 * (1 - Math.min(1, env.daylight * 2)) : 0, realDt);
     sfx.waterfall(0, 0, realDt);
   }
   sfx.update(realDt);
@@ -846,6 +857,7 @@ events.on('treeFell', ({ x, z, fallTime, size }) => {
 // --- Pääsilmukka --------------------------------------------------------------------------
 let last = performance.now();
 let elapsed = 0;
+const _fireWind = { x: 0, z: 0 }; // sessio 59: tuuli nuotioiden liekkeihin
 let saveTimer = CONFIG.autosaveSec;
 let edgeMsgTimer = 0;
 let drawTimer = 0;
@@ -880,16 +892,29 @@ function handleHotbar() {
   }
 }
 
+// Sessio 59: valikon kamera nuotioleirissä. Kuva vaihtuu valikon paneelin
+// mukaan (menu.shot), siirtymä on pehmeä, ja kamera "hengittää" hiljaa.
+// Aika kulkee kultaisesta hetkestä yöhön noin viidessä minuutissa.
+const _camPos = new THREE.Vector3(), _camAt = new THREE.Vector3();
+const _tPos = new THREE.Vector3(), _tAt = new THREE.Vector3();
 function updateMenuCamera(dt) {
   menuCam.t += dt;
   const t = menuCam.t;
-  const x = menuCam.x + Math.sin(t * 0.03) * 5;
-  const z = menuCam.z + Math.cos(t * 0.021) * 3;
-  const y = Math.max(heightAt(x, z), CONFIG.waterLevel) + 3 + Math.sin(t * 0.2) * 0.12;
-  camera.position.set(x, y, z);
-  // Katse kohti laskevaa aurinkoa, hidas panorointi.
-  camera.rotation.set(0.05 + Math.sin(t * 0.07) * 0.02, MENU_SPOT.yaw + Math.sin(t * 0.045) * 0.18, 0, 'YXZ');
-  player.position.set(x, y - 3, z);
+  env.setTime(Math.min(MENU_SPOT.nightEnd, MENU_SPOT.time + t * ((MENU_SPOT.nightEnd - MENU_SPOT.time) / MENU_SPOT.dusk)));
+  const shot = CAMP_SHOTS[menu.shot] || CAMP_SHOTS.main;
+  camp.world(shot.pos, _tPos);
+  camp.world(shot.at, _tAt);
+  _tPos.y = Math.max(_tPos.y, heightAt(_tPos.x, _tPos.z) + 0.5);
+  if (!menuCam.ready) { _camPos.copy(_tPos); _camAt.copy(_tAt); menuCam.ready = true; }
+  const k = 1 - Math.exp(-dt * 1.4);
+  _camPos.lerp(_tPos, k);
+  _camAt.lerp(_tAt, k);
+  camera.position.copy(_camPos);
+  camera.position.x += Math.sin(t * 0.13) * 0.05;
+  camera.position.y += Math.sin(t * 0.21) * 0.025;
+  camera.position.z += Math.cos(t * 0.11) * 0.05;
+  camera.lookAt(_camAt.x + Math.sin(t * 0.07) * 0.15, _camAt.y + Math.sin(t * 0.09) * 0.05, _camAt.z);
+  player.position.set(camp.x, camp.y, camp.z);
 }
 
 function frame(now) {
@@ -905,6 +930,8 @@ function frame(now) {
 
   if (state === 'playing') handleHotbar();
 
+  camp.setVisible(state === 'menu');
+  camp.update(dt, elapsed, camera, env.windDir.x * env.w.wind * 3, env.windDir.y * env.w.wind * 3);
   if (state === 'menu') updateMenuCamera(dt);
   else if (inGame) {
     // Vene liikkuu ennen pelaajaa (kyydissä pelaajan paikka tulee veneeltä).
@@ -1107,7 +1134,9 @@ function frame(now) {
     respawnPlayer();
   }
 
-  structures.update(simDt, elapsed, player.position);
+  _fireWind.x = env.windDir.x * env.w.wind * 3;
+  _fireWind.z = env.windDir.y * env.w.wind * 3;
+  structures.update(simDt, elapsed, player.position, camera, _fireWind);
   ruins.update(running || state === 'menu' ? dt : 0, player.position);
   drops.update(running ? dt : 0, elapsed, player, inventory);
   updateGlow(elapsed);
