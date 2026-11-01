@@ -7,7 +7,7 @@
 import * as THREE from 'three';
 import { heightAt } from '../world/terrain.js';
 import { leafTexture, addSurfaceDetail } from './surfaces.js';
-import { addWet } from './materials.js';
+import { addWet, softFoliage } from './materials.js';
 import { kitMaterial } from './kitMaterials.js';
 import { WHITE_UV } from '../models/util.js';
 
@@ -116,7 +116,7 @@ export class Debris {
     // Sessio 25: lehtiatlasta käyttävien mallien (puut, pensaat) sirpaleet.
     // Sessio 30: sama kaarnapinta ja märkyys kuin pystyssä olevilla ja
     // kaadetuilla puilla (ennen palat olivat sileitä, ilman kaarnaa).
-    this.leafMaterial = addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide, map: leafTexture, alphaTest: 0.42, alphaToCoverage: true }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 0.3, 0);
+    this.leafMaterial = softFoliage(addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide, map: leafTexture, alphaTest: 0.42, alphaToCoverage: true }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 0.3, 0));
     this.chipGeo = new THREE.TetrahedronGeometry(0.06, 0);
     this.chipMats = new Map();
     // Hiutaleet: suikale (pituus 1, leveys 0,45), skaalataan 1-3 cm.

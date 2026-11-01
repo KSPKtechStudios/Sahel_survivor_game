@@ -61,7 +61,9 @@ function createClumpGeometry() {
 }
 
 export function createGrassMaterial() {
-  const m = new THREE.MeshLambertMaterial({ side: THREE.DoubleSide });
+  // Sessio 40: alpha-to-coverage (MSAA pehmentää korsien reunat; ennen kova
+  // discard-raja välkkyi ja teki moiré-kuvioita kauempana).
+  const m = new THREE.MeshLambertMaterial({ side: THREE.DoubleSide, alphaToCoverage: true });
   m.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = windUniforms.uTime;
     shader.uniforms.uWindDir = windUniforms.uWindDir;
@@ -159,7 +161,10 @@ varying float vGKind;`)
   vec2 gdx = dFdx(gts), gdy = dFdy(gts);
   float glod = max(0.0, 0.5 * log2(max(dot(gdx, gdx), dot(gdy, gdy))));
   float ga = (gFloor ? gf.a : gt.a) * (1.0 + glod * 0.28);
-  if (ga < 0.5) discard;
+  // Terävöity alfa: reuna on noin pikselin levyinen, ja MSAA:n peittävyys
+  // pehmentää sen (ei sumeaa läpikuultavuutta, ei portaita).
+  float gcov = clamp((ga - 0.5) / max(fwidth(ga), 1e-4) + 0.5, 0.0, 1.0);
+  if (gcov <= 0.0) discard;
   vec3 gcol = mix(vGBase, vGTip, smoothstep(0.0, 1.0, gt.g));
   // Osa korsista on kuolleita (olki), tähkät vaaleita.
   float gid = gt.b / 0.85;
@@ -179,6 +184,7 @@ varying float vGKind;`)
   // Märkänä tummempi.
   gcol *= 1.0 - uGrassWet * 0.25;
   diffuseColor.rgb = gcol;
+  diffuseColor.a = gcov;
 }`)
       .replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>
   normal = normalize(vNormal);`)

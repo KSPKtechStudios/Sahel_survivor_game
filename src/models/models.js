@@ -3,16 +3,21 @@
 // Väliaikaisia malleja: jokainen malli on BufferGeometry (position, normal,
 // color). Kun grafiikkaa jalostetaan, nämä voi korvata glTF-malleilla samoilla
 // nimillä (ks. docs/DECISIONS.md).
-import { makeAcacia, makeBaobab, makeJungleTree, makeCanopyTree } from './trees.js';
+import { makeAcacia, makeBaobab, makeJungleTree, makeCanopyTree, makeEmergentTree, makeSapling } from './trees.js';
 // Sessio 26: uudet palmut ja banaanit.
-import { makePalm, makeCoconutPalm, makeDoumPalm, makeBanana } from './palms.js';
-import { makeBush, makeTumbleweed, makeGrassTuft, makeBamboo, makeThicket, makeEuphorbia, makeReeds } from './plants.js';
+import { makePalm, makeCoconutPalm, makeDoumPalm } from './palms.js';
+import { makeBush, makeTumbleweed, makeGrassTuft, makeThicket, makeEuphorbia, makeReeds } from './plants.js';
 import { makeGroundStick, makeStone, makeTermiteMound, makeOutcrop, makeSpire } from './rocks.js';
+import { makeCliffRock, makeKarstTower } from './karst.js';
 import { scannedBoulder, SCANNED_BOULDER_COUNT } from './scanned/build.js';
 import { kitModel } from './kit/build.js';
-import { makeAncientPillar, makeRustyShield, makeAncientRoots, makeTwigs } from './ancient.js';
+import { makeAncientPillar, makeRustyShield, makeTwigs } from './ancient.js';
+// Sessio 58: juurakko ja sammaloitunut runko etäisyyskentästä.
+import { makeAncientRoots, makeMossyLog } from './organic.js';
+import { organicAsset } from './organicAssets.js';
 import { makeKelp, makeSeabedRocks, makeShoreRocks, makeBeachStones } from './shore.js';
 import { ensureUv } from './util.js';
+import { treeAsset, treeVariantCount } from './treeAssets.js';
 import { makeCampfireBase, createItemModels } from './items.js';
 import { createBuildModels } from './building.js';
 import {
@@ -80,7 +85,8 @@ const VARIANTS = {
   // Sessio 24: harmaantuneet kuolleet puut kitistä (ennen makeDeadTree).
   // Sessio 27: lahopuu kaatuu kuten muut puut (rungon tiedot mallin muodosta).
   deadTree: [(s, q) => withTreeMeta(kitModel(['DeadTree_1', 'DeadTree_2', 'DeadTree_3'][Math.round((s - 61) / 101)], q)), 3, 61],
-  bamboo: [makeBamboo, 2, 71],
+  // Sessio 49: käyttäjän tuoma bambu (Sketchfab, CC-BY-4.0; ennen makeBamboo).
+  bamboo: kit(['Bamboo_A'], 71),
   thicket: [makeThicket, 3, 81],
   euphorbia: [makeEuphorbia, 2, 91],
   outcrop: [makeOutcrop, 3, 111],
@@ -92,8 +98,9 @@ const VARIANTS = {
   doum: [makeDoumPalm, 3, 161],
   coconut: [makeCoconutPalm, 3, 171],
   log: [(s) => makeLog(s, false), 2, 181],
-  mossyLog: [(s) => makeLog(s, true), 2, 191],
-  banana: [makeBanana, 3, 201],
+  mossyLog: [(s, q) => organicAsset('mossyLog', s, q) || makeMossyLog(s, q), 3, 191],
+  // Sessio 49: käyttäjän tuoma banaanipuu, 0–2 sivuversoa (ennen makeBanana).
+  banana: kit(['Banana_A', 'Banana_B', 'Banana_C'], 201),
   desertShrub: [makeDesertShrub, 3, 211],
   driftwood: [makeDriftwood, 3, 221],
   tallGrass: [makeTallGrass, 3, 231],
@@ -130,18 +137,36 @@ const VARIANTS = {
   // Sessio 24: ympäristön tarinankerronta
   ancientPillar: [makeAncientPillar, 4, 761],
   rustyShield: [makeRustyShield, 3, 771],
-  ancientRoots: [makeAncientRoots, 3, 781],
+  ancientRoots: [(s, q) => organicAsset('ancientRoots', s, q) || makeAncientRoots(s, q), 3, 781],
   twigs: [makeTwigs, 3, 791],
   // Sessio 25: rannat ja merenpohja
   kelp: [makeKelp, 3, 801],
   seabedRocks: [makeSeabedRocks, 3, 811],
   shoreRocks: [makeShoreRocks, 3, 821],
   beachStones: [makeBeachStones, 4, 831],
+  // Sessio 48: sademetsän jättiläispuu (ylin latvuskerros), trooppiset
+  // aluskasvit (Poly Haven, CC0) ja taimet (keskikerros).
+  emergent: [makeEmergentTree, 3, 1001],
+  tropicalPlant: kit(['Calathea_A', 'Calathea_B', 'Calathea_C', 'Fern2_A', 'Fern2_B', 'Fern2_C', 'Fern2_D'], 1101, true),
+  sapling: [makeSapling, 4, 1201],
+  // Sessio 49: käyttäjän tuoma bambupensas (kenttäkerros).
+  bambooBush: kit(['BambooBush_A'], 1301),
+  // Sessio 58: karstimaisema (kalkkikivilohkareet seinässä ja kalkkikivitornit).
+  cliffRock: [makeCliffRock, 6, 1401],
+  karstTower: [(s, q) => makeKarstTower(Math.round((s - 1501) / 101), s, q), 3, 1501],
 };
 // Mallit, joilla on kevyt kaukoversio (ilman varjoa).
-const HAS_FAR = new Set(['bamboo', 'banana', 'acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);
+const HAS_FAR = new Set(['ancientRoots', 'mossyLog', 'cliffRock', 'karstTower', 'emergent', 'bambooBush', 'bamboo', 'banana', 'acacia', 'jungle', 'palm', 'baobab', 'boulder', 'termite', 'canopy', 'deadTree', 'outcrop', 'spire', 'shea', 'doum', 'coconut', 'ancientPillar']);
 // Mallit, joista tehdään tiheärunkoinen versio hakkaamista varten.
-const HAS_HI = new Set(['acacia', 'jungle', 'palm', 'canopy', 'shea', 'doum', 'coconut', 'baobab']);
+const HAS_HI = new Set(['emergent', 'acacia', 'jungle', 'palm', 'canopy', 'shea', 'doum', 'coconut', 'baobab']);
+
+// Sessio 56: Blenderillä tehdyt puut (treeAssets.js) korvaavat nämä
+// proseduraaliset puut, jos ne latautuivat. Kaukomalli on mukana, ja
+// hakattava malli on sama kuin lähimalli (rungossa on tiheät renkaat).
+const ASSET_TREES = ['acacia', 'shea', 'baobab', 'canopy', 'jungle', 'emergent', 'sapling'];
+// Sessio 58: akasioissa uudet ja vanhat proseduraaliset mallit sekaisin
+// (käyttäjä piti vanhoja parempina; uudet yksinään näyttivät orvoilta).
+const MIXED_TREES = new Set(['acacia']);
 
 function seedsFor(model) {
   const [, n, base] = VARIANTS[model];
@@ -157,15 +182,27 @@ export function createModelLibrary() {
     near[model] = seeds.map((s) => ensureUv(fn(s, 1)));
     far[model] = HAS_FAR.has(model) ? seeds.map((s) => ensureUv(fn(s, 0))) : null;
   }
+  const assetTrees = new Map(); // malli -> Blender-varianttien määrä (ne ovat listan alussa)
+  for (const model of ASSET_TREES) {
+    const n = treeVariantCount(model);
+    if (!n || !VARIANTS[model]) continue;
+    const an = Array.from({ length: n }, (_, v) => treeAsset(model, v, 'near'));
+    const af = Array.from({ length: n }, (_, v) => treeAsset(model, v, 'far') || an[v]);
+    near[model] = MIXED_TREES.has(model) ? [...an, ...near[model]] : an;
+    far[model] = MIXED_TREES.has(model) ? [...af, ...far[model]] : af;
+    assetTrees.set(model, n);
+  }
   const hiCache = {};
   return {
     world: near,
     far,
     // Hakattava versio luodaan vasta tarvittaessa.
     hi(model, variant) {
-      if (!HAS_HI.has(model)) return near[model][variant];
-      const key = `${model}:${variant}`;
-      if (!hiCache[key]) hiCache[key] = ensureUv(VARIANTS[model][0](seedsFor(model)[variant], 2));
+      const na = assetTrees.get(model) || 0;
+      if (variant < na || !HAS_HI.has(model)) return near[model][variant];
+      const pv = variant - na;
+      const key = `${model}:${pv}`;
+      if (!hiCache[key]) hiCache[key] = ensureUv(VARIANTS[model][0](seedsFor(model)[pv], 2));
       return hiCache[key];
     },
     tumbleweed: makeTumbleweed(42),

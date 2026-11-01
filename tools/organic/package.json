@@ -1,0 +1,9 @@
+{
+  "name": "sahel-organic-tool",
+  "private": true,
+  "type": "module",
+  "description": "Muinaisen juurakon ja sammaloituneen rungon mallien esilaskenta (build.mjs).",
+  "dependencies": {
+    "meshoptimizer": "0.22.0"
+  }
+}

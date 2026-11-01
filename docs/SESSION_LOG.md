@@ -2,6 +2,604 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-11-01 (sessio 59, jatko)
+**Tehtiin**
+- Valikot kokonaan uusiksi käyttäjän vastausten mukaan (DESIGN.md).
+- Nuotioleiri valikkomaailmaan (`ui/menuCamp.js`, `terrain.js` `MENU_CAMP`, `campProps`, `chunkGen.js`):
+  - leiripaikka valittiin skriptillä (`s59/campfind.mjs`) ja kuvattiin (`s59/spotshot.mjs`);
+  - kamerakuvat paneelin mukaan, ilta vaihtuu yöksi.
+- Käyttäjän palaute kesken työn: nuotio huono ja harva, puu leirin viereen. Tehtiin uusi tuli (`render/campfire.js`) ja uusi nuotiomalli (`items.js` `makeCampfireBase`), ja ne otettiin käyttöön myös pelin nuotioissa ja soihtutelineissä (`structures.js`). Lisäksi akaasia leirin viereen.
+- Uusi UI:
+  - `index.html` (logo-malli, paneelit) ja `menu.css` kokonaan uusi;
+  - `menu.js`: logo, Jatka-nappi, kamerakuva;
+  - Cinzel-fontti ja `assets/ui/bogolan.png`.
+- Äänet: `sfx.campfire` (rätinä ja sirkat).
+- Testit, kaikki ilman virheitä:
+  - `s59/campshot.mjs`, `s59/menushot.mjs` ja `s59/pauseshot2.mjs`: valikko, maailmat, asetukset, tekijät, yö, lataus ja tauko;
+  - `s58/fireshot.mjs`: pelin nuotio ja soihtuteline;
+  - savutesti `karstshot.mjs`.
+- Lint: ei uusia virheitä (9 vanhaa globaalivirhettä).
+
+**Kesken / tiedossa**
+- Logon nimi on työnimi.
+- Ääniä ei voi kuunnella testiympäristössä, joten ne arvioi käyttäjä.
+
+**Seuraavaksi**
+- Käyttäjän palaute valikoista, nuotiosta ja äänistä.
+
+## 2026-11-01 (sessio 59)
+**Tehtiin**
+- Käyttäjä pyysi valikoiden täydellistä uudistusta (DESIGN.md, sessio 59) ja vastasi kysymyksiin. Työ on kesken.
+- Korjattiin reunan vesipisarabugi (`post.js` `uSplash`-alustus). Varmistettu: valikossa `uSplashOn` = 0, eikä pisaroita näy.
+- Testeille oma sisäänrakennettu palvelin (`scratchpad/serve.mjs`), koska erillinen http-server sammui toistuvasti.
+- Ladattiin Cinzel-fontti (OFL) logoa varten.
+
+**Kesken**
+- Valikkouudistus: nuotioleiri (paikka x −2576, z 662 valikkomaailmassa), logo ja käsityötyylinen UI.
+
+## 2026-10-30 (sessio 58, jatko 12)
+**Tehtiin**
+- Käyttäjä: torneja ja järviä ei juuri löydy; ne saavat olla paljon yleisempiä, ja järvet aina vuorten ympäröiminä.
+- `terrain.js`:
+  - tornien ruutu 170 m (406 tornia 144 km²:llä);
+  - vuoristojärvet omassa 240 m:n ruudukossa ympäröintimittauksella (vähintään 38 järveä 64 km²:llä).
+- Pelikuva `s58/lakeshot.mjs`: siemen 777, järvi (−560, 2210) rannalta; turkoosi vesi ja kallioseinämä takana, ei virheitä.
+
+**Seuraavaksi**
+- Käyttäjän palaute.
+
+## 2026-10-30 (sessio 58, jatko 11)
+**Tehtiin**
+- Käyttäjä: kalkkikivitorneja ei näy vuoristossa; toive vuoristojärvistä laaksoihin.
+- `terrain.js`:
+  - tornien ruutu 300 m ja löysemmät ehdot (30 → 139 tornia 144 km²:llä, mitattu Nodella);
+  - uusi `karstLake` (noin 30–40 järveä samalla alueella).
+- `chunkGen.js`: turkoosi vesi. `karst.js`: tornin juuri syvemmälle.
+- Pelikuva `s58/lakeshot.mjs`: järvi turkoosi, torni näkyy, ei virheitä.
+- Testipalvelin sammui toistuvasti, ja uudelleenkäynnistykset veivät paljon aikaa (käyttäjä huomautti). Jatkossa palvelimen tila tarkistetaan ensin, eikä sitä käynnistetä silmukassa.
+
+**Seuraavaksi**
+- Käyttäjän palaute.
+
+## 2026-10-29 (sessio 58, jatko 10)
+**Tehtiin**
+- Käyttäjä antoi tumbleweedille uuden mallin ja animaation (`tumbleweed_jumping.glb`, Sketchfab, ThymKruijt, CC-BY-4.0) ja pyysi nimeämään sen suomeksi: Arokierijä.
+- `assets/models/nature/arokierija.glb`:
+  - pakattu skriptillä `s54/pack_tw.mjs` (gltf-transform; scratchpad, ei repossa);
+  - tekstuuri palettikuvaksi PIL:llä.
+- `src/models/arokierija.js` (uusi):
+  - lataus, kvantisoinnin purku ja solmun muunnos geometriaan;
+  - skaalaus maakosketuksen säteestä (animaation alku);
+  - sisäkuorten tummennus;
+  - loikkakäyrä animaatiosta.
+- `world/tumbleweeds.js`: uusi malli ja loikat; vanha risupallo varamalliksi ja sirpaleiksi.
+- `interaction.js`: nimi "Arokierijä".
+- Tekijät: `index.html` ja `assets/CREDITS.txt`.
+- Testit:
+  - `s58/twshot.mjs`: aavikolla; näkyy, vierii ja loikkii;
+  - `s58/twclose.mjs`: lähikuva;
+  - savutesti `karstshot.mjs`: ei virheitä;
+  - lint puhdas.
+
+**Kesken / tiedossa**
+- Ensimmäisessä testissä malli ei näkynyt. Syy: meshopt-pakkaus siirtää sijaintien skaalan solmuun. Korjattu leipomalla solmun muunnos geometriaan.
+
+**Seuraavaksi**
+- Käyttäjän palaute arokierijästä ja jatkon 9 malleista.
+
+## 2026-10-29 (sessio 58, jatko 9)
+**Tehtiin**
+- Käyttäjä: aurinko yhä liian häikäisevä; haamun malli ja tekstuurit realistisemmiksi; savipeikolle kunnon malli. Käyttäjä kertoi savipeikkojen tarinan (kirjattu DESIGN.md:hen).
+- Aurinko (`sky.js`, `post.js`):
+  - pieni kirkas kiekko, tiivis kehä, heikko laaja hehku;
+  - linssiheijastus himmeämpi, rengas lähes pois;
+  - bloomin yläraja 12 → 6.
+  - Testattiin `s58/suntest.mjs`.
+- Savipeikko: `src/models/clayGolem.js` (uusi). Osat torso, pää, kädet ja jalat. Valmiiksi laskettu `organic.bin`:iin, 3 muunnelmaa. Pintatekstuuri `addSurfaceDetail`; `mobs.js` kopioi nyt varjostinlaajennuksen kloonattuun materiaaliin.
+- Haamu: `src/models/ghost.js` (uusi): huppu, hartiaviitta, kallo ja luiset kädet. `ghostCloak.js`: 512 px kangastekstuuri ja normaalikartta. `creatures.js` `makeHaamu` käyttää uusia osia; liitoskohdat ja API ennallaan.
+- Esikatselu `shots/s58/golem.html` (git-ignoroitu).
+- Pelitesti `s58/mobshot.mjs`: savipeikot ja haamu yöllä ja hämärässä savannilla, ei virheitä.
+- Savutesti `s58/karstshot.mjs`: ei virheitä. Lint puhdas.
+
+**Kesken / tiedossa**
+- Ohjelmistorenderöinnissä yökuvat ovat hyvin tummia, joten yksityiskohdat arvioitiin esikatselusta.
+- Haamun luut välähtävät osumasta; kangas välähtää nyt myös.
+
+**Seuraavaksi**
+- Käyttäjän palaute auringosta, savipeikosta ja haamusta (DESIGN-kysymykset: ruukunsirut ja helmet, kallo hupussa).
+
+## 2026-10-29 (sessio 58, jatko 8)
+**Tehtiin**
+- Käyttäjän havainto (kuvat joelta ja latvuston alta):
+  - avoimella paikalla valo on kunnossa, mutta lehvästöt pilaavat;
+  - toive: aurinko saa kuultaa lehvästön välistä, mutta ei saa sokaista.
+- Syy: lehtien läpikuultavuus ei huomioinut auringon varjoa, joten koko latvusto hehkui. Korjaus `materials.js` `addTranslucency`: kuultavuus kerrotaan auringon varjolla.
+- Testattiin `s58/transtest.mjs` (oletusasetukset, varjot päällä, syvä sademetsä klo 16, aurinkoa kohti ja ylös): varjoiset lehdet ovat tummia, valaistut kuultavat, taivas näkyy, ei virheitä.
+
+**Seuraavaksi**
+- Käyttäjän palaute.
+
+## 2026-10-29 (sessio 58, jatko 7)
+**Tehtiin**
+- Käyttäjä: jatkon 6 jälkeen valonsäteet katosivat kokonaan; niitä pitää olla, mutta ei överinä.
+- `post.js`: sademetsässä säteet noin puolet alkuperäisestä, valokeilat lähes ennallaan; taivaan himmennys ja valotus jatkon 6 mukaiset.
+
+**Seuraavaksi**
+- Käyttäjän palaute säteiden määrästä.
+
+## 2026-10-28 (sessio 58, jatko 6)
+**Tehtiin**
+- Käyttäjän kuva (sademetsä illalla, sateessa): valon määrä on yhä överi, ja ylös katsoessa taivasta ei erota valon seasta. Häikäisyyn tottuminen toimii.
+- `post.js`: valonsäteet, taivaan himmennys latvuston alla, sironta, valokeilat, bloom ja automaattisen valotuksen taivaspaino (0,75 → 1,1); `sky.js`: auringon hehku.
+- Testattiin `s58/glowtest.mjs`: sademetsä klo 17.4, katse aurinkoa kohti ja ylös, ennen ja jälkeen.
+
+**Kesken / tiedossa**
+- Ohjelmistorenderöinti ei ylivalota yhtä rajusti kuin näytönohjain, joten lopullinen arvio jää käyttäjälle.
+
+**Seuraavaksi**
+- Käyttäjän palaute valon määrästä ja jatkon 5 malleista.
+
+## 2026-10-28 (sessio 58, jatko 4–5)
+**Tehtiin**
+- Käyttäjän kuvapalaute:
+  - sademetsäpuun oksisto typerä ja harva;
+  - kannot eivät näytä oikeilta;
+  - "Muinainen juurakko" -nimi ja paljon paremmat mallit ja tekstuurit;
+  - sammaloitunut runko paremmaksi;
+  - mustat pikselit tiheikköpensaan vieressä;
+  - usva pilven tasolla;
+  - aurinkoon katsominen: ensin sokaisee, sitten silmä tottuu.
+- Jatko 4 (commit 3f5a925):
+  - silmän tottuminen aurinkoon (`post.js`);
+  - pilven sisällä vain kevyt usva;
+  - latvuston yläpuolella kirkkaampi ilma ja horisonttiusva (`environment.js` `canopy`, `main.js`);
+  - nimenmuutos.
+- Jatko 5:
+  - juurakko ja sammaloitunut runko etäisyyskentästä (`models/sdfMesh.js`, `models/organic.js`), laskettu valmiiksi tiedostoon `assets/models/organic.bin` (`tools/organic/build.mjs`, meshoptimizer);
+  - materiaali `solid_mossy`;
+  - sademetsäpuut: oksisto "space colonization" -menetelmällä, alalatvuksista koottu latvus, pyöreät mutkittelevat pönkkäjuuret (`build_trees.py`);
+  - muiden puulajien mallit tarkistettiin samoiksi.
+- Testattiin:
+  - esikatselusivut `shots/s58/props.html` ja `shots/s56/trees.html`;
+  - aurinkotesti aavikolla (häikäisyarvo nousee 0 → 0,56 ja himmentää säteet);
+  - savutesti ilman virheitä;
+  - eslint.
+
+**Kesken / tiedossa**
+- Mustat pikselit:
+  - merkkitesti (`s58/negfind.mjs`, `s58/negid.mjs`) löysi ilman korjausta 10–11 negatiivista fragmenttia ruudussa tiheikön lähellä;
+  - sekoitus ei ollut syy;
+  - korjaus `render/shaderSafety.js` rajaa värit nollaan, ja sen jälkeen 7 ruudussa löytyi 0;
+  - testi on hidas (noin 5 minuuttia ruutua kohden), joten kaikkia kulmia ei ajettu loppuun.
+- Työkalu `tools/organic` tarvitsee meshoptimizerin (`npm install` kansiossa).
+
+**Seuraavaksi**
+- Käyttäjän palaute puista, juurakoista ja rungoista sekä aurinko- ja usvamuutoksista.
+- Käyttäjän vahvistus, että mustat pikselit ovat poissa.
+
+## 2026-10-28 (sessio 58, jatko 3)
+**Tehtiin**
+- Käyttäjän idea: kevyt höyry tai pilviverho vuorten huippujen tuntumaan ("oho"-elämys, ei överiksi).
+- `render/post.js`: verhovyöhyke (`uVeil`, `uVeilRect`, `uVeilDrift`, `tVeil`); `render/peakMist.js`: massiivikartta ja vyöhykkeen korkeus laakson pohjan mukaan; `main.js` kytkentä.
+- Testattiin: `s58/misttest.mjs` (laelta kolmeen suuntaan, verho päällä ja pois), eslint, ei virheitä konsolissa.
+
+**Kesken / tiedossa**
+- Laaksosta ylös katsottuna verhoa ei saatu testikuvaan (latvusto peittää), toimivuus nähty laelta.
+
+**Seuraavaksi**
+- Käyttäjän palaute verhon määrästä.
+
+## 2026-10-28 (sessio 58, jatko 2)
+**Tehtiin**
+- Käyttäjän pyynnöt:
+  - vuoret erottumaan kaukaa usvaisina, kaukaisina hahmoina;
+  - näköetäisyys säädettäväksi asetuksista niin, ettei fps putoa.
+- `render/fogPatch.js`: korkeusriippuvainen sumu (`fogMist`); `main.js` päivittää usvan ylärajan ja jälkikäsittelyn korkeussumun pohjan laakson pohjaan.
+- `render/farTerrain.js`: kaukaisten vuorten siluetit; `terrain.js` `sampleRelief`; asetus `farView` (`save.js`, `menu.js`, `index.html`).
+- Testattiin: `s58/fartest2.mjs` (massiivin laelta kolmeen suuntaan siluetit päällä ja pois), eslint, ei virheitä konsolissa.
+
+**Kesken / tiedossa**
+- Siluettiruudut ovat omia piirtokutsujaan (noin 100). Jos ruudunpäivitys heikkenee, ne voi yhdistää isommiksi verkoiksi.
+- Usvan ja taivaan raja horisontissa on suora viiva (ennallaan).
+
+**Seuraavaksi**
+- Käyttäjän palaute kaukaisista vuorista ja asetuksesta.
+
+## 2026-10-28 (sessio 58, jatko)
+**Tehtiin**
+- Käyttäjän palaute (kuva sademetsästä):
+  - roikkuvat liaanit olivat liian paksuja ja samanlaisia, tekstuurina puu;
+  - jyrkänneportaat näyttivät kamalilta, eikä niille päässyt ylös;
+  - generointi oli vain kahden tason vaihtelua;
+  - pyydettiin kunnollista vuoristoa (Geminin ehdotus: thaimaalainen karsti);
+  - tarkennus: tasainen viidakko on hyvä, ja karsti on viidakon sisäinen variantti;
+  - tarkistettava, toimiiko kasvillisuus maaston kanssa.
+- Liaanit: `treeAssets.js` (`vineSpecs`: `kind`, ohuemmat säteet, ilmajuuriverho), `vines.js` (`STYLE`: kierre, korkkiruuvi, litteä nauha, lehtimäärät), `tools/blender/vinetex.py` → `vine_stem_c/n.webp`, `kitMaterials.js` (`vineTex`, rungon liaani).
+- Karsti: `terrain.js` (`escarpment()` uusiksi: `karstMaskAt`, `karstField`, `rampAt`; laaksonpohja tasaisempi; kalkkikiven väri kaikille karstin jyrkille rinteille; joen laakso massiivin läpi; putoukset karstiseinille; tornit laaksoihin).
+- Pelaajan jyrkkyysraja: `player.js` (`MAX_CLIMB`).
+- Kasvillisuus: `chunkGen.js` (puiden ja koristekasvien rinneraja karstissa).
+- Kaatuvan puun osuma: `fallen.js` (`_hitFx`).
+- Testattiin (scratchpad `s58/`):
+  - `karstmap.mjs`/`.py` (kartta ylhäältä), `shots/s58/terrain3d.html` (3D-esikatselu, git-ignoroitu);
+  - `vegcheck.mjs`: puut jyrkillä rinteillä 39 → 4, koristekasvit seinillä 1115 → 122, leijuvia 0;
+  - `s57/rivcheck.mjs`: vedenpinnan hyppyjä yli 1 m 2–4 kpl (enintään 1,2 m);
+  - `s57/fallcheck.mjs`, `fallwall.mjs`: 2–3 putousta, 0 vesiseinää;
+  - pelikuvat: `karstshot2/3.mjs` (seinä, laki, rinne, ilmakuva), `s57/vineshot2.mjs` (liaanit), `fallshot58.mjs` (kaatuvan puun osuma).
+
+**Kesken / tiedossa**
+- Vesiputouksia on vähemmän kuin ennen (2–3 / maailma); kysytty käyttäjältä.
+- Sademetsän usva peittää kaukaiset massiivit; voisi harkita usvan vähentämistä karstialueella, jos käyttäjä haluaa nähdä vuoret kauempaa.
+- Olennot eivät noudata pelaajan jyrkkyysrajaa (eläimet voivat nousta seinää).
+
+**Seuraavaksi**
+- Käyttäjän palaute karstista, liaaneista ja osumaefektistä.
+
+## 2026-10-28 (sessio 58)
+**Tehtiin**
+- Käyttäjän palaute (kuvat):
+  - vanhat akasiat olivat parempia, ja ne halutaan sekaisin uusien kanssa;
+  - viidakkopuiden rungon ympäri kiertävä liaani puuttui;
+  - palmujen lehvät olivat liian harvoja;
+  - lehdet kiilsivät muovisesti;
+  - puut ja muinaiset juuret syntyivät kallion kielekkeille kaikissa biomeissa;
+  - kallio oli tylsä "ruohoseinä", ja tilalle haluttiin karstikallio (kuva kalkkikivitornista: "ompas hieno").
+- Akasiat: `models.js` (`MIXED_TREES`, `hi()` vanhoille varianteille).
+- Liaani: `build_trees.py` (`trunk_surface`, `climbing_vine`, `build_climber`, materiaali `treeVine`), `kitMaterials.js`. Liaani näkyi ensin mustana; syy oli liian tumma materiaali eikä geometria (normaalit ja kiertosuunta tarkistettu).
+- Palmut: `palms.js`. Mattapinta: `kitMaterials.js`, `materials.js`.
+- Kielekkeet: `chunkGen.js` (`footRadius`, `footOk`).
+- Karsti: uusi `models/karst.js` (`makeKarstTower`, `makeCliffRock`), `terrain.js` (tornit, kalkkikiven värit seinässä), `chunkGen.js` (torni- ja lohkarekierrokset), `objectTypes.js`, `world.js` (tornin törmäys), tekstuuri `limestone_col/nrm.jpg` (ambientCG Rock026).
+- Testattiin (scratchpad `s56/`, `s58/`): puiden esikatselu (`shots/s56/trees.html`, git-ignoroitu), `karstcheck.mjs` (tornit siemenillä 777, 1, 42, 12345: 41–54 kpl), eslint, `py_compile`, pelin savutesti ja kuvat tornista ja jyrkänteestä (`karstshot.mjs`).
+
+**Kesken / tiedossa**
+- Kaatuvan puun osumaefekti (pölähdys ja partikkelit, kun puu kaatuu jonkin päälle) on vielä tekemättä.
+- Jokien ja putousten tarkistukset (`s57/rivcheck.mjs`, `fallwall.mjs`) ja suorituskyky (`s56/perf.mjs`) ajamatta tämän session muutosten jälkeen.
+- Käyttäjä kysyi, miksi työ jumitti: liaanin vian etsintä ja hitaat ohjelmistorenderöidyt kuvat veivät paljon aikaa. Jatkossa pushataan välillä, jotta käyttäjä pääsee testaamaan.
+
+**Seuraavaksi**
+- Kaatuvan puun osumaefekti (`game/fallen.js`, partikkelit).
+- Käyttäjän palaute karstista, liaanista, palmuista ja akasioista.
+
+## 2026-10-28 (sessio 57)
+**Tehtiin**
+- Käyttäjän palaute (kuvat sademetsästä):
+  - kaatojälki pelkkää valkoista;
+  - liaanit huonoja malleja;
+  - latvuston läpi tulee liikaa valoa (korjattava ilman suurta fps-pudotusta);
+  - viidakkoon kallioita, jyrkänteitä ja ehkä vesiputouksia (jokigenerointi ei saa hajota);
+  - lisäksi savannin akasioiden lehvästöt liian harvoja.
+- Lehtiatlas tiheämmäksi (`leafgen.py`: akasia, leveälehtiset, kapokki), korttien suunta osin vaakaan (`build_trees.py` `foliage(mode='mix')`).
+- Latvukset leveämmiksi samalla korttimäärällä (`build_trees.py`: oksien pituus ja kulma). Mitattu: ylös katsoessa taivasta 38 % → 14 % (session 55 versio 23 %), kolmiot sademetsässä 6,5 M → 6,4 M.
+- Kevyemmät mallit (`build_trees.py`): kaukomalli vain runko ja pääoksat; pienet oksat harvemmilla renkailla. Varjokopiot (`world.js`, `instancePool.js` `layer`, `environment.js`).
+- Kaatojälki: `treeCut.js` (kansi, kiertosuunta, välirengas, UV), `kitMaterials.js` (`endGrain`, kuitujuovat lovessa), `build_trees.py` (renkaat kaatokohdan ympärillä).
+- Liaanit: `vines.js` (uusi piirto), `treeAssets.js` (`vineSpecs`, `leafCell`).
+- Jyrkänteet (`terrain.js` `escarpment`, `chunkGen.js` tiheysavain `cliff`, `objectTypes.js` lohkareet ja kivirouhe).
+- Vesiputoukset: `terrain.js` (`fallInCell`, `applyFalls`, `fallsNear`), `render/waterfalls.js`, `sfx.js` (`waterfall`), `main.js`.
+- Testattiin (scratchpad `s57/`):
+  - `rivcheck.mjs`: jokien pinnan hypyt ennallaan;
+  - `fallcheck.mjs` ja `fallwall.mjs`: 13–19 putousta siementä kohden, ei vesiseiniä;
+  - `cover.mjs`: latvuston peitto;
+  - `fallshot.mjs`: putoukset pelissä (sivulta, ylhäältä), ääni;
+  - `vineshot.mjs`: liaanit;
+  - `s56/perf.mjs`: kolmiot (savanni 1,07 M, metsäsavanni 1,23 M, sademetsä 6,4 M).
+
+**Kesken / tiedossa**
+- Ensimmäinen putouskuva alavirrasta jäi puiden taakse (kuvakulma, ei vika). Sivulta putous ja allas näkyvät hyvin.
+- Jyrkänteiden kallio on ruskeaa; sammalta tai märkiä juovia voisi lisätä, jos käyttäjä haluaa.
+- Pysäytyskoukku vertaa vanhaan `origin`-remoteen (KSPKtech/sahel, jäädytetty); kaikki on pushattu `studios`-remoteen.
+
+**Seuraavaksi**
+- Käyttäjän palaute: latvusto, liaanit, kaatojälki, jyrkänteet ja putoukset (määrä, myös vuoristoon?).
+
+## 2026-10-27 (sessio 56)
+**Tehtiin**
+- Käyttäjän pyynnöt:
+  - paranna kaikki esineet paitsi soihtu, nuija ja muut käyttäjän mallit;
+  - puut Blenderillä realistisemmiksi ja tiheämmiksi;
+  - kesken session: kannot ja juuret ovat liian kulmikkaita (kuvat: sademetsäpuun kolmiolevyt vs. oikea kanto).
+- Puut (`tools/blender/`):
+  - `leafgen.py` + `pack_leaves.py`: lehtiatlas Blenderissä mallinnetuista lehvistä;
+  - `build_trees.py`: 7 lajia, 23 muunnelmaa, lähi- ja kaukomalli; latvukset `Tree.foliage`-korteista;
+  - tyven juurilohkot rungon osana (`trunk_line(lobes=...)`, `build_trunk`, `lobe_angles`, `lobe_shape`); vanhat kolmiolevyt (`buttresses`) poistettu;
+  - `prep_textures.py --bark`: kaarnatekstuurit, baobabin kaarna vaalennettu (`BARK_ADJ`).
+- Peli:
+  - `src/models/treeAssets.js` lataa puut ja muuntaa ne kitin muotoon; `models.js` käyttää niitä (`ASSET_TREES`), vanhat puut varalla;
+  - `kitMaterials.js`: `treeLeaf`, `treeBark_<laji>` (tuore puu `freshWood`, lehtien normaalit `keepLeafNormal`);
+  - `treeCut.js splitTree` säilyttää materiaaliryhmät; `breakables.js` ja `fallen.js` käyttävät `kitMaterials`-taulukkoa;
+  - `objectTypes.js`: akasian ja karitteen tiheys suuremmaksi (vanhat puut pysyvät paikoillaan, ks. DECISIONS).
+- Esineet: 17 mallia uusiksi (`items_misc.py`, `items_mats.py`, `items_food.py`); apufunktiot `shapes.facet_cuts`, `shapes.split_part`, `items_food.smooth_prof`; uudet materiaalit `ash`, `coal` (`itemAssets.js`).
+- Testattiin:
+  - esikatselu `shots/s56/trees.html` (myös tyven lähikuva `eye=2`);
+  - pelissä headless: biomien kuvat, akasian ja karitteen kaato ja kanto (scratchpad `s56/fell.mjs`);
+  - esineiden esikatselut ja koko `items.glb` (116 esinettä);
+  - lint puhdas, Blender-skriptit kääntyvät.
+
+**Kesken / tiedossa**
+- Palmut, doumpalmu, kookospalmu ja kuollut puu ovat vanhoja malleja.
+- Sademetsän puiden (jättiläispuu, kapokki, sademetsäpuu) kaatotesti ja suorituskykymittaus (piirtokutsut, kolmiot) olivat kesken commitin hetkellä; ne kaatuvat samalla koodilla kuin akasia ja karite.
+
+**Seuraavaksi**
+- Käyttäjän palaute puista, kannoista, tiheydestä ja esineistä (ks. TODO).
+
+## 2026-10-27 (sessio 55)
+**Tehtiin**
+- Käyttäjän palaute:
+  - eri tasojen aseiden ja kilpien pitää näyttää erilaisilta;
+  - osa malleista on huonolaatuisia ja saa suunnitella uusiksi;
+  - nuijan tekstuurit eivät näy pikapalkissa.
+- Nuija:
+  - kuvakkeet piirrettiin ennen kuin käyttäjän mallien tekstuurit ehtivät latautua;
+  - `userItems.js` `userTexturesReady()`, ja `main.js` odottaa sitä ennen `renderItemIcons`.
+- Tasot:
+  - uudet muodot kuparille, raudalle ja rubiinille (`items_tools.py`, `items_weapons.py`, `items_bows.py`);
+  - uudet apufunktiot `shapes.py`: `mirror_x`, `lathe_z`, `shaped_disc`; `blade`-funktioon urat ja keskilinjan siirto;
+  - uudet apufunktiot `items_weapons.py`: `resample_loop`, `planks_shape`.
+- Heikot mallit uusiksi (`items_mats.py`, `items_food.py`), litteille esineille kuvakekulmat (`icons.js`).
+- Putkien ja nyörien kehykset rinnakkaissiirrolla (`itemlib.transport_frames`).
+- Testattiin:
+  - esikatselusivut `shots/s55/` (scratchpad);
+  - pelin omat kuvakkeet isona arkkina (`s54/iconsheet.mjs`);
+  - pelissä headless (`s54/game55.mjs`): 109/109 mallia, ei virheitä, uudet aseet kädessä ja kilvet vasemmassa kädessä;
+  - lint puhdas.
+
+**Kesken / tiedossa**
+- GLB kasvoi 2,9 → 3,5 Mt (kohokuviot, taljojen reunat).
+
+**Seuraavaksi**
+- Käyttäjän palaute (ks. TODO).
+- Leopardin ja gorillan animaatiot.
+
+## 2026-10-27 (sessio 54)
+**Tehtiin**
+- Käyttäjän pyyntö: paremmat 3D-mallit ja tekstuurit kaikille esineille. Puunuija, soihtu ja kivipuukko jätettiin ennalleen.
+- Blender 4.0.2 asennettiin pilviympäristöön (apt) sekä `python3-numpy` (glTF-vientiä varten).
+- Putki `tools/blender/` (ks. `tools/blender/README.md`):
+  - `itemlib.py`, `shapes.py` ja `paint.py`: muodot, UV:t, AO:n leivonta ja maalaus;
+  - `items_*.py`: esineet ryhmittäin (työkalut, aseet, materiaalit, ruoat, sekalaiset, jouset, panssarit);
+  - `prep_textures.py`: ambientCG-tekstuurit ja itse tehdyt rengas- ja suomutekstuurit;
+  - `optimize_glb.mjs`: meshopt-pakkaus.
+- Pelin puolella:
+  - `src/models/itemAssets.js`: GLB:n lataus ja materiaalikirjasto;
+  - `items.js` korvaa vanhat mallit uusilla;
+  - `icons.js`, `drops.js` ja `main.js` käyttävät niitä;
+  - `viewmodel.js`: jousen runko, jänteen nuoli ja kilven materiaali;
+  - `archery.js`: lentävä nuoli.
+- Testattiin:
+  - esikatselusivut `shots/s54/` (vanha ja uusi rinnakkain; git-poissuljettu);
+  - pelissä headless (`s54/game_items.mjs`, scratchpad): 109/109 mallia ladattu, ei virheitä, kuvakkeet, maassa olevat esineet, kädessä pidettävät, jousen jännitys ja laukaus;
+  - vertailu session 53 versioon: kädessä näkyvät samat esineet samalla tavalla;
+  - lint puhdas.
+
+**Kesken / tiedossa**
+- Pieniä hiottavia malleja (ks. TODO): köysikerä, pihka, taljojen reuna, kookospähkinän ääriviiva.
+
+**Seuraavaksi**
+- Käyttäjän palaute uusista malleista.
+- Leopardin ja gorillan animaatiot (käyttäjä: eivät vielä täysin kunnossa): kysy, mikä on vialla.
+
+## 2026-10-14 (sessio 53)
+**Tehtiin**
+- Käyttäjän palaute: leopardin ja gorillan animaatiot liian nopeita, leopardin kävely vaappuu.
+- Syyt mitattiin:
+  - leopardi kääntyi 5 rad/s napsahtaen ja kallistui joka käännöksessä noin 9°; esteiden kierto laukaisi tätä jatkuvasti;
+  - paikallaan kääntyminen nosti askellajin raviin;
+  - takajalan kanta laski maahan askeleen lopussa;
+  - gorillan lyöntiklipissä koko malli on siirretty 1,7–2,2 m eteen, ja nousuklippi on vain 0,57 s.
+- Korjaukset:
+  - `mobs.js` `_steer`: pehmeä kääntyminen (`turnAcc`) leopardille ja gorillalle;
+  - `models/leopard.js`: tahti, kallistus, kintereet, tassut, häntä;
+  - `models/gorilla.js`: uusi `animateGorilla` (kävely raajojen vaiheista ja peilattu oikea jalka, nousun ja lyönnin ajoitus, rinnan lyönti IK:lla), lyöntiklipin juurisiirto pois;
+  - `mobs.js` `_animGorilla` kutsuu sitä.
+- Testattiin:
+  - ruutusarjat `shots/s53/` (`leo_strip`, `ganim`, `gstrip`; git-poissuljettu);
+  - pelissä leopardin käytös (`s52/leopard.mjs`) ja liikkeen arvot sademetsässä (`s53/run_prowl.mjs`), gorillan käytös (`s51/gorilla.mjs`).
+
+**Seuraavaksi**
+- Käyttäjän palaute tahdista (ks. TODO).
+
+## 2026-10-13 (sessio 52)
+**Tehtiin**
+- Gorillan syöksy hitaammaksi (`mobs.js`: run, windup, attack, syöksy).
+- Harmaapapukaijat:
+  - malli `models/creatures.js` `makeParrot`;
+  - tekoäly, lento ja animaatio `mobs.js` (`_thinkParrot`, `_parrotMove`, `_animParrot`, istumapaikat `_parrotPerches`);
+  - nuolen osuma säikäyttää (`arrowImpact`), ja nuolen törmäyskorkeus kivillä on mallin mukainen (`archery.js` `_objTop`).
+- Leopardi:
+  - malli kevennetty scratchpadissa (`tropical/leo_prep.mjs`, `leo_norm.mjs`) → `assets/models/leopard/leopard.glb`;
+  - luuranko, painot, oikean etujalan korjaus ja proseduraaliset animaatiot `models/leopard.js`;
+  - tekoäly `mobs.js` `_thinkLeopard`;
+  - syntetisoitu murina `sfx.leopardGrowl`.
+- Testattiin:
+  - mallisivut `shots/s52/` (rig-, anim- ja papukaijasivut, git-poissuljettu);
+  - pelissä `s52/parrot*.mjs` ja `s52/leopard.mjs` (scratchpad): vaanii → loikkaa → raapii → vetäytyy, jähmettyy katsottaessa, soihtu, osumat.
+
+**Seuraavaksi**
+- Käyttäjän palaute papukaijoista, leopardista ja gorillan nopeudesta (ks. TODO).
+
+## 2026-10-13 (sessio 51)
+**Tehtiin**
+- Gorilla:
+  - malli `models/gorilla.js` (käyttäjän GLB kevennettynä: `assets/models/gorilla/gorilla.glb`);
+  - tekoäly ja animaatio `game/mobs.js`: `_thinkGorilla` (säikähdysmittari, väistö, varoitus, karjaisu, hyökkäys, rauhoittuminen), `_gorillaAnger`, `_animGorilla`, `_trySpawnGorilla`;
+  - pelaajan äkkinäiset liikkeet tunnistetaan `update()`:ssa (hyppy, laskeutuminen, uusi isku).
+- Karjaisu: `sfx.gorillaRoar` ja tapahtuma `gorillaRoar`.
+- Muut: kuolinteksti, F3-painike, tekijät (CREDITS ja Tekijät-paneeli).
+- Testattiin: mallisivu `shots/s51/game_gorilla.html` (suunta ja animaatiot) ja pelissä `s51/gorilla.mjs` (scratchpad; askeltava simulaatio).
+
+**Seuraavaksi**
+- Käyttäjän palaute gorillan vaikeudesta ja käytöksestä.
+
+## 2026-10-13 (sessio 50)
+**Tehtiin**
+- Ambienssin vika löytyi mittaamalla selaimessa:
+  - paikallisesti viidakkoääni soi (analysaattori −36 dB, hiljaisessa kohdassa);
+  - githack ohjaa mp3:t raw.githubusercontent.comiin, joten verkkoversiossa Web Audio sai hiljaisuutta;
+  - korjaus `audio/sfx.js` (`crossOrigin`); testiskripti `s50/audio.mjs` (scratchpad; BASEURL githackiin).
+- Kuoriainen NPC:ksi (`npc`-lippu: `mobs.js`, `archery.js`, `interaction.js`, `nameplates.js`, `styles.css`) ja yleisemmäksi.
+- Kärpäset useammin ja kovempaa (`render/flies.js`, `sfx.js`).
+- Hyttynen (`sfx.mosquito`, `assets/sfx/mosquito-buzz.mp3`, F3-painike); mäkärät (`render/insects.js`).
+
+**Seuraavaksi**
+- Käyttäjän palaute: kuuluuko ambienssi nyt verkkoversiossa.
+
+## 2026-10-13 (sessio 49, jatko)
+**Tehtiin**
+- Banaanin hedelmäterttu korjattu:
+  - muunnin `userglb.mjs` (scratchpad): `thinFruit` keventää banaanit yksitellen;
+  - tarkistettu lähikuvalla `shots/s49/kitview.html?cam=...`.
+- Päävalikkoon Tekijät-paneeli (`index.html`, `menu.js` `credits`, `menu.css` `.credits-list`); tarkistettu kuvakaappauksella.
+
+**Seuraavaksi**
+- Käyttäjän palaute session 49 muutoksista (ks. TODO).
+
+## 2026-10-12 (sessio 49)
+**Tehtiin**
+- Herkuleskuoriainen:
+  - 1,4 × isompi (`models/beetle.js` S);
+  - lentää rungolta toiselle ja kiipeilee rungoilla (`game/mobs.js`: `_beetleFindTrunk`, `_trunkAt`, `_beetleAir`, rungolla asento `_animBeetle`:ssa);
+  - osa syntyy suoraan rungolle.
+- Käyttäjän mallit (banaanipuu, bambu, bambupensas; Sketchfab CC-BY-4.0):
+  - muunnin `userglb.mjs` (scratchpad) → `models/kit/userKit.js`;
+  - tekstuurit `assets/models/nature/banana_*`, `bamboo_*`;
+  - materiaalit `kitMaterials.js` (`plantCard`, `plantSolid`);
+  - uusi tyyppi `bambooBush` listan loppuun;
+  - vanhat `makeBanana` ja `makeBamboo` poistettu.
+- Kenttäkerros: koristekasvien tiheydet ylös. Latvusto: `trees.js` `widen` (leveämpi latvus, sama korttimäärä).
+- Kärpäset (`render/flies.js`):
+  - syöksyjät lähistöllä ja ohilento korvan ohi äänen kanssa (`sfx.flyBuzz`, `assets/sfx/fly-buzz.mp3`);
+  - F3-painike "Kärpänen ohi".
+- Tekijät `assets/CREDITS.txt` (CC-BY vaatii nimeämisen).
+
+**Seuraavaksi**
+- Käyttäjän palaute (ks. TODO): kuoriainen rungoilla, uudet kasvit, kärpäset, latvusto ja ruudunpäivitys.
+
+## 2026-10-12 (sessio 48)
+**Tehtiin**
+- Ambienssi (`audio/sfx.js`): tasot mitattu (EBU R128), viidakkoääni kuuluviin.
+- Jättiläispuu (`models/trees.js` `makeEmergentTree`), taimi (`makeSapling`) ja trooppiset kasvit (Poly Haven calathea ja fern_02 → `models/kit/tropicalKit.js`, muunnin scratchpadissa: gltf-transform + meshoptimizer).
+  - Uudet tyypit `objectTypes.js`:n loppuun: `emergent`, `tropicalPlant`, `sapling`.
+  - Materiaalit `kitMaterials.js`:ssä.
+- Hyönteiset (`render/insects.js`, `ambient.js`:n kautta).
+- Herkuleskuoriainen:
+  - malli `models/beetle.js`;
+  - tekoäly ja animaatio `game/mobs.js` (`_thinkBeetle`, `_animBeetle`, `_trySpawnBeetle`);
+  - sarvi-esine `items.js` ja `items2.js`;
+  - F3-painike.
+- Käyttäjän referenssikuva kirjattu DESIGN.md:hen.
+- Testattiin:
+  - kuoriaisen testisivu `shots/s48/beetle.html` (kävely, uhittelu, lento, kuolema);
+  - pelissä sademetsä vanha ja uusi rinnakkain (vaakasuoraan ja ylöspäin) sekä suorituskyky (kolmiot ja piirtokutsut);
+  - kuoriaisen syntyminen ja lento;
+  - pelin lataus ilman virheitä, ESLint.
+- Kokeiltiin ja hylättiin: Poly Havenin anthurium ja pachira (raskaita, ja kevennys rikkoi UV:t), ks. DECISIONS.
+
+**Seuraavaksi**
+- Käyttäjän palaute: ruudunpäivitys sademetsässä, latvuston peitto, tiheikkö, hyönteiset ja kuoriainen.
+- Avoimet kysymykset: kuoriaisen koko ja käytös, sarven käyttö, hidastaako tiheikkö liikkumista.
+
+## 2026-10-12 (sessio 47)
+**Tehtiin**
+- Sademetsän tunnelma, vain sademetsässä ja päivällä:
+  - `render/environment.js`: aurinko, lämmin sävy, hajavalo sekä usvan sävy, tummennus ja alku;
+  - `main.js`: korkeussumu ja valokeilat env-arvoista;
+  - `render/post.js`: värimäärittely (`gradeHumid`).
+- Testattiin: sademetsä (sademetsän kohta 28, 1616), klo 8.30, 11 ja 15.30, kaksi suuntaa. Vertailtiin sessiota 36, nykyistä ja uusia arvoja samassa latauksessa (vanhat ja uudet rinnakkain). ESLint.
+
+**Seuraavaksi**
+- Käyttäjän palaute. Jos jokin on liikaa, arvot ovat `env.humid*`-ominaisuuksina (`environment.js`:n konstruktorissa) ja `post.gradeHumid`.
+
+## 2026-10-12 (sessio 46)
+**Tehtiin**
+- Selvitettiin lehvästön pikselimössö ja välkyntä: sessio 36 ja nykyinen versio vertailtiin samasta kohdasta. Latvukset olivat samanlaiset, eli vika ei tullut grafiikkapäivityksestä.
+- Testattiin varjot pois, entinen hajavalo, jälkikäsittely pois, syväterävyys pois, kolme alfareunan muunnelmaa, mipmap-bias ja varjojen pehmennys kaukana.
+- `render/materials.js`: `softFoliage` (mipmap-bias kaukana ja keskitetty alfareuna). Käytössä `vegetation`- ja `bush`-materiaaleissa, `debris.js`:n lehdissä, `main.js`:n `activeMaterial`issa sekä `kitMaterials.js`:n lehdissä ja kukissa.
+- `render/post.js`: syväterävyys hieman voimakkaammaksi.
+- Testattiin: savanni klo 11, 1280 × 720, välkyntämittaus (kamera kääntyy 0,0006 rad), ESLint. Tarkistusajossa löytyi etumerkkivirhe (`-vViewPosition.z`, jolloin bias ei kytkeytynyt), ja se korjattiin. Korjattu versio: −11–16 % (bias 8–30 m), ja lopuksi alue siirrettiin 4–20 m:iin.
+
+**Seuraavaksi**
+- Käyttäjän palaute. Jos latvukset välkkyvät yhä liikaa, seuraava askel on rakenteellinen: kaukaisille puille harvemmat ja isommat lehtikortit tai valmiiksi renderöidyt kuvat (impostorit). Tämä on isompi työ, ja ruudunpäivitys on tarkistettava (sessio 43).
+
+## 2026-10-12 (sessio 45)
+**Tehtiin**
+- `render/post.js`: okkluusio ohittaa ohuen geometrian (korret, lehdet), isompi säde, kevyempi ja leveämpi pehmennys; terävöinti poistettu.
+- Terävöinnin asetus pois myös: `main.js`, `ui/menu.js`, `index.html`, `game/save.js` (vanha arvo poistetaan).
+- Testattiin: savanni klo 11, okkluusio pois / vanha / uusi (shader kääntyy, ei virheitä), ESLint.
+
+**Seuraavaksi**
+- Käyttäjä kertoo, mikä tarkalleen näyttää yhä huonolta ("edelleen ei hyvä"). Tarjolla: lisää session 37 jälkeen tulleita tehosteita oletuksena pois (hehku, värimäärittely, vinjetti, syväterävyys).
+
+## 2026-10-12 (sessio 44)
+**Tehtiin**
+- Session 43 lähdemuutokset peruttu (FPS).
+- `render/post.js`: syväterävyys session 25 arvoihin; puolikkaan tarkkuuden sumennus sekoittuu vasta 0,2:sta alkaen.
+- Tarkistettu: pikselitiheys ja MSAA ennallaan (eivät syy).
+- Testattiin: savanni klo 11 (renderöityy, ei virheitä), ESLint. Käyttäjän kuvan kaltaista kaukaista auringonlaskunäkymää ei kuvattu.
+
+**Seuraavaksi**
+- Käyttäjän palaute. Jos kaukana näkyy yhä mössöä, kokeile syväterävyyden laskemista täydellä tarkkuudella tai poista se oletuksena.
+
+## 2026-10-12 (sessio 43)
+**Tehtiin**
+- Kaukomallit: `models/trees.js` ja `models/flora.js` (`blob`), `models/palms.js` (lehdykät), `world/world.js` (`LOD_NEAR` 2,4).
+- Testattiin: savanni klo 11, suurennos kaukaisista puista ennen ja jälkeen (latvukset täyteläisempiä), ESLint.
+
+**Seuraavaksi**
+- Käyttäjän palaute. Jos ruudunpäivitys kärsii, `LOD_NEAR` takaisin pienemmäksi.
+
+## 2026-10-12 (sessio 42)
+**Tehtiin**
+- Takapakki: `player/viewmodel.js` (reunavalo hienovaraiseksi), `render/post.js` (liike-epäterävyys session 25 arvoihin), `game/save.js` (okkluusio ja liike-epäterävyys oletuksena pois, asetusversio 6).
+- Testattiin: käsi ja kirves yöllä (`vm.html?night=1`), ESLint.
+
+**Seuraavaksi**
+- Käyttäjän palaute. Jos jokin tehoste on yhä häiritsevä, harkitse sen poistamista kokonaan.
+
+## 2026-10-12 (sessio 41)
+**Tehtiin**
+- `player/viewmodel.js`: täytevalot pois; `addRim` (Fresnel), `vmMaterial` (materiaalikopiot), `skyEnvTexture` (heijastukset).
+- Testisivu `shots/s29/vm.html?night=1` (yön valaistus).
+- Testattiin: kirves, puukko ja nuija yöllä (ääriviivat ja terien heijastus erottuvat, ydin tumma), puukko päivällä (ennallaan), ESLint.
+- Push remoteen `studios` (ks. sessio 40).
+
+**Seuraavaksi**
+- Käyttäjän palaute.
+
+## 2026-10-12 (sessio 40)
+**Tehtiin**
+- `render/grassField.js`: alpha-to-coverage ja terävöity alfa.
+- Anisotropia 16: `alphaMips.js`, `surfaces.js`, `textures.js`, `kitMaterials.js` ja `scannedMaterials.js`.
+- `render/post.js`:
+  - taivaan tummennus `skyDim`;
+  - syväterävyys lievemmäksi;
+  - okkluusio 0,62;
+  - `handAE` 0,3.
+- `player/viewmodel.js`: täytevalot miedommiksi.
+- `game/save.js`: terävöinti oletuksena pois (asetusversio 5).
+- Huom.: työympäristö palauttaa `origin`-remoten toistuvasti vanhaan repoon (`KSPKtech/sahel`, jäädytetty). Uudelle repolle tehtiin oma remote `studios` (`KSPKtechStudios/Sahel_survivor_game`), ja haara seuraa sitä: **pushaa aina `studios`iin, ei `origin`iin**.
+- Testattiin: savanni klo 11 (ruohon reunat, vertailu session 37 kuvaan: korret pehmeämmät, taivas tummempi), sademetsä taivaalle päivällä (taivas ei puhkea) ja yöllä (nuija ja käsi hämäriä mutta erottuvat), ESLint.
+
+**Seuraavaksi**
+- Käyttäjän palaute reunojen laadusta.
+
+## 2026-10-12 (sessio 39)
+**Tehtiin**
+- PR #1 oli yhdistetty mainiin, ja käyttäjä lisäsi videon mainiin. Työhaara siirrettiin mainin päälle (suora eteenpäin siirto).
+- Intro: `index.html` (kerros ja skripti), `menu.css` (#intro), `main.js` (ei piirtoa intron aikana), `assets/videos/intro.mp4` (faststart, nimetty uudelleen).
+- `render/post.js`:
+  - valoisuus: sironta, valokeilat, säteet, silmän mukautumisen taivaspaino ja päivätavoite;
+  - bloomin yläraja, terävöinti 0,25;
+  - syväterävyys tarkennuksen mukaan;
+  - liike-epäterävyys;
+  - käden mukautuminen alfakanavalla (`uOutA`, `uHandAE`, `handAE`).
+- `player/viewmodel.js`: täytevalot miedommiksi. `main.js`: valokeilojen ilma.
+- Testattiin:
+  - intro (Playwright; H.264 ei toimi testiselaimessa, joten testi syötti saman videon WebM-muodossa): toisto äänen kanssa ja Esc-ohitus, ja valikko latautui;
+  - ilman videotukea intro ohittuu itsestään;
+  - sademetsä aamulla, keskipäivällä ja yöllä;
+  - ESLint.
+
+**Seuraavaksi**
+- Käyttäjän palaute.
+
 ## 2026-10-12 (sessio 38)
 **Tehtiin**
 - `render/post.js`:

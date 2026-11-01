@@ -44,6 +44,8 @@ export const ITEMS = {
   hide: { name: 'Pahkasian talja', stack: 50, cat: 'material', tags: ['pelt'], desc: 'Karkea, harjaksinen talja.' },
   gazelle_pelt: { name: 'Gasellintalja', stack: 50, cat: 'material', tags: ['pelt'], desc: 'Pehmeä, vaalea talja.' },
   monkey_pelt: { name: 'Apinantalja', stack: 50, cat: 'material', tags: ['pelt'], desc: 'Harmaa, pitkäkarvainen talja.' },
+  // Sessio 48: herkuleskuoriaisesta (käyttötarkoitus avoin, ks. DESIGN).
+  beetle_horn: { name: 'Herkuleskuoriaisen sarvi', stack: 50, cat: 'material', desc: 'Kiiltävän musta, kaareva sarvi. Alapinnalla kullanruskeaa karvaa.' },
   fox_pelt: { name: 'Aavikkoketun talja', stack: 50, cat: 'material', tags: ['pelt'], desc: 'Hiekanvärinen, pehmeä talja.' },
   leather: { name: 'Nahka', stack: 50, cat: 'material', desc: 'Parkittua nahkaa taljoista.' },
   shea_butter: { name: 'Karitevoi', stack: 50, cat: 'material', desc: 'Karitepähkinöistä keitetty voi. Voiteisiin.' },

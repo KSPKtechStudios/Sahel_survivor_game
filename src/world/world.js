@@ -18,6 +18,7 @@ import { GenPool } from './genPool.js';
 import { OBJ_STRIDE, DECOR_STRIDE } from './chunkGen.js';
 import { splitTree } from '../game/treeCut.js';
 import { GrassField } from '../render/grassField.js';
+import { karstNear } from './terrain.js';
 
 const SIZE = CONFIG.chunkSize;
 const SEG = CONFIG.chunkSegments;
@@ -78,13 +79,20 @@ export class World {
       const near = models.world[def.model];
       const far = models.far[def.model];
       variantCounts[def.model] = near.length;
-      const mat = (def.surface && materials[`${def.material}_${def.surface}`]) || materials[def.material];
+      // look (sessio 58) = oma ulkoasu, jos se poikkeaa pinnan tyypistä (surface ohjaa myös osumaefektejä).
+      const look = def.look || def.surface;
+      const mat = (look && materials[`${def.material}_${look}`]) || materials[def.material];
       // Sessio 23: skannatuilla malleilla on oma tekstuurimateriaalinsa;
       // sessio 24: kitin malleilla omat materiaalit ryhmittäin.
       const matFor = (geo) => (geo.userData.kit ? kitMaterials(geo.userData.kit) : geo.userData.tex ? scannedMaterial(geo.userData.tex) : mat);
+      // Sessio 57: Blender-puiden lähimallit eivät heitä varjoa itse, vaan
+      // kevyt kaukomalli piirretään varjoon (kerros 1 = vain varjokamerat).
+      // Lähipuut piirrettiin ennen kahdesti tarkkana (kuva + varjo).
+      const shadowProxy = def.kind === 'tree' && def.castShadow && far && near[0] && near[0].userData.tree && near[0].userData.kit && far.every((g, v) => g !== near[v]);
       this.pools[type] = {
-        near: near.map((geo) => new InstancePool(scene, geo, matFor(geo), { capacity: def.decorative ? 4096 : 256, castShadow: def.castShadow })),
+        near: near.map((geo) => new InstancePool(scene, geo, matFor(geo), { capacity: def.decorative ? 4096 : 256, castShadow: def.castShadow && !shadowProxy })),
         far: far ? far.map((geo) => new InstancePool(scene, geo, matFor(geo), { capacity: 512, castShadow: false })) : null,
+        shadow: shadowProxy ? far.map((geo) => new InstancePool(scene, geo, matFor(geo), { capacity: 256, castShadow: true, layer: 1 })) : null,
       };
       if (def.kind === 'tree') {
         this.stumpPools[type] = near.map((_, v) => {
@@ -123,6 +131,7 @@ export class World {
     for (const P of Object.values(this.pools)) {
       for (const pool of P.near) pool.clear();
       if (P.far) for (const pool of P.far) pool.clear();
+      if (P.shadow) for (const pool of P.shadow) pool.clear();
     }
     for (const list of Object.values(this.stumpPools)) for (const pool of list) pool.clear();
     if (seed !== undefined) this.gen.setSeed(seed);
@@ -252,6 +261,17 @@ export class World {
 
   _assignPool(obj, dist) {
     const want = this._poolFor(obj, dist);
+    // Varjokopio lähimallille (sessio 57).
+    const P = this.pools[obj.type];
+    const wantS = P && P.shadow && want && want === P.near[obj.variant] ? P.shadow[obj.variant] : null;
+    if (wantS !== obj.spool) {
+      this._dropShadow(obj);
+      if (wantS) {
+        obj.sown = obj.sown || { slot: -1 };
+        obj.spool = wantS;
+        wantS.add(this._matrixFor(obj), obj.sown);
+      }
+    }
     if (want === obj.pool) return;
     if (obj.pool) obj.pool.remove(obj.slot);
     obj.pool = want;
@@ -319,6 +339,11 @@ export class World {
       chunk.objects.push(obj);
       const cr = isStump ? 0.25 : def.collider;
       if (cr > 0) chunk.colliders.push({ x: obj.x, z: obj.z, r: cr * obj.scale, obj });
+    }
+    // Sessio 58: kalkkikivitornin törmäys jokaiseen chunkiin, johon se ulottuu
+    // (pelaajan törmäys käy läpi vain lähimmät chunkit).
+    if (data.rain > 0.0005) {
+      for (const k of karstNear(cx * SIZE + SIZE / 2, cz * SIZE + SIZE / 2, SIZE * 0.75)) chunk.colliders.push({ x: k.x, z: k.z, r: k.R * 0.95 });
     }
     this.chunks.set(this.key(cx, cz), chunk);
     this.grass.addChunk(chunk, data.cover, data.coverCells);
@@ -405,6 +430,11 @@ export class World {
     return this._matrixFor(obj).clone();
   }
 
+  _dropShadow(obj) {
+    if (obj.spool) obj.spool.remove(obj.sown.slot);
+    obj.spool = null;
+  }
+
   _disposeChunk(k, ch) {
     this.scene.remove(ch.mesh);
     ch.mesh.geometry.dispose();
@@ -415,6 +445,7 @@ export class World {
     for (const obj of ch.objects) {
       if (obj.pool) obj.pool.remove(obj.slot);
       obj.pool = null;
+      this._dropShadow(obj);
       if (obj.active) this.deactivate(obj, true);
     }
     this._setDecor(ch, false);
@@ -428,6 +459,7 @@ export class World {
   activate(obj, mesh) {
     if (obj.pool) obj.pool.remove(obj.slot);
     obj.pool = null;
+    this._dropShadow(obj);
     obj.slot = -1;
     obj.active = mesh;
     this.scene.add(mesh);
@@ -514,6 +546,7 @@ export class World {
     const ch = obj.chunk;
     if (obj.pool) obj.pool.remove(obj.slot);
     obj.pool = null;
+    this._dropShadow(obj);
     if (obj.active) {
       this.scene.remove(obj.active);
       obj.active = null;

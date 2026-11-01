@@ -1,10 +1,13 @@
-// Tuulen mukana vierivät tumbleweedit. Niitä on vain pelaajan lähellä:
-// uusia syntyy tuulen yläpuolelle ja kaukana olevat poistetaan.
+// Tuulen mukana vierivät arokierijät (tumbleweed). Niitä on vain pelaajan
+// lähellä: uusia syntyy tuulen yläpuolelle ja kaukana olevat poistetaan.
+// Sessio 58: malli ja loikat käyttäjän antamasta mallista ja animaatiosta
+// (models/arokierija.js); vanha risupallo jää varalle ja sirpaleiksi.
 // Sessio 10: vain aavikolla (dyynit, pöytävuoret) ja punaisella
 // laterittitasangolla; veteen vierinyt uppoaa, ja kasvillisuuteen
 // (muut biomit) vierinyt jää kiinni ja katoaa.
 import * as THREE from 'three';
 import { sampleTerrain, waterAt } from './terrain.js';
+import { arokierijaAsset, arokierijaHop, AROKIERIJA_RPS } from '../models/arokierija.js';
 
 const _wq = {};
 
@@ -20,8 +23,12 @@ const _q = new THREE.Quaternion();
 export class Tumbleweeds {
   constructor(scene, geometry, material) {
     this.scene = scene;
-    this.geometry = geometry;
-    this.material = material;
+    // Vanha risupallo: varamalli ja hakatessa lentävät risut (sirpaleiksi
+    // tarvitaan verteksivärit, joita kuvatekstuurimallissa ei ole).
+    this.shatterGeo = geometry;
+    const a = arokierijaAsset();
+    this.geometry = a ? a.geometry : geometry;
+    this.material = a ? a.material : material;
     this.list = [];
     this.spawnTimer = 0;
     this._s = {};
@@ -50,6 +57,7 @@ export class Tumbleweeds {
       const g = 14;
       tw.vy -= g * dt;
       const p = tw.mesh.position;
+      p.y -= tw.hopY; // loikka on pelkkä näkyvä siirto fysiikan päällä
       p.x += tw.vx * dt;
       p.z += tw.vz * dt;
       p.y += tw.vy * dt;
@@ -57,12 +65,17 @@ export class Tumbleweeds {
       const ground = Math.max(wq.h, wq.wl) + tw.radius;
       if (p.y <= ground) {
         p.y = ground;
-        const hspeed = Math.hypot(tw.vx, tw.vz);
-        // Pieniä pomppuja kovassa tuulessa.
-        tw.vy = hspeed > 2 && Math.random() < dt * 2.5 ? 1.5 + Math.random() * hspeed * 0.5 : 0;
+        tw.vy = 0;
       }
-      // Pyörimisliike vierimisen mukaan.
+      // Loikat animaation käyrästä: tahti seuraa vauhtia, ja korkeus kasvaa
+      // vauhdin neliönä (hiljaisella tuulella vain töyssyjä), enintään kuten
+      // animaatiossa (noin säteen korkuisia loikkia).
       const hs = Math.hypot(tw.vx, tw.vz);
+      const rel = hs / (AROKIERIJA_RPS * tw.radius);
+      tw.hopT += dt * Math.min(1.6, Math.max(0.25, rel));
+      tw.hopY = arokierijaHop(tw.hopT) * tw.radius * Math.min(1, rel * rel) * tw.hopK * (tw.sink > 0 ? 0 : 1);
+      p.y += tw.hopY;
+      // Pyörimisliike vierimisen mukaan.
       if (hs > 0.01) {
         _axis.set(tw.vz, 0, -tw.vx).normalize();
         _q.setFromAxisAngle(_axis, (hs * dt) / tw.radius);
@@ -101,7 +114,7 @@ export class Tumbleweeds {
     const s = sampleTerrain(x, z, this._s);
     if (s.h < s.wl + 0.2 || s.plateau > 0.5 || habitat(s) < 0.5) return;
     const mesh = new THREE.Mesh(this.geometry, this.material);
-    const scale = 0.8 + Math.random() * 0.5;
+    const scale = 0.75 + Math.random() * 0.45;
     mesh.scale.setScalar(scale);
     mesh.castShadow = true;
     mesh.position.set(x, s.h + 0.5 * scale, z);
@@ -119,6 +132,9 @@ export class Tumbleweeds {
       scale,
       sink: 0,
       check: 0.4,
+      hopT: Math.random() * 10,
+      hopY: 0,
+      hopK: 0.7 + Math.random() * 0.4,
       type: 'tumbleweed',
     });
   }

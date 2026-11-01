@@ -6,6 +6,22 @@ Tähän kirjataan käyttäjän kertomat asiat. Prototyypissä tarvittiin lisäks
 paikkamerkkisisältöä (biomit, esineet, reseptit, tehtävät); ne on listattu
 erikseen kohdassa **Paikkamerkit**, eikä niitä pidetä päätettyinä.
 
+## Valikoiden täydellinen uudistus (käyttäjän kertoma, 2026-11-01, sessio 59)
+- Nykyiset valikot ovat "intialaisen mobiilipelin tasoa". Kaikki uusiksi: uudet logot ja ammattimaisempi, Valheim-henkinen ja tunnelmallinen ilme.
+- **Filosofia:** valikon kehittäminen sivuutetaan usein, mutta valikon pitää olla mukava, kotoisa, idyllinen ja taiteellinen paikka, jossa voi viettää aikaa (esim. odottaessa kaveria tai säätäessä asetuksia).
+- Vaikutteita saa ottaa introvideosta (auringonlasku, joki, akaasiat, savitiilikaupunki, kultainen SAHEL-logo).
+- Valinnat (kysymyksiin vastattu):
+  - **Tausta:** 3D-scene; nuotioleiri (kumpare, nuotio, varusteet, taustalla joki, akaasiat ja kaukana kaupunki). Voi tehdä Blenderillä.
+  - **Valo:** hämärä, joka vaihtuu hiljalleen yöksi.
+  - **UI-tyyli:** sahelilainen käsityö: tumma nahka ja pellava, messinki, bògòlanfini-kuviot, kultaiset otsikot; paneeli ruudun reunassa, scene näkyy.
+  - **Logo:** introon pohjautuva uusi logo (kultainen antiikva, viimeistelty, pieni tunnus).
+  - **Hahmo:** ei hahmoa, vain leirin merkit (viltti, reppu, jousi, kattila).
+  - **Valinnat:** paneeli reunassa; kamera liukuu leirin eri kohtiin valikon mukaan (esim. kartta = maailmat).
+  - **Äänet:** tulen rätinä, illan äänet ja valikkomusiikki hiljempaa.
+  - **Laajuus:** kaikki valikot kerralla (päävalikko, maailmat, asetukset, tekijät, taukovalikko).
+
+- Jatkopalaute (sessio 59): leirin näkymä on "ihan ok". Nuotion tuli (tekstuuri) on huono ja harva sekä pelissä että valikossa, joten se tehdään täysin uudelleen. Leirintäalueen vieressä saa olla puu tekemässä tunnelmaa.
+
 ## Konsepti (käyttäjän kertoma, 2026-10-06)
 - Valheim- tai Minecraft-tyyppinen **selviytymispeli**, jossa on **reppu (inventory)** ja **valmistusjärjestelmä (crafting)**.
 - Peli pohjautuu **Burkina Fason Sahel-alueeseen**.
@@ -216,6 +232,209 @@ Paljon bugikorjauksia ja parannuksia, "tee huolella".
 - **Soihtu sammuu**, jos sitä pitää kädessä vedessä. **Sateessa soihtu palaa huonosti**: ei sammu, mutta palaa "yskien" ja heikosti.
 - **Kuulla on vaiheet** (täysikuu, puolikuu, uusikuu jne.). **Täysikuun aikaan kaikkia vihollisia syntyy hieman enemmän.**
 - **Lammikot eivät saa leijua** (käyttäjän kuva leijuvasta lammikosta).
+
+## Sessio 58 (käyttäjän kertoma, 2026-10-28): puut, palmut ja kalliot (kuvat)
+- **Vanhat akasiamallit olivat parempia;** sekoitetaan vanhat ja uudet akasiat keskenään, koska uudet näyttävät orvoilta.
+- **Viidakkopuista puuttuu rungon ympäri kiertävä liaani,** joka vanhoissa puissa oli hieno.
+- **Palmujen lehvät ovat aivan liian harvoja;** niiden pitää olla tiheämpiä.
+- **Lehtien materiaali kiiltää muovisen näköisesti** (kuvissa banaanin ja puiden lehdet).
+- **Ikivanhat juuret ja puut syntyvät kallioiden kielekkeille bugisesti, kaikissa biomeissa** (ei vain viidakossa).
+- **Jyrkänteen kallio on tympeän näköinen, pelkkä ruohoseinä.** Tavoite on kuvien kaltainen karstimaisema: jyrkkiä kalkkikiviseinämiä, joissa on kivenlohkareita ja köynnöksiä, ja ylhäällä kasvillisuutta. Käyttäjä piti erityisesti yksittäisestä kalkkikivitornista ("ompas hieno").
+- **Kun puu kaatuu jonkin päälle** (toinen puu, pensas, kivi tms., ei pelkkä maa), osumakohtaan tulee aivan pieni pölähdys (ei liikaa) ja vähän roiskahtavia partikkeleita, ikään kuin puu rikkoisi jotakin. Pelkkään maahan kaatuessa tätä efektiä ei ole.
+- Avoimet kysymykset: kuinka korkeita ja yleisiä kalkkikivitornien ja -seinämien pitää olla (aiemmin: Kongon sademetsä on melko tasainen, ei liikaa maastonmuotoja)?
+- **Jatkopalaute (kuva sademetsästä, session 58 versio):**
+  - Roikkuvat köynnökset ovat liian paksuja ja kaikki samanlaisia: halutaan eri paksuisia ja eri mallisia variantteja. Tekstuuri on puuta; tilalle jotain kasvimaista.
+  - Maastonmuodot ja niiden generointi näyttävät kamalilta. Pelaaja ei pääse jyrkänteen päälle: tarvitaan pieniä solia ("mountain pass") tai kohtia, joissa rinne loivenee niin, että ylös pääsee.
+  - Nykyinen generointi on käytännössä vain maanpinnan tason vaihtelua parilla tasolla. Halutaan kunnollinen maastogeneraatio: välillä tasaista viidakkoa, välillä kunnon vuoristoa.
+  - Käyttäjän välittämä ehdotus (Gemini): thaimaalainen karstivuoristo (Phang Nga, Krabi). Tasaiset laaksot ja jyrkät kalliot (porrastettu tai harjanteinen kohina), matala kohina tekee tasaisen viidakon pohjan ja jokilaaksot. Korkeat kohdat nousevat jyrkästi pystysuoriksi kalliopylväiksi ja -seinämiksi, ei pyöreiksi kukkuloiksi. Siirtymä tasaiselta pohjalta kallioseinään näyttää luonnolliselta, ja kasvillisuutta on rinteillä tiettyyn jyrkkyyteen asti.
+  - Tarkistettava, miten puut ja kasvit toimivat maastogeneraation kanssa ja toimivatko ylipäätään.
+  - **Tarkennus:** perus tasainen viidakko on ihan hyvä sellaisenaan. Karstivuoristo on sademetsäbiomin sisällä paikoittain esiintyvä variantti, ei koko viidakon korvaaja.
+  - **Vuoret saisivat erottua jo kauempaa,** mutta usvaisina, kaukaisina hahmoina.
+  - **Näköetäisyys (render distance) säädettäväksi asetuksista,** ja se on toteutettava niin, ettei mitään turhaa piirretä eikä fps putoa pohjamutiin.
+  - **Vuorten huippujen lähellä aivan kevyt höyry tai pieni usva,** pieni pilviverho, joka leijailee ja tuo huipuille suuruuden ja korkeuden tunnetta ("oho"-elämys yksinäiselle viidakontutkijalle). Ei överiksi.
+- **Jatkopalaute (kuvat, session 58 jatko 3):**
+  - Sademetsäpuu ja sen oksisto näyttävät tosi typeriltä ja epäluonnollisilta, latvus on tosi harva.
+  - Kannot (puun tyvi ja juuret) eivät näytä vieläkään oikeilta.
+  - "Ikivanhat juuret" nimetään uudelleen: **"Muinainen juurakko"**. Sen tekstuurien ja 3D-mallin pitää olla paljon parempia.
+  - Sammaloituneen rungon mallia parannettava huomattavasti.
+  - Tiheikköpensaan lehtien vieressä näkyy edelleen mustia pikseleitä, kun katsoo tarkasti.
+  - Pilviverho ei toimi, kun pelaaja on sen tasolla: oikeasti pilven sisällä ollessa pilveä ei näe, vain pientä usvaa näkökentässä. Usva ei muutenkaan vakuuta realistisuudella; sitä voi twiikata.
+  - **Aurinkoon katsominen sokaisee (vanha ongelma):** halutaan, että ensimmäiset pari sekuntia aurinkoon katsoessa on mahdottoman kirkasta, mutta sitten silmä tottuu ja alkaa nähdä.
+- **Jatkopalaute (session 58 jatko 6–8):**
+  - Valon määrä oli yhä överi; taivasta ei erottanut ylös katsoessa. Säteitä (god rays) saa ja pitää olla, mutta ei överinä.
+  - Avoimella paikalla valo on ok; lehvästöt pilaavat. Aurinko saa kuultaa lehvästön välistä, mutta se ei saa sokaista pelaajaa.
+  - Aurinko on yhä tosi häikäisevä ("kuin toinen tuleminen"). Päiväntasaajan aurinko on kirkas, mutta sen pitää näyttää aidommalta.
+- **Aave (Haamu):** 3D-mallia ja tekstuureja parannettava realistisemmiksi (Blender käytettävissä).
+- **Savipeikko:** kunnon 3D-malli. **Tarina (käyttäjän kertoma):** savipeikot ovat alueella aiemmin eläneiden ihmisten kuolleita sieluja. Ne nousevat yöllä maasta ja ottavat ruumiikseen kaiken, mitä maasta löytyy: savea, risuja, kiviä ja muuta maan materiaalia.
+- **Karstivuoristo** (jatko 11): kalkkikivitorneja pitää näkyä vuoristossa; laaksoissa saa joskus olla silmiä hiveleviä vuoristojärviä.
+- Jatko 12: karstipylväät ja turkoosit vuoristojärvet saavat olla aika paljon yleisempiä; vuoristojärvet aina vuorten ympäröimänä.
+- **Arokierijä** (jatko 10): tumbleweedin suomenkielinen nimi pelissä on Arokierijä. Käyttäjä antoi uuden mallin ja animaation ("Tumbleweed Jumping", loikkiva tumbleweed).
+- Avoimet kysymykset (jatko 9):
+  - Saako savipeikossa olla ihmisten jäänteitä, kuten ruukunsiruja ja savihelmiä? (Tehty, poistetaan jos ei sovi.)
+  - Saako haamun hupun sisällä erottua hämärästi kallo, vai pitäisikö kasvojen olla pelkkää pimeyttä? (Tehty kallo.)
+
+## Sessio 56 (käyttäjän kertoma, 2026-10-27): kaikki esineet paremmiksi, puut
+- **Paranna kaikki esinemallit**, paitsi soihtu, nuija ja muut käyttäjän valmiit mallit.
+- **Puut realistisemmiksi ja tiheämmiksi** (Blenderillä): ne ovat vielä vähän hassuja.
+- Avoimet kysymykset:
+  - Tarkoittaako "tiheämmäksi" tuuheampia latvuksia, enemmän puita vai molempia? (Tehty molempia maltillisesti, ks. CHANGELOG.)
+- **Jatkopyynnöt (kuvat sademetsästä):**
+  - kaatojälki on epärealistinen, pelkkä valkoinen pinta;
+  - liaanit näyttävät huonoilta malleilta ja irrallisilta, ne pitää päivittää;
+  - uusien lehvästöjen läpi pääsee liikaa valoa, sademetsä on menettänyt umpinaisen latvuston: korjattava ilman että fps putoaa paljon;
+  - viidakkoon maastonmuotoja, ei liikaa (Kongon sademetsä on melko tasainen), mutta kallioita ja jyrkänteitä siellä täällä, ehkä vesiputouksia; jokigenerointi ei saa mennä rikki.
+  - savannin akasioiden lehvästöt ovat liian harvoja.
+  - Avoimet kysymykset: kuinka monta vesiputousta maailmassa saa olla (nyt noin kymmenkunta)? Myös vuoristoon?
+- **Kannot ja juuret eivät saa olla kulmikkaita** (käyttäjän kuvat: sademetsäpuun terävät kolmiolevyt tyvessä vs. oikea kanto). Oikea kanto: tyvi levenee pyöreästi, paksut juuret kaartuvat maahan, kaarna jatkuu juuria pitkin.
+
+## Sessio 55 (käyttäjän kertoma, 2026-10-27): esinemallien jatko
+- **Eri tasojen aseiden ja kilpien välillä pitää olla eroja**, etteivät ne aina näytä samalta.
+- **Osa malleista on vielä aika huonolaatuisia;** jotkin saa suunnitella aivan kokonaan uusiksi.
+- **Nuijan tekstuurit eivät näy pikapalkissa** (kuvake).
+- Avoimet kysymykset:
+  - Ovatko tasojen erot nyt riittävät?
+  - Mitkä mallit ovat vielä huonoja?
+
+## Sessio 54 (käyttäjän kertoma, 2026-10-27): esineiden mallit
+- Leopardin ja gorillan animaatiot eivät ole vieläkään täysin kunnossa; niihin palataan myöhemmin.
+- **Kaikille esineille paremmat 3D-mallit ja tekstuurit.** Blenderiä ja internetiä saa käyttää.
+- **Valmiita malleja ei tehdä uusiksi:** puunuija ja soihtu (käyttäjän mallit) sekä kivipuukko (sessio 33) ovat jo loistavia.
+- Avoimet kysymykset:
+  - Mikä animaatioissa on vielä vialla (leopardi, gorilla)?
+  - Ovatko uudet esinemallit oikean näköisiä ja kokoisia? Mitkä vaativat vielä korjausta?
+
+## Sessio 53 (käyttäjän kertoma, 2026-10-14): animaatiot
+- **Leopardin ja gorillan animaatiot ovat aivan liian nopeita.**
+- **Leopardin kävely on erikoista vaappumista.**
+- Kaivataan parempia animaatioita.
+- Avoimet kysymykset:
+  - Onko tahti nyt sopiva, vai vieläkin hitaammaksi?
+  - Gorilla lyö nyt rintaansa varoittaessaan ja karjuessaan. Sopiiko?
+
+## Sessio 52 (käyttäjän kertoma, 2026-10-13): linnut ja leopardi
+- **Gorillan hyökkäyspyrähdys on aivan liian nopea.**
+- **Sademetsään lintuja:**
+  - niitä voi ampua nuolilla, ja niistä saa sulkia;
+  - niitä ei voi tappaa käsin, koska ne pakenevat lähestyttäessä.
+- **Sademetsään lisää elämää: uusi mobi, leopardi** (käyttäjän 3D-malli). Sille tehdään fiksut animaatiot.
+- Toteutuksen ehdotukset (eivät käyttäjän sanomia; vahvistettava):
+  - Lintu on harmaapapukaija. Parvi istuu lahopuiden, sammalkivien ja lohkareiden päällä, pyrähtää lentoon ja laskeutuu kauemmas. Kolmannen lennon jälkeen parvi lentää pois.
+  - Leopardi on harvinainen, öisin yleisempi, vaaniva saalistaja:
+    - hiipii pelaajan selän taakse ja jähmettyy, kun pelaaja katsoo sitä;
+    - ärjyy varoitukseksi ja loikkaa huomaamatta;
+    - pelkää soihtua ja pakenee haavoittuneena.
+- Avoimet kysymykset:
+  - Mitä leopardista saa (nyt lihaa, taljaa, luita, jänteitä)? Oma leopardintalja-esine?
+  - Onko leopardi sopivan vaarallinen (loikka 18, tassun isku 10, noin 2–3 iskua ennen vetäytymistä)?
+  - Leopardin ääni: nyt syntetisoitu murina. Onko käyttäjällä äänitiedosto?
+  - Papukaijojen ääni: nyt ei ääntä. Lisätäänkö?
+  - Onko papukaija oikea lintu, vai halutaanko jokin muu (esim. turako tai sarvinokka)?
+
+## Sessio 51 (käyttäjän kertoma, 2026-10-13): gorilla
+- **Uusi mobi: gorilla** (käyttäjän 3D-malli animaatioineen ja karjaisuääni).
+- **Karjaisu** kuuluu aina, kun gorilla huomaa pelaajan ja hyökkää kimppuun.
+- **Käytös (tärkeä):**
+  - ei hyökkää heti pelaajan kimppuun, vaan jopa hieman pelkää tätä, jotta viidakosta ei tule aivan liian vaikea maasto;
+  - hyökkää vain, jos kokee olonsa uhatuksi: pelaaja lyö sitä jollakin, hyppää yhtäkkiä sen viereen tai tekee todella äkkinäisiä liikkeitä. Silloin se suuttuu.
+- Avoimet kysymykset:
+  - Mitä gorillasta saa (nyt lihaa, taljaa ja luita)?
+  - Kuinka kauan se pysyy vihaisena (nyt noin 22 s) ja kuinka kovaa se lyö (nyt 20)?
+
+## Sessio 50 (käyttäjän kertoma, 2026-10-13)
+- **Sademetsän ambienssi ei taaskaan kuulu**, ei edes musiikki pois päältä.
+- **Herkuleskuoriainen:**
+  - hieman yleisempi;
+  - **ei enää mobi:** sitä ei voi tappaa eikä sillä ole terveyspalkkia, mutta se liikkuu edelleen NPC:nä.
+- **Kärpäsen äänet** kuuluvat tosi harvoin.
+- **Mäkäräparvet** yleisemmiksi ja selkeämmiksi.
+- **Hyttysen ääni** (käyttäjän tiedosto) kuuluu satunnaisesti pelaajan ympärillä.
+- Avoin kysymys: saako herkuleskuoriaisesta vielä jotain (sarvi-esine jäi pelistä pois)?
+
+## Sessio 49 (käyttäjän kertoma, 2026-10-12): sademetsän jatko
+- **Kenttäkerrosta ja lehtikatosta (latvusta) lisää**, jos se onnistuu ilman, että pelattavuus ja ruudunpäivitys kärsivät.
+- **Herkuleskuoriainen:**
+  - **pikkiriikkisen suurempi**, jotta pelaaja huomaa sen paremmin (oikeakin on valtava);
+  - **lentelee enemmän** ja kulkee esim. **puunrungoilla** eikä niinkään koko ajan maassa, koska maasta sitä on vaikea huomata.
+- **Käyttäjän 3D-mallit** (Sketchfab, CC-BY-4.0): banaanipuu ja kaksi erilaista bambua (bambu ja bambupensas).
+- **Lisää "eloa kuhisevaa" fiilistä viidakkoon:** hyttysparvia ja perhosia näkyy, mutta lisäksi mustia partikkeleita tai **kärpäsen tai paarman näköisiä pikkuolentoja**, jotka **vilahtavat nopeasti pelaajan näkökentän ohi** silloin tällöin. Ääni käyttäjältä (kärpänen surisee vasemmalta oikealle).
+- Avoimet kysymykset:
+  - Onko kuoriainen nyt sopivan kokoinen (noin 28 cm sarvineen)?
+  - Kuinka usein kärpäsen pitäisi lentää korvan ohi (nyt noin 10–35 s:n välein päivällä)?
+  - Saako bambuista tai banaaneista jotain muuta kuin nykyiset (bambu, risut, banaanit, kuitu)?
+
+## Sessio 48 (käyttäjän kertoma, 2026-10-12): sademetsäbiomin hiominen
+- Sademetsästä tai viidakosta tulee käyttäjälle ensimmäisenä mieleen **tiheä, pimeä metsikkö**; nykyinen ei anna sellaista fiilistä.
+  1. **Sademetsän ambienssiäänet** eivät enää kuulu taustalla.
+  2. **Lisää kasveja:** sademetsä on vaikeakulkuinen eli tiheää pusikkoa. Enemmän kasvillisuutta (internetistä saa hakea malleja).
+  3. **Enemmän puita tai ainakin oksia puille:** kunnon lehtikatto (latvusto), jonka läpi päivänvalo paistaa maahan vain pieninä säteinä lehvästöjen raoista.
+  4. **Hyönteisiä:** partikkeleina tai todella pieninä 3D-malleina; niitä sademetsissä piisaa.
+  5. **Uusi mobi: herkuleskuoriainen.** Niin suuri ötökkä, että sille voi tehdä oman 3D-mallin.
+- **Käyttäjän referenssikuva ("hieno kuva"):** Aasian sademetsä (peda.net, shutterstock 72433876):
+  - paljon korkeita, hoikkia ja sammaleisia runkoja, joissa köynnöksiä ja kiipeäviä saniaisia;
+  - vihreää lehvästöä kaikilla korkeuksilla maasta latvoihin (keskikerros täynnä);
+  - umpinainen latvuskatto, jonka läpi valo hehkuu vihertävänä;
+  - maa täynnä saniaisia ja taimia.
+- Avoimet kysymykset:
+  - Pitääkö herkuleskuoriaisen olla todellisen kokoinen (noin 17 cm) vai pelin vuoksi suurempi?
+  - Hyökkääkö se? Mitä siitä saa?
+  - Pitäisikö tiheän pusikon hidastaa liikkumista ("vaikeakulkuinen")?
+
+## Sessio 47 (käyttäjän kertoma, 2026-10-12)
+- Sessio 46 korjasi lehvästön. Nyt viimeinen grafiikkasäätö ennen seuraavia kehityskohteita: **pientä atmosfäärin parantelua. Varovasti, ulkonäköä ei saa taas pilata.**
+- Käyttäjän ohje (tiivistetty): **sademetsän tunnelma ja kontrasti takaisin**, ilman liike-epäterävyyttä, suttua tai terävöintiä.
+  1. **Kontrasti ja sävytys:** sademetsä näyttää lattealta ja haalealta, ja siitä puuttuu syvyys. Varjot syvemmiksi ja vihreät kylläisemmiksi, ei tasaista hajavaloa.
+  2. **Auringonvalo ja varjot:** lämmin suora auringonvalo latvuston läpi; lehdillä ja maassa vahva valon ja varjon kontrasti.
+  3. **Jälkikäsittely puhtaana:** liike-epäterävyyttä, TAA:ta tai terävöintiä ei kytketä takaisin. Vain valaistuksen, sumun tiheyden ja värimäärittelyn arvoja hienosäädetään.
+  4. **Sumu ja horisontin utu:** etäisyys ja horisontti näyttävät liian teräviltä ja latteilta. Sumu (`scene.fog`) taivaan sävyyn, ja kaukaiset puut ja tausta häivytetään pehmeästi horisonttiin (syvyys ja tunnelma).
+
+## Sessio 46 (käyttäjän kertoma, 2026-10-12)
+- **Puiden lehvästöt näyttävät pikselimössöltä** (kuva savannilta) **ja välkkyvät kameraa liikutettaessa.** Ruoho toimii nyt; lehvät ovat suuri ongelma.
+- Käyttäjä: "sano jos et ymmärrä missä vika on", ettei krediittejä kulu turhaan.
+- **Syväterävyyttä saa taas hieman lisätä**: se ei ollut ongelman aiheuttaja.
+
+## Sessio 45 (käyttäjän kertoma, 2026-10-12)
+- **Edelleen ei hyvä** (kuva). Mikä tarkalleen näyttää yhä huonolta? (avoin kysymys)
+- **SSAO aiheuttaa tiheässä ruohossa ja lehdissä valtavasti rumaa välkkymistä** → säädettävä.
+- **Terävöinti-asetus on turha** ja tekee pelistä kamalan näköisen → saa poistaa kokonaan.
+
+## Sessio 44 (käyttäjän kertoma, 2026-10-12)
+- **Session 43 muutos pudotti ruudunpäivitystä paljon, etenkin viidakossa** → peruttava.
+- **Kaukaiset puut ja horisontti näyttävät pikselimössöltä** (kuva, kuin 240p). Tämä johtuu jostain grafiikkapäivityksen yhteydessä tehdystä. Käyttäjä liitti toisen tekoälyn ehdotuksen: täysi renderöintitarkkuus (ei pienennettyjä renderöintikohteita), siisti reunanpehmennys ja kasvillisuuden mipmapit.
+
+## Sessio 43 (käyttäjän kertoma, 2026-10-12)
+- **Kaukana puut näyttävät kuin suoraan PS1-peleistä** (kuva).
+
+## Sessio 42 (käyttäjän kertoma, 2026-10-12): takapakki grafiikkaan
+- Käsi näytti yöllä **"radioaktiiviselta"** (kuva): reunavalo oli aivan liian voimakas.
+- Käyttäjä: grafiikkaa parannettiin liian massiivisesti, ja peli näyttää nyt aika kaamealta. Pitää ottaa takapakkia.
+- Käyttäjän ohje (tiivistetty):
+  1. **Haamukuvat ja suttu liikkeessä pois:** kameraa liikutettaessa koko kuvaan tulee sumea vana. Rikkinäinen TAA tai liike-epäterävyys pois, tilalle puhdas reunanpehmennys (esim. SMAA).
+  2. **Kasvillisuuden välkyntä:** paikallaan ruoho ja lehdet välkkyvät, kohisevat ja tekevät moiré-kuvioita. Anisotrooppinen suodatus, lineaariset mipmapit ja `alphaToCoverage` kasvillisuudelle.
+  3. **Jälkikäsittelyn siivous:** pois aggressiivinen ajallinen kertymä ja ristiriitaiset terävöinnit.
+
+## Sessio 41 (käyttäjän kertoma, 2026-10-12)
+- **Käsi on yöllä hieman liian valoisa.** Käyttäjän ohje (tiivistetty):
+  1. **Reunavalo / Fresnel:** tasainen täytevalo pois. Tilalle hienovarainen reunavalo, joka korostaa vain käden ja esineen ääriviivoja tummaa taustaa vasten, ja ydin jää varjoon.
+  2. **Heijastukset:** kädessä olevilla esineillä (terät, puiset kahvat) sopivat karheus- ja metallisuusarvot, jotta ne poimivat himmeän ympäristön tai taivaan heijastuksen pimeässä ilman keinotekoisia valoja.
+
+## Sessio 40 (käyttäjän kertoma, 2026-10-12)
+- **Taivas on yhä vähän ylivalottunut** (kuva sademetsästä taivaalle).
+- **Asiat näyttävät yhä rumilta.** Syväterävyyttä saa lieventää (nyt "överi").
+- **Käsi ja työkalut ovat pimeässä yössä yhä hieman liian kirkkaita** (vielä vähän tummemmaksi).
+- **Kasvillisuuden välkyntä ja moiré** (käyttäjän kuvaus, tiivistetty): lehdet ja ruoho välkkyvät ja tekevät moiré-kuvioita keskipitkillä ja pitkillä etäisyyksillä. Korjaukset:
+  1. anisotrooppinen suodatus maaston ja kasvillisuuden tekstuureille suurimmalla tuetulla arvolla;
+  2. mipmapit `LinearMipmapLinearFilter`-suodatuksella kaikille kasvillisuuden alfakartoille;
+  3. `alphaToCoverage` ruoho- ja lehtimateriaaleille (tai alphaTestin säätö tai SMAA);
+  4. aggressiivinen terävöinti hillitymmäksi tai pois.
+
+## Sessio 39 (käyttäjän kertoma, 2026-10-12)
+- **Intro:** käyttäjän video (`sahel intro valmis (1).mp4`, nyt `assets/videos/intro.mp4`) pelin aivan alkuun ennen valikoita ja latausikkunoita. Ohitus: **Esc, välilyönti tai hiiren oikea**.
+- Käyttäjä haluaa repoon kansion videoille (cutscenet ja videoanimaatiot): `assets/videos/`.
+- **Päivällä selkeällä säällä on yhä aivan liian valoisaa** (kuvat sademetsästä auringon suuntaan).
+- **Asiat näyttävät "huonoilta", ja reunat ovat rumat** (esim. lehdissä). Laatu on heikko, ja se liittyy uusiin tehosteisiin.
+- **Liike-epäterävyyttä hieman enemmän; syväterävyys toimivammaksi ja huomattavammaksi.**
+- **Käsi ja työkalu ovat pimeässä nyt liiankin valoisia.** Niissä pitää näkyä heijastukset ja pimeys, mutta pieni valo, etteivät ne ole yöllä aivan pimennossa.
+- **Ukkosmyrsky ja sade ovat juuri hyviä:** silloin yöllä tulee niin pimeää, että täytyy käyttää soihtua (osui nappiin, ei muuteta).
 
 ## Sessio 38 (käyttäjän kertoma, 2026-10-12)
 - Grafiikkapäivitys näyttää tosi hyvältä, mutta sivuvaikutuksena **kaikki näyttää ärsyttävästi sumealta ja epätarkalta**.

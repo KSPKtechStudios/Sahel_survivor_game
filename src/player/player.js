@@ -11,6 +11,7 @@ const _right = new THREE.Vector3();
 const _wish = new THREE.Vector3();
 const _colliders = [];
 const _wq = {};
+const MAX_CLIMB = 1.25; // jyrkin käveltävä rinne (nousu / matka, n. 51°)
 
 export class Player {
   constructor(camera) {
@@ -203,6 +204,7 @@ export class Player {
 
     // --- Liike + törmäykset
     const p = this.position;
+    const ox = p.x, oz = p.z;
     p.x += (this.velocity.x + this.knock.x) * dt;
     p.z += (this.velocity.z + this.knock.z) * dt;
     p.y += this.velocity.y * dt;
@@ -246,6 +248,29 @@ export class Player {
 
     // --- Maa ja vesi (meri, järvet ja joet omalla korkeudellaan)
     waterAt(p.x, p.z, _wq);
+    // Sessio 58: jyrkkä kallioseinä pysäyttää (ennen pelaaja nousi minkä
+    // tahansa seinän päälle hetkessä). Yli n. 51° nousu seinää päin perutaan,
+    // ja pelaaja liukuu seinän suuntaisesti; loivat rinteet ja solat käyvät.
+    const gPrev = this._groundPrev;
+    const run = Math.hypot(p.x - ox, p.z - oz);
+    if (gPrev !== undefined && run > 1e-5 && run < 3 && _wq.h > p.y + 0.02 && _wq.h - gPrev > run * MAX_CLIMB) {
+      const e = 0.4;
+      const gx = heightAt(p.x + e, p.z) - heightAt(p.x - e, p.z), gz = heightAt(p.x, p.z + e) - heightAt(p.x, p.z - e);
+      const gl = Math.hypot(gx, gz) || 1;
+      const nx = gx / gl, nz = gz / gl;
+      let dx = p.x - ox, dz = p.z - oz;
+      const into = dx * nx + dz * nz;
+      if (into > 0) { dx -= nx * into; dz -= nz * into; }
+      p.x = ox + dx; p.z = oz + dz;
+      const vin = this.velocity.x * nx + this.velocity.z * nz;
+      if (vin > 0) { this.velocity.x -= nx * vin; this.velocity.z -= nz * vin; }
+      waterAt(p.x, p.z, _wq);
+      if (_wq.h > p.y + 0.02 && _wq.h - gPrev > Math.hypot(dx, dz) * MAX_CLIMB + 0.01) {
+        p.x = ox; p.z = oz;
+        waterAt(p.x, p.z, _wq);
+      }
+    }
+    this._groundPrev = _wq.h;
     let ground = _wq.h;
     // Rakennetut lattiat: päälle voi astua (askel enintään 0,5 m).
     for (const pf of world.platforms) {

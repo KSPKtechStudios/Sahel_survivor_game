@@ -8,6 +8,7 @@ Tekstuurit (assets/textures/), ambientCG (https://ambientcg.com), CC0:
   sand    = Ground054      soil   = Ground072      forest = Ground078
   rock    = Rock030        bark   = Bark014        planks = Planks012
   moss    = Moss002        mossrock = Rock064 (sessio 24)
+  limestone = Rock026 (sessio 58, karstikalliot ja -tornit)
   (1K-JPG; väri- ja normaalikartta, uudelleenpakattu JPEG:ksi)
   leaves.png = LeafSet019, LeafSet024, LeafSet022 (koottu atlakseksi)
   grass.png = Clauden piirtämä ruohoatlas (sessio 24, CC0)
@@ -25,6 +26,13 @@ Stylized Nature MegaKit, ilmainen versio (https://quaternius.com), CC0 (sessio 2
   tekstuurit pienennetty)
   Sessio 28: lahopuun kuori (deadbark.jpg, deadbark_nrm.jpg) vaihdettu: Poly Haven
   bark_willow_02 (CC0, 1k), haalistettu harmaaksi.
+
+Trooppiset aluskasvit (assets/models/nature/calathea.jpg, fern2.jpg;
+  src/models/kit/tropicalKit.js), sessio 48: Poly Haven
+  (https://polyhaven.com), CC0: calathea_orbifolia_01, fern_02
+  (1k glTF; muunnelmat erotettu, kevennetty gltf-transform + meshoptimizer
+  lähi- ja kaukomalliksi, mittakaava suurennettu luonnonkasvien kokoon,
+  tekstuurit pienennetty 512 px JPEG:ksi)
 
 Kädet (assets/models/arms/), sessio 29: käyttäjän antama malli
   FPS_Female_Arms.fbx ja sen tekstuurit (väri, karheus, normaali). Muunnettu
@@ -48,4 +56,78 @@ Ihon pintakuvio (assets/models/arms/skin_detail_*.webp), sessio 33:
 Kivipuukko (assets/models/items/knife_*.webp), sessio 33: ambientCG.com
   Wood051, Rope001 ja Rock030 (CC0), pienennetty 512 px.
 
-Fontit: ks. assets/fonts (OFL).
+Banaanipuu ja bambut (assets/models/nature/banana_*, bamboo_*;
+  src/models/kit/userKit.js), sessio 49: käyttäjän antamat Sketchfab-mallit,
+  lisenssi CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/),
+  NIMEÄMINEN VAADITAAN:
+  - "Banana Tree (Low Poly)", tekijä EmiyaSyahriel
+    https://sketchfab.com/3d-models/banana-tree-low-poly-97a50ee6d93d4d8cb2c455a64a6d17c2
+  - "bamboo", tekijä evolveduk
+    https://sketchfab.com/3d-models/bamboo-a02bf0e3ffe44617ad49daf3cd94fe59
+  - "Bamboo Bush", tekijä sujirour
+    https://sketchfab.com/3d-models/bamboo-bush-d0d5eb345ff7420bb7f5c5239fcec637
+  Muutokset: muunnettu pelin muotoon (gltf-transform + meshoptimizer),
+  mittakaava muutettu, banaanin hedelmäterttu kevennetty, muunnelmia
+  (sivuversot), kaukoversiot, tekstuurit pienennetty 512 px.
+
+Gorilla (assets/models/gorilla/gorilla.glb), sessio 51: käyttäjän antama
+  Sketchfab-malli "Gorilla", tekijä planeta-elefante, CC-BY-4.0, NIMEÄMINEN
+  VAADITAAN: https://sketchfab.com/3d-models/gorilla-e69585d870ce4ae382fd071e87ae3b0e
+  Muutokset: animaatioiden avainkehykset kevennetty (gltf-transform resample),
+  tekstuuri JPEG:ksi; pelissä käännetään ja skaalataan.
+Gorillan karjaisu (assets/sfx/gorilla-roar.mp3), sessio 51: käyttäjän antama
+  tiedosto flutie8211-gorilla-roar-523007.mp3 (tiedostonimen perusteella
+  Pixabay, tekijä flutie8211). Leikattu karjaisun kohta (3,2 s).
+
+Leopardi (assets/models/leopard/leopard.glb), sessio 52: käyttäjän antama
+  Sketchfab-malli "Prowling Leopard 3D Model Free", tekijä iRahulRajput,
+  CC-BY-4.0, NIMEÄMINEN VAADITAAN:
+  https://sketchfab.com/3d-models/prowling-leopard-3d-model-free-d02a9709556348968fef810684b4e3fa
+  Muutokset: kevennetty 232 000 -> 11 000 kolmioon, irralliset viikset pois,
+  vain värikartta (JPEG), käännetty ja skaalattu; pelissä lisätään luuranko,
+  oikean etujalan alaosa korvataan vasemman peilikuvalla ja animoidaan koodissa.
+
+Arokierijä (assets/models/nature/arokierija.glb), sessio 58: käyttäjän antama
+  Sketchfab-malli "Tumbleweed Jumping", tekijä ThymKruijt, CC-BY-4.0,
+  NIMEÄMINEN VAADITAAN:
+  https://sketchfab.com/3d-models/tumbleweed-jumping-00247b1c98ee440dad9a6abbc43a29bf
+  Muutokset: tekstuuri palettikuvaksi (256 väriä), toinen UV-kanava pois,
+  meshopt-pakkaus; pelissä skaalataan, ja animaatiosta käytetään loikkien
+  korkeuskäyrää (liike tuulen mukaan).
+
+Kärpäsen surina (assets/sfx/fly-buzz.mp3), sessio 49: käyttäjän antama
+  tiedosto kuzu420-fly-buzzing-from-left-to-right-337281.mp3 (tiedostonimen
+  perusteella Pixabay, tekijä kuzu420; lisenssi tarkistettava, ks.
+  docs/TODO.md). Kolme ohilentoa leikattu yhdeksi lyhyeksi tiedostoksi.
+
+Hyttysen ininä (assets/sfx/mosquito-buzz.mp3), sessio 50: käyttäjän antama
+  tiedosto freesound_community-flying-mosquito-105770.mp3 (tiedostonimen
+  perusteella Pixabay / Freesound-yhteisö). Normalisoitu, monoksi.
+
+Esinemallit (assets/models/items/items.glb; lähde tools/blender/), sessio 54:
+  mallinnettu tässä projektissa Blenderillä (Python-skriptit), ei ulkopuolisia
+  malleja. Materiaalikirjaston tekstuurit (assets/textures/items/), ambientCG
+  (https://ambientcg.com), CC0, 1K-JPG pienennetty 512 px WebP:ksi:
+  wood = Wood049       hardwood = Wood027   heartwood = Wood026  bark = Bark012
+  stone = Rock041      flint = Rock035      clay = Rock029       bone = Rock054
+  iron = Metal046B     steel = Metal055A    copper = Metal047B   gold = Metal048A
+  brass = Metal007     leather = Leather030 rope = Rope001       cloth = Fabric045
+  fur = Fabric084
+  (flint värikylläisyys vähennetty; cloth, bone ja fur harmaiksi, sävy annetaan
+  pelissä). Rengas- ja suomupanssarin tekstuurit (chain_*, scales_*) on tehty
+  itse skriptillä tools/blender/prep_textures.py.
+meshoptimizer (vendor/meshopt/meshopt_decoder.module.js), sessio 54:
+  https://github.com/zeux/meshoptimizer, MIT-lisenssi (vendor/meshopt/LICENSE.md).
+  Esinemallien pakkaus (EXT_meshopt_compression) ja purku pelissä.
+
+Fontit: ks. assets/fonts (OFL). Sessio 59: Cinzel (The Cinzel Project Authors,
+  SIL Open Font License 1.1, assets/fonts/LICENSE-cinzel.txt) valikon otsikoissa ja logossa.
+Bògòlanfini-kuvio (assets/ui/bogolan.png), sessio 59: piirretty ohjelmallisesti tähän peliin.
+
+Puut (assets/models/trees/; lähde tools/blender/build_trees.py, leafgen.py,
+  pack_leaves.py), sessio 56: mallinnettu tässä projektissa Blenderillä
+  (Python-skriptit), ei ulkopuolisia malleja. Lehtiatlas (leaves.webp) on
+  renderöity Blenderissä itse tehdyistä lehvistä. Kaarnatekstuurit ambientCG
+  (https://ambientcg.com), CC0, 1K-JPG pienennetty 512 px WebP:ksi:
+  acacia = Bark014   shea = Bark001   baobab = Bark005 (vaalennettu, harmaampi)
+  rain = Bark009     kapok = Bark010  emergent = Bark004   sapling = Bark002

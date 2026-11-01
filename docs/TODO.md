@@ -1,8 +1,140 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 59 valikot:
+  - nuotioleiri ja aika: odota valikossa muutama minuutti, jolloin ilta vaihtuu yöksi;
+  - kameran liikkeet paneelien välillä, logo, Jatka-nappi, asetukset, taukovalikko ja latausruutu;
+  - äänet: rätinä ja sirkat;
+  - rakennettu nuotio ja soihtuteline pelissä.
+- [ ] Avoin: logon nimi on yhä työnimi Sahel. Kun nimi päätetään, logo vaihdetaan (index.html `tpl-logo`).
+- [ ] Käyttäjä testaa jatko 12: karstitornit ja vuoristojärvet karstivuoristossa (siemen 777: järvi x −560, z 2210, kallioseinät ympärillä).
+- [ ] Käyttäjä testaa jatko 10: arokierijät aavikolla tuulisella säällä (loikat, ulkonäkö läheltä, nimi "Arokierijä", hakkaaminen).
+- [x] Arokierijä: käyttäjän malli ja loikkiva animaatio peliin, nimi suomeksi (jatko 10).
+- [ ] Käyttäjä testaa jatko 9:
+  - aurinko avoimella paikalla (savanni tai aavikko): näyttääkö pieneltä kirkkaalta kiekolta ilman valtavaa hehkua;
+  - savipeikko yöllä ([F3] → Savipeikko): muoto, kivet, risut ja juuret, kasvot;
+  - haamu yöllä sademetsässä ([F3] → Haamu): huppu, kallo hupun sisällä, luiset sormet hihoista, viitan kangas läheltä.
+- [x] Aurinko aidommaksi (jatko 9).
+- [x] Savipeikolle kunnon 3D-malli tarinan mukaan (jatko 9).
+- [x] Haamun malli ja tekstuurit realistisemmiksi (jatko 9).
+- [ ] Käyttäjä testaa jatko 8: sademetsässä aurinkoa kohti ja ylös latvustoon katsoen. Kuultaako aurinko lehvästön välistä ilman sokaisevaa valoseinää? Näkyvätkö säteet maltillisina?
+- [ ] Käyttäjä testaa session 58 jatko 4:
+  - katso suoraan aurinkoon (avoimella paikalla): sokaiseeko ensin ja tottuuko silmä parissa sekunnissa;
+  - nouse massiivin laelle pilviverhon korkeudelle: pitäisi näkyä vain kevyt usva, ei verhoa silmien edessä;
+  - usva laella ja viidakon pohjalla; "Muinainen juurakko" -nimi.
+- [x] Mustat pikselit tiheikköpensaan lehtien vieressä: korjattu rajaamalla värit nollaan (jatko 5).
+- [ ] Käyttäjä testaa: näkyykö mustia pikseleitä vielä tiheikköpensaan lehtien vieressä.
+- [x] Muinainen juurakko: paljon parempi 3D-malli ja tekstuurit (jatko 5).
+- [x] Sammaloitunut runko: huomattavasti parempi malli (jatko 5).
+- [x] Sademetsäpuu: luonnollisempi haarautuminen ja tuuheampi latvus (jatko 5).
+- [x] Kannot ja tyven pönkkäjuuret: pyöreämmät ja luonnollisemmat (jatko 5).
+- [ ] Käyttäjä testaa jatko 5:
+  - sademetsäpuiden latvukset ja oksisto (läheltä ja kaukaa);
+  - puiden tyvet;
+  - muinaisen juurakon kolme muunnelmaa (kanto, juurihäkki, juurimatto);
+  - sammaloituneet rungot;
+  - ruudunpäivitys sademetsässä (latvuksissa on enemmän lehtiä).
+- [ ] Käyttäjä testaa session 58:
+  - kalliot: jyrkänteiden kalkkikiviseinät, lohkareet ja köynnökset sademetsässä;
+  - kalkkikivitornit sademetsässä (kartalla tai [F3]): ulkonäkö, koko ja määrä;
+  - liaani sademetsäpuiden rungon ympärillä;
+  - vanhat ja uudet akasiat sekaisin savannilla;
+  - palmujen lehvästöt ja lehtien mattapinta;
+  - eivät puut tai muinaiset juuret enää roiku kielekkeiden reunoilla (kaikki biomit).
+- [ ] Vastaus: sopiiko tornien korkeus (25–48 m) ja määrä (35–54 koko maailmassa)?
+- [x] Sessio 58: kaatuvan puun osumaefekti (pölähdys ja partikkelit, kun puu osuu johonkin).
+- [ ] Käyttäjä testaa session 58 jatkon:
+  - karstivuoristo sademetsässä (kartalla tai [F3]): massiivien ulkonäkö, laaksot, rinteet ja solat ylös, joet rotkoissa;
+  - pelaaja ei enää kävele pystyseinää ylös: tuntuuko raja (n. 51°) hyvältä;
+  - liaanien paksuus, muodot ja uusi varsitekstuuri;
+  - kaatuvan puun osuma toiseen puuhun, pensaaseen tai kiveen.
+- [ ] Käyttäjä testaa: pilviverho karstihuipuilla (massiivin laelta tai aukiolta ylös katsoen). Onko sopivan hento, vai enemmän / vähemmän?
+- [ ] Käyttäjä testaa: kaukaiset vuoret usvassa (esim. massiivin laelta) ja asetus "Kaukaiset vuoret"; tuntuuko ruudunpäivitys samalta?
+- [ ] Vastaus: vesiputouksia on nyt 2–3 maailmaa kohden (karstiseinillä 30–50 m korkeita). Riittääkö, vai lisätäänkö?
+- [ ] Vastaus: sopiiko karstin määrä (noin kolmannes sademetsästä) ja massiivien korkeus (20–60 m)?
+- [ ] Käyttäjä testaa session 57 (sademetsä):
+  - latvusto ylös katsoessa (näkyykö vielä liikaa taivasta) ja ruudunpäivitys;
+  - kaatojälki kannossa ja kaatuneen rungon päässä;
+  - liaanit läheltä (paksuus, lehdet, kaaret oksien välillä);
+  - jyrkänteet ja vesiputoukset: [F3] tai kartta; putouksen kohina, allas (uiminen), laskupuro;
+  - savannin akasioiden lehvästöt.
+- [ ] Vastaus: putouksia on noin kymmenkunta koko maailmassa. Sopiiko määrä, ja tehdäänkö niitä myös vuoristoon?
+- [ ] Leopardin ja gorillan animaatiot eivät ole vieläkään täysin kunnossa (käyttäjä, sessio 54). Palataan myöhemmin: kysy, mikä on vielä vialla.
+- [ ] Käyttäjä testaa session 54: uudet esinemallit.
+  - Kuvakkeet repussa ja valmistuksessa.
+  - Maahan pudotetut esineet ([Q]).
+  - Kädessä pidettävät työkalut ja aseet, jousi ja nuolet (jänteellä ja lennossa), kilpi toisessa kädessä.
+- [ ] Vastaus: mitkä mallit näyttävät vielä huonoilta tai väärän kokoisilta?
+- [ ] Käyttäjä testaa session 56:
+  - uudet puut savannilla, metsäsavannilla ja sademetsässä: näyttävätkö realistisilta, ovatko latvukset tarpeeksi tuuheita;
+  - kannot ja juuret (seisovan puun tyvi ja kaadetun puun kanto): ovatko nyt pyöreät;
+  - puiden määrä savannilla ja metsäsavannilla: sopiva vai vieläkin lisää;
+  - ruudunpäivitys savannilla ja sademetsässä (uudet puut ovat tarkempia);
+  - uudet esineet: kivi, piikivi, savi, ruoko, fonio, kuoriaisen sarvi, nuotio, karitepähkinät, baobabin hedelmä, hibiskus, moringa, bissap-kuppi, rohtopullo, halot.
+- [ ] Vastaus: tarkoittiko "tiheämmäksi" tuuheampia latvuksia vai enemmän puita (molempia tehty maltillisesti)? Lisätäänkö puita myös sademetsään?
+- [ ] Puut: palmut, doumpalmu, kookospalmu ja kuollut puu ovat vielä vanhoja malleja. Tehdäänkö nekin Blenderillä?
+- [ ] Käyttäjä testaa session 55:
+  - nuijan kuvake pikapalkissa;
+  - eri tasojen kirveet, hakut, miekat, tikarit, keihäät ja kilvet: erottuvatko ne nyt toisistaan;
+  - uudet mallit: simpukka, rautarenkaat, akasiankumi, jänne, nahka, taljat, paahdetut sienet, raaka liha, kookos, köysi.
+- [ ] Vastaus: mitkä mallit ovat vielä huonoja? (Ehdokkaita jatkoon: fonio, moringa, hibiskus, bissap-kuppi.)
+- [x] Esinemallien hiominen (sessio 54): köysikerän katko, pihka, taljojen reuna, kookospähkinän ääriviiva (sessio 55)
+- [ ] Käyttäjä testaa session 53 ([F3] → Olennot → Leopardi / Gorilla):
+  - leopardin kävely ja kääntyminen (ei vaappumista), hiipiminen, juoksu;
+  - gorillan kävely rystysillä, varoitus (nousee ja lyö rintaansa), lyönti (ei hyppää eteen).
+- [ ] Vastaus: onko animaatioiden tahti nyt sopiva?
+- [ ] Käyttäjä testaa session 52:
+  - gorillan hyökkäys (hitaampi syöksy);
+  - papukaijat sademetsässä tai [F3] → Olennot → Papukaijat: lähestyminen, ampuminen jousella, sulat;
+  - leopardi ([F3] → Olennot → Leopardi): vaaniminen, jähmettyminen katsottaessa, loikka, soihtu, animaatiot.
+- [ ] Vastaus: leopardin saalis ja vaarallisuus; leopardin ja papukaijan äänet (äänitiedostot?); onko papukaija sopiva lintu.
+- [ ] Leopardin etutassuissa on pieniä jäänteitä vanhasta oikeasta tassusta (vasemman tassun sisäsivulla). Paranna, jos käyttäjä huomaa.
+- [ ] Käyttäjä testaa session 51: gorilla sademetsässä tai [F3] → Olennot → Gorilla.
+  - Väistääkö se rauhallista pelaajaa?
+  - Suuttuuko se vasta lyönnistä, hypystä viereen tai äkkinäisestä ryntäyksestä, ja kuuluuko karjaisu?
+  - Onko se liian vaikea tai liian helppo?
+- [ ] Vastaus: mitä gorillasta saa, kuinka kauan se on vihainen ja kuinka kovaa se lyö.
+- [ ] Käyttäjä testaa session 50:
+  - kuuluuko sademetsän ambienssi nyt (myös tuuli savannilla ja sade);
+  - herkuleskuoriainen (ei terveyspalkkia, lyönti vain säikäyttää);
+  - kärpäset ja hyttynen (F3 → Olennot → Hyttynen / Kärpänen ohi);
+  - mäkäräparvet.
+- [ ] Vastaus: kuinka usein hyttysen pitäisi kuulua; saako kuoriaisesta jotain?
+- [ ] Käyttäjä testaa session 49:
+  - herkuleskuoriainen puunrungoilla ja lennossa ([F3] → Olennot → Herkuleskuoriainen, tai odota sademetsässä): koko, näkyykö se nyt paremmin;
+  - banaanipuut ja bambut (iso bambu ja bambupensas);
+  - kenttäkerros ja latvusto (ylös katsoessa vähemmän taivasta);
+  - kärpäset: sinkoilevat lähellä, ja ohilento äänen kanssa ([F3] → Olennot → Kärpänen ohi);
+  - ruudunpäivitys sademetsässä.
+- [ ] Vastaus: kärpäsen ohilentojen tiheys (nyt 10–35 s välein päivällä) ja äänen voimakkuus; onko kuoriainen sopivan kokoinen.
+- [ ] Kärpäsäänen lisenssi: tiedostonimen perusteella Pixabay (tekijä kuzu420). Varmista käyttäjältä lähde.
+- [x] CC-BY-4.0-mallien (banaani, bambu, bambupensas) tekijät pelissä: päävalikko → Tekijät (sessio 49, jatko). Pidä lista ajan tasalla, kun malleja tulee lisää.
+- [ ] Käyttäjä testaa session 48:
+  - sademetsän ambienssi (kuuluuko);
+  - latvuskatto ylös katsoessa ja valoläikät maassa;
+  - tiheikkö (calathea, saniaiset, taimet) ja jättiläispuut, myös sen kaataminen;
+  - mäkäräparvet ja perhoset;
+  - herkuleskuoriainen: odota sademetsässä (öisin useammin) tai [F3] → Olennot → Herkuleskuoriainen;
+  - ruudunpäivitys sademetsässä.
+- [ ] Vastaus:
+  - ~~herkuleskuoriaisen koko (nyt 20 cm)~~ (sessio 49: suurennettu) ja käytös (ei hyökkää);
+  - mihin sen sarvea käytetään;
+  - pitäisikö tiheikön hidastaa liikkumista?
+- [ ] Jos sademetsä on vielä liian avoin: jättiläispuiden tiheyttä ylös (`objectTypes.js`, `emergent.density.rainforest`), mutta ruudunpäivitys on tarkistettava.
+- [ ] Käyttäjä testaa session 47: sademetsä päivällä (aamu, keskipäivä, iltapäivä): valoläikät ja -keilat, varjojen syvyys, vihreät, usva kaukana. Onko jokin liikaa (esim. usva tai lämmin sävy)?
+- [ ] Käyttäjä testaa session 46: puiden latvukset kaukana (pikselimössö, välkkyykö kameraa käännettäessä), lähellä olevat lehdet (näyttävätkö yhä terävältä), syväterävyys (sopiva?)
+- [ ] Jos latvukset välkkyvät yhä: kaukaisille puille harvemmat ja isommat lehtikortit tai impostorit (isompi työ, tarkista ruudunpäivitys)
+- [ ] Käyttäjä testaa session 45: Ambienttiokkluusio päälle asetuksista → välkkyykö ruoho ja lehdet yhä; terävöinti-asetusta ei enää ole
+- [ ] Vastaus: mikä tarkalleen näyttää yhä huonolta (sessio 45, "edelleen ei hyvä")? Kokeile asetuksista Hehku, Värimäärittely, Vinjetti ja Syväterävyys pois yksi kerrallaan ja kerro, mikä niistä parantaa
 - [x] Historia siirretty uuteen repoon `KSPKtechStudios/Sahel_survivor_game` ja pushattu (2026-10-12)
-- [ ] Käyttäjä testaa session 38: onko kuva nyt terävä (asetus Terävöinti päälle ja pois), näkyvätkö työkalut ja käsi pimeässä ja varjossa, sademetsä yöllä ilman soihtua ja päivällä (ylivalotus)
+- [ ] Käyttäjä testaa session 44: ruudunpäivitys viidakossa (palautunut?), kaukaiset puut ja horisontti (ei pikselimössöä). Jos mössöä näkyy yhä, kokeile Syväterävyys pois päältä ja kerro, muuttuuko
+- [x] ~~Session 43 kaukomallit~~ (peruttu sessiossa 44: FPS)
+- [ ] Käyttäjä testaa session 42: ei suttua kameraa kääntäessä, kasvillisuus paikallaan (välkkyykö yhä), käsi yöllä luonnollinen. Jos ruoho välkkyy yhä, tarkista ettei Ambienttiokkluusio ole päällä asetuksissa
+- [ ] Käyttäjä testaa session 41: käsi ja työkalut yöllä (vain ääriviivat ja heijastukset erottuvat), päivällä ennallaan
+- [ ] Käyttäjä testaa session 40: ruohon ja lehtien reunat kaukana (välkyntä ja moiré), taivas päivällä, syväterävyys, käsi yöllä. Jos reunat yhä välkkyvät: kerro missä (ruoho, puiden lehdet, kasvit) ja millä laatutasolla
+- [ ] Käyttäjä testaa session 39: intro (soiko äänen kanssa, Esc / välilyönti / hiiren oikea ohittaa), päivänvalo selkeällä säällä (sademetsä aurinkoa kohti), lehtien reunat, liike-epäterävyys (asetus Kevyt / Vahva), syväterävyys, käsi ja työkalu yöllä
+- [ ] Jos intro halutaan myös selaimille, jotka eivät osaa H.264:ää: WebM-versio (VP9 + Opus) rinnalle
+- [ ] Käyttäjä testaa session 38: onko kuva nyt terävä (terävöinti poistettu sessiossa 45), näkyvätkö työkalut ja käsi pimeässä ja varjossa, sademetsä yöllä ilman soihtua ja päivällä (ylivalotus)
 - [ ] Käyttäjä testaa session 37: grafiikka päivällä, kultaisella tunnilla (aamu ~7, ilta ~17) ja yöllä soihdun kanssa; asetukset Ambienttiokkluusio, Hehku, Värimäärittely ja Vinjetti sekä laatutasot (Matala, Keskitaso, Korkea, Ultra). Toimiiko heikommalla koneella, ja onko kontrasti nyt sopiva (liian tumma tai yhä liian vaalea)?
 - [ ] Käyttäjä testaa session 36: liekin koko, liekki tuulessa (tuulinen sää, myrsky), kipinät ja savu jäävät leijumaan kun soihdun vaihtaa pois, peukalo nyrkissä ja kahvoilla (soihtu, nuija, kirves, puukko)
 - [ ] Käyttäjä testaa session 35: soihdun liekki (paikallaan, kävellen, juosten, kääntyen, heilauttaen, tuulessa, sateessa, yöllä), kipinät ja savu, ei jumiin jääviä pisteitä soihdun vaihdon jälkeen, nyrkin peukalo
@@ -114,7 +246,7 @@
 
 ## Myöhemmin (grafiikan jalostus)
 - [ ] Oikeat CC0-tekstuurit maastoon (hiekka, lateriitti, kivi, sademetsän maa), normaalikartat
-- [ ] glTF-mallit proseduraalisten tilalle (sama nimi `src/models/`-tiedostoissa)
+- [x] glTF-mallit proseduraalisten tilalle: esineet (sessio 54, `assets/models/items/items.glb`)
 - [ ] Parempi käsimalli (luut/animaatiot), vesi-shader, jälkikäsittely (bloom, värimäärittely)
 - [ ] Päätä lopullinen nimi (Sahel vai jokin muu)
 

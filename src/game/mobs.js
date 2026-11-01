@@ -20,14 +20,24 @@
 // luuranko rakennetaan latauksessa). Vaeltaa ja laiduntaa yksin tai pareittain;
 // liian lähelle tulevaa pelaajaa se katsoo korvat levällään ja siirtyy sitten
 // verkkaisesti kauemmas. Runko on liikkuva este, joka tönäisee pelaajaa.
+// Herkuleskuoriainen (sessio 48–50): sademetsän kuoriainen (oma malli,
+// models/beetle.js), yleisempi öisin. Lentelee pöristen puulta toiselle ja
+// kiipeilee puunrungoilla (sessio 49: maasta sitä oli vaikea huomata);
+// välillä laskeutuu maahan. Liian lähelle tulevalle se nostaa sarvensa;
+// ahdisteltuna tai lyötynä se lentää pois. Sessio 50: NPC, ei mobi (ei
+// vahinkoa, ei terveyspalkkia, ei hyökkää).
 import * as THREE from 'three';
 import { waterAt, sampleTerrain, insideStructure } from '../world/terrain.js';
-import { makeWarthog, makeClayGolem, makeGazelle, makeFennec, makeMonkey, makeGuineafowl, makeBird, makeHaamu } from '../models/creatures.js';
+import { makeWarthog, makeClayGolem, makeGazelle, makeFennec, makeMonkey, makeGuineafowl, makeBird, makeHaamu, makeParrot } from '../models/creatures.js';
 import { createFlameTexture, createSoftDotTexture } from '../render/textures.js';
 import { events } from './events.js';
 import { windUniforms } from '../render/materials.js';
 import { GhostCloak } from '../models/ghostCloak.js';
 import { loadElephant, elephantReady, makeElephant, animateElephant } from '../models/elephant.js';
+import { loadGorilla, gorillaReady, makeGorilla, animateGorilla } from '../models/gorilla.js';
+import { loadLeopard, leopardReady, makeLeopard, animateLeopard } from '../models/leopard.js';
+import { makeHerculesBeetle } from '../models/beetle.js';
+import { OBJECT_TYPES } from '../world/objectTypes.js';
 
 export const MOB_TYPES = {
   warthog: {
@@ -84,18 +94,62 @@ export const MOB_TYPES = {
     name: 'Norsu', hp: 400, radius: 0.85, height: 2.9, walk: 1.05, run: 1.9, mass: 40, sight: 16, turn: 0.6, poise: 999,
     drops: [], heavy: true,
   },
+  // Sessio 51: gorilla (käyttäjän malli, models/gorilla.js). Rauhallinen ja
+  // hieman arka: väistää pelaajaa eikä hyökkää, ellei sitä lyödä tai säikytetä
+  // (hyppy viereen, äkkinäinen ryntäys kohti, huitominen lähellä). Suuttuessaan
+  // karjuu, lyö rintaansa ja hyökkää. Sessio 52 (käyttäjä: hyökkäyspyrähdys
+  // liian nopea): ryntäys 6,0 -> 4,6 m/s (kävelyä nopeampi, juoksua hitaampi),
+  // valmistelu 0,32 -> 0,6 s ja syöksy 4,2 -> 2,4 m/s.
+  gorilla: {
+    name: 'Gorilla', hp: 150, radius: 0.55, height: 1.5, walk: 1.0, run: 4.6, mass: 5,
+    damage: 20, knock: 8.5, up: 2.2, reach: 1.55, windup: 0.6, attack: 0.5, recover: 0.9,
+    sight: 14, poise: 28, turn: 2.8, turnAcc: 7, drops: [['raw_meat', 2, 4], ['hide', 1, 2], ['bone', 1, 2]],
+    cause: 'gorilla', gorilla: true,
+  },
+  // Sessio 48: herkuleskuoriainen. tiny = pienet osuma- ja kuolemaefektit.
+  beetle: {
+    // Sessio 49: 1,4-kertainen (n. 28 cm sarvineen), jotta erottuu paremmin.
+    // Sessio 50 (käyttäjä): ei enää mobi vaan NPC (npc): sitä ei voi tappaa,
+    // eikä sillä ole terveyspalkkia; lyönti vain säikäyttää sen lentoon.
+    name: 'Herkuleskuoriainen', hp: 10, radius: 0.14, height: 0.125, walk: 0.2, run: 0.4, mass: 0.2, sight: 1.3, turn: 2.2, poise: 0,
+    drops: [], beetle: true, tiny: true, npc: true,
+  },
+  // Sessio 52 (käyttäjä): leopardi (käyttäjän malli, models/leopard.js).
+  // Vaaniva saalistaja sademetsässä (harvinainen, useammin öisin); ks.
+  // _thinkLeopard. pounceDamage = loikan osuma, damage = tassun isku.
+  // long: rungon pituus osumissa (bodyPoint).
+  leopard: {
+    name: 'Leopardi', hp: 80, radius: 0.3, height: 0.75, walk: 0.95, run: 7.4, mass: 2,
+    damage: 10, pounceDamage: 18, knock: 6, up: 1.6, reach: 1.25, windup: 0.55, attack: 0.3, recover: 1.05,
+    sight: 20, poise: 12, turn: 3.2, turnAcc: 9, drops: [['raw_meat', 1, 3], ['hide', 1, 1], ['bone', 0, 1], ['sinew', 0, 1]],
+    cause: 'leopard', leopard: true, long: true,
+  },
+  // Sessio 52 (käyttäjä): sademetsän lintu, jota voi ampua nuolella ja josta
+  // saa sulkia. Harmaapapukaijaparvi istuu lahopuiden, sammalkivien ja
+  // lohkareiden päällä; lähestyttäessä se pyrähtää lentoon ja laskeutuu
+  // kauemmas (kolmannen kerran jälkeen lentää pois). Lyönnit eivät osu
+  // (noMelee: lintu väistää ja pakenee), vain nuolet.
+  parrot: {
+    name: 'Harmaapapukaija', hp: 3, radius: 0.12, height: 0.3, walk: 0.3, run: 1, mass: 0.1, sight: 14, turn: 10, poise: 0,
+    drops: [['feather', 2, 4]], parrot: true, noMelee: true, tiny: true, group: [3, 5], max: 10,
+  },
 };
 const WILD = ['gazelle', 'guineafowl', 'monkey', 'fennec', 'bird'];
-const FACTORY = { warthog: makeWarthog, gazelle: makeGazelle, fennec: makeFennec, monkey: makeMonkey, guineafowl: makeGuineafowl, bird: makeBird, haamu: makeHaamu };
+const FACTORY = { warthog: makeWarthog, gazelle: makeGazelle, fennec: makeFennec, monkey: makeMonkey, guineafowl: makeGuineafowl, bird: makeBird, haamu: makeHaamu, beetle: makeHerculesBeetle, parrot: makeParrot };
 
 const MAX_WARTHOGS = 3;
 const MAX_CLAY = 3;
 const MAX_HAAMU = 1;
 const MAX_ELEPHANTS = 2;
+const MAX_BEETLES = 6; // sessio 50: 3 -> 6 (käyttäjä: hieman yleisempi)
+const MAX_GORILLAS = 2;
+const MAX_LEOPARDS = 1;
 // Soihdun sytyttämä olento palaa näin kauan (s) ja ottaa vahinkoa / s.
 const FIRE_TIME = 5;
 const FIRE_DPS = 3.5;
-const DESPAWN = { warthog: 150, clay: 70, gazelle: 170, guineafowl: 150, monkey: 150, fennec: 150, bird: 120, haamu: 120, elephant: 230 };
+const DESPAWN = { warthog: 150, clay: 70, gazelle: 170, guineafowl: 150, monkey: 150, fennec: 150, bird: 120, haamu: 120, elephant: 230, beetle: 60, gorilla: 130, parrot: 110, leopard: 140 };
+// Sessio 52: papukaijan istumapaikat (mallin yläpinta; lahopuulla rungon matkalta).
+const PERCH_TYPES = { mossyLog: 'long', log: 'long', mossStone: 'top', boulder: 'top' };
 const PLAYER_R = 0.35;
 
 const _wq = {};
@@ -105,12 +159,17 @@ const _v = new THREE.Vector3();
 const _m = new THREE.Matrix4();
 const _w = new THREE.Vector3();
 const _cw = { x: 0, z: 0 }; // sessio 27: tuuli haamun viittaan
+// Sessio 49: kuoriainen rungolla (suunta ja rungon tiedot).
+const _bX = new THREE.Vector3(), _bY = new THREE.Vector3(), _bZ = new THREE.Vector3();
+const _bm = new THREE.Matrix4();
+const _tk = { x: 0, z: 0, r: 0 };
 
 // Veren väri lajeittain (savipeikolla punaruskeaa savivelliä).
 const RED = new THREE.Color(0.55, 0.03, 0.02);
 const BLOOD = {
   warthog: RED, clay: new THREE.Color(0.45, 0.16, 0.07), gazelle: RED, guineafowl: RED, monkey: RED, fennec: RED, bird: RED,
-  haamu: new THREE.Color(0.12, 0.06, 0.26), elephant: RED,
+  haamu: new THREE.Color(0.12, 0.06, 0.26), elephant: RED, gorilla: RED, parrot: RED, leopard: RED,
+  beetle: new THREE.Color(0.32, 0.36, 0.1), // hyönteisen kellanvihreä hemolymfa
 };
 
 // Hiiltynyt versio geometriasta (palanut savipeikko murenee mustina paloina).
@@ -138,6 +197,8 @@ const templates = new Map();
 function instantiate(type, n, eyeMat) {
   // Norsulla on oma luuranko (kopioidaan ladatusta mallista).
   if (type === 'elephant') return makeElephant();
+  if (type === 'gorilla') return makeGorilla(); // sessio 51: oma luuranko ja animaatiot
+  if (type === 'leopard') return makeLeopard(); // sessio 52: luuranko rakennetaan latauksessa
   const key = `${type}:${n % VARIANTS}`;
   let t = templates.get(key);
   if (!t) {
@@ -146,13 +207,23 @@ function instantiate(type, n, eyeMat) {
   }
   const group = t.group.clone(true);
   const material = t.material.clone();
+  // Sessio 58: kloonaus ei kopioi varjostinlaajennuksia (savipeikon pintatekstuuri).
+  if (t.material.onBeforeCompile) {
+    material.onBeforeCompile = t.material.onBeforeCompile;
+    material.customProgramCacheKey = t.material.customProgramCacheKey;
+  }
   const src = [], dst = [];
   t.group.traverse((o) => src.push(o));
   group.traverse((o) => dst.push(o));
   const map = new Map(src.map((o, i) => [o, dst[i]]));
   for (const o of dst) if (o.isMesh && o.material === t.material) o.material = material;
   const out = { group, material, kind: t.kind };
-  for (const k of ['body', 'head', 'tail', 'torso', 'glow', 'core']) if (t[k]) out[k] = map.get(t[k]);
+  // Sessio 58: haamun hupulla ja hartiaviitalla on oma kangasmateriaali.
+  if (t.cloth) {
+    out.cloth = t.cloth.clone();
+    for (const o of dst) if (o.isMesh && o.material === t.cloth) o.material = out.cloth;
+  }
+  for (const k of ['body', 'head', 'tail', 'torso', 'glow', 'core', 'hip']) if (t[k]) out[k] = map.get(t[k]);
   for (const k of ['legs', 'arms', 'eyes', 'wings']) if (t[k]) out[k] = t[k].map((o) => map.get(o));
   // Sessio 28: haamun viitta on jokaisella oma (kangas simuloidaan
   // yksilöllisesti). Ennen kopio jäi päivittämättä ja vartalo näkymättömäksi.
@@ -171,7 +242,7 @@ function instantiate(type, n, eyeMat) {
 // Rungon keskilinjan lähin piste kohtaan (x, z): norsulla jana takaa eteen,
 // muilla olennon paikka (osumat, nuolet ja nimilappu koko rungon pituudelta).
 export function bodyPoint(m, x, z, out) {
-  if (!m.def.heavy) { out.x = m.pos.x; out.z = m.pos.z; return out; }
+  if (!m.def.heavy && !m.def.long) { out.x = m.pos.x; out.z = m.pos.z; return out; }
   const fx = Math.sin(m.yaw), fz = Math.cos(m.yaw), md = m.model;
   const t = Math.max(md.zH - 0.2, Math.min(md.zF + 0.3, (x - m.pos.x) * fx + (z - m.pos.z) * fz));
   out.x = m.pos.x + fx * t;
@@ -236,6 +307,11 @@ export class Mobs {
     this.wildTimer = 2;
     this.haamuTimer = 25;
     this.elephantTimer = 6;
+    this.beetleTimer = 4;
+    this.gorillaTimer = 8;
+    this.parrotTimer = 3;
+    this.leopardTimer = 20;
+    this.flockId = 0;
     this.combat = null; // asetetaan main.js:ssä (osumat pelaajaan)
     this.enabled = true;
     this.seed = 1;
@@ -245,8 +321,10 @@ export class Mobs {
   // olento nyi peliä.
   prepare() {
     loadElephant(); // ladataan taustalla; norsuja syntyy vasta kun malli on valmis
+    loadGorilla(); // sessio 51: samoin gorilla
+    loadLeopard(); // sessio 52: samoin leopardi
     for (const type of Object.keys(MOB_TYPES)) {
-      if (type === 'elephant') continue;
+      if (type === 'elephant' || type === 'gorilla' || type === 'leopard') continue;
       for (let n = 0; n < VARIANTS; n++) {
         const inst = instantiate(type, n, this.eyeMaterial);
         inst.material.dispose();
@@ -280,6 +358,7 @@ export class Mobs {
       timer: 1 + Math.random() * 4,
       tx: x, tz: z,          // vaelluksen kohde
       provoked: 0,           // aika, jonka pahkasika on vihainen
+      startle: 0,            // sessio 51: gorillan säikähdys (1 = suuttuu)
       staggerDur: 0,
       vulnerable: false,     // parryn jälkeen ottaa enemmän vahinkoa
       hitDone: false,
@@ -464,7 +543,7 @@ export class Mobs {
     const fx = dir.x / hl, fz = dir.z / hl;
     const pitch = Math.atan2(dir.y, hl);
     for (const m of this.list) {
-      if (m.state === 'dead' || m.yOff < -0.6) continue;
+      if (m.state === 'dead' || m.yOff < -0.6 || m.def.npc || m.def.noMelee) continue; // sessio 50: NPC:hen ei lyödä (52: eikä papukaijaan)
       bodyPoint(m, px, pz, _bp);
       const dx = _bp.x - px, dz = _bp.z - pz;
       const d = Math.hypot(dx, dz);
@@ -488,6 +567,16 @@ export class Mobs {
   // Vahinko olentoon. opts: { fromX, fromZ, knock, up, stagger }
   damage(m, amount, opts = {}) {
     if (m.state === 'dead') return false;
+    // Sessio 50: NPC (herkuleskuoriainen) ei ota vahinkoa; säikähtää lentoon.
+    if (m.def.npc) {
+      if (m.def.beetle && m.state !== 'fly') this._beetleTakeOff(m, true);
+      return false;
+    }
+    // Sessio 52: papukaija väistää lyönnit ja lähtee lentoon; vain nuoli osuu.
+    if (m.def.noMelee && !opts.arrow) {
+      if (m.def.parrot) this._parrotScare(m);
+      return false;
+    }
     if (m.def.heavy) {
       // Norsu ei kaadu: osuma vain ärsyttää sitä, ja se lähtee pois.
       m.hp = Math.max(m.def.hp * 0.2, m.hp - amount);
@@ -504,10 +593,15 @@ export class Mobs {
     this.push(m, m.pos.x - (opts.fromX ?? m.pos.x), m.pos.z - (opts.fromZ ?? m.pos.z), opts.knock || 3, opts.up || 0);
     events.emit('mobHit', { type: m.type, amount, mob: m });
     if (m.hp <= 0) {
+      if (m.def.parrot) this._parrotShot(m);
       this._kill(m);
       return true;
     }
     const def = m.def;
+    if (def.parrot) {
+      this._parrotShot(m);
+      return true;
+    }
     if (def.skittish) {
       // Arka eläin pakenee heti (lintu lentää) ja varoittaa laumaansa.
       this._startFlee(m, true);
@@ -524,6 +618,28 @@ export class Mobs {
       // sen hetkeksi kauemmas.
       if (opts.arrow && m.state === 'stalk') m.timer = Math.min(m.timer, 0.6);
       else if (m.state === 'dive' || m.state === 'windup') this._set(m, 'rise', 1.6);
+    }
+    if (def.gorilla) {
+      // Sessio 51: lyöty gorilla suuttuu heti (vähillä voimilla pakenee).
+      if (m.hp / def.hp < 0.25) {
+        m.provoked = 0;
+        if (!opts.stagger && amount < def.poise) this._set(m, 'flee', 6 + Math.random() * 2);
+      } else {
+        this._gorillaAnger(m, 0.9);
+      }
+    }
+    if (def.leopard) {
+      // Sessio 52: vähillä voimilla leopardi pakenee; muuten kostaa (60 %)
+      // tai vetäytyy viidakkoon.
+      m.hurtT = 1;
+      m.calm = 0;
+      if (m.hp / def.hp < 0.4) {
+        if (!opts.stagger && amount < def.poise) { this._set(m, 'flee'); return true; }
+      } else if (amount < def.poise && m.state !== 'pounce' && m.state !== 'attack' && m.state !== 'windup') {
+        if (Math.random() < 0.6) this._set(m, 'maul', 2.5 + Math.random() * 1.5);
+        else this._leopardRetreat(m, 25);
+        return true;
+      }
     }
     if (m.type === 'warthog') {
       if (m.hp / def.hp < 0.35) {
@@ -575,6 +691,7 @@ export class Mobs {
   bleed(m, pos, dx, dz, amount) {
     if (!this.blood) return;
     _w.set(dx, 0, dz).normalize();
+    if (m.def.tiny) { this.blood.spray(pos, _w, BLOOD[m.type], 4, 0.25); return; }
     this.blood.spray(pos, _w, BLOOD[m.type], Math.min(30, 6 + Math.round(amount * 1.1)), 0.8 + amount / 25);
   }
 
@@ -583,11 +700,14 @@ export class Mobs {
     _v.copy(m.pos);
     _v.y += def.height * 0.5;
     // Kuolema: iso roiske, pölypöllähdys ja lammikko alle.
-    if (this.blood) {
+    if (this.blood && def.tiny) {
+      this.blood.spray(_v, null, BLOOD[m.type], 5, 0.3);
+    } else if (this.blood) {
       this.blood.spray(_v, null, BLOOD[m.type], 34, 1.3);
       m.poolAt = 0.35;
     }
-    this.bursts.spawn(_v, m.type === 'clay' ? 0x8a5a3a : m.type === 'haamu' ? 0x2a1d48 : 0xb8a888, 18, 1.8);
+    if (!def.tiny) this.bursts.spawn(_v, m.type === 'clay' ? 0x8a5a3a : m.type === 'haamu' ? 0x2a1d48 : 0xb8a888, 18, 1.8);
+    else if (def.parrot) this.bursts.spawn(_v, 0xa4a8ac, 12, 1.1, { size: 0.07, life: 1.8, gravity: 0.5 }); // höyheniä
     if (m.type === 'clay' && this.blood) this.blood.splat(m.pos.x, m.pos.z, 1.3, BLOOD.clay, 1.5);
     for (const [item, a, b] of def.drops) {
       const n = a + Math.floor(Math.random() * (b - a + 1));
@@ -656,9 +776,12 @@ export class Mobs {
   // Soihdun isku sytyttää olennon (sessio 12e). Savipeikko palaa loppuun kuten
   // aamulla; muut palavat hetken (vahinkoa ajan mukana) ja pakenevat.
   setOnFire(m) {
-    if (m.state === 'dead' || m.def.ghost || !this.list.includes(m)) return;
+    if (m.state === 'dead' || m.def.ghost || m.def.npc || !this.list.includes(m)) return;
     if (m.def.heavy) { this._elephantLeave(m, true); return; }
+    if (m.def.parrot) { this._parrotScare(m); return; }
     if (m.type === 'clay') { if (!m.burning) this._ignite(m); return; }
+    if (m.def.gorilla) this._gorillaAnger(m, 0.9);
+    if (m.def.leopard && m.state !== 'dead') this._set(m, 'flee'); // sessio 52: pelkää tulta
     const fresh = !(m.fireT > 0);
     m.fireT = FIRE_TIME;
     if (fresh && this.fire) this.fire.burst(m.pos.x, m.pos.y + m.def.height * 0.5, m.pos.z, 0.3, 22);
@@ -754,6 +877,30 @@ export class Mobs {
         this.elephantTimer = 15 + Math.random() * 20;
         this._trySpawnElephants();
       }
+      // Sessio 48: herkuleskuoriaiset sademetsässä (öisin useammin).
+      this.beetleTimer -= dt;
+      if (this.beetleTimer <= 0) {
+        this.beetleTimer = 4 + Math.random() * 5;
+        this._trySpawnBeetle(night);
+      }
+      // Sessio 51: gorillat sademetsässä (päivällä useammin).
+      this.gorillaTimer -= dt;
+      if (this.gorillaTimer <= 0) {
+        this.gorillaTimer = 18 + Math.random() * 17;
+        this._trySpawnGorilla(night);
+      }
+      // Sessio 52: leopardi sademetsässä (harvinainen, useammin öisin).
+      this.leopardTimer -= dt;
+      if (this.leopardTimer <= 0) {
+        this.leopardTimer = 35 + Math.random() * 40;
+        this._trySpawnLeopard(night);
+      }
+      // Sessio 52: papukaijaparvet sademetsässä (päivällä).
+      this.parrotTimer -= dt;
+      if (this.parrotTimer <= 0) {
+        this.parrotTimer = 6 + Math.random() * 8;
+        this._trySpawnParrots(night);
+      }
     }
     for (const m of this.list.slice()) {
       const d = Math.hypot(m.pos.x - p.x, m.pos.z - p.z);
@@ -773,16 +920,32 @@ export class Mobs {
     // Palavat olennot valaisevat ympäristöään (nuotioiden valot jaetaan).
     this.fires.length = 0;
 
+    // Sessio 51: pelaajan äkkinäiset liikkeet (gorilla säikähtää): hypyn alku,
+    // laskeutuminen ja uusi isku tässä ruudussa.
+    const onG = !!player.onGround;
+    this._pJump = this._pOnG && !onG && player.velocity.y > 1.5;
+    this._pLand = this._pOnG === false && onG;
+    this._pOnG = onG;
+    const atk = this.combat ? this.combat.attacking : null;
+    this._pSwing = !!atk && atk !== this._pAtk;
+    this._pAtk = atk;
+
     // --- Tekoäly, liike ja animaatio
     for (const m of this.list.slice()) {
       if (dt > 0) {
-        if (m.def.skittish) this._thinkSkittish(m, dt);
+        if (m.def.parrot) this._thinkParrot(m, dt);
+        else if (m.def.skittish) this._thinkSkittish(m, dt);
+        else if (m.def.beetle) this._thinkBeetle(m, dt);
+        else if (m.def.gorilla) this._thinkGorilla(m, dt);
+        else if (m.def.leopard) this._thinkLeopard(m, dt);
         else if (m.type === 'warthog') this._thinkWarthog(m, dt);
         else if (m.def.ghost) this._thinkHaamu(m, dt);
         else if (m.def.heavy) this._thinkElephant(m, dt);
         else this._thinkClay(m, dt);
         if (!this.list.includes(m)) continue;
-        if (m.state === 'fly') this._flyPhysics(m, dt);
+        if (m.def.parrot) this._parrotMove(m, dt);
+        else if (m.def.beetle && (m.state === 'fly' || m.state === 'climb' || m.state === 'dead')) this._beetleAir(m, dt);
+        else if (m.state === 'fly') this._flyPhysics(m, dt);
         else if (m.def.ghost) this._ghostPhysics(m, dt);
         else this._physics(m, dt);
       }
@@ -818,6 +981,43 @@ export class Mobs {
       for (let i = 0; i < n && this.count('warthog') < MAX_WARTHOGS + 1; i++) {
         const ox = x + (Math.random() - 0.5) * 5, oz = z + (Math.random() - 0.5) * 5;
         if (this._okSpot(ox, oz)) this.spawn('warthog', ox, oz);
+      }
+      return;
+    }
+  }
+
+  // Sessio 48: herkuleskuoriainen sademetsään 12–30 m:n päähän.
+  _trySpawnBeetle(night) {
+    if (this.count('beetle') >= MAX_BEETLES || Math.random() > (night ? 0.85 : 0.6)) return;
+    const p = this.player.position;
+    for (let a = 0; a < 6; a++) {
+      const ang = Math.random() * Math.PI * 2;
+      const r = 12 + Math.random() * 18;
+      const x = p.x + Math.cos(ang) * r, z = p.z + Math.sin(ang) * r;
+      if (!this._okSpot(x, z) || (_s.rainforest || 0) < 0.6) continue;
+      const m = this.spawn('beetle', x, z);
+      // Sessio 49: puolet syntyy suoraan puunrungolle (maasta vaikea huomata).
+      if (Math.random() < 0.65) {
+        const t = this._beetleFindTrunk(m, false);
+        if (t) { m.trunk = t; this._beetleOnTrunk(m); this._set(m, 'climb', 20 + Math.random() * 30); }
+      }
+      return;
+    }
+  }
+
+  // Sessio 51: gorilla (1–2) sademetsässä 35–70 m:n päähän.
+  _trySpawnGorilla(night) {
+    if (!gorillaReady() || this.count('gorilla') >= MAX_GORILLAS || Math.random() > (night ? 0.25 : 0.6)) return;
+    const p = this.player.position;
+    for (let a = 0; a < 6; a++) {
+      const ang = Math.random() * Math.PI * 2;
+      const r = 35 + Math.random() * 35;
+      const x = p.x + Math.cos(ang) * r, z = p.z + Math.sin(ang) * r;
+      if (!this._okSpot(x, z) || (_s.rainforest || 0) < 0.6) continue;
+      const n = Math.random() < 0.6 ? 1 : 2;
+      for (let i = 0; i < n && this.count('gorilla') < MAX_GORILLAS; i++) {
+        const ox = x + (Math.random() - 0.5) * 6, oz = z + (Math.random() - 0.5) * 6;
+        if (this._okSpot(ox, oz)) this.spawn('gorilla', ox, oz);
       }
       return;
     }
@@ -934,6 +1134,14 @@ export class Mobs {
       const x = p.x - Math.sin(ang) * dist, z = p.z - Math.cos(ang) * dist;
       if (!this._okSpot(x, z)) continue;
       if (type === 'elephant' && !elephantReady()) return null;
+      if (type === 'gorilla' && !gorillaReady()) return null;
+      if (type === 'leopard' && !leopardReady()) return null;
+      if (type === 'parrot') {
+        // Parvi lähimmille istumapaikoille (tai maahan, jos niitä ei ole).
+        const f = this._spawnParrotFlock(x, z, 14, true);
+        if (f) return f;
+        continue;
+      }
       const m = this.spawn(type, x, z, { emerge: type === 'clay' });
       m.yaw = Math.atan2(p.x - x, p.z - z);
       return m;
@@ -1332,6 +1540,1039 @@ export class Mobs {
     if (pos.y < m.groundH) { pos.y = m.groundH; m.vy = 0; }
   }
 
+  // --- Leopardi (sessio 52) ------------------------------------------------
+  // Vaaniva saalistaja, mutta reilu: hiipii matalana ja yrittää päästä
+  // pelaajan taakse. Kun pelaaja katsoo sitä suoraan (eikä puu ole välissä),
+  // se jähmettyy; pitkään katsottuna se luovuttaa ja lähtee pois. Liian
+  // lähelle tultaessa se ärjyy varoitukseksi. Huomaamatta 5–9 m:n päähän
+  // päästyään se kyyristyy, heiluttaa takapäätään, murisee ja loikkaa; sen
+  // jälkeen se iskee tassuilla hetken ja vetäytyy viidakkoon. Palavaa
+  // soihtua se ei uskalla lähestyä; haavoittuneena se pakenee.
+
+  _trySpawnLeopard(night) {
+    if (!leopardReady() || this.count('leopard') >= MAX_LEOPARDS || Math.random() > (night ? 0.45 : 0.15)) return;
+    const p = this.player.position;
+    for (let a = 0; a < 6; a++) {
+      const ang = Math.random() * Math.PI * 2;
+      const r = 45 + Math.random() * 30;
+      const x = p.x + Math.cos(ang) * r, z = p.z + Math.sin(ang) * r;
+      if (!this._okSpot(x, z) || (_s.rainforest || 0) < 0.6) continue;
+      this.spawn('leopard', x, z);
+      return;
+    }
+  }
+
+  // Katsooko pelaaja leopardia (katse kohti, puu tai pensas ei peitä).
+  _leopardWatched(m, d) {
+    const P = this.player;
+    if (P.dead || d > 26) return false;
+    const lx = -Math.sin(P.yaw), lz = -Math.cos(P.yaw);
+    const ux = (m.pos.x - P.position.x) / d, uz = (m.pos.z - P.position.z) / d;
+    if (lx * ux + lz * uz < 0.87) return false;
+    m.losT = (m.losT || 0) - 1;
+    if (m.losT <= 0) {
+      m.losT = 6;
+      _v.set(P.position.x, P.position.y + 1.4, P.position.z);
+      _w.set(m.pos.x - _v.x, m.pos.y + 0.5 - _v.y, m.pos.z - _v.z);
+      const L = _w.length();
+      _w.divideScalar(L || 1);
+      const hit = this.world.raycast(_v, _w, L);
+      m.los = !hit || hit.t > L - 0.8;
+    }
+    return m.los;
+  }
+
+  _leopardGrowl(m, kind) {
+    m.growlCd = 2.5;
+    events.emit('leopardGrowl', { x: m.pos.x, z: m.pos.z, kind });
+  }
+
+  _leopardRetreat(m, calm = 25) {
+    m.calm = calm;
+    m.crouchK = 0;
+    this._set(m, 'retreat', 7 + Math.random() * 4);
+  }
+
+  _thinkLeopard(m, dt) {
+    const def = m.def, P = this.player;
+    if (m.state !== 'pounce') m.air = 0;
+    m.stateT += dt;
+    m.timer -= dt;
+    m.calm = Math.max(0, (m.calm || 0) - dt);
+    m.growlCd = Math.max(0, (m.growlCd || 0) - dt);
+    m.hurtT = Math.max(0, (m.hurtT || 0) - dt * 2.5);
+    const { dx, dz, d } = this._toPlayer(m);
+    const night = this.env.daylight < 0.12;
+    const sight = this._sight(def) * (night ? 1.2 : 0.85);
+    const notices = !P.dead && d < sight;
+    const torch = this.structures && this.structures.held;
+    const torchNear = torch && d < 9;
+    const watched = this._leopardWatched(m, d);
+    m.watchT = watched ? (m.watchT || 0) + dt : Math.max(0, (m.watchT || 0) - dt * 0.5);
+    const hunt = () => !P.dead && m.calm <= 0 && !torchNear;
+    switch (m.state) {
+      case 'graze':
+      case 'idle':
+        this._steer(m, 0, 0, 0, dt);
+        if (notices && hunt()) this._set(m, 'stalk');
+        else if (m.timer <= 0) {
+          const a = Math.random() * Math.PI * 2, r = 6 + Math.random() * 12;
+          m.tx = m.pos.x + Math.cos(a) * r;
+          m.tz = m.pos.z + Math.sin(a) * r;
+          this._set(m, 'prowl', 14);
+        }
+        break;
+      case 'prowl': {
+        const wx = m.tx - m.pos.x, wz = m.tz - m.pos.z, wd = Math.hypot(wx, wz);
+        this._steer(m, wx / (wd || 1), wz / (wd || 1), def.walk, dt);
+        if (notices && hunt()) this._set(m, 'stalk');
+        else if (wd < 1 || m.timer <= 0) this._set(m, 'idle', 3 + Math.random() * 6);
+        break;
+      }
+      case 'stalk': {
+        // Hiipii kohti, mieluiten sivulta ja takaa (pelaajan selän puolelle).
+        if (!hunt() || d > sight * 1.6) { this._leopardRetreat(m, torchNear ? 12 : 6); break; }
+        if (watched && d < 20) { this._set(m, 'freeze'); break; }
+        const lx = -Math.sin(P.yaw), lz = -Math.cos(P.yaw);
+        const bx = P.position.x - lx * Math.min(5, d * 0.4), bz = P.position.z - lz * Math.min(5, d * 0.4);
+        let tx = bx - m.pos.x, tz = bz - m.pos.z;
+        const tl = Math.hypot(tx, tz) || 1;
+        tx /= tl; tz /= tl;
+        if (d < 10) { tx = dx; tz = dz; }
+        this._steer(m, tx, tz, def.walk * (d < 12 ? 0.85 : 1.15), dt);
+        if (d < 8.5 && d > 4.5 && !watched) this._set(m, 'gather', 0.6 + Math.random() * 0.3);
+        else if (d < 4.5) this._set(m, 'snarl', 1.2);
+        break;
+      }
+      case 'freeze':
+        // Pelaaja katsoo: jähmettyy paikalleen kyyryyn ja tuijottaa.
+        this._steer(m, dx, dz, 0, dt, true);
+        if (!hunt()) { this._leopardRetreat(m, torchNear ? 12 : 8); break; }
+        if (m.watchT > 5) { this._leopardRetreat(m, 30); break; }
+        if (d < 6) { this._set(m, 'snarl', 1.4); break; }
+        if (!watched && m.stateT > 0.6) this._set(m, 'stalk');
+        break;
+      case 'snarl':
+        // Varoitus: ärjyy, häntä piiskaa. Jos pelaaja tulee yhä lähemmäs,
+        // hyökkää; muuten perääntyy.
+        this._steer(m, dx, dz, 0, dt, true);
+        if (m.stateT < dt * 1.5 && m.growlCd <= 0) this._leopardGrowl(m, 'snarl');
+        if (torchNear) { this._leopardRetreat(m, 15); break; }
+        if (m.timer <= 0) {
+          if (d < 3.6 && hunt()) this._set(m, 'maul', 2.5 + Math.random() * 1.5);
+          else if (d < 6 && Math.random() < 0.5) this._set(m, 'snarl', 1.0);
+          else this._leopardRetreat(m, 20);
+        }
+        break;
+      case 'gather':
+        // Kyyristyy, heiluttaa takapäätä ja murisee ennen loikkaa.
+        this._steer(m, dx, dz, 0, dt, true);
+        if (m.stateT < dt * 1.5 && m.growlCd <= 0) this._leopardGrowl(m, 'growl');
+        if (torchNear) { this._leopardRetreat(m, 12); break; }
+        if (m.timer <= 0) {
+          // Hyppy pelaajan kohdalle (hieman eteen liikkeen suuntaan).
+          const lead = 0.25;
+          m.lx = P.position.x + P.velocity.x * lead - dx * 0.6;
+          m.lz = P.position.z + P.velocity.z * lead - dz * 0.6;
+          const ld = Math.hypot(m.lx - m.pos.x, m.lz - m.pos.z);
+          m.leapDur = Math.max(0.45, Math.min(0.85, ld / 10));
+          m.leapV = Math.min(12, ld / m.leapDur);
+          m.leapDir = Math.atan2(m.lx - m.pos.x, m.lz - m.pos.z);
+          m.yaw = m.leapDir;
+          this._set(m, 'pounce');
+        }
+        break;
+      case 'pounce': {
+        const u = Math.min(1, m.stateT / m.leapDur);
+        const sp = m.leapV * (u < 1 ? 1 : 0);
+        m.vel.x = Math.sin(m.leapDir) * sp;
+        m.vel.z = Math.cos(m.leapDir) * sp;
+        m.air = Math.sin(Math.PI * u) * Math.min(0.75, 0.25 + m.leapV * 0.05);
+        if (!m.hitDone && u > 0.55 && d - PLAYER_R < def.reach + 0.5 && !P.dead) {
+          m.hitDone = true;
+          const res = this.combat ? this.combat.receiveHit(m, def.pounceDamage, { knock: def.knock * 1.2, up: def.up, cause: def.cause }) : 'hit';
+          if (res === 'block' || res === 'broken') this.push(m, -dx, -dz, 3);
+        }
+        if (u >= 1) {
+          m.air = 0;
+          m.vel.multiplyScalar(0.2);
+          this._set(m, 'land', 0.45);
+        }
+        break;
+      }
+      case 'land':
+        this._steer(m, 0, 0, 0, dt);
+        if (m.timer <= 0) this._set(m, 'maul', 2.5 + Math.random() * 1.5);
+        break;
+      case 'maul':
+        // Lähitaistelu: lähestyy ja iskee tassulla; aikanaan vetäytyy.
+        if (P.dead || torchNear) { this._leopardRetreat(m, 25); break; }
+        if (m.timer <= 0) { this._leopardRetreat(m, 30 + Math.random() * 20); break; }
+        if (d - PLAYER_R < def.reach + 0.35) {
+          m.side = Math.random() < 0.5 ? 1 : -1;
+          this._set(m, 'windup');
+        } else this._steer(m, dx, dz, d > 5 ? def.run : def.run * 0.55, dt);
+        break;
+      case 'windup':
+        this._steer(m, dx, dz, 0, dt, true);
+        if (m.stateT >= def.windup) this._set(m, 'attack');
+        break;
+      case 'attack': {
+        const k = Math.max(0, 1 - m.stateT / def.attack);
+        m.vel.x = Math.sin(m.yaw) * 2.2 * k;
+        m.vel.z = Math.cos(m.yaw) * 2.2 * k;
+        if (!m.hitDone && m.stateT > def.attack * 0.5) this._tryHit(m);
+        if (m.stateT >= def.attack) this._set(m, 'recover');
+        break;
+      }
+      case 'recover':
+        this._steer(m, 0, 0, 0, dt);
+        if (m.stateT >= def.recover) this._set(m, 'maul'); // raatelun aika kuluu edelleen
+        break;
+      case 'retreat': {
+        // Vetäytyy pois pelaajasta (kävellen; kauempana rauhoittuu).
+        const wob = Math.sin(m.stateT * 0.8 + m.phase) * 0.5;
+        this._steer(m, -dx * Math.cos(wob) + dz * Math.sin(wob), -dz * Math.cos(wob) - dx * Math.sin(wob), d < 10 ? def.run * 0.55 : def.walk * 1.3, dt);
+        if (m.timer <= 0) this._set(m, 'idle', 2 + Math.random() * 3);
+        break;
+      }
+      case 'flee': {
+        const wob = Math.sin(m.stateT * 1.2 + m.phase) * 0.35;
+        this._steer(m, -dx * Math.cos(wob) + dz * Math.sin(wob), -dz * Math.cos(wob) - dx * Math.sin(wob), def.run, dt);
+        if (d > 70) this.remove(m);
+        break;
+      }
+      case 'stagger':
+        this._steer(m, 0, 0, 0, dt);
+        if (m.stateT >= m.staggerDur) {
+          if (m.hp / def.hp < 0.4) this._set(m, 'flee');
+          else if (Math.random() < 0.65 && !torchNear) this._set(m, 'maul', 2 + Math.random() * 1.5);
+          else this._leopardRetreat(m, 25);
+        }
+        break;
+      case 'dead':
+        m.deadT += dt;
+        m.vel.multiplyScalar(Math.exp(-dt * 6));
+        m.air = 0;
+        if (m.poolAt > 0 && m.deadT >= m.poolAt && this.blood) {
+          m.poolAt = 0;
+          this.blood.splat(m.pos.x, m.pos.z, 1.5, BLOOD.leopard, 4);
+        }
+        if (m.deadT > 9) this.remove(m);
+        break;
+      default:
+        this._set(m, 'idle', 2);
+    }
+  }
+
+  // Animaation tila leopardin mallille (models/leopard.js).
+  _animLeopard(m, md, speed, dt, elapsed) {
+    const s = m.state;
+    const turn = dt > 0 ? angleDiff(m.yaw, m.prevYaw ?? m.yaw) / dt : 0;
+    m.prevYaw = m.yaw;
+    const fx = Math.sin(m.yaw), fz = Math.cos(m.yaw);
+    const h0 = m.pos.y;
+    const hF = waterAt(m.pos.x + fx * 0.45, m.pos.z + fz * 0.45, _wq).h - h0;
+    const hH = waterAt(m.pos.x - fx * 0.5, m.pos.z - fz * 0.5, _wq).h - h0;
+    const p = this.player.position;
+    const look = angleDiff(Math.atan2(p.x - m.pos.x, p.z - m.pos.z), m.yaw);
+    const aware = s !== 'idle' && s !== 'prowl' && s !== 'graze' && s !== 'retreat' && s !== 'flee' && s !== 'dead';
+    let pounce = -1, swipe = -1;
+    if (s === 'gather') pounce = 0.38 * Math.min(1, m.stateT / Math.max(0.1, m.stateT + m.timer));
+    else if (s === 'pounce') pounce = 0.4 + 0.5 * Math.min(1, m.stateT / (m.leapDur || 0.6));
+    else if (s === 'land') pounce = 0.9 + 0.1 * Math.min(1, m.stateT / 0.45);
+    if (s === 'windup') swipe = 0.45 * Math.min(1, m.stateT / m.def.windup);
+    else if (s === 'attack') swipe = 0.45 + 0.35 * Math.min(1, m.stateT / m.def.attack);
+    else if (s === 'recover') swipe = 0.8 + 0.2 * Math.min(1, m.stateT / m.def.recover);
+    animateLeopard(md, {
+      speed, turn, t: elapsed,
+      crouch: s === 'stalk' || s === 'freeze' || s === 'gather' ? 1 : s === 'snarl' ? 0.45 : 0,
+      alert: aware ? 1 : 0,
+      look, lookUp: 0,
+      pounce, air: m.air || 0,
+      swipe, side: m.side || 1,
+      snarl: s === 'snarl' ? 1 : s === 'freeze' ? 0.25 : 0,
+      hurt: m.hurtT || 0,
+      dead: s === 'dead' ? m.deadT : -1, deathSide: m.deathSide || 1,
+      dhF: Math.max(-0.3, Math.min(0.3, hF)), dhH: Math.max(-0.3, Math.min(0.3, hH)),
+    }, dt);
+  }
+
+  // --- Harmaapapukaija (sessio 52) ---------------------------------------------
+  // Parvi istuu lahopuiden, sammalkivien ja lohkareiden päällä (tiheä
+  // aluskasvillisuus peittäisi maassa olevat linnut). Kun pelaaja huomataan,
+  // linnut pysähtyvät katsomaan; jos pelaaja tulee lähemmäs, juoksee, hyppää,
+  // huitoo tai nuoli osuu lähelle, koko parvi pyrähtää lentoon ja laskeutuu
+  // 25–45 m päähän (ammuttaessa kauemmas). Kolmannen lennon jälkeen parvi
+  // lentää pois ja katoaa.
+
+  // Istumapaikat säteellä r (lista { o, bb }).
+  _parrotPerches(x, z, r, out = []) {
+    out.length = 0;
+    const models = this.world.models && this.world.models.world;
+    if (!models) return out;
+    this.world.forEachChunkNear(x, z, r, (ch) => {
+      for (const o of ch.objects) {
+        if (!PERCH_TYPES[o.type] || o.stump) continue;
+        if ((o.x - x) ** 2 + (o.z - z) ** 2 > r * r) continue;
+        const geo = models[OBJECT_TYPES[o.type].model]?.[o.variant];
+        if (!geo) continue;
+        if (!geo.boundingBox) geo.computeBoundingBox();
+        // Liian matala (aluskasvillisuuden sisällä) tai korkea ei kelpaa.
+        const top = geo.boundingBox.max.y * o.scale;
+        if (top < 0.3 || top > 2.6) continue;
+        out.push({ o, bb: geo.boundingBox });
+      }
+    });
+    return out;
+  }
+
+  // Kohta istumapaikan päältä (slot: monesko lintu samalla paikalla).
+  // Lahopuulla linnut asettuvat rungon matkalle, kivellä ensimmäinen laelle
+  // ja muut sen ympärille hieman alemmas.
+  _perchPoint(p, slot = 0, out = {}) {
+    const { o, bb } = p;
+    const long = PERCH_TYPES[o.type] === 'long';
+    const sx = bb.max.x - bb.min.x, sz = bb.max.z - bb.min.z;
+    let lx = (bb.min.x + bb.max.x) / 2, lz = (bb.min.z + bb.max.z) / 2, ky = long ? 0.88 : 0.95;
+    if (long) {
+      const t = [0, -0.22, 0.22, -0.36, 0.36][slot % 5] + (Math.random() - 0.5) * 0.08;
+      if (sx > sz) lx += t * sx; else lz += t * sz;
+    } else if (slot > 0) {
+      const a = slot * 2.1 + Math.random() * 0.5, r = 0.2 * Math.min(sx, sz);
+      lx += Math.cos(a) * r;
+      lz += Math.sin(a) * r;
+      ky = 0.9;
+    }
+    const c = Math.cos(o.rot), sn = Math.sin(o.rot), k = o.scale;
+    out.x = o.x + (lx * c + lz * sn) * k;
+    out.z = o.z + (-lx * sn + lz * c) * k;
+    out.y = o.y + bb.max.y * k * ky;
+    return out;
+  }
+
+  // n lintua istumapaikoille (eri paikoille, jos niitä riittää).
+  _perchSlots(list, n) {
+    const order = list.slice().sort(() => Math.random() - 0.5);
+    const pts = [];
+    for (let i = 0; i < n; i++) pts.push(this._perchPoint(order[i % order.length], Math.floor(i / order.length)));
+    return pts;
+  }
+
+  _spawnParrotFlock(x, z, r, force = false) {
+    const def = MOB_TYPES.parrot;
+    const perches = this._parrotPerches(x, z, r);
+    if (!perches.length && !force) return null;
+    const n = def.group[0] + Math.floor(Math.random() * (def.group[1] - def.group[0] + 1));
+    const flock = ++this.flockId;
+    const pts = perches.length ? this._perchSlots(perches, n) : null;
+    let first = null;
+    for (let i = 0; i < n && this.count('parrot') < def.max; i++) {
+      let px = x + (Math.random() - 0.5) * 3, pz = z + (Math.random() - 0.5) * 3, py = null;
+      if (pts) { px = pts[i].x; pz = pts[i].z; py = pts[i].y; }
+      const m = this.spawn('parrot', px, pz);
+      if (py !== null) m.pos.y = py;
+      m.perchY = m.pos.y;
+      m.flock = flock;
+      m.flights = 0;
+      this._set(m, 'perch', 1 + Math.random() * 5);
+      first = first || m;
+    }
+    return first;
+  }
+
+  _trySpawnParrots(night) {
+    if (this.count('parrot') > MOB_TYPES.parrot.max - 3 || Math.random() > (night ? 0.04 : 0.7)) return;
+    const p = this.player.position;
+    for (let a = 0; a < 6; a++) {
+      const ang = Math.random() * Math.PI * 2;
+      const r = 30 + Math.random() * 35;
+      const x = p.x + Math.cos(ang) * r, z = p.z + Math.sin(ang) * r;
+      if (!this._okSpot(x, z) || (_s.rainforest || 0) < 0.55) continue;
+      if (this._spawnParrotFlock(x, z, 14)) return;
+    }
+  }
+
+  // Koko parvi lentoon (far: ammuttu, lentää kauemmas tai pois).
+  _parrotScare(m, far = false) {
+    if (m.state === 'dead' || m.state === 'leave') return;
+    const P = this.player.position;
+    const flock = this.list.filter((o) => o.type === 'parrot' && o.flock === m.flock && o.state !== 'dead' && o.state !== 'leave' && o.takeoffAt === undefined && (o.state !== 'fly' || o === m));
+    if (!flock.length) return;
+    let dest = null;
+    if ((m.flights || 0) < 3 && !(far && Math.random() < 0.35)) {
+      const away = Math.atan2(m.pos.x - P.x, m.pos.z - P.z);
+      for (let a = 0; a < 6 && !dest; a++) {
+        const ang = away + (Math.random() - 0.5) * 2.2;
+        const r = (far ? 38 : 24) + Math.random() * 20;
+        const x = m.pos.x + Math.sin(ang) * r, z = m.pos.z + Math.cos(ang) * r;
+        if (!this._okSpot(x, z) || (_s.rainforest || 0) < 0.3) continue;
+        const list = this._parrotPerches(x, z, 14);
+        if (list.length) dest = this._perchSlots(list, flock.length);
+      }
+    }
+    flock.forEach((o, i) => {
+      o.flights = (o.flights || 0) + 1;
+      o.dest = dest ? dest[i] : null; // null: lentää pois
+      o.takeoffAt = o === m ? 0 : 0.08 + Math.random() * 0.5;
+    });
+  }
+
+  // Osuma (myös kuolettava): muut parven linnut lähtevät kauas.
+  _parrotShot(m) {
+    m.airDeath = m.state === 'fly' || m.state === 'leave';
+    const other = this.list.find((o) => o !== m && o.type === 'parrot' && o.flock === m.flock && o.state !== 'dead');
+    if (m.hp > 0) this._parrotScare(m, true);
+    else if (other) this._parrotScare(other, true);
+  }
+
+  // Nuoli osui maahan tai esineeseen: lähellä olevat linnut säikähtävät.
+  arrowImpact(x, y, z) {
+    for (const m of this.list) {
+      if (m.type !== 'parrot' || m.state === 'dead') continue;
+      if ((m.pos.x - x) ** 2 + (m.pos.y - y) ** 2 + (m.pos.z - z) ** 2 < 5.5 * 5.5) { this._parrotScare(m); return; }
+    }
+  }
+
+  _parrotTakeOff(m) {
+    if (m.state === 'dead') return;
+    const P = this.player.position;
+    m.hopping = false;
+    if (!m.dest) {
+      this._set(m, 'leave', 8);
+      m.fl = null;
+      m.vy = 2.2;
+      m.yawT = Math.atan2(m.pos.x - P.x, m.pos.z - P.z) + (Math.random() - 0.5) * 0.9;
+      return;
+    }
+    this._parrotFlight(m, m.dest, 2.4 + Math.random() * 2.5);
+  }
+
+  _parrotFlight(m, p, peak) {
+    const dist = Math.hypot(p.x - m.pos.x, p.z - m.pos.z);
+    m.fl = {
+      sx: m.pos.x, sy: m.pos.y, sz: m.pos.z, ex: p.x, ey: p.y, ez: p.z, t: 0,
+      dur: 0.5 + dist / 7.5, peak: peak + dist * 0.04, bend: (Math.random() - 0.5) * dist * 0.3,
+    };
+    this._set(m, 'fly');
+  }
+
+  // Pieni siirtymä: hyppy samalla rungolla tai lyhyt lento viereiselle.
+  _parrotHop(m) {
+    const list = this._parrotPerches(m.pos.x, m.pos.z, 7);
+    if (!list.length) return;
+    const p = this._perchPoint(list[Math.floor(Math.random() * list.length)], Math.floor(Math.random() * 3));
+    const d = Math.hypot(p.x - m.pos.x, p.z - m.pos.z);
+    if (d < 0.25 || d > 6) return;
+    this._parrotFlight(m, p, d < 1.5 ? 0.25 : 0.6 + d * 0.15);
+    m.hopping = true;
+  }
+
+  _thinkParrot(m, dt) {
+    m.stateT += dt;
+    m.timer -= dt;
+    if (m.state === 'dead') {
+      m.deadT += dt;
+      if (m.deadT > 8) this.remove(m);
+      return;
+    }
+    if (m.takeoffAt !== undefined) {
+      m.takeoffAt -= dt;
+      if (m.takeoffAt <= 0) { m.takeoffAt = undefined; this._parrotTakeOff(m); }
+    }
+    const P = this.player;
+    const { dx, dz, d } = this._toPlayer(m);
+    const sight = this._sight(m.def);
+    switch (m.state) {
+      case 'graze':
+      case 'perch':
+        if (m.takeoffAt !== undefined) break;
+        if (d < sight) {
+          this._set(m, 'alert', 1.2 + Math.random() * 1.8);
+          m.alertD = m.state === 'alert' && m.alertD ? Math.min(m.alertD, d) : d;
+          break;
+        }
+        if (m.timer <= 0) {
+          m.timer = 3 + Math.random() * 7;
+          if (Math.random() < 0.3) this._parrotHop(m);
+          else m.yawT = m.yaw + (Math.random() - 0.5) * 2.6;
+        }
+        if (m.yawT !== undefined) m.yaw += Math.max(-dt * 5, Math.min(dt * 5, angleDiff(m.yawT, m.yaw)));
+        break;
+      case 'alert': {
+        // Kääntyy katsomaan pelaajaa; pyrähtää, jos pelaaja tulee lähemmäs
+        // tai tekee äkkinäisiä liikkeitä.
+        m.yaw += Math.max(-dt * 4, Math.min(dt * 4, angleDiff(Math.atan2(dx, dz), m.yaw)));
+        m.yawT = m.yaw;
+        const scary = d < sight * 0.6 || d < m.alertD - 2.5 || (this._pSwing && d < 7) || (this._pJump && d < 9) || (P.sprinting && d < sight);
+        if (scary && m.takeoffAt === undefined) this._parrotScare(m);
+        else if (m.timer <= 0) this._set(m, 'perch', 2 + Math.random() * 4);
+        break;
+      }
+      case 'leave':
+        if (m.stateT > 7) this.remove(m);
+        break;
+    }
+  }
+
+  _parrotMove(m, dt) {
+    const pos = m.pos;
+    const ox = pos.x, oy = pos.y, oz = pos.z;
+    const w = waterAt(pos.x, pos.z, _wq);
+    m.groundH = Math.max(w.h, w.wl);
+    if (m.state === 'fly' && m.fl) {
+      const f = m.fl;
+      f.t = Math.min(1, f.t + dt / f.dur);
+      const u = f.t, s = u * u * (3 - 2 * u), arc = Math.sin(Math.PI * u);
+      const hx = f.ex - f.sx, hz = f.ez - f.sz, hl = Math.hypot(hx, hz) || 1;
+      pos.x = f.sx + hx * s - (hz / hl) * f.bend * arc;
+      pos.z = f.sz + hz * s + (hx / hl) * f.bend * arc;
+      // Nopea nousu alussa, liuku alas lopussa.
+      pos.y = f.sy + (f.ey - f.sy) * s + f.peak * Math.pow(arc, 0.6);
+      pos.y = Math.max(pos.y, m.groundH + 0.05);
+      if (u >= 1) {
+        pos.set(f.ex, f.ey, f.ez);
+        m.perchY = f.ey;
+        m.fl = null;
+        m.hopping = false;
+        m.yawT = m.yaw;
+        this._set(m, 'perch', 2 + Math.random() * 5);
+      }
+    } else if (m.state === 'leave') {
+      m.vy += (3.2 - m.vy) * Math.min(1, dt * 1.5);
+      pos.y += m.vy * dt;
+      m.yaw += Math.max(-dt * 3, Math.min(dt * 3, angleDiff(m.yawT, m.yaw)));
+      pos.x += Math.sin(m.yaw) * 8 * dt;
+      pos.z += Math.cos(m.yaw) * 8 * dt;
+    } else if (m.state === 'dead') {
+      if (m.airDeath && pos.y > m.groundH + 0.02) {
+        // Ammuttu lennosta: putoaa maahan.
+        m.vy -= 9.8 * dt;
+        pos.y = Math.max(m.groundH + 0.02, pos.y + m.vy * dt);
+        pos.x += m.vel.x * dt;
+        pos.z += m.vel.z * dt;
+        m.vel.multiplyScalar(Math.exp(-dt * 1.2));
+      } else m.vel.set(0, 0, 0);
+      return;
+    } else if (m.perchY !== undefined) {
+      pos.y = m.perchY;
+    }
+    if (dt > 0) {
+      m.vel.set((pos.x - ox) / dt, 0, (pos.z - oz) / dt);
+      m.vy = (pos.y - oy) / dt;
+      // Lentosuunta (ei taaksepäin istumapaikalla) ja kallistus käännöksissä.
+      const sp = Math.hypot(m.vel.x, m.vel.z);
+      const y0 = m.yaw;
+      if (sp > 0.6 && m.state === 'fly') m.yaw += angleDiff(Math.atan2(m.vel.x, m.vel.z), m.yaw) * Math.min(1, dt * 8);
+      m.turnRate = angleDiff(m.yaw, y0) / dt;
+    }
+  }
+
+  // Istuessa pää liikkuu nykäyksittäin (katselee, kallistaa päätä, nokkii ja
+  // sukii), pyrstö keikkuu. Lennossa siivet lyövät nopeasti, välillä liito;
+  // laskeutuessa runko nousee pystyyn, siivet jarruttavat ja jalat ojentuvat.
+  _animParrot(m, md, dt, elapsed) {
+    const s = m.state;
+    const A = m.pa || (m.pa = { pitch: -0.65, fold: 1, hx: 0.45, hy: 0, hz: 0, next: 0, tx: 0.45, ty: 0, tz: 0, act: 0, leg: 0, roll: 0 });
+    const k = (hz) => Math.min(1, dt * hz);
+    const air = s === 'fly' || s === 'leave' || (s === 'dead' && m.airDeath && m.pos.y > (m.groundH ?? 0) + 0.03);
+    let pitch, fold, flap = 0, leg = 0, roll = 0;
+    if (s === 'dead') {
+      pitch = 0; fold = 0.45;
+      const kk = smooth(m.deadT / 0.35);
+      md.group.rotation.z = (m.deathSide || 1) * kk * 1.45;
+      if (air) md.group.rotation.x = m.deadT * 9;
+    } else if (air) {
+      const f = m.fl;
+      const u = f ? f.t : 0.5;
+      const landing = f && u > 0.78;
+      const glide = !landing && !m.hopping && f && u > 0.45 && Math.sin(elapsed * 3.1 + m.phase) > 0.2;
+      pitch = landing ? -1.05 * smooth((u - 0.78) / 0.18) : m.vy > 1 ? -0.3 : m.vy < -1 ? 0.12 : -0.05;
+      fold = 0;
+      const amp = landing ? 1.05 : glide ? 0 : 0.9;
+      flap = glide ? 0.18 : Math.sin(elapsed * (landing ? 24 : 36) + m.phase * 3) * amp + 0.15;
+      leg = landing ? -0.5 : 1.35;
+      roll = Math.max(-0.5, Math.min(0.5, (m.turnRate || 0) * 0.15));
+    } else {
+      pitch = s === 'alert' ? -0.85 : -0.65;
+      fold = 1;
+    }
+    // Pään asento: uusi kohde nykäyksittäin.
+    A.next -= dt;
+    if (A.next <= 0) {
+      const r = Math.random();
+      if (s === 'alert') {
+        // Katsoo pelaajaa välillä toisella silmällä (pää kallistuu).
+        const P = this.player.position;
+        const look = angleDiff(Math.atan2(P.x - m.pos.x, P.z - m.pos.z), m.yaw);
+        A.ty = Math.max(-1.2, Math.min(1.2, look)) + (Math.random() - 0.5) * 0.3;
+        A.tx = 0.5; A.tz = (Math.random() < 0.5 ? -1 : 1) * Math.random() * 0.55;
+        A.next = 0.35 + Math.random() * 0.7;
+      } else if (r < 0.12) {
+        A.tx = 1.35; A.ty = (Math.random() - 0.5) * 0.4; A.tz = 0; A.next = 0.25 + Math.random() * 0.2; // nokkii
+      } else if (r < 0.2) {
+        A.tx = 0.6; A.ty = (Math.random() < 0.5 ? -1 : 1) * 2.1; A.tz = 0.3; A.next = 0.9 + Math.random() * 1.2; // sukii
+      } else {
+        A.tx = 0.3 + Math.random() * 0.4; A.ty = (Math.random() - 0.5) * 1.8; A.tz = (Math.random() - 0.5) * 0.7;
+        A.next = 0.3 + Math.random() * 1.3;
+      }
+    }
+    const hk = k(air ? 8 : 20);
+    A.hx += ((air ? 0.15 - pitch : A.tx) - A.hx) * hk;
+    A.hy += ((air ? 0 : A.ty) - A.hy) * hk;
+    A.hz += ((air ? 0 : A.tz) - A.hz) * hk;
+    A.pitch += (pitch - A.pitch) * k(air ? 7 : 9);
+    A.fold += (fold - A.fold) * k(air ? 14 : 7);
+    A.leg += (leg - A.leg) * k(10);
+    A.roll += (roll - A.roll) * k(5);
+    md.hip.rotation.set(A.pitch, 0, A.roll);
+    md.head.rotation.set(A.hx, A.hy, A.hz, 'YXZ');
+    md.tail.rotation.x = air ? -0.1 : 0.05 + Math.sin(elapsed * 1.7 + m.phase) * 0.06 + (s === 'alert' ? Math.max(0, Math.sin(elapsed * 9)) * 0.15 : 0);
+    for (let i = 0; i < 2; i++) {
+      const w = md.wings[i], sx = i === 0 ? -1 : 1;
+      w.visible = A.fold < 0.8;
+      w.rotation.y = sx * A.fold * 1.5;
+      w.rotation.z = sx * (flap * (1 - A.fold) - 1.45 * A.fold);
+    }
+    for (const l of md.legs) l.rotation.x = A.leg;
+  }
+
+  // --- Herkuleskuoriainen (sessio 48) ------------------------------------------
+  // Sessio 49 (käyttäjä: lentelee enemmän ja on puunrungoilla, koska maasta
+  // sitä on vaikea huomata): kuoriainen lentää itsekseen rungolta toiselle ja
+  // kiipeilee rungoilla enimmäkseen 1–3 m:n korkeudella selkä ulospäin.
+
+  // Rungon keskipiste ja säde korkeudella h (puun mallin rungon tiedoista).
+  _trunkAt(t, h, out) {
+    const o = t.obj, M = t.meta, sc = o.scale;
+    const b = M.base, tp = M.top;
+    const k = Math.max(0, Math.min(1, (h / sc - b[1]) / Math.max(0.1, tp[1] - b[1])));
+    const lx = (b[0] + (tp[0] - b[0]) * k) * sc, lz = (b[2] + (tp[2] - b[2]) * k) * sc;
+    const c = Math.cos(o.rot), sn = Math.sin(o.rot);
+    out.x = o.x + lx * c + lz * sn;
+    out.z = o.z - lx * sn + lz * c;
+    out.r = (M.r0 + (M.r1 - M.r0) * k) * sc;
+    return out;
+  }
+
+  // Kiipeilykorkeus rungolla: enimmäkseen silmien korkeudella (pelaajan pitää
+  // huomata kuoriainen); pönkkäjuurten yläpuolella.
+  _trunkRange(obj, meta) {
+    const hMin = obj.type === 'emergent' ? 3.6 : obj.type === 'jungle' ? 1.9 : 0.7;
+    const hMax = Math.max(hMin + 0.6, Math.min(obj.type === 'emergent' ? 4.6 : 3.0, meta.top[1] * obj.scale * 0.7));
+    return [hMin, hMax];
+  }
+
+  _trunkAlive(t) {
+    return t && !this.world.removed.has(t.obj.id) && !this.world.stumps.has(t.obj.id);
+  }
+
+  // Lähin sopiva runko 2–14 m:n päästä (pakeneva: poispäin pelaajasta).
+  _beetleFindTrunk(m, flee) {
+    const p = this.player.position;
+    this.world.collidersNear(m.pos.x, m.pos.z, 14, _cols);
+    const cand = [];
+    for (const c of _cols) {
+      const o = c.obj;
+      if (!o) continue;
+      const def = OBJECT_TYPES[o.type];
+      if (!def || def.kind !== 'tree' || o.stump) continue;
+      const geo = this.world.models.world[def.model]?.[o.variant];
+      const meta = geo && geo.userData.tree;
+      if (!meta) continue;
+      const d = Math.hypot(o.x - m.pos.x, o.z - m.pos.z);
+      if (d < 1.5 || d > 14) continue;
+      if (flee && Math.hypot(o.x - p.x, o.z - p.z) < Math.hypot(m.pos.x - p.x, m.pos.z - p.z) + 1) continue;
+      cand.push({ obj: o, meta, d });
+    }
+    if (!cand.length) return null;
+    cand.sort((a, b) => a.d - b.d);
+    const pick = cand[Math.floor(Math.random() * Math.min(4, cand.length))];
+    const t = { obj: pick.obj, meta: pick.meta };
+    const [hMin, hMax] = this._trunkRange(pick.obj, pick.meta);
+    t.h = hMin + Math.random() * (hMax - hMin);
+    const c = this._trunkAt(t, t.h, _tk);
+    t.ang = Math.atan2(m.pos.z - c.z, m.pos.x - c.x) + (Math.random() - 0.5) * 1.2;
+    t.dir = Math.random() < 0.5 ? 1 : -1;
+    return t;
+  }
+
+  // Lentoon: kohteena runko (useimmiten) tai maa.
+  _beetleTakeOff(m, flee = true) {
+    if (m.state === 'dead') return;
+    m.trunk = Math.random() < 0.75 ? this._beetleFindTrunk(m, flee) : null;
+    if (!m.trunk) {
+      const p = this.player.position;
+      let a = Math.random() * Math.PI * 2;
+      if (flee) a = Math.atan2(m.pos.z - p.z, m.pos.x - p.x) + (Math.random() - 0.5) * 1.4;
+      const r = 5 + Math.random() * 7;
+      m.fx = m.pos.x + Math.cos(a) * r;
+      m.fz = m.pos.z + Math.sin(a) * r;
+    }
+    this._set(m, 'fly', 14);
+    m.vel.y = 1.4;
+  }
+
+  // Laskeutuminen rungolle: paikka ja suunta rungon pinnalla.
+  _beetleOnTrunk(m) {
+    const t = m.trunk;
+    const c = this._trunkAt(t, t.h, _tk);
+    const off = c.r + 0.012;
+    m.pos.set(c.x + Math.cos(t.ang) * off, (t.obj.y ?? m.pos.y) + t.h, c.z + Math.sin(t.ang) * off);
+  }
+
+  _thinkBeetle(m, dt) {
+    const def = m.def;
+    m.stateT += dt;
+    m.timer -= dt;
+    const { dx, dz, d } = this._toPlayer(m);
+    const P = this.player;
+    const close = !P.dead && d < (P.crouching ? 0.6 : 1.2);
+    switch (m.state) {
+      case 'graze':
+        this._steer(m, 0, 0, 0, dt);
+        if (close) this._set(m, 'threat', 1.4 + Math.random());
+        else if (m.timer <= 0) {
+          // Usein lentoon (rungolle), muuten pieni kävely.
+          if (Math.random() < 0.55) { this._beetleTakeOff(m, false); break; }
+          const a = Math.random() * Math.PI * 2, r = 1 + Math.random() * 3;
+          m.tx = m.pos.x + Math.cos(a) * r;
+          m.tz = m.pos.z + Math.sin(a) * r;
+          this._set(m, 'wander', 14);
+        }
+        break;
+      case 'wander': {
+        const wx = m.tx - m.pos.x, wz = m.tz - m.pos.z;
+        const wd = Math.hypot(wx, wz);
+        const wob = Math.sin(m.stateT * 1.7 + m.phase * 0.01) * 0.5;
+        const ux = wx / (wd || 1), uz = wz / (wd || 1);
+        this._steer(m, ux * Math.cos(wob) - uz * Math.sin(wob), uz * Math.cos(wob) + ux * Math.sin(wob), def.walk, dt);
+        if (close) this._set(m, 'threat', 1.4 + Math.random());
+        else if (wd < 0.25 || m.timer <= 0) this._set(m, 'graze', 2 + Math.random() * 5);
+        break;
+      }
+      case 'threat':
+        this._steer(m, dx, dz, 0, dt, true);
+        m.annoy = (m.annoy || 0) + (close ? dt : -dt * 0.5);
+        if (m.annoy > 3.2) { m.annoy = 0; this._beetleTakeOff(m, true); break; }
+        if (m.timer <= 0) this._set(m, close ? 'threat' : 'graze', close ? 1 : 1.5);
+        break;
+      case 'fly': {
+        // Kömpelö, pörisevä lento kohteeseen (runko tai maa).
+        const t = m.trunk;
+        if (t && !this._trunkAlive(t)) m.trunk = null;
+        const gy = waterAt(m.pos.x, m.pos.z, _wq).h;
+        let tx, ty, tz;
+        if (m.trunk) {
+          const c = this._trunkAt(m.trunk, m.trunk.h, _tk);
+          const off = c.r + 0.012;
+          tx = c.x + Math.cos(m.trunk.ang) * off;
+          tz = c.z + Math.sin(m.trunk.ang) * off;
+          ty = (m.trunk.obj.y ?? gy) + m.trunk.h;
+        } else {
+          tx = m.fx ?? m.pos.x; tz = m.fz ?? m.pos.z;
+          ty = waterAt(tx, tz, _wq).h;
+        }
+        const hx = tx - m.pos.x, hz = tz - m.pos.z;
+        const hd = Math.hypot(hx, hz);
+        // Kaukana lennetään 1,5–2,5 m:n korkeudella, lähellä suoraan kohteeseen.
+        const cruise = hd > 1.5 ? Math.max(ty, gy + 1.6 + Math.sin(m.stateT * 1.3) * 0.4) : ty;
+        const vx = hx, vy = cruise - m.pos.y, vz = hz;
+        const vl = Math.hypot(vx, vy, vz) || 1;
+        const sp = Math.min(2.6, 0.6 + vl * 2.2);
+        const wob = Math.sin(m.stateT * 9 + m.phase * 0.01) * 0.25;
+        m.vel.x += ((vx / vl) * sp + Math.cos(m.stateT * 3.1) * wob - m.vel.x) * Math.min(1, dt * 4);
+        m.vel.z += ((vz / vl) * sp + Math.sin(m.stateT * 2.7) * wob - m.vel.z) * Math.min(1, dt * 4);
+        m.vel.y += ((vy / vl) * sp - m.vel.y) * Math.min(1, dt * 4);
+        if (hd > 0.05) m.yaw += angleDiff(Math.atan2(hx, hz), m.yaw) * Math.min(1, dt * 5);
+        if (hd < 0.12 && Math.abs(ty - m.pos.y) < 0.12) {
+          m.vel.set(0, 0, 0);
+          if (m.trunk) { this._beetleOnTrunk(m); this._set(m, 'climb', 15 + Math.random() * 25); }
+          else { m.pos.y = ty; this._set(m, 'graze', 3 + Math.random() * 6); }
+        } else if (m.timer <= 0) {
+          m.trunk = null; m.fx = m.pos.x; m.fz = m.pos.z; // laskeutuu suoraan alas
+        }
+        break;
+      }
+      case 'climb': {
+        // Rungolla: kiipeää hitaasti ylös ja alas, välillä pysähtyy.
+        const t = m.trunk;
+        if (!this._trunkAlive(t)) { this._beetleTakeOff(m, false); break; }
+        const move = Math.sin(m.stateT * 0.4 + m.phase * 0.01) > -0.2;
+        m.climbV = move ? 0.07 : 0;
+        t.h += t.dir * m.climbV * dt;
+        t.ang += Math.sin(m.stateT * 0.23) * 0.05 * dt;
+        const [hMin, hMax] = this._trunkRange(t.obj, t.meta);
+        if (t.h > hMax) t.dir = -1;
+        if (t.h < hMin) t.dir = 1;
+        this._beetleOnTrunk(m);
+        m.vel.set(0, 0, 0);
+        if (m.timer <= 0 || (close && d < 0.8 && Math.random() < dt * 0.5)) this._beetleTakeOff(m, close);
+        break;
+      }
+      case 'stagger':
+        if (m.stateT >= m.staggerDur) this._beetleTakeOff(m, true);
+        break;
+      case 'dead':
+        m.deadT += dt;
+        m.vel.x *= Math.exp(-dt * 6);
+        m.vel.z *= Math.exp(-dt * 6);
+        if (m.deadT > 9) this.remove(m);
+        break;
+      default:
+        this._set(m, 'graze', 2);
+    }
+  }
+
+  // Ilmassa ja rungolla oma liike (lento kolmiulotteisesti; kuollut putoaa).
+  _beetleAir(m, dt) {
+    const pos = m.pos;
+    const gy = Math.max(waterAt(pos.x, pos.z, _wq).h, -1000);
+    if (m.state === 'climb') return;
+    if (m.state === 'dead') {
+      m.vel.y -= 9.8 * dt;
+      pos.addScaledVector(m.vel, dt);
+      if (pos.y <= gy) { pos.y = gy; m.vel.set(0, 0, 0); }
+      return;
+    }
+    pos.x += (m.vel.x + m.knock.x) * dt;
+    pos.z += (m.vel.z + m.knock.z) * dt;
+    pos.y += m.vel.y * dt;
+    m.knock.multiplyScalar(Math.exp(-dt * 3.5));
+    if (pos.y < gy) { pos.y = gy; m.vel.y = Math.max(0, m.vel.y); }
+  }
+
+  // Kuusijalkainen kävely kolmijalkakäynnillä (vasen etu, oikea keski ja
+  // vasen taka yhtä aikaa). Uhitellessa etupää ja sarvet nousevat; lentäessä
+  // peitinsiivet aukeavat ja lentosiivet surisevat. Rungolla selkä ulospäin
+  // ja pää kulkusuuntaan. Kuollessa kääntyy selälleen.
+  _animBeetle(m, md, speed, dt, elapsed) {
+    const L = md.legs, W = md.wings;
+    const s = m.state;
+    const climbing = s === 'climb' && m.trunk;
+    const flying = s === 'fly' && m.pos.y > waterAt(m.pos.x, m.pos.z, _wq).h + 0.02;
+    if (climbing) m.phase += (m.climbV || 0) * dt * 110;
+    const walkK = climbing ? Math.min(1, (m.climbV || 0) / 0.07) : Math.min(1, speed / Math.max(0.05, m.def.walk));
+    let headX = Math.sin(elapsed * 1.3 + m.phase * 0.01) * 0.04;
+    let bodyX = 0;
+    if (s === 'threat') { headX = -0.45; bodyX = -0.16; }
+    for (const g of L) {
+      const side = g.userData.side, k = g.userData.pair;
+      // Ryhmä A: vasen etu (k0, -1), oikea keski (k1, +1), vasen taka (k2, -1).
+      const grpA = (k === 1) === (side > 0);
+      const ph = m.phase + (grpA ? 0 : Math.PI);
+      let swing = Math.sin(ph) * 0.42 * walkK;
+      let lift = Math.max(0, Math.cos(ph)) * 0.35 * walkK;
+      if (flying) { swing = 0.25 * (k - 1); lift = -0.5; }
+      else if (s === 'threat' && k === 0) { lift = 0.25; swing = 0.3; }
+      if (s === 'dead') {
+        const tw = m.deadT < 3.5 ? Math.sin(elapsed * 9 + k * 2 + side) * 0.3 * (1 - m.deadT / 3.5) : 0;
+        swing = tw;
+        lift = -0.6;
+      }
+      g.rotation.y = -side * swing;
+      g.rotation.z = side * lift;
+    }
+    // Peitinsiivet (0, 1) ja lentosiivet (2, 3)
+    const open = flying ? 1 : 0;
+    m.wingOpen = (m.wingOpen || 0) + (open - (m.wingOpen || 0)) * Math.min(1, dt * 10);
+    const o = m.wingOpen;
+    for (let i = 0; i < 2; i++) {
+      const g = W[i], side = g.userData.side;
+      g.rotation.z = side * o * 0.75;
+      g.rotation.x = o * 0.55; // takaosa nousee
+    }
+    for (let i = 2; i < 4; i++) {
+      const g = W[i], side = g.userData.side;
+      g.visible = o > 0.4;
+      if (g.visible) {
+        g.rotation.z = side * (0.15 + Math.sin(elapsed * 70) * 0.7);
+        g.rotation.y = side * 0.35;
+      }
+    }
+    md.head.rotation.x += (headX - md.head.rotation.x) * Math.min(1, dt * 8);
+    md.body.rotation.x += (bodyX - md.body.rotation.x) * Math.min(1, dt * 8);
+    if (climbing) {
+      // Selkä (+Y) rungosta ulospäin, eteenpäin (+Z) kulkusuuntaan pystyssä.
+      _bY.set(Math.cos(m.trunk.ang), 0, Math.sin(m.trunk.ang));
+      _bZ.set(0, m.trunk.dir, 0);
+      _bX.crossVectors(_bY, _bZ);
+      _bm.makeBasis(_bX, _bY, _bZ);
+      md.group.quaternion.setFromRotationMatrix(_bm);
+      return;
+    }
+    md.group.rotation.set(flying ? -0.5 : bodyX * 0.6, m.yaw, 0);
+    if (s === 'dead') {
+      // Selälleen: kääntyy pituusakselin ympäri ja nousee kuoren kaaren verran.
+      const k = smooth(m.deadT / 0.5);
+      md.group.rotation.set(0, m.yaw, m.deathSide * k * Math.PI);
+      md.group.position.y += k * 0.077;
+    }
+  }
+
+  // --- Gorilla (sessio 51) ------------------------------------------------------
+  // Käyttäjä: ei hyökkää heti, vaan jopa hieman pelkää pelaajaa (viidakosta ei
+  // saa tulla liian vaikea). Suuttuu vain, jos kokee olonsa uhatuksi: lyönti,
+  // hyppy viereen tai äkkinäiset liikkeet. Suuttuessaan karjuu ja hyökkää.
+  // Säikähdys kertyy mittariin (m.startle, 1 = suuttuu) ja laantuu ajan myötä;
+  // puolivälissä gorilla varoittaa nousemalla ja lyömällä rintaansa.
+  _thinkGorilla(m, dt) {
+    const def = m.def, P = this.player;
+    m.stateT += dt;
+    m.timer -= dt;
+    m.provoked = Math.max(0, m.provoked - dt);
+    m.startle = Math.max(0, m.startle - dt * 0.2);
+    m.displayCd = Math.max(0, (m.displayCd || 0) - dt);
+    const { dx, dz, d } = this._toPlayer(m);
+    const sees = this._sees(m, d);
+    // Pelaajan nopeus gorillaa kohti (m/s).
+    const toward = P.velocity.x * dx + P.velocity.z * dz < 0 ? -(P.velocity.x * dx + P.velocity.z * dz) : 0;
+    if (m.provoked <= 0 && !P.dead && d < 6 && m.state !== 'dead' && m.state !== 'flee') {
+      // Juoksee suoraan päin (kävely 4,2 m/s ei säikytä, juoksu 7,2 m/s säikyttää).
+      if (toward > 5.5 && d < 4.5) m.startle += dt * 0.9 * (toward / 6);
+      if (this._pJump && d < 3.5) m.startle += d < 2.2 ? 1.1 : 0.55;    // hyppää viereen
+      if (this._pLand && d < 2.5) m.startle += 0.6;                     // laskeutuu viereen
+      if (this._pSwing && d < 3.2) m.startle += 0.45;                   // huitoo lähellä
+      if (d < 1.5) m.startle += dt * 0.35;                              // tunkee liian lähelle
+      if (m.startle >= 1) this._gorillaAnger(m, 1.3);
+      else if (m.startle > 0.45 && m.displayCd <= 0 && m.state !== 'display') {
+        m.displayCd = 7;
+        this._set(m, 'display', 1.5);
+      }
+    }
+    switch (m.state) {
+      case 'graze':
+        this._steer(m, 0, 0, 0, dt);
+        if (m.provoked > 0 && !P.dead) this._set(m, 'chase');
+        else if (sees && d < 6) this._set(m, 'avoid', 4 + Math.random() * 2);
+        else if (sees && d < 11) this._set(m, 'watch', 2 + Math.random() * 2);
+        else if (m.timer <= 0) {
+          const a = Math.random() * Math.PI * 2, r = 4 + Math.random() * 8;
+          m.tx = m.pos.x + Math.cos(a) * r;
+          m.tz = m.pos.z + Math.sin(a) * r;
+          this._set(m, 'wander', 12);
+        }
+        break;
+      case 'wander': {
+        const wx = m.tx - m.pos.x, wz = m.tz - m.pos.z;
+        const wd = Math.hypot(wx, wz);
+        this._steer(m, wx / (wd || 1), wz / (wd || 1), def.walk, dt);
+        if (m.provoked > 0) this._set(m, 'chase');
+        else if (sees && d < 11) this._set(m, 'watch', 2 + Math.random() * 2);
+        else if (wd < 1 || m.timer <= 0) this._set(m, 'graze', 4 + Math.random() * 6);
+        break;
+      }
+      case 'watch':
+        // Pysähtyy katsomaan pelaajaa varovaisena.
+        this._steer(m, dx, dz, 0, dt, true);
+        if (m.provoked > 0) this._set(m, 'chase');
+        else if (d < 6) this._set(m, 'avoid', 3 + Math.random() * 2);
+        else if (m.timer <= 0) this._set(m, !sees || d > 11 ? 'graze' : 'watch', 2 + Math.random() * 2);
+        break;
+      case 'avoid': {
+        // Väistää: kävelee poispäin; jos pelaaja tulee perässä, juoksee
+        // (4,2 m/s, pelaajan kävelyvauhti).
+        if (m.provoked > 0) { this._set(m, 'chase'); break; }
+        const sp = toward > 1.5 && d < 8 ? 4.2 : def.walk * 1.35;
+        const wob = Math.sin(m.stateT * 0.9 + m.phase) * 0.4;
+        const fx = -dx * Math.cos(wob) + dz * Math.sin(wob), fz = -dz * Math.cos(wob) - dx * Math.sin(wob);
+        this._steer(m, fx, fz, sp, dt);
+        if (m.timer <= 0) this._set(m, d > 10 ? 'watch' : 'avoid', d > 10 ? 1.5 + Math.random() : 2.5);
+        break;
+      }
+      case 'display':
+        // Varoitus: nousee, lyö rintaansa ja katsoo pelaajaa (ei hyökkää).
+        this._steer(m, dx, dz, 0, dt, true);
+        if (m.provoked > 0 && m.stateT > 0.6) this._set(m, 'chase');
+        else if (m.timer <= 0) this._set(m, 'avoid', 3 + Math.random() * 2);
+        break;
+      case 'roar':
+        // Suuttunut: karjuu ja lyö rintaansa, sitten hyökkää.
+        this._steer(m, dx, dz, 0, dt, true);
+        if (m.timer <= 0) this._set(m, 'chase');
+        break;
+      case 'chase':
+        if (m.provoked <= 0 || d > 28 || P.dead) { this._gorillaCalm(m); break; }
+        this._steer(m, dx, dz, def.run * (d < 4 ? 0.75 : 1), dt);
+        if (d - PLAYER_R < def.reach + 0.5) this._set(m, 'windup');
+        break;
+      case 'windup':
+        this._steer(m, dx, dz, 0, dt, true);
+        if (m.stateT >= def.windup) this._set(m, 'attack');
+        break;
+      case 'attack': {
+        // Syöksähdys ja lyönti (osuma kerran).
+        const k = Math.max(0, 1 - m.stateT / def.attack);
+        m.vel.x = Math.sin(m.yaw) * 2.4 * k;
+        m.vel.z = Math.cos(m.yaw) * 2.4 * k;
+        if (!m.hitDone && m.stateT > def.attack * 0.45) this._tryHit(m);
+        if (m.stateT >= def.attack) this._set(m, 'recover');
+        break;
+      }
+      case 'recover':
+        this._steer(m, 0, 0, 0, dt);
+        if (m.stateT >= def.recover) {
+          if (m.provoked <= 0) this._gorillaCalm(m);
+          else if (Math.random() < 0.45) {
+            m.circleDir = Math.random() < 0.5 ? -1 : 1;
+            this._set(m, 'circle', 1 + Math.random());
+          } else this._set(m, 'chase');
+        }
+        break;
+      case 'circle':
+        if (m.provoked <= 0 || P.dead) { this._gorillaCalm(m); break; }
+        this._circle(m, dx, dz, d, 3.5, def.run * 0.45, dt);
+        if (m.timer <= 0) this._set(m, 'chase');
+        break;
+      case 'flee': {
+        const wob = Math.sin(m.stateT * 1.3 + m.phase) * 0.35;
+        this._steer(m, -dx * Math.cos(wob) + dz * Math.sin(wob), -dz * Math.cos(wob) - dx * Math.sin(wob), def.run * 0.8, dt);
+        if (m.timer <= 0 && (d > 30 || P.dead)) this._set(m, 'graze', 4);
+        else if (m.timer <= 0) m.timer = 2;
+        break;
+      }
+      case 'stagger':
+        this._steer(m, 0, 0, 0, dt);
+        if (m.stateT >= m.staggerDur) {
+          if (m.hp / def.hp < 0.25) this._set(m, 'flee', 6);
+          else this._set(m, m.provoked > 0 ? 'chase' : 'avoid', 3);
+        }
+        break;
+      case 'dead':
+        m.deadT += dt;
+        m.vel.multiplyScalar(Math.exp(-dt * 6));
+        if (m.poolAt > 0 && m.deadT >= m.poolAt && this.blood) {
+          m.poolAt = 0;
+          this.blood.splat(m.pos.x, m.pos.z, 1.8, BLOOD.gorilla, 4);
+        }
+        if (m.deadT > 8) this.remove(m);
+        break;
+      default:
+        this._set(m, 'graze', 2);
+    }
+  }
+
+  // Suuttuu (lyönti, tuli tai säikähdys): uusi suuttumus alkaa karjaisulla.
+  _gorillaAnger(m, roarT) {
+    if (m.state === 'dead' || m.state === 'flee') return;
+    const fresh = m.provoked <= 0;
+    m.provoked = 22;
+    m.startle = 0;
+    if (fresh) {
+      this._set(m, 'roar', roarT);
+      events.emit('gorillaRoar', { x: m.pos.x, z: m.pos.z });
+    } else if (m.state === 'avoid' || m.state === 'watch' || m.state === 'graze' || m.state === 'wander' || m.state === 'display') {
+      this._set(m, 'chase');
+    }
+  }
+
+  // Rauhoittuu: väistää pelaajaa taas.
+  _gorillaCalm(m) {
+    m.provoked = 0;
+    m.startle = 0;
+    this._set(m, 'avoid', 4);
+  }
+
   _thinkClay(m, dt) {
     const def = m.def;
     m.stateT += dt;
@@ -1691,7 +2932,16 @@ export class Mobs {
     }
     const diff = angleDiff(want, m.yaw);
     const turn = m.def.turn * (speed > 3 ? 1.1 : 1);
-    m.yaw += Math.max(-turn * dt, Math.min(turn * dt, diff));
+    if (m.def.turnAcc) {
+      // Sessio 53: isot eläimet kääntyvät pehmeästi (kulmanopeus kiihtyy ja
+      // hidastuu ennen kohdesuuntaa), eivät napsahda suoraan uuteen suuntaan.
+      const acc = m.def.turnAcc;
+      const ad = Math.abs(diff);
+      const wantRate = Math.sign(diff) * Math.min(turn, Math.sqrt(2 * acc * ad) * 0.85, ad * 12);
+      const r = m.yawRate || 0;
+      m.yawRate = r + Math.max(-acc * dt, Math.min(acc * dt, wantRate - r));
+      m.yaw += m.yawRate * dt;
+    } else m.yaw += Math.max(-turn * dt, Math.min(turn * dt, diff));
     const align = face ? 0 : Math.max(0, Math.cos(diff));
     const tv = speed * align;
     const k = 1 - Math.exp(-dt * 8);
@@ -1825,17 +3075,42 @@ export class Mobs {
     md.group.rotation.y = m.yaw;
     m.flash *= Math.exp(-dt * 9);
     if (!m.burning) md.material.emissive.setRGB(m.flash * 0.85, m.flash * 0.22, m.flash * 0.12);
+    if (md.cloth) md.cloth.emissive.copy(md.material.emissive);
     const speed = Math.hypot(m.vel.x, m.vel.z);
     const kind = md.kind;
-    m.phase += speed * dt * (m.type === 'warthog' ? 4.4 : kind === 'bird' ? 14 : kind === 'guineafowl' ? 9 : m.def.skittish ? 5 : 3.2);
+    m.phase += speed * dt * (m.type === 'warthog' ? 4.4 : kind === 'beetle' ? 110 : kind === 'bird' ? 14 : kind === 'guineafowl' ? 9 : m.def.skittish ? 5 : 3.2);
     if (kind === 'elephant') this._animElephant(m, md, speed, dt, elapsed);
+    else if (kind === 'beetle') this._animBeetle(m, md, speed, dt, elapsed);
+    else if (kind === 'gorilla') this._animGorilla(m, md, speed, dt);
+    else if (kind === 'leopard') this._animLeopard(m, md, speed, dt, elapsed);
     else if (m.type === 'warthog') this._animWarthog(m, md, speed, dt, elapsed);
     else if (kind === 'guineafowl' || kind === 'bird') this._animFowl(m, md, speed, dt, elapsed);
+    else if (kind === 'parrot') this._animParrot(m, md, dt, elapsed);
     else if (kind === 'haamu') this._animHaamu(m, md, speed, dt, elapsed);
     else if (m.def.skittish) this._animQuad(m, md, speed, dt, elapsed);
     else this._animClay(m, md, speed, dt, elapsed);
     this._fxDaze(m, md, dt, elapsed);
     if (m.emergeGlow) this._fxEmerge(m, dt);
+  }
+
+  // Sessio 51/53: gorillan animaatiot mallista (models/gorilla.js,
+  // animateGorilla): seisoo, kävelee rystysillään, laukkaa, nousee pystyyn ja
+  // lyö rintaansa (varoitus ja karjaisu) ja lyö. Kuollessaan kaatuu kyljelleen.
+  _animGorilla(m, md, speed, dt) {
+    const s = m.state;
+    if (s === 'dead') {
+      const k = smooth(Math.min(1, m.deadT / 0.8));
+      md.group.rotation.set(0, m.yaw, m.deathSide * k * 1.45);
+      md.group.position.y += k * 0.35;
+      return;
+    }
+    const turn = dt > 0 ? angleDiff(m.yaw, m.prevYaw ?? m.yaw) / dt : 0;
+    m.prevYaw = m.yaw;
+    const d = m.def;
+    animateGorilla(md, {
+      state: s, stateT: m.stateT, stateDur: m.stateT + Math.max(0, m.timer), speed, turn,
+      windup: d.windup, attack: d.attack, recover: d.recover,
+    }, dt);
   }
 
   // Norsu: kävely, kärsä, korvat ja häntä (models/elephant.js). Jalat

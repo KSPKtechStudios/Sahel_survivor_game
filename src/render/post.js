@@ -96,6 +96,10 @@ uniform sampler2D tPrev;
 uniform float uUp;
 uniform float uDown;
 uniform float uInit;
+uniform vec2 uSunUV;  // sessio 58: auringon paikka kuvassa
+uniform float uSunK;  // aurinko lähellä kuvan keskiötä (0..1)
+uniform float uGUp;   // häikäisyyn tottuminen (hidas, n. 2 s)
+uniform float uGDown; // palautuminen
 varying vec2 vUv;
 void main() {
   float sl = 0.0, sm = 0.0, ws = 0.0;
@@ -103,20 +107,40 @@ void main() {
     for (int x = 0; x < 16; x++) {
       vec2 uv = (vec2(float(x), float(y)) + 0.5) / vec2(16.0, 9.0);
       vec3 c = texture2D(tColor, uv).rgb;
-      float l = min(dot(c, vec3(0.2126, 0.7152, 0.0722)), 4.0);
+      // Sessio 58: kirkas taivas saa vaikuttaa enemmän (yläraja 4 -> 8).
+      float l = min(dot(c, vec3(0.2126, 0.7152, 0.0722)), 8.0);
       float sky = step(0.99999, texture2D(tDepth, uv).r);
       // Sessio 27: taivas painaa enemmän (0,15 -> 0,4): ylös kirkkaaseen
       // katsottaessa metsä tummuu ja alas katsottaessa silmä tottuu taas.
-      float w = (1.25 - length(uv - 0.5)) * mix(1.0, 0.4, sky);
+      // Sessio 39: taivas painaa vielä enemmän (0,4 -> 0,75): aurinkoon ja
+      // kirkkaaseen taivaaseen katsottaessa valotus laskee, eikä taivas puhkea.
+      // Sessio 58: 0,75 -> 1,1 (käyttäjä: ylös katsoessa taivasta ei erottanut
+      // valon seasta): latvuston aukkojen taivas laskee valotusta, ja taivas
+      // säilyttää värinsä.
+      float w = (1.25 - length(uv - 0.5)) * mix(1.0, 1.1, sky);
       sl += w * log(l + 0.0005);
       sm += w * l;
       ws += w;
     }
   }
   float cur = log(mix(exp(sl / ws), sm / ws, 0.7) + 0.0005);
-  float prev = texture2D(tPrev, vec2(0.5)).r;
+  vec4 pv = texture2D(tPrev, vec2(0.5));
+  float prev = pv.r;
   float k = cur > prev ? uUp : uDown;
-  gl_FragColor = vec4(uInit > 0.5 ? cur : mix(prev, cur, k), 0.0, 0.0, 1.0);
+  // Sessio 58: häikäisyyn tottuminen (g-kanava). Aurinkoon katsottaessa ensin
+  // sokaisee, sitten parissa sekunnissa silmä tottuu ja alkaa nähdä.
+  float sv = 0.0;
+  if (uSunK > 0.0) {
+    for (int i = 0; i < 5; i++) {
+      float a = float(i) * 1.2566;
+      vec2 o = i == 0 ? vec2(0.0) : vec2(cos(a), sin(a)) * 0.012;
+      sv += step(0.99999, texture2D(tDepth, clamp(uSunUV + o, 0.001, 0.999)).r);
+    }
+    sv *= 0.2;
+  }
+  float gT = sv * uSunK;
+  float gk = gT > pv.g ? uGUp : uGDown;
+  gl_FragColor = vec4(uInit > 0.5 ? cur : mix(prev, cur, k), uInit > 0.5 ? 0.0 : mix(pv.g, gT, gk), 0.0, 1.0);
 }
 `;
 
@@ -137,8 +161,17 @@ float coc(vec2 uv, float focus) {
   // tarkennusta kauempana oleva tausta (tai hyvin lähellä oleva) sumenee.
   // Sessio 25: selvästi hillitympi (käyttäjä: sumensi liikaa). Tausta
   // sumenee vasta kaukana ja vain vähän; etuala vain aivan kameran edessä.
-  float farStart = max(focus * 3.0 + 15.0, 32.0);
-  float farC = smoothstep(farStart, farStart * 4.0 + 80.0, z) * 0.4;
+  // Sessio 39 (käyttäjä: toimivammaksi ja huomattavammaksi): tarkennuksen
+  // mukaan. Lähelle katsottaessa tausta sumenee selvästi; kauas katsottaessa
+  // vain aivan kameran edessä oleva sumenee.
+  // Sessio 44: takaisin session 25 arvoihin. Sessioiden 39-40 voimakkaampi
+  // syväterävyys korvasi kaukaisen maiseman lähes kokonaan puolikkaan
+  // tarkkuuden kuvalla, mikä näytti pikselimössöltä.
+  // Sessio 46: hieman takaisin päin (käyttäjä: syväterävyys ei ollut
+  // pikselimössön syy, saa lisätä): alkaa aiemmin ja voimakkaampana kuin
+  // sessiossa 25, mutta lievempänä kuin sessioissa 39-40.
+  float farStart = max(focus * 2.5 + 12.0, 24.0);
+  float farC = smoothstep(farStart, farStart * 4.0 + 80.0, z) * 0.5;
   float nearC = focus > 8.0 ? (1.0 - smoothstep(0.5, 1.3, z)) * 0.45 : 0.0;
   return max(farC, nearC);
 }
@@ -195,13 +228,21 @@ uniform float uAspect;
 uniform float uFlare;
 uniform vec2 uSunUV;
 uniform vec3 uFlareColor;
-uniform sampler2D tLum;  // sessio 25: sopeutunut kirkkaus (log)
+uniform sampler2D tLum;  // sessio 25: sopeutunut kirkkaus (log); g = häikäisyyn tottuminen (sessio 58)
+uniform float uGlareOn;
 uniform vec4 uAE;        // x = viitekirkkaus, y = voimakkuus (0 = pois), z = min, w = max
 uniform vec4 uHFog;      // sessio 24: korkeussumu x = tiheys, y = pohja (m), z = vaimeneminen, w = aika
 uniform vec3 uHFogColor;
+uniform vec4 uVeil;      // sessio 58: huippujen pilviverho x, y = vyöhykkeen ala- ja yläraja (m), z = voimakkuus, w = valoisuus
+uniform vec4 uVeilRect;  // kartan alkukulma (x, z) ja koko (m)
+uniform vec2 uVeilDrift; // tuulen mukana ajelehtiminen (m)
+uniform sampler2D tVeil; // missä massiiveja on (0..1)
+uniform float uHorizon;  // sessio 58: taivaan horisontin usvaisuus
 uniform sampler2D tVol;  // sessio 26: valokeilat (r = valaistu matka m, g = säteen pituus)
 uniform vec3 uVolCol;    // auringon väri * voimakkuus * ilman tiheys
 uniform vec2 uVolTexel;
+uniform float uOutA;     // sessio 39: alfa HDR-kuvaan (0 = maailma; käsi kirjoittaa 1)
+uniform float uSkyK;     // sessio 40: taivaan valotus päivällä (ei puhkea valkoiseksi)
 uniform sampler2D tAO;   // sessio 37: ambienttiokkluusio (r = okkluusio, g = syvyys)
 uniform vec2 uAORes;
 uniform float uAOStr;
@@ -255,11 +296,12 @@ vec3 lensFlare(vec2 uv) {
   float d = length(dv);
   vec3 c = vec3(0.0);
   // Hehku ja tähtimäiset säteet
-  c += uFlareColor * (exp(-d * 7.0) * 0.22 + exp(-d * 26.0) * 0.45);
+  // Sessio 58: tiiviimpi ja himmeämpi (ennen hehku peitti noin 10 % kuvasta).
+  c += uFlareColor * (exp(-d * 13.0) * 0.08 + exp(-d * 42.0) * 0.26);
   float ang = atan(dv.y, dv.x);
-  c += uFlareColor * (pow(abs(cos(ang * 3.0)), 60.0) + pow(abs(cos(ang * 2.0 + 0.6)), 90.0) * 0.6) * exp(-d * 5.0) * 0.12;
+  c += uFlareColor * (pow(abs(cos(ang * 3.0)), 60.0) + pow(abs(cos(ang * 2.0 + 0.6)), 90.0) * 0.6) * exp(-d * 7.0) * 0.06;
   // Vaakajuova
-  c += uFlareColor * exp(-abs(uv.y - sp.y) * 140.0) * exp(-abs(dv.x) * 2.2) * 0.06;
+  c += uFlareColor * exp(-abs(uv.y - sp.y) * 140.0) * exp(-abs(dv.x) * 2.2) * 0.03;
   // Haamut (linssien heijastukset)
   vec2 toC = vec2(0.5) - sp;
   c += vec3(0.55, 0.75, 1.0) * flareGhost(uv, sp, toC, 0.55, 0.035) * 0.10;
@@ -267,8 +309,9 @@ vec3 lensFlare(vec2 uv) {
   c += vec3(0.6, 1.0, 0.7) * flareGhost(uv, sp, toC, 1.45, 0.025) * 0.12;
   c += vec3(0.85, 0.6, 1.0) * flareGhost(uv, sp, toC, 1.85, 0.11) * 0.05;
   c += vec3(1.0, 0.7, 0.5) * flareGhost(uv, sp, toC, 2.2, 0.05) * 0.08;
-  // Heikko rengas auringon ympärillä
-  c += uFlareColor * smoothstep(0.03, 0.0, abs(d - 0.32)) * 0.025;
+  // Heikko rengas auringon ympärillä (sessio 58: 0,025 -> 0,008, näytti
+  // keinotekoiselta kehältä taivaalla)
+  c += uFlareColor * smoothstep(0.03, 0.0, abs(d - 0.32)) * 0.008;
   return c * vis * uFlare;
 }
 
@@ -398,7 +441,8 @@ vec3 sceneAt(vec2 uv) {
   vec3 c = texture2D(tColor, uv).rgb;
   if (uUseDof > 0.5) {
     vec4 d = texture2D(tDof, uv);
-    c = mix(c, d.rgb, smoothstep(0.12, 0.6, d.a));
+    // Puolikkaan tarkkuuden sumennus vain selvästi sumeisiin kohtiin (sessio 44).
+    c = mix(c, d.rgb, smoothstep(0.2, 0.6, d.a));
   }
   return c;
 }
@@ -452,6 +496,8 @@ void main() {
     col *= mix(1.0, ao, uAOStr * (1.0 - 0.35 * smoothstep(0.4, 2.0, lum)));
   }
 
+  if (sky) col *= uSkyK;
+
   // Kangastus: kaukainen maa aivan horisontin alla heijastaa taivasta kuin
   // väreilevä vesi.
   if (heatW > 0.001 && !sky && ray.y < 0.0) {
@@ -483,6 +529,62 @@ void main() {
     col = mix(col, hcol, clamp(amt, 0.0, 0.9));
   }
 
+  // Sessio 58: ohut pilviverho karstihuippujen tuntumassa (käyttäjä: huipuille
+  // suuruuden ja korkeuden tunnetta, ei liikaa). Katsesäde leikataan
+  // korkeusvyöhykkeellä [uVeil.x, uVeil.y]; tiheys tulee kartasta (missä
+  // massiiveja on) ja tuulen mukana ajelehtivasta laikkukohinasta, ja
+  // vyöhykkeen keskikorkeus ja paksuus vaihtelevat paikan mukaan (ei suoria
+  // reunoja). Maaston kohdalla verho loppuu itsestään (syvyys).
+  // Pilven sisällä (kamera vyöhykkeen tasolla) verhoa ei näe kerroksena,
+  // vain kevyenä usvana ympärillä, kuten oikeassa pilvessä.
+  if (uVeil.z > 0.0) {
+    float L = sky ? 1400.0 : dist;
+    float y0 = uVeil.x, y1 = uVeil.y;
+    float inside = smoothstep(y0 - 14.0, y0 + 2.0, uCamPos.y) * (1.0 - smoothstep(y1 - 2.0, y1 + 14.0, uCamPos.y));
+    float mu = max(dot(ray, uSunDir), 0.0);
+    vec3 vcol = vec3(0.9, 0.92, 0.95) * uVeil.w + uSunColor * (0.1 + 0.35 * pow(mu, 4.0)) * uInscatter;
+    if (inside > 0.01) {
+      vec2 cp = (uCamPos.xz - uVeilRect.xy) / uVeilRect.z;
+      float mc = (cp.x > 0.0 && cp.y > 0.0 && cp.x < 1.0 && cp.y < 1.0) ? texture2D(tVeil, cp).r : 0.0;
+      float haze = inside * mc * 0.22 * (1.0 - exp(-L / 70.0)) * uVeil.z;
+      col = mix(col, vcol, haze);
+    }
+    float t0 = 1.0, t1 = 0.0;
+    if (abs(ray.y) < 1e-4) {
+      if (uCamPos.y > y0 && uCamPos.y < y1) { t0 = 0.0; t1 = L; }
+    } else {
+      float a = (y0 - uCamPos.y) / ray.y, b = (y1 - uCamPos.y) / ray.y;
+      t0 = max(min(a, b), 0.0);
+      t1 = min(max(a, b), L);
+    }
+    if (t1 > t0 && inside < 0.99) {
+      float seg = min(t1 - t0, 260.0);
+      float tm = t0 + seg * 0.5;
+      vec3 P = uCamPos + ray * tm;
+      vec2 mp = (P.xz - uVeilRect.xy) / uVeilRect.z;
+      float mask = (mp.x > 0.0 && mp.y > 0.0 && mp.x < 1.0 && mp.y < 1.0) ? texture2D(tVeil, mp).r : 0.0;
+      if (mask > 0.01) {
+        vec2 q = P.xz - uVeilDrift;
+        float n = hfN(q * 0.011) * 0.62 + hfN(q * 0.031 + 7.3) * 0.38;
+        // Vyöhykkeen keskikohta ja paksuus vaihtelevat (repaleiset reunat).
+        float ctr = (y0 + y1) * 0.5 + (hfN(q * 0.006 + 3.1) - 0.5) * (y1 - y0) * 0.7;
+        float hw = (y1 - y0) * (0.22 + 0.3 * hfN(q * 0.017 - 5.2));
+        float hm = (P.y - ctr) / hw;
+        float dens = mask * smoothstep(0.4, 0.78, n) * max(0.0, 1.0 - hm * hm);
+        float amt = (1.0 - exp(-dens * seg * 0.02)) * uVeil.z * (1.0 - inside);
+        amt *= smoothstep(25.0, 90.0, tm); // ei pilveä kasvojen edessä
+        col = mix(col, vcol, clamp(amt, 0.0, 0.55));
+      }
+    }
+  }
+
+  // Sessio 58: taivas horisontin tuntumassa sulautuu usvaan (ennen terävä raja
+  // usvan ja taivaan välissä). Ei latvuston alla (taivas näkyy vain aukoista).
+  if (sky && uHorizon > 0.0) {
+    float hz = (1.0 - smoothstep(-0.03, 0.16, ray.y)) * uHorizon;
+    col = mix(col, uHFogColor, hz);
+  }
+
   // Ilmakehä: sumu hehkuu auringon suunnassa (aamu- ja iltavalo, usva).
   if (uInscatter > 0.0 && !sky) {
     float f = clamp((dist - uFogNear) / max(uFogFar - uFogNear, 1.0), 0.0, 1.0);
@@ -506,17 +608,19 @@ void main() {
     col += uVolCol * phase * v.x * (1.0 - 0.85 * pow(litF, 1.5));
   }
 
-  if (uUseRays > 0.5) col += texture2D(tRays, vUv).rgb * uRayColor * uRayStrength;
-  if (uFlare > 0.01) col += lensFlare(vUv);
+  // Sessio 58: häikäisyyn tottunut silmä: säteet ja heijastus hiipuvat.
+  float glareA = uGlareOn > 0.5 ? texture2D(tLum, vec2(0.5)).g : 0.0;
+  if (uUseRays > 0.5) col += texture2D(tRays, vUv).rgb * uRayColor * uRayStrength * (1.0 - 0.6 * glareA);
+  if (uFlare > 0.01) col += lensFlare(vUv) * (1.0 - 0.55 * glareA);
   if (uLens > 0.01) col = lensDrops(vUv, col);
   if (uSplashOn > 0.5) col = lensSplash(vUv, col);
   // Silmän mukautuminen: valotus sopeutuneen kirkkauden mukaan.
   if (uAE.y > 0.0) {
-    float aL = exp(texture2D(tLum, vec2(0.5)).r);
-    col *= clamp(pow(uAE.x / max(aL, 0.0001), uAE.y), uAE.z, uAE.w);
+    vec2 aLG = texture2D(tLum, vec2(0.5)).rg;
+    col *= clamp(pow(uAE.x / max(exp(aLG.x), 0.0001), uAE.y), uAE.z, uAE.w) * (1.0 - 0.5 * aLG.y);
   }
 
-  gl_FragColor = vec4(col, 1.0);
+  gl_FragColor = vec4(col, uOutA);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }
@@ -604,6 +708,13 @@ void main() {
   vec3 ddx = abs(Pr.z - P.z) < abs(P.z - Pl.z) ? Pr - P : P - Pl;
   vec3 ddy = abs(Pu.z - P.z) < abs(P.z - Pd.z) ? Pu - P : P - Pd;
   vec3 N = normalize(cross(ddx, ddy));
+  // Sessio 45: ohut kasvillisuus (korret, lehdet) jätetään pois: niiden
+  // syvyys poikkeaa molemmista naapureista (toinen derivaatta suuri), ja
+  // tuulessa liikkuessaan ne välkyttivät okkluusiota. Tasot ja isot muodot
+  // pitävät okkluusion.
+  float thin = (abs(Pr.z + Pl.z - 2.0 * P.z) + abs(Pu.z + Pd.z - 2.0 * P.z)) / z;
+  fade *= 1.0 - smoothstep(0.015, 0.06, thin);
+  if (fade <= 0.0) { gl_FragColor = vec4(1.0, z, 0.0, 1.0); return; }
   float R2 = uRadius * uRadius;
   float rnd = 6.2831853 * fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
   float bias = 0.01 + 0.0012 * z;
@@ -611,7 +722,8 @@ void main() {
   for (int i = 0; i < NS; i++) {
     float a = (float(i) + 0.5) / float(NS);
     float ang = a * 6.2831853 * TURNS + rnd;
-    vec2 uv = vUv + vec2(cos(ang), sin(ang)) * (ssR * a) * uHalfTexel;
+    // Näytteet vasta 35 %:n säteeltä: pienet yksityiskohdat eivät varjosta.
+    vec2 uv = vUv + vec2(cos(ang), sin(ang)) * (ssR * (0.35 + 0.65 * a)) * uHalfTexel;
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) continue;
     vec3 v = viewPos(uv) - P;
     float vv = dot(v, v);
@@ -668,7 +780,7 @@ vec3 pre(vec3 c) {
 }
 float kw(vec3 c) { return 1.0 / (1.0 + dot(c, vec3(0.2126, 0.7152, 0.0722)) * uThresh.z * gAE); }
 void main() {
-  if (uAE.y > 0.0) gAE = clamp(pow(uAE.x / max(exp(texture2D(tLum, vec2(0.5)).r), 0.0001), uAE.y), uAE.z, uAE.w);
+  if (uAE.y > 0.0) { vec2 lg = texture2D(tLum, vec2(0.5)).rg; gAE = clamp(pow(uAE.x / max(exp(lg.x), 0.0001), uAE.y), uAE.z, uAE.w) * (1.0 - 0.5 * lg.y); }
   vec3 a = pre(texture2D(tInput, vUv + uTexel * vec2(-1.0, -1.0)).rgb);
   vec3 b = pre(texture2D(tInput, vUv + uTexel * vec2(1.0, -1.0)).rgb);
   vec3 c = pre(texture2D(tInput, vUv + uTexel * vec2(-1.0, 1.0)).rgb);
@@ -723,8 +835,7 @@ uniform float uBloom;
 uniform vec4 uGrade;   // x kontrasti, y kylläisyys, z lämpö, w päällä
 uniform float uVig;
 uniform float uAspect;
-uniform float uSharp;  // sessio 38: terävöinti 0..1 (0 = pois)
-uniform vec2 uTexel;
+uniform float uHandAE; // sessio 39: käden mukautumisen eksponentti (alfa 1 = käsi)
 varying vec2 vUv;
 vec3 tm(vec3 c) {
   #ifdef TONE_MAPPING
@@ -734,22 +845,16 @@ vec3 tm(vec3 c) {
 }
 void main() {
   float ae = 1.0;
-  if (uAE.y > 0.0) ae = clamp(pow(uAE.x / max(exp(texture2D(tLum, vec2(0.5)).r), 0.0001), uAE.y), uAE.z, uAE.w);
-  vec3 bl = uBloom > 0.0 ? texture2D(tBloom, vUv).rgb * uBloom : vec3(0.0);
-  vec3 c = tm((texture2D(tHDR, vUv).rgb + bl) * ae);
-  // Sessio 38: kontrastiin mukautuva terävöinti (AMD CAS -tyyli): reunat
-  // terävöityvät, tasaiset alueet ja kohina eivät (käyttäjä: kuva sumea).
-  if (uSharp > 0.0) {
-    vec3 n = tm((texture2D(tHDR, vUv + vec2(0.0, uTexel.y)).rgb + bl) * ae);
-    vec3 s = tm((texture2D(tHDR, vUv - vec2(0.0, uTexel.y)).rgb + bl) * ae);
-    vec3 e = tm((texture2D(tHDR, vUv + vec2(uTexel.x, 0.0)).rgb + bl) * ae);
-    vec3 w = tm((texture2D(tHDR, vUv - vec2(uTexel.x, 0.0)).rgb + bl) * ae);
-    vec3 mn = min(min(min(n, s), min(e, w)), c);
-    vec3 mx = max(max(max(n, s), max(e, w)), c);
-    vec3 amp = sqrt(clamp(min(mn, 1.0 - mx) / max(mx, vec3(1e-4)), 0.0, 1.0));
-    vec3 wt = -amp / mix(8.0, 5.0, uSharp);
-    c = clamp((c + (n + s + e + w) * wt) / (1.0 + 4.0 * wt), 0.0, 1.0);
-  }
+  float glareF = 0.0;
+  if (uAE.y > 0.0) { vec2 lg = texture2D(tLum, vec2(0.5)).rg; glareF = lg.y; ae = clamp(pow(uAE.x / max(exp(lg.x), 0.0001), uAE.y), uAE.z, uAE.w) * (1.0 - 0.5 * lg.y); }
+  vec3 bl = uBloom > 0.0 ? texture2D(tBloom, vUv).rgb * uBloom * (1.0 - 0.45 * glareF) : vec3(0.0);
+  vec4 h0 = texture2D(tHDR, vUv);
+  // Käsi ja esineet (alfa 1) saavat vain osan mukautumisesta: yöllä niissä
+  // näkyy pimeys ja heijastukset, mutta ne eivät katoa mustaan.
+  ae = mix(ae, pow(ae, uHandAE), clamp(h0.a, 0.0, 1.0));
+  vec3 c = tm((h0.rgb + bl) * ae);
+  // Sessio 45: terävöinti (sessio 38) poistettu kokonaan (käyttäjä: teki
+  // pelistä kamalan näköisen).
   if (uGrade.w > 0.5) {
     vec3 p = pow(c, vec3(1.0 / 2.2));
     // Kontrasti: S-käyrä keskisävyn (0,45) ympäri, ääripäät pehmeästi.
@@ -830,7 +935,7 @@ export class PostFX {
     }, { toneMapped: false });
     this.dofMat = mat(dofFS, {
       tColor: { value: null }, tDepth: { value: depthTexture }, tFocus: { value: null }, uTexel: { value: new THREE.Vector2() },
-      uNear: { value: 0.1 }, uFar: { value: 1500 }, uMaxR: { value: 3 },
+      uNear: { value: 0.1 }, uFar: { value: 1500 }, uMaxR: { value: 3.5 },
     }, { toneMapped: false });
     this.compMat = mat(compositeFS, {
       tColor: { value: null }, tDepth: { value: depthTexture }, tRays: { value: null }, tDof: { value: null },
@@ -839,14 +944,17 @@ export class PostFX {
       uNear: { value: 0.1 }, uFar: { value: 1500 }, uCamPos: { value: new THREE.Vector3() },
       uSunDir: { value: new THREE.Vector3() }, uSunColor: { value: new THREE.Color() }, uInscatter: { value: 0 },
       uLens: { value: 0 }, uAspect: { value: 1 },
-      uSplash: { value: [new THREE.Vector4(), new THREE.Vector4(), new THREE.Vector4(), new THREE.Vector4()] }, uSplashOn: { value: 0 },
+      // Sessio 59: w = 0 (Vector4 alustuu w = 1:ksi, jolloin neljä tyhjää roisketta
+      // näkyivät pisaroina kuvan vasemmassa alakulmassa).
+      uSplash: { value: [0, 1, 2, 3].map(() => new THREE.Vector4(0, 0, 0, 0)) }, uSplashOn: { value: 0 },
       uFlare: { value: 0 }, uSunUV: { value: new THREE.Vector2(0.5, 0.5) }, uFlareColor: { value: new THREE.Color(1, 0.92, 0.8) },
       uFogNear: { value: 50 }, uFogFar: { value: 330 },
       uHeat: { value: 0 }, uTime: { value: 0 }, uViewProj: { value: new THREE.Matrix4() },
       uHFog: { value: new THREE.Vector4(0, 0, 0.12, 0) }, uHFogColor: { value: new THREE.Color(0.7, 0.72, 0.74) },
-      tLum: { value: null }, uAE: { value: new THREE.Vector4(0.3, 0, 0.6, 3) },
+      uVeil: { value: new THREE.Vector4(0, 0, 0, 1) }, uVeilRect: { value: new THREE.Vector4(0, 0, 1, 0) }, uVeilDrift: { value: new THREE.Vector2() }, tVeil: { value: null }, uHorizon: { value: 0 },
+      tLum: { value: null }, uAE: { value: new THREE.Vector4(0.3, 0, 0.6, 3) }, uGlareOn: { value: 0 },
       tVol: { value: null }, uVolCol: { value: new THREE.Color(0, 0, 0) }, uVolTexel: { value: new THREE.Vector2(1, 1) },
-      tAO: { value: null }, uAORes: { value: new THREE.Vector2(1, 1) }, uAOStr: { value: 0 },
+      tAO: { value: null }, uAORes: { value: new THREE.Vector2(1, 1) }, uAOStr: { value: 0 }, uOutA: { value: 1 }, uSkyK: { value: 1 },
     });
     // Sessio 26: volumetriset valokeilat (main.js asettaa ilman tiheyden).
     this.shafts = 0;
@@ -864,16 +972,20 @@ export class PostFX {
     // efektiä); yön yläraja matalampi (selkeä yö hieman tummemmaksi).
     // Sessio 37: päivällä matalampi tavoitekirkkaus (dayRef; käyttäjä: päivä
     // näytti ylivalottuneelta). Yöllä ennallaan.
-    this.ae = { ref: 0.3, dayRef: 0.25, strength: 0.82, min: 0.5, max: 2.8, nightMax: 1.9, humidNight: 1.5, darkTau: 1.7, brightTau: 0.5 };
+    this.ae = { ref: 0.3, dayRef: 0.22, strength: 0.82, min: 0.5, max: 2.8, nightMax: 1.9, humidNight: 1.5, darkTau: 1.7, brightTau: 0.5 };
     this.lumRT = [0, 1].map(() => makeRT(1, 1, { type: THREE.FloatType, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter }));
     this.lumIdx = 0;
     this.lumInit = true;
     this.lumMat = mat(lumFS, {
       tColor: { value: null }, tDepth: { value: depthTexture }, tPrev: { value: null },
       uUp: { value: 0.1 }, uDown: { value: 0.05 }, uInit: { value: 1 },
+      uSunUV: { value: new THREE.Vector2(0.5, 0.5) }, uSunK: { value: 0 }, uGUp: { value: 0.01 }, uGDown: { value: 0.01 },
     }, { toneMapped: false });
     // Sessio 24: korkeussumu (main.js asettaa tiheyden ja pohjan).
     this.hfog = { density: 0, base: 0, falloff: 0.12, color: new THREE.Color(0.7, 0.72, 0.74) };
+    // Sessio 58: huippujen pilviverho (render/peakMist.js asettaa).
+    this.veil = { y0: 0, y1: 0, strength: 0, light: 1, tex: null, rect: new THREE.Vector4(0, 0, 1, 0), drift: new THREE.Vector2() };
+    this.horizon = 0; // taivaan horisontin usvaisuus (main.js)
     this.time = 0;
 
     // Sessio 37: ambienttiokkluusio (0 = pois, 1 = kevyt, 2 = laadukas),
@@ -884,11 +996,15 @@ export class PostFX {
     this.vignette = true;
     // Sessio 38: korkeampi kynnys ja tiiviimpi, heikompi hehku (käyttäjä: kuva
     // näytti sumealta; kirkas taivas ja usva hehkuivat koko kuvan yli).
-    this.bloomCfg = { threshold: 2.0, knee: 0.7, intensity: 0.2, clamp: 40, spread: 0.65 };
-    this.sharpen = 0.5; // sessio 38: terävöinti (0 = pois)
+    this.bloomCfg = { threshold: 2.0, knee: 0.7, intensity: 0.16, clamp: 6, spread: 0.65 }; // sessio 58: 0,2 -> 0,16; yläraja 12 -> 6 (auringon hehku ei leviä)
+    this.handAE = 0.3; // sessio 39: kädelle vain osa silmän mukautumisesta (eksponentti); sessio 40: 0,4 -> 0,3
+    this.skyDim = 0.22; // sessio 40: taivas päivällä 22 % tummempi
     this.gradeCfg = { contrast: 1.1, saturation: 1.12, warmth: 1 };
+    // Sessio 47: sademetsässä päivällä hieman enemmän kontrastia ja
+    // kylläisyyttä (syvät varjot, täyteläiset vihreät).
+    this.gradeHumid = { contrast: 0.08, saturation: 0.12 };
     this.vigStrength = 0.24;
-    this.aoCfg = { radius: 0.85, intensity: 1.15, strength: 0.75, fade: 90 };
+    this.aoCfg = { radius: 1.2, intensity: 1.0, strength: 0.5, fade: 70 }; // sessio 45: isommat muodot, kevyempi
     this.aoRT = makeRT(1, 1);
     this.aoRT2 = makeRT(1, 1);
     this._aoNS = 0;
@@ -912,7 +1028,8 @@ export class PostFX {
     this.finalMat = mat(finalFS, {
       tHDR: { value: this.hdrRT.texture }, tBloom: { value: this.bloomMips[0].texture }, uBloom: { value: 0 },
       uGrade: { value: new THREE.Vector4(1, 1, 1, 0) }, uVig: { value: 0 }, uAspect: { value: 1 },
-      tLum: { value: null }, uAE: { value: new THREE.Vector4(0.3, 0, 0.6, 3) }, uSharp: { value: 0 }, uTexel: { value: new THREE.Vector2() },
+      tLum: { value: null }, uAE: { value: new THREE.Vector4(0.3, 0, 0.6, 3) },
+      uHandAE: { value: 0.4 },
     });
 
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.compMat);
@@ -937,7 +1054,7 @@ export class PostFX {
   }
 
   get active() {
-    return this.autoExposure || this.godRays || this.motionBlur > 0 || this.dof || this.lens > 0.01 || this.splashOn || (this.lensFlare && this.flare > 0.01) || this.hfog.density > 0.0005;
+    return this.autoExposure || this.godRays || this.motionBlur > 0 || this.dof || this.lens > 0.01 || this.splashOn || (this.lensFlare && this.flare > 0.01) || this.hfog.density > 0.0005 || (this.veil.tex !== null && this.veil.strength > 0.001);
   }
 
   _resize() {
@@ -961,7 +1078,6 @@ export class PostFX {
     this.aoMat.uniforms.uTexel.value.set(1 / w, 1 / h);
     this.aoMat.uniforms.uHalfTexel.value.set(1 / hw, 1 / hh);
     this.finalMat.uniforms.uAspect.value = w / h;
-    this.finalMat.uniforms.uTexel.value.set(1 / w, 1 / h);
     this.compMat.uniforms.uVolTexel.value.set(1 / hw, 1 / hh);
     this.dofMat.uniforms.uTexel.value.set(1 / hw, 1 / hh);
     this.maskMat.uniforms.uAspect.value = w / h;
@@ -976,13 +1092,14 @@ export class PostFX {
 
   // Viimeistelyvaihe käytössä (bloom, värimäärittely tai vinjetti).
   get finishing() {
-    return this.bloom || this.grade || this.vignette || this.sharpen > 0;
+    return this.bloom || this.grade || this.vignette;
   }
 
   // Piirrä maailma tehosteineen ruudulle. env: aurinko, sumu ja sää.
   // overlay = { scene, camera } (käsi): piirretään maailman päälle omalla
   // syvyydellään, viimeistelyvaiheessa samaan HDR-kuvaan (bloom ja sävytys).
   render(scene, camera, env, dt, overlay = null) {
+    this._gradeHum = (env.humid || 0) * (env.daylight || 0); // sessio 47 (_finish)
     const r = this.renderer;
     if (!this.active) {
       r.setRenderTarget(null);
@@ -1023,8 +1140,14 @@ export class PostFX {
       const w = env.w;
       // Matala aurinko, usva ja kosteus vahvistavat säteitä.
       const low = 1 - THREE.MathUtils.smoothstep(env.sunDir.y, 0.15, 0.75) * 0.6;
+      // Sessio 58: kosteus vahvisti säteitä lähes kaksinkertaisiksi (0,9),
+      // ja latvuston aukoista syntyi koko kuvan peittävä "jumalallinen valo"
+      // (käyttäjä: taivasta ei erottanut). Ensin vähennettiin liikaa (säteet
+      // katosivat; käyttäjä: niitä pitää olla, mutta ei överinä), nyt
+      // sademetsässä noin puolet alkuperäisestä.
+      const hcR = (env.humid || 0) * (env.canopy ?? 1);
       rays = THREE.MathUtils.smoothstep(facing, 0.0, 0.35) * onScreen * env.daylight * low
-        * (0.55 + w.haze * 0.8 + env.humid * 0.9) * (1 - w.cloud * 0.5) * (w.vis < 80 ? 0.3 : 1);
+        * (0.5 + w.haze * 0.6 + env.humid * 0.5) * (1 - 0.15 * hcR) * (1 - w.cloud * 0.5) * (w.vis < 80 ? 0.3 : 1);
       if (rays > 0.01) {
         const sun = _sun.set(_v.x * 0.5 + 0.5, _v.y * 0.5 + 0.5);
         this.maskMat.uniforms.tColor.value = this.sceneRT.texture;
@@ -1042,7 +1165,7 @@ export class PostFX {
       }
     }
     cu.uUseRays.value = rays > 0.01 ? 1 : 0;
-    cu.uRayStrength.value = rays * 1.35;
+    cu.uRayStrength.value = rays * 0.8; // sessio 39: 1,35 -> 0,95; sessio 58: 0,8
 
     // --- Volumetriset valokeilat varjokartasta
     const sh = env.sun.shadow;
@@ -1064,7 +1187,7 @@ export class PostFX {
       vu.uFrame.value = this.frame;
       this._pass(this.volMat, this.volRT);
       cu.tVol.value = this.volRT.texture;
-      cu.uVolCol.value.copy(env.sun.color).multiplyScalar(env.sun.intensity * 0.011 * shaft);
+      cu.uVolCol.value.copy(env.sun.color).multiplyScalar(env.sun.intensity * 0.0068 * shaft); // sessio 58: 0,0075 -> 0,0068
     } else {
       cu.uVolCol.value.setRGB(0, 0, 0);
     }
@@ -1093,6 +1216,7 @@ export class PostFX {
     // --- Liike-epäterävyys: nopeus edellisen ruudun kamerasta.
     if (this.motionBlur > 0 && this.hasPrev && dt > 0) {
       // Sessio 25: runsaampi (käyttäjän toive).
+      // Sessio 42: takaisin session 25 voimakkuuteen (sessio 39 sotki liikkeessä).
       const strength = this.motionBlur === 2 ? 1.7 : 0.9;
       cu.uMBScale.value = Math.min(4, strength * (1 / 60) / Math.max(dt, 1 / 240));
       cu.uPrevViewProj.value.copy(this.prevViewProj);
@@ -1116,12 +1240,24 @@ export class PostFX {
     cu.uFlare.value = this.lensFlare ? this.flare : 0;
     cu.uSunUV.value.copy(this.sunUV);
     cu.uSunColor.value.copy(env.sky.uniforms.uSunColor.value).multiplyScalar(env.sky.uniforms.uSunVisible.value);
-    cu.uInscatter.value = 0.9 * env.daylight * (1 - env.w.cloud * 0.6);
+    // Sessio 39: auringon suuntaan hohtava sironta miedommaksi (0,9 -> 0,5,
+    // sademetsässä vielä vähemmän): ennen koko kuva hukkui kultaiseen hehkuun.
+    // Sessio 58: latvuston alla taivas vielä himmeämpi (aukoista näkyy
+    // taivaan väri eikä valkoista hehkua) ja sironta miedompi (0,5 -> 0,32).
+    const hcS = (env.humid || 0) * (env.canopy ?? 1);
+    cu.uSkyK.value = 1 - (this.skyDim + 0.25 * hcS) * env.daylight;
+    cu.uInscatter.value = 0.32 * env.daylight * (1 - env.w.cloud * 0.6) * (1 - 0.5 * (env.humid || 0));
     cu.uFogNear.value = env.scene.fog.near;
     cu.uFogFar.value = env.scene.fog.far;
     const hf = this.hfog;
     cu.uHFog.value.set(hf.density, hf.base, hf.falloff, this.time);
     cu.uHFogColor.value.copy(hf.color);
+    const vl = this.veil;
+    cu.uVeil.value.set(vl.y0, vl.y1, vl.tex ? vl.strength : 0, vl.light);
+    cu.uVeilRect.value.copy(vl.rect);
+    cu.uVeilDrift.value.copy(vl.drift);
+    cu.tVeil.value = vl.tex;
+    cu.uHorizon.value = this.horizon;
 
     // --- Silmän mukautuminen
     if (this.autoExposure) {
@@ -1133,10 +1269,18 @@ export class PostFX {
       lu.uUp.value = 1 - Math.exp(-ddt / this.ae.brightTau);
       lu.uDown.value = 1 - Math.exp(-ddt / this.ae.darkTau);
       lu.uInit.value = this.lumInit ? 1 : 0;
+      // Sessio 58: häikäisy, kun aurinko on lähellä kuvan keskiötä.
+      const sdx = (this.sunUV.x - 0.5) * (this.renderer.domElement.width / Math.max(1, this.renderer.domElement.height)), sdy = this.sunUV.y - 0.5;
+      const sc = Math.hypot(sdx, sdy);
+      lu.uSunUV.value.copy(this.sunUV);
+      lu.uSunK.value = this.flare * (1 - THREE.MathUtils.smoothstep(sc, 0.12, 0.5));
+      lu.uGUp.value = 1 - Math.exp(-ddt / 1.8);
+      lu.uGDown.value = 1 - Math.exp(-ddt / 2.5);
       this._pass(this.lumMat, next);
       this.lumIdx = 1 - this.lumIdx;
       this.lumInit = false;
       cu.tLum.value = next.texture;
+      cu.uGlareOn.value = 1;
       // Sessio 38: sademetsässä päivällä matalampi tavoite (latvuston alla
       // kirkas usva ylivalotti) ja yöllä enemmän mukautumista (näkyvyys).
       const hum = env.humid || 0;
@@ -1144,6 +1288,7 @@ export class PostFX {
       cu.uAE.value.set(THREE.MathUtils.lerp(this.ae.ref, this.ae.dayRef - 0.05 * hum, env.daylight), this.ae.strength, this.ae.min, THREE.MathUtils.lerp(nightMax, this.ae.max, env.daylight));
     } else {
       cu.uAE.value.y = 0;
+      cu.uGlareOn.value = 0;
     }
     // Sessio 38: viimeistelyvaiheessa mukautuminen tehdään vasta lopussa,
     // jolloin se koskee myös kättä ja kädessä olevia esineitä (yöllä ne
@@ -1155,6 +1300,7 @@ export class PostFX {
     if (this._aeInFinal) cu.uAE.value.y = 0;
 
     const fin = this.finishing;
+    cu.uOutA.value = fin ? 0 : 1;
     this._pass(this.compMat, fin ? this.hdrRT : null);
     if (overlay) {
       r.setRenderTarget(fin ? this.hdrRT : null);
@@ -1186,10 +1332,10 @@ export class PostFX {
     this._pass(this.aoMat, this.aoRT);
     const bu = this.aoBlurMat.uniforms;
     bu.tAO.value = this.aoRT.texture;
-    bu.uDir.value.set(1 / this.aoRT.width, 0);
+    bu.uDir.value.set(2 / this.aoRT.width, 0); // sessio 45: leveämpi sumennus
     this._pass(this.aoBlurMat, this.aoRT2);
     bu.tAO.value = this.aoRT2.texture;
-    bu.uDir.value.set(0, 1 / this.aoRT.height);
+    bu.uDir.value.set(0, 2 / this.aoRT.height);
     this._pass(this.aoBlurMat, this.aoRT);
     cu.tAO.value = this.aoRT.texture;
     cu.uAOStr.value = this.aoCfg.strength;
@@ -1228,9 +1374,10 @@ export class PostFX {
       fu.uBloom.value = 0;
     }
     const g = this.gradeCfg;
-    fu.uGrade.value.set(g.contrast, g.saturation, g.warmth, this.grade ? 1 : 0);
+    const gh = this._gradeHum || 0;
+    fu.uGrade.value.set(g.contrast + this.gradeHumid.contrast * gh, g.saturation + this.gradeHumid.saturation * gh, g.warmth, this.grade ? 1 : 0);
     fu.uVig.value = this.vignette ? this.vigStrength : 0;
-    fu.uSharp.value = this.sharpen;
+    fu.uHandAE.value = this.handAE;
     if (!this._aeInFinal) fu.uAE.value.y = 0;
     this._pass(this.finalMat, null);
   }

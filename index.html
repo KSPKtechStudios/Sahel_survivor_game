@@ -16,6 +16,58 @@
   </script>
 </head>
 <body>
+  <!-- Sessio 39: intro ennen valikoita ja latausta (ohitus: Esc, välilyönti, hiiren oikea). -->
+  <div id="intro">
+    <video id="intro-video" src="assets/videos/intro.mp4" playsinline preload="auto"></video>
+    <div id="intro-sound" class="intro-hint hidden">Klikkaa: ääni päälle</div>
+    <div id="intro-skip" class="intro-hint">Ohita: Esc · välilyönti · hiiren oikea</div>
+  </div>
+  <script>
+    // Intro toistetaan heti (ennen pelin moduuleja). window.sahelIntro täyttyy, kun
+    // video loppuu tai ohitetaan; main.js ei piirrä sitä ennen mitään.
+    (function () {
+      var root = document.getElementById('intro');
+      var v = document.getElementById('intro-video');
+      var hint = document.getElementById('intro-sound');
+      var done = false, started = false, resolve;
+      window.sahelIntroActive = true;
+      window.sahelIntro = new Promise(function (r) { resolve = r; });
+      function finish() {
+        if (done) return;
+        done = true;
+        window.sahelIntroActive = false;
+        try { v.pause(); } catch (e) { /* ei väliä */ }
+        window.removeEventListener('keydown', onKey, true);
+        root.classList.add('out');
+        setTimeout(function () { root.remove(); }, 700);
+        resolve();
+      }
+      function onKey(e) {
+        if (e.code === 'Escape' || e.code === 'Space') { e.preventDefault(); e.stopImmediatePropagation(); finish(); }
+      }
+      window.addEventListener('keydown', onKey, true);
+      root.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      root.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        if (e.button === 2) finish();
+        else if (e.button === 0 && v.muted) { v.muted = false; hint.classList.add('hidden'); }
+      });
+      v.addEventListener('ended', finish);
+      v.addEventListener('error', finish);
+      v.addEventListener('playing', function () { started = true; });
+      // Selain voi estää äänellisen automaattitoiston: silloin äänettömänä ja vihje.
+      var p = v.play();
+      if (p && p.catch) {
+        p.catch(function () {
+          v.muted = true;
+          hint.classList.remove('hidden');
+          v.play().catch(finish);
+        });
+      }
+      // Jos video ei käynnisty (hidas yhteys tai tukematon muoto), ei jäädä odottamaan.
+      setTimeout(function () { if (!started) finish(); }, 9000);
+    })();
+  </script>
   <canvas id="game"></canvas>
   <div id="weather-tint"></div>
 
@@ -152,41 +204,103 @@
   </div>
   <div id="devtools" class="hidden"></div>
 
-  <!-- ===================== Valikon osat (mallit) ===================== -->
-  <template id="tpl-scroll">
-    <div class="scroll">
-      <div class="scroll-frame">
-        <i class="orn tl"></i><i class="orn tr"></i><i class="orn bl"></i><i class="orn br"></i>
-        <div class="scroll-paper">
-          <span class="glyphs g1">Sahelin maa</span>
-          <span class="glyphs g2">· Burkina Faso ·</span>
-          <h1 class="scroll-title">Sahel</h1>
-          <div class="scroll-sub"></div>
-        </div>
-        <div class="roll-track left"><div class="roll left"></div></div>
-        <div class="roll-track right"><div class="roll right"></div></div>
-      </div>
+  <!-- ===================== Valikon osat (sessio 59) ===================== -->
+  <!-- Logo: tunnus (baobab laskevaa aurinkoa vasten) ja kultainen nimi introvideon tapaan. -->
+  <template id="tpl-logo">
+    <div class="logo">
+      <svg class="logo-emblem" viewBox="0 0 120 120" aria-hidden="true">
+        <defs>
+          <linearGradient id="lg-gold" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff0c2"/><stop offset="0.45" stop-color="#f0c066"/><stop offset="1" stop-color="#a8691f"/>
+          </linearGradient>
+          <radialGradient id="lg-sun" cx="0.5" cy="1" r="0.9">
+            <stop offset="0" stop-color="#fff2c8"/><stop offset="0.55" stop-color="#f3b24e"/><stop offset="1" stop-color="#c0581c"/>
+          </radialGradient>
+          <clipPath id="lg-clip"><circle cx="60" cy="60" r="47"/></clipPath>
+        </defs>
+        <circle cx="60" cy="60" r="55" fill="none" stroke="url(#lg-gold)" stroke-width="2.6"/>
+        <circle cx="60" cy="60" r="49.5" fill="none" stroke="url(#lg-gold)" stroke-width="0.9" opacity="0.7"/>
+        <g fill="url(#lg-gold)">
+          <path d="M60 1.5 l3 3 -3 3 -3 -3z"/><path d="M60 112.5 l3 3 -3 3 -3 -3z"/><path d="M1.5 60 l3 -3 3 3 -3 3z"/><path d="M112.5 60 l3 -3 3 3 -3 3z"/>
+        </g>
+        <g clip-path="url(#lg-clip)">
+          <rect x="0" y="0" width="120" height="120" fill="#24150b"/>
+          <g stroke="url(#lg-gold)" stroke-width="1.2" opacity="0.55" stroke-linecap="round">
+            <path d="M60 78 L60 22"/><path d="M60 78 L34 30"/><path d="M60 78 L86 30"/><path d="M60 78 L20 50"/><path d="M60 78 L100 50"/>
+          </g>
+          <path d="M26 80 A34 34 0 0 1 94 80 Z" fill="url(#lg-sun)"/>
+          <rect x="0" y="80" width="120" height="40" fill="#1a0f07"/>
+          <path d="M8 80 H112" stroke="url(#lg-gold)" stroke-width="1.4"/>
+          <g fill="#160c05" stroke="#160c05" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M52 92 C53 84 52 76 49.5 67 L55 66 C55.5 61 56.5 57 56 53 L58.5 53 C59 57 60 61 61.5 66 L67.5 67 C66 75 65 84 66.5 92 Z"/>
+            <g fill="none" stroke-width="2.2">
+              <path d="M50 67 C45 62 41 60 35 59"/><path d="M36 59 C33 56 31 54 29 54"/><path d="M41 61 C40 57 38 55 36 53"/>
+              <path d="M55.5 60 C52 55 49.5 52 46 50"/><path d="M47 51 C45 48 44 46 43 44"/>
+              <path d="M62 62 C65 57 69 55 74 54"/><path d="M73 54 C75 51 77 49 79 48"/>
+              <path d="M67 67 C73 63 78 63 84 61"/><path d="M83 61 C86 59 88 58 91 58"/>
+              <path d="M58 54 C59 50 60 47 61.5 44"/>
+            </g>
+            <g fill="#160c05" stroke="none">
+              <ellipse cx="31" cy="53" rx="5" ry="2.2"/><ellipse cx="43" cy="44" rx="4" ry="2"/><ellipse cx="61.5" cy="43" rx="4.5" ry="2.2"/>
+              <ellipse cx="79" cy="47" rx="4.5" ry="2"/><ellipse cx="91" cy="57" rx="5" ry="2.2"/><ellipse cx="36" cy="52" rx="3" ry="1.6"/>
+            </g>
+          </g>
+          <g stroke="url(#lg-gold)" stroke-width="1" opacity="0.8" stroke-linecap="round">
+            <path d="M20 80 l-1.5 -4"/><path d="M24 80 l1 -5"/><path d="M96 80 l-1 -4"/><path d="M101 80 l1.5 -5"/>
+          </g>
+        </g>
+      </svg>
+      <div class="logo-word">Sahel</div>
+      <div class="logo-rule"><i></i><b></b><i></i></div>
+      <div class="logo-sub"></div>
     </div>
   </template>
 
   <!-- ===================== Päävalikko ===================== -->
   <div id="mainmenu" class="screen hidden">
-    <div class="mm-vignette"></div>
-    <div class="mm-stage">
-      <div class="scroll-slot"></div>
+    <div class="mm-shade"></div>
+    <aside class="mm-side">
+      <div class="mm-band" aria-hidden="true"></div>
+      <div class="logo-slot"></div>
       <div class="panels">
         <div class="panel" data-panel="main">
-          <div class="btn-col">
-            <button class="wood-btn big" data-action="worlds"><span class="label">Pelaa</span></button>
-            <button class="wood-btn big" data-action="settings"><span class="label">Asetukset</span></button>
+          <nav class="menu-list">
+            <button class="mbtn continue hidden" data-action="continue" type="button"><span class="label">Jatka</span><small id="mm-continue"></small></button>
+            <button class="mbtn" data-action="worlds" type="button"><span class="label">Pelaa</span><small>Valitse tai luo maailma</small></button>
+            <button class="mbtn" data-action="settings" type="button"><span class="label">Asetukset</span><small>Grafiikka, ohjaus ja äänet</small></button>
+            <button class="mbtn" data-action="credits" type="button"><span class="label">Tekijät</span><small>Mallit, tekstuurit ja fontit</small></button>
+          </nav>
+          <p class="mm-quote">Paahtavista hiekoista tukahduttaviin latvustoihin – maa ei anna mitään anteeksi.</p>
+        </div>
+
+        <!-- Sessio 49: tekijät (CC-BY-4.0-mallit vaativat nimeämisen; koko lista assets/CREDITS.txt) -->
+        <div class="panel" data-panel="credits">
+          <h2 class="ptitle">Tekijät</h2>
+          <div class="pbody">
+            <div class="credits-list">
+                <h3>3D-mallit (CC BY 4.0)</h3>
+                <p>"Banana Tree (Low Poly)", EmiyaSyahriel (Sketchfab)</p>
+                <p>"bamboo", evolveduk (Sketchfab)</p>
+                <p>"Bamboo Bush", sujirour (Sketchfab)</p>
+                <p>"Gorilla", planeta-elefante (Sketchfab)</p>
+                <p>"Prowling Leopard 3D Model Free", iRahulRajput (Sketchfab)</p>
+                <p>"Tumbleweed Jumping" (arokierijä), ThymKruijt (Sketchfab)</p>
+                <p class="credits-note">creativecommons.org/licenses/by/4.0 · muokattu peliin sopiviksi (koko, kevennys, muunnelmat, animaatioiden kevennys, luuranko ja animaatiot lisätty)</p>
+                <h3>Mallit ja tekstuurit (CC0)</h3>
+                <p>Poly Haven · ambientCG · Quaternius (Stylized Nature MegaKit) · ShareTextures</p>
+                <h3>Muut</h3>
+                <p>Kädet, norsu, nuija, soihtu, musiikki ja äänet: projektin omistajan toimittamat</p>
+                <p>Fontit: SIL Open Font License</p>
+                <p>Esinemallien pakkaus: meshoptimizer (MIT)</p>
+              </div>
           </div>
+          <button class="mbtn back" data-action="back" type="button"><span class="label">Takaisin</span></button>
         </div>
 
         <div class="panel" data-panel="worlds">
-          <div class="board">
-            <div class="board-inner">
-              <h2>Maailmat</h2>
-              <div class="worlds-layout">
+          <h2 class="ptitle">Maailmat</h2>
+          <div class="pbody">
+            <div class="worlds-layout">
                 <div class="world-list-wrap">
                   <h3>Tallennetut maailmat</h3>
                   <div id="world-list"></div>
@@ -203,28 +317,27 @@
                     </span>
                   </label>
                   <p class="nw-hint">Kartta on aluksi tyhjä: maailma piirtyy siihen vasta, kun tutkit sitä.</p>
-                  <button class="wood-btn small" id="nw-create"><span class="label">Luo maailma</span></button>
+                  <button class="mbtn cta" id="nw-create" type="button"><span class="label">Luo maailma</span></button>
                 </div>
               </div>
-            </div>
           </div>
-          <button class="wood-btn small back" data-action="back"><span class="label">Takaisin</span></button>
+          <button class="mbtn back" data-action="back" type="button"><span class="label">Takaisin</span></button>
         </div>
       </div>
-    </div>
-    <div class="mm-footer">Alpha v0.1 · työnimi</div>
+      <div class="mm-footer">Alpha v0.1 · työnimi</div>
+    </aside>
   </div>
 
   <!-- ===================== Asetukset (siirretään pää- tai taukovalikkoon) ===================== -->
   <div class="panel" data-panel="settings" id="settings-panel">
-    <div class="board">
-      <div class="board-inner">
-        <h2>Asetukset</h2>
+    <h2 class="ptitle">Asetukset</h2>
+    <div class="pbody">
         <div class="settings-grid">
           <label class="set-row"><span>Hiiren herkkyys</span><input type="range" id="set-sens" min="0.2" max="3" step="0.05"><output id="out-sens"></output></label>
           <label class="set-row"><span>Käännä pystyakseli</span><input type="checkbox" id="set-invert" class="toggle"><output></output></label>
           <label class="set-row"><span>Näkökenttä</span><input type="range" id="set-fov" min="60" max="100" step="1"><output id="out-fov"></output></label>
           <label class="set-row"><span>Näköetäisyys</span><input type="range" id="set-view" min="3" max="8" step="1"><output id="out-view"></output></label>
+          <label class="set-row" title="Kaukaisten vuorten usvaiset siluetit näköetäisyyden takana (kevyt)"><span>Kaukaiset vuoret</span><input type="range" id="set-far" min="0" max="2000" step="200"><output id="out-far"></output></label>
           <div class="set-row"><span>Grafiikan laatu</span>
             <div class="seg" id="set-quality">
               <button type="button" data-v="low">Matala</button><button type="button" data-v="medium">Keskitaso</button><button type="button" data-v="high">Korkea</button><button type="button" data-v="ultra">Ultra</button>
@@ -248,7 +361,6 @@
           <label class="set-row"><span>Hehku (bloom)</span><input type="checkbox" id="set-bloom" class="toggle"><output></output></label>
           <label class="set-row"><span>Värimäärittely</span><input type="checkbox" id="set-grade" class="toggle"><output></output></label>
           <label class="set-row"><span>Vinjetti</span><input type="checkbox" id="set-vig" class="toggle"><output></output></label>
-          <label class="set-row"><span>Terävöinti</span><input type="checkbox" id="set-sharp" class="toggle"><output></output></label>
           <label class="set-row"><span>Valonsäteet</span><input type="checkbox" id="set-rays" class="toggle"><output></output></label>
           <div class="set-row"><span>Liike-epäterävyys</span>
             <div class="seg" id="set-mblur">
@@ -265,26 +377,26 @@
           <label class="set-row"><span>Äänitehosteet</span><input type="range" id="set-sfx" min="0" max="1" step="0.05"><output id="out-sfx"></output></label>
           <div class="set-note">Pelissä musiikki soi hiljaa taustalla; päävalikossa normaalisti.</div>
         </div>
-      </div>
     </div>
-    <button class="wood-btn small back" data-action="back"><span class="label">Takaisin</span></button>
+    <button class="mbtn back" data-action="back" type="button"><span class="label">Takaisin</span></button>
   </div>
 
   <!-- ===================== Taukovalikko ===================== -->
   <div id="pausemenu" class="screen hidden">
     <div class="pm-dim"></div>
-    <div class="mm-stage compact">
-      <div class="scroll-slot"></div>
+    <aside class="mm-side compact">
+      <div class="mm-band" aria-hidden="true"></div>
+      <div class="logo-slot"></div>
       <div class="panels">
         <div class="panel" data-panel="pause">
-          <div class="btn-col">
-            <button class="wood-btn big" data-action="resume"><span class="label">Jatka</span></button>
-            <button class="wood-btn big" data-action="settings"><span class="label">Asetukset</span></button>
-            <button class="wood-btn big" data-action="quit"><span class="label">Päävalikkoon</span></button>
-          </div>
+          <nav class="menu-list">
+            <button class="mbtn" data-action="resume" type="button"><span class="label">Jatka</span><small>Takaisin peliin</small></button>
+            <button class="mbtn" data-action="settings" type="button"><span class="label">Asetukset</span><small>Grafiikka, ohjaus ja äänet</small></button>
+            <button class="mbtn" data-action="quit" type="button"><span class="label">Päävalikkoon</span><small>Peli tallentuu</small></button>
+          </nav>
         </div>
       </div>
-    </div>
+    </aside>
     <aside class="pm-side">
       <div class="side-card">
         <h3>Ohjaimet</h3>
@@ -316,12 +428,12 @@
 
   <!-- ===================== Lataus ===================== -->
   <div id="loading" class="screen">
-    <div class="mm-vignette"></div>
+    <div class="ld-shade"></div>
     <div class="load-box">
-      <div class="scroll-slot"></div>
+      <div class="logo-slot"></div>
       <div class="load-text" id="load-text">Ladataan…</div>
       <div class="load-bar"><i id="load-fill"></i></div>
-      <button class="wood-btn small hidden" id="btn-enter"><span class="label">Klikkaa pelaamaan</span></button>
+      <button class="mbtn cta hidden" id="btn-enter" type="button"><span class="label">Klikkaa pelaamaan</span></button>
     </div>
   </div>
 

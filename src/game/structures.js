@@ -6,7 +6,7 @@
 // tarvitse kääntää uudelleen. Lattiat ovat kävelypintoja (world.platforms).
 import * as THREE from 'three';
 import { addSurfaceDetail } from '../render/surfaces.js';
-import { createFlameTexture } from '../render/textures.js';
+import { CampfireFx } from '../render/campfire.js';
 import { PIECES } from './pieces.js';
 import { STATIONS } from './items.js';
 
@@ -26,13 +26,11 @@ export class Structures {
       { layer: 'soil', mask: 'warm', scale: 1.8, strength: 0.8 },
       { layer: 'rock', mask: 'grey', scale: 2.0, strength: 0.85 },
     ]);
-    this.flameMat = new THREE.SpriteMaterial({
-      map: createFlameTexture(),
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      transparent: true,
-      fog: true,
-    });
+    // Sessio 59: nuotion tukeille kaarna (ei lautoja).
+    this.fireMaterial = addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 }), [
+      { layer: 'bark', mask: 'darkWood', scale: 1.2, strength: 0.95 },
+      { layer: 'rock', mask: 'grey', scale: 2.0, strength: 0.85 },
+    ]);
     this.lights = [];
     for (let i = 0; i < MAX_FIRE_LIGHTS; i++) {
       const l = new THREE.PointLight(0xff8a3a, 0, 22, 1.6);
@@ -68,21 +66,20 @@ export class Structures {
     const group = new THREE.Group();
     group.position.set(x, y, z);
     group.rotation.y = rot;
-    const mesh = new THREE.Mesh(this.geos[type], this.material);
+    const mesh = new THREE.Mesh(this.geos[type], type === 'campfire' ? this.fireMaterial : this.material);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     group.add(mesh);
     const st = { type, x, y, z, rot, key, group, colliders: [], platform: null, flames: [], seed: Math.random() * 100 };
     if (def.fire) {
-      const n = def.fire === 'campfire' ? 3 : 2;
-      const fy = def.fire === 'campfire' ? 0.35 : 1.72;
-      for (let i = 0; i < n; i++) {
-        const s = new THREE.Sprite(this.flameMat);
-        s.position.set((i - (n - 1) / 2) * 0.08, fy, (i % 2) * 0.06 - 0.03);
-        group.add(s);
-        st.flames.push(s);
-      }
-      st.fireY = def.fire === 'campfire' ? 0.9 : 1.9;
+      // Sessio 59: uusi tuli (render/campfire.js) entisten liekkikuvien tilalle.
+      const camp = def.fire === 'campfire';
+      const fx = new CampfireFx(camp ? 0.85 : 0.3, { smoke: camp, coals: camp, seed: st.seed });
+      fx.group.position.set(0, camp ? 0.05 : 1.62, 0);
+      group.add(fx.group);
+      st.fx = fx;
+      st.flames.push(fx);
+      st.fireY = camp ? 0.9 : 1.9;
       st.fireScale = def.fire === 'campfire' ? 1 : 0.55;
     }
     this.scene.add(group);
@@ -128,6 +125,7 @@ export class Structures {
     if (i < 0) return;
     this.list.splice(i, 1);
     this.scene.remove(st.group);
+    if (st.fx) st.fx.dispose();
     for (const c of st.colliders) {
       const k = this.world.extraColliders.indexOf(c);
       if (k >= 0) this.world.extraColliders.splice(k, 1);
@@ -176,17 +174,14 @@ export class Structures {
     return best;
   }
 
-  update(dt, elapsed, playerPos) {
-    // Liekkien lepatus
+  // camera: tuli kääntyy kameraan päin; wind = { x, z } (m/s, valinnainen).
+  update(dt, elapsed, playerPos, camera = null, wind = null) {
+    // Tulet (vain lähellä olevat päivitetään, kaukaiset piilotetaan).
     for (const st of this.list) {
-      if (!st.flames.length) continue;
-      const k0 = st.fireScale;
-      st.flames.forEach((f, i) => {
-        const t = elapsed * (7 + i * 1.7) + st.seed + i * 2;
-        const k = 0.85 + Math.sin(t) * 0.1 + Math.sin(t * 2.3) * 0.06;
-        f.scale.set((0.45 * k + i * 0.03) * k0, 0.85 * k * (1.05 - i * 0.12) * k0, 1);
-        if (k0 === 1) f.position.y = 0.32 + (0.85 * k) * 0.35;
-      });
+      if (!st.fx) continue;
+      const near = (st.x - playerPos.x) ** 2 + (st.z - playerPos.z) ** 2 < 140 * 140;
+      st.fx.group.visible = near;
+      if (near && camera) st.fx.update(dt, elapsed, camera, wind ? wind.x : 0, wind ? wind.z : 0);
     }
     // Valot lähimmille tulisijoille (ja muille tulille)
     const sorted = [];

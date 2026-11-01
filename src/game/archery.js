@@ -8,7 +8,9 @@ import { ITEMS } from './items.js';
 import { events } from './events.js';
 import { waterAt } from '../world/terrain.js';
 import { makeArrowGeometry } from '../models/items2.js';
+import { itemAsset } from '../models/itemAssets.js';
 import { bodyPoint } from './mobs.js';
+import { OBJECT_TYPES } from '../world/objectTypes.js';
 
 const GRAVITY = 9.8;
 const MAX_ARROWS = 24;
@@ -32,7 +34,13 @@ export class Archery {
     this.arrows = [];
     this.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8 });
     this.geos = {};
-    for (const k of AMMO_ORDER) this.geos[k] = makeArrowGeometry(k);
+    this.mats = {};
+    for (const k of AMMO_ORDER) {
+      // Sessio 54: Blender-malli (arrow1_<tunnus>), jos se on ladattu.
+      const a = itemAsset('arrow1_' + k);
+      this.geos[k] = a || makeArrowGeometry(k);
+      this.mats[k] = (a && a.userData.material) || this.material;
+    }
     this.noAmmoT = 0;
   }
 
@@ -107,7 +115,7 @@ export class Archery {
     _dir.z += (Math.random() - 0.5) * spread * 2;
     _dir.normalize();
     const speed = (16 + 44 * d * d) * bow.power * a.speed;
-    const mesh = new THREE.Mesh(this.geos[kind], this.material);
+    const mesh = new THREE.Mesh(this.geos[kind], this.mats[kind]);
     mesh.castShadow = true;
     // Lähtö jousen kohdalta (hieman oikealla ja alempana), jotta nuolen
     // lennon näkee ruudulla.
@@ -149,6 +157,8 @@ export class Archery {
 
   // Nuoli pysähtyi: ehjä nuoli jää poimittavaksi.
   _land(a, keepChance) {
+    // Sessio 52: nuolen osuma lähelle säikäyttää linnut lentoon.
+    this.mobs.arrowImpact(a.pos.x, a.pos.y, a.pos.z);
     if (Math.random() < keepChance) {
       this.drops.spawn(a.kind, 1, _p.copy(a.pos).addScaledVector(_q.copy(a.vel).normalize(), -0.2), { spread: 0.05, up: 0.15 });
     }
@@ -187,10 +197,21 @@ export class Archery {
     }
   }
 
+  // Esineen yläpinnan korkeus (puu: runko 6 m; muut mallin rajauslaatikosta).
+  _objTop(o) {
+    const def = OBJECT_TYPES[o.type];
+    const sc = o.scale || 1;
+    if (!def || def.kind === 'tree') return o.y + 6 * sc;
+    const geo = this.world.models?.world?.[def.model]?.[o.variant];
+    if (!geo) return o.y + 6 * sc;
+    if (!geo.boundingBox) geo.computeBoundingBox();
+    return o.y + geo.boundingBox.max.y * sc;
+  }
+
   _collide(a, ox, oy, oz) {
     // Eläimet ja viholliset
     for (const m of this.mobs.list) {
-      if (m.state === 'dead' || m.yOff < -0.6) continue;
+      if (m.state === 'dead' || m.yOff < -0.6 || m.def.npc) continue; // sessio 50: NPC:t läpi
       const r = m.def.radius + 0.12;
       // Lähin kohta liikkeen janalla olennon keskilinjaan (2D) ja korkeus.
       const dx = a.pos.x - ox, dz = a.pos.z - oz;
@@ -223,8 +244,10 @@ export class Archery {
         if (c.top !== undefined && a.pos.y > c.top) continue;
       } else {
         if ((a.pos.x - c.x) ** 2 + (a.pos.z - c.z) ** 2 > c.r * c.r) continue;
-        // Puiden rungot ja kivet: korkeus karkeasti esineen mukaan.
-        const top = c.obj ? c.obj.y + 6 * (c.obj.scale || 1) : (c.top ?? Infinity);
+        // Puiden rungot ja kivet: korkeus karkeasti esineen mukaan (sessio 52:
+        // kivien ja pensaiden yli menevä nuoli ei enää pysähdy ilmaan, joten
+        // kiven päällä istuvaan lintuun voi osua).
+        const top = c.obj ? this._objTop(c.obj) : (c.top ?? Infinity);
         if (a.pos.y > top) continue;
       }
       this.debris.chips(a.pos, 0x8a7a6a, 3, null, 0.4);

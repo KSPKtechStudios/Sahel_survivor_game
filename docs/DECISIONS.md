@@ -2,6 +2,407 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-11-01 (sessio 59, jatko)
+- **Valikon tausta on oikea pelimaailma** (valikkomaailma, siemen 'sahel-valikko'), johon rakennetaan leiri (`ui/menuCamp.js`). Leirin paikka (x −2576, z 662) valittiin skriptillä kumpareista, joiden länsipuolella on vettä. Aukio (`terrain.js` `MENU_CAMP`, `CLEARINGS`) estää puut, pensaat ja ruohon, ja akaasia lisätään chunkiin (`campProps`). Syy: käyttäjä halusi 3D-scenen; erillinen scene olisi vaatinut oman valaistuksen, taivaan ja jälkikäsittelyn, nyt kaikki on pelin omaa.
+- **Leirin varusteet ovat pelin Blender-esinemalleja** (`itemAsset`), tilat `lay`, `flat`, `stand` ja `lean`; rajat lasketaan leirin paikallisissa koordinaateissa. Syy: valmiit, laadukkaat mallit ja yhtenäinen tyyli.
+- **Kamerakuvat paneelin mukaan** (`CAMP_SHOTS`, `menu.shot`), pehmeä siirtymä (1 − e^(−1,4 dt)) ja hiljainen "hengitys". Aika kulkee 17,55 → 20,3 330 sekunnissa ja jää yöhön.
+- **Uusi tuli `render/campfire.js`**: liekki on kohinasävytin (fbm + vääristys) kolmella kameraan kääntyvällä tasolla, joista kaksi on pienempiä sivukieliä. Hiilet sykkivät omissa tahdeissaan, ja kipinät ja savu ovat omat pistejärjestelmät. Valoista huolehtii kutsuja. Syy: entiset liekkikuvat ja pistehiukkaset olivat käyttäjän mukaan harvoja. Sama efekti pelin nuotiossa, soihtutelineessä ja valikossa.
+- **Nuotion tukeille oma materiaali kaarnatekstuurilla** (`structures.fireMaterial`). Syy: yhteinen materiaali antoi tummille puille lautatekstuurin.
+- **UI: Cinzel (OFL) otsikoihin ja logoon, Alegreya leipätekstiin**; bògòlanfini-kuvio piirrettiin itse (Python) saumattomaksi tiiliksi. Cinzel Decorativea kokeiltiin, mutta sen koristeellinen H näytti logossa oudolta.
+- **SVG-logon liukuväreille omat tunnisteet joka kopiolle.** Syy: samat id:t viittasivat piilossa olevaan näkymään, jolloin logo ei piirtynyt.
+- **Rätinä ja sirkat syntetisoidaan WebAudiolla** (`sfx.campfire`). Syy: pelissä ei ollut sopivia äänitiedostoja, eikä uusia tiedostoja tarvita.
+- **Testeille oma sisäänrakennettu palvelin** (`scratchpad/serve.mjs`), ja valikon kuvissa `reducedMotion: 'reduce'`. Syy: erillinen palvelin sammui toistuvasti, ja CSS-animaatiot eivät ehdi edetä hitaassa ohjelmistorenderöinnissä.
+
+## 2026-11-01 (sessio 59)
+- **Keularoiskeiden paikat alustetaan `Vector4(0, 0, 0, 0)`.** Syy: `THREE.Vector4()` alustuu w = 1:ksi, ja w on roiskeen voimakkuus, joten neljä "tyhjää" roisketta kohdassa (0, 0) olivat aktiivisia.
+
+## 2026-10-30 (sessio 58, jatko 12)
+- **Karstitornien ruutu 300 → 170 m**, karstimaskin raja 0,45 → 0,3. Tuloksena 406 tornia 144 km²:llä (jatkossa 11: 139).
+- **Vuoristojärvillä oma ruudukko** (`KLAKE_CELL` 240 m, `karstLakeInCell`). Ruudusta etsitään 24 ehdokkaasta se kohta, jota massiivit ympäröivät eniten. Ympäröinti mitataan 16 suuntaan 150 m:n säteellä, ja kohta kelpaa, jos vähintään 55 % suunnista osuu seinämään tai yli 12 m korkeampaan maahan. Säde on 95 % lähimmästä seinämästä (32–85 m). Tavallinen järviruudukko jättää karstialueet näille. Syy: käyttäjä halusi järvet aina vuorten ympäröimiksi ja paljon yleisemmiksi.
+
+## 2026-10-30 (sessio 58, jatko 11)
+- **Karstitornien ruutu 640 → 300 m, 10 yritystä ja löysemmät ehdot** (sademetsä ≥ 0,8, pohjan korkeusero ≤ 7 m, mallin juuri −8 m). Syy: käyttäjä ei löytänyt torneja. Mittaus: ennen 30 tornia 144 km²:llä; tiukka tasaisuusvaatimus hylkäsi lähes kaikki massiivien väliset paikat.
+- **Karstilaaksojen järvet omana tyyppinä** (`terrain.js` `karstLake`, `lakeK`). Paikkana on laakson pohja (ei massiivin päällä tai seinämässä), pinta on matalimman reunakohdan alla, ja syvyys on enintään 10 m. Väri on turkoosi (`chunkGen.js` `W_COL.karst`). Syy: käyttäjän toive. Tavalliset järvet hylkäsivät kalliot (`cliff`, `rock`), joten karstilaaksoihin ei tullut järviä.
+
+## 2026-10-29 (sessio 58, jatko 10)
+- **Arokierijän malli `assets/models/nature/arokierija.glb`** (käyttäjän GLB pakattuna: tekstuuri 256 värin palettikuvaksi, toinen UV pois, meshopt; 760 → 159 kt). Materiaali: `alphaTest` 0,5 sekoituksen sijaan, koska läpinäkyvien pintojen järjestysvirheet välttyvät. Verteksiväri tummentaa sisempiä kuoria. Syy: alkuperäinen tekstuuri oli 550 kt; palettikuvassa läpinäkyvyys säilyi samana.
+- **Animaatiosta käytetään vain loikkien korkeuskäyrää** (`arokierija.js` `arokierijaHop`). Animaatio on pelkkä jäykän kappaleen liikerata: vierintä ja kaksi loikkaa, siirto 144 yksikköä/s, säde 26,4 yksikköä. Vaakaliike ja pyöriminen tulevat edelleen tuulesta ja vierimisestä. Käyrää toistetaan vauhdin mukaan (0,25–1,6 × animaation tahti), ja korkeus kerrotaan vauhdin neliöllä (enintään 1). Syy: animaation suoraviivainen rata ei sovi maastoon eikä tuulen suuntaan, mutta loikkien muoto ja tahti säilyvät. Satunnaiset fysiikkapompput poistettiin, ettei loikkia tule kahdesti.
+- **Hakkuun sirpaleet tehdään vanhasta risupallosta** (`tumbleweeds.shatterGeo`). Syy: sirpalointi tarvitsee verteksivärit, ja kuvatekstuurikorteista tulisi tekstuurittomia lappuja. Vanha malli jää myös varamalliksi, jos GLB ei lataudu.
+- **Koodissa nimi pysyy `tumbleweed`-muodossa, pelissä näkyy "Arokierijä".** Syy: koodin tunnisteet ovat muutenkin englanniksi, ja vain näkyvä nimi muuttui.
+
+## 2026-10-29 (sessio 58, jatko 9)
+- **Auringon hehku tiiviiksi kolmella kerroksella** (`sky.js`: leveä 0,07, kehä 0,16, kiekon reuna 0,55). Linssiheijastuksen hehku ja säteet himmeämmiksi, rengas 0,025 → 0,008, bloomin yläraja 12 → 6. Syy: käyttäjän mukaan aurinko oli yhä aivan liian häikäisevä. Aidossa kuvassa auringon kirkkaus on pieni kiekko, ja laaja hehku ja kehät ovat heikkoja. Silmän tottuminen (jatko 4) hoitaa sokaisun.
+- **Savipeikko ja haamun huppu, kallo ja kädet tehdään etäisyyskentästä** (`clayGolem.js`, `ghost.js`, sama `SdfField` kuin juurakossa). Ne lasketaan valmiiksi tiedostoon `organic.bin` ja harvennetaan noin 15 000 kolmioon olentoa kohti; varalla laskenta käynnistyksessä. Syy: ohuet risut, sormet ja kallon muodot vaativat tarkan ruudukon, ja peli käyttää samaa nivelrakennetta (vartalo, pää, kädet, jalat) kuin ennen, joten animaatiot toimivat ennallaan. Blenderiä ei tarvittu, koska putki on jo olemassa ja tulos on toistettava koodista.
+- **Savipeikon ulkonäkö käyttäjän tarinasta:** savesta muovattu kumara ruumis, kallomaiset kasvot, kiviä, risuja ja juuria. Lisäksi ruukunsiru ja savihelmet merkkeinä alueella eläneistä ihmisistä (oma tulkinta, ks. DESIGN-kysymys).
+- **Haamun huppu ja hartiaviitta käyttävät viitan kangastekstuuria** (UV muodosta, sauman ylittävät kolmiot saavat omat kärkipisteet). Kasvojen musta pallo korvattiin hämärällä kallolla hupun pimeässä sisuksessa (oma tulkinta, ks. DESIGN-kysymys). Osuman välähdys näkyy myös kankaassa (`mobs.js` kopioi kangasmateriaalin olentokohtaisesti).
+- **Kangastekstuuri 512 × 512 ja normaalikartta** (`ghostCloak.js`). Lankojen leveys 4 kuvapistettä ja kohina jaksollinen u-suunnassa, jotta viitan sauma ei näy. Syy: käyttäjä toivoi realistisempia tekstuureja; 256 × 256 kudos oli liian karkea ja tasainen.
+
+## 2026-10-29 (sessio 58, jatko 8)
+- **Lehtien läpikuultavuus kerrotaan auringon varjolla** (`materials.js` `addTranslucency`). Varjo saadaan valaistuksen jo laskemasta auringon valosta: `directLight` on viimeinen suunnattu valo, ja sen suhde varjottomaan valoon (`directionalLights[0].color`) kertoo varjon. Pieni hajavalo-osuus (0,08) jää varjostamatta, ettei latvus ole musta massa. Syy: ennen jokainen aurinkoa kohti oleva lehti hehkui, myös syvällä latvuston varjossa, ja tiheä latvusto muuttui valkoiseksi valoseinäksi. Käyttäjä huomasi, että avoimella paikalla valo oli kunnossa ja ongelma oli lehvästöissä.
+
+## 2026-10-29 (sessio 58, jatko 7)
+- **Valonsäteet palautettiin noin puoleen alkuperäisestä:**
+  - kosteuden kerroin 0,5;
+  - latvuston alla −15 %;
+  - voimakkuus 0,8;
+  - valokeilat 0,0068.
+
+  Sademetsässä säteiden kokonaiskerroin oli alun perin noin 1,38, jatkossa 6 noin 0,32 ja nyt noin 0,68. Syy: käyttäjän mukaan jatkon 6 jälkeen säteet katosivat kokonaan; niitä pitää olla, mutta ei överinä.
+
+## 2026-10-28 (sessio 58, jatko 6)
+- **Hehkua vähennetään kaikista lähteistä kerralla, ei poisteta yhtä.** Muutokset:
+  - valonsäteet: kosteuden kerroin 0,9 → 0,25, latvuston alla −35 %, voimakkuus 0,95 → 0,7;
+  - taivas latvuston alla 25 % lisää himmeämpi;
+  - sironta 0,5 → 0,32, ja kosteudessa vielä vähemmän;
+  - taivaan aurinkohehku noin 35–45 % pienempi;
+  - valokeilat 0,0075 → 0,0055;
+  - bloom 0,2 → 0,16.
+
+  Lisäksi automaattisessa valotuksessa taivaan paino 0,75 → 1,1 ja kirkkauden yläraja 4 → 8, jolloin ylös katsoessa valotus laskee ja taivas erottuu.
+
+  Syy: käyttäjän mukaan valon määrä on yhä överi ja taivas hukkuu "jumalalliseen valoon". Valo kasautui monesta lähteestä yhtä aikaa (kuvassa satoi, ja kosteus vahvisti säteitä). Silmän tottuminen säilyy ennallaan.
+
+## 2026-10-28 (sessio 58, jatko 5)
+- **Juurakko ja sammaloitunut runko mallinnetaan etäisyyskentästä** (`models/sdfMesh.js`, `models/organic.js`): juuret ja oksat ovat kartiomaisia kapseleita, jotka liitetään pehmeästi toisiinsa, ja pinta poimitaan "surface nets" -menetelmällä. Syy: putkista kootuissa malleissa liitokset näyttivät irrallisilta, ja käyttäjä halusi paljon paremmat mallit; kentästä saadaan myös varjostus koloihin.
+- **Mallit lasketaan valmiiksi tiedostoon** (`assets/models/organic.bin`, työkalu `tools/organic/build.mjs`). Ne lasketaan tarkalla ruudukolla ja harvennetaan meshoptimizerilla: lähimalli 9000 / 6500 kolmiota, kaukomalli noin 1600 / 1100 kolmiota. Syy: tarkka laskenta kestää sekunteja ja tuottaisi 30–70 tuhatta kolmiota mallia kohden; juurakoita on noin 3,5 ja runkoja 2,4 jokaisessa 64 metrin ruudussa sademetsää. Jos tiedosto ei lataudu, mallit lasketaan käynnistyksessä karkeammalla ruudukolla.
+- **Uusi materiaali `solid_mossy` ja tyypin kenttä `look`:**
+  - `solid_mossy`: kaarnatekstuuri ruskeissa, sammaltekstuuri vihreissä kohdissa;
+  - `look` valitsee materiaalin. `surface` ohjaa yhä osumaefektejä ('wood').
+- **Sademetsäpuiden oksisto "space colonization" -menetelmällä** (`build_trees.py` `colonize`). Latvuksen muodon houkutinpisteet ovat useamman alalatvuksen yhdistelmä. Oksien paksuus lasketaan putkimallilla, ja ketju seuraa suurinta alipuuta. Kaukomallin taso määräytyy oksan paksuudesta. Syy: käyttäjän mukaan oksisto näytti typerältä ja epäluonnolliselta ja latvus oli harva. Muiden lajien satunnaisjonot pidettiin ennallaan, ja niiden mallit tarkistettiin samoiksi.
+- **Mustien pikselien korjaus: väri ja lopullinen valo rajataan nollaan kaikissa materiaaleissa** (`render/shaderSafety.js`: Three.js:n `color_fragment`- ja `opaque_fragment`-palat). Syy: merkkitestissä negatiiviset fragmentit värjättiin; niitä oli 10–11 ruudussa tiheikön lähellä. Läpikuultavien hiukkasten sekoitus ei ollut syy (sekoituksen negatiivisia oli 0). Korjauksen jälkeen 7 ruudussa samoista kulmista 0. Todennäköinen mekanismi: reunanpehmennyksen reunapikselissä varjostin ajetaan kolmion ulkopuolella, jolloin kärkipisteiden arvot ekstrapoloituvat. Mäkäräisiin ei koskettu (käyttäjän ohje).
+- **Muinaiselle juurakolle törmäyssäde 0,7 m** (ennen 0). Syy: uusi kanto ja juurihäkki ovat 1,5–3 m korkeita, eikä niiden läpi pidä voida kävellä.
+- **Pönkkäjuuret pyöreiksi ja mutkitteleviksi** (`lobes`: viides arvo on kierre, ja juuri levenee maata kohti). Kulmaleveys valittiin niin, että juurten väliin jää notko eikä tyvestä tule yhtenäistä helmaa. Syy: käyttäjän mukaan tyvet eivät näyttäneet oikeilta.
+
+## 2026-10-28 (sessio 58, jatko 4)
+- **Aurinkoon tottuminen on oma hidas tila automaattisen valotuksen rinnalla** (`post.js`: luminanssikuvan G-kanava). Häikäisytavoite lasketaan auringon näkyvyydestä (syvyysnäytteet auringon kohdalta) ja etäisyydestä kuvan keskeltä; nousu noin 1,8 s, lasku noin 2,5 s. Tottuminen laskee valotusta ja himmentää säteitä, linssiheijastusta ja bloomia. Syy: käyttäjä halusi, että ensin sokaisee ja sitten silmä tottuu; tavallinen automaattinen valotus mittaa koko kuvan keskiarvoa, joten pieni aurinko ei sitä juuri muuta.
+- **Kun kamera on pilviverhon korkeudella, verho vaihdetaan kevyeksi usvaksi** (`inside`-kerroin). Syy: käyttäjä: pilven sisällä pilveä ei oikeasti näe, vain pieni usva näkökentässä.
+- **Sademetsän kostea sumu riippuu latvuston alla olemisesta** (`env.canopy`, 1 = latvuston alla; main.js laskee sen korkeudesta laakson pohjan yläpuolella, 16–30 m). Latvuston yläpuolella sumu on vaaleampi ja kauemmas näkyvä, ja horisonttiin lisätään kevyt usva (`post.horizon`). Syy: käyttäjä: usva ei vakuuta realistisuudella; massiivin laella ilma ei ole sama kuin viidakon pohjalla.
+- **Mustia pisteitä (käyttäjä: pikseleitä, ei mäkäräisiä) ei korjata hyönteisiä muuttamalla.** Syy: käyttäjä kielsi koskemasta mäkäräisiin; diagnostiikka löysi HDR-kuvasta negatiivisia kuvapisteitä, joita selvitetään erikseen.
+
+## 2026-10-28 (sessio 58, jatko 3)
+- **Huippujen pilviverho tehdään jälkikäsittelyssä korkeusvyöhykkeenä** (`post.js` `uVeil`, `render/peakMist.js`), ei sprite-pilvinä. Syy: syvyyspuskurin ansiosta verho loppuu pehmeästi maaston ja puiden kohdalla (spritet leikkaisivat kallioon teräviä reunoja), eikä uusia piirtokutsuja tule. Missä verhoa on, kertoo 48 × 48 ruudun kartta (64 m ruutu) massiivien korotuksesta, laajennettuna yhdellä ruudulla. Kartta lasketaan vähitellen pelaajan siirtyessä.
+
+## 2026-10-28 (sessio 58, jatko 2)
+- **Sumu muutettiin korkeusriippuvaiseksi kaikille materiaaleille** (`render/fogPatch.js`: Three.js:n `fog_*`-palat korvataan ennen materiaalien kääntämistä). Usvan yläraja on yhteinen uniform (`fogMist`, sama olio kaikissa materiaaleissa), ja main.js asettaa sen 18 m laakson pohjan yläpuolelle (pelaajan kohdalla maasto miinus karstin korotus). Syy: vuoret näkyvät usvasta johdonmukaisesti, olivat ne ladattua maastoa tai siluetteja, eikä tarvita uniformia jokaiseen materiaaliin erikseen.
+- **Kaukaiset vuoret ovat oma kevyt kerroksensa** (`render/farTerrain.js`), ei näköetäisyyden kasvatus. Syy: puiden ja esineiden määrä kasvaa näköetäisyyden neliönä, siluetit taas maksavat vain korkeuserojen kohdista. Päällekkäisyys ladattujen palojen kanssa estetään latausruudukon tekstuurilla, ei säteellä (palojen reuna on rosoinen).
+- **Kameran kaukotaso seuraa asetusta** (vähintään 1500 m, muuten etäisyys + 200 m).
+
+## 2026-10-28 (sessio 58, jatko)
+- **Karstivuoristo on sademetsän sisäinen variantti, joka korvaa session 57 jyrkänteet** (`terrain.js` `escarpment()`, `karstMaskAt`, `karstField`, `rampAt`). Käyttäjä: tasainen viidakko on hyvä, ja karsti on viidakkobiomin sisällä esiintyvä variantti; jyrkänneportaat näyttivät kamalilta. Massiivi on kentän tasa-arvokäyrän sisäpuoli (thaimaalainen tornikarsti), ja laaksonpohja on karstialueella hieman tasaisempi.
+- **Jokiverkko ei näe massiiveja** (`escSoft = 0`, kuten jyrkänteissä), ja joen laaksossa massiivi madaltuu (laakso V + 5 + 2,5·w). Syy: jokigenerointi ei saa hajota (käyttäjä, sessio 57). Tarkistettu: vedenpinnan hyppyjä yli 1 m on vain 2–4 (enintään 1,2 m) ja putousten ympärillä 0 vesiseinää.
+- **Loivat rinteet ovat massiivin reunan osa** (`rampAt`): kentän reunan alapuolinen kaista nousee lineaarisesti laelle. Syy: solat ja rinteet syntyvät luonnostaan samasta kentästä, joten ylös pääsee aina jostakin, eikä erillisiä ramppeja tarvitse sijoitella.
+- **Pelaajalle jyrkkyysraja** (`player.js` `MAX_CLIMB` = 1,25, n. 51°). Syy: ilman sitä pystyseinä ei olisi este, koska pelaaja nousi aina maanpinnan korkeudelle. Raja koskee kaikkia biomeja; vuoristossa vain todella jyrkät kohdat pysäyttävät.
+- **Karstissa tiukempi rinneraja puille (n. 40°) ja koristekasveille (n. 48°)** vain karstialueella (`chunkGen.js`). Syy: muiden biomien kasvillisuus ei muutu.
+- **Vesiputoukset siirrettiin karstiseinille** (`tryFall`): Newtonin haku seinän puoliväliin, ei loivan rinteen kohdalle, lähdepuro 26–50 m. Niitä on nyt vähemmän; avoin kysymys käyttäjälle.
+- **Liaanien muototyypit ja paksuus tehdään puun liaanimäärittelyssä** (`treeAssets.js` `vineSpecs`, `kind`), ja piirto lukee ne (`vines.js` `STYLE`). Varsitekstuuri on tehty ohjelmallisesti (`tools/blender/vinetex.py`, FFT-kohina, jaksollinen), joten ulkopuolista lisenssiä ei tarvita.
+- **Osumaefekti tehdään kaatuvan rungon murskaustarkistuksessa** (`fallen.js` `_crush` → `_hitFx`): samat törmäystarkistukset kuin puiden ketjukaadossa ja kasvien murskauksessa, yksi efekti kohdetta kohti. Syy: ei uusia törmäyslaskuja.
+
+## 2026-10-28 (sessio 58)
+- **Akasioissa vanhat proseduraaliset ja uudet Blender-mallit sekaisin** (`models.js` `MIXED_TREES`): Blender-variantit ovat listan alussa, vanhat perässä, ja tarkka malli (`hi`) haetaan vanhoille oikealla siemenellä. Syy: käyttäjä piti vanhoja parempina ja uusia "orvon näköisinä", mutta ei pyytänyt uusien poistamista.
+- **Rungon liaani tehdään Blender-puuhun omana materiaalinaan** (`build_trees.py` `climbing_vine`, materiaali `treeVine`). Sillä on oma satunnaislukujono, jotta puiden muoto ei muuttunut. Syy: se kaatuu, heiluu ja katkeaa rungon mukana ilman erillistä logiikkaa.
+- **Liaanin materiaali on vaalea (0xf2eedc) ja AO 0,88.** Syy: tumma sävy kertaa taimikaarnan tekstuuri kertaa AO teki siitä varjopuolella täysin mustan (albedo noin 4 %).
+- **Kielekkeiden tarkistus tehdään juuren säteellä** (`chunkGen.js` `footRadius`, `footOk`): maan korkeus mitataan 8 suunnasta, ja liian iso pudotus tai nousu hylkää paikan. Syy: pelkkä keskipisteen kaltevuus ei huomannut jyrkänteen reunaa, joten puu jäi puoliksi ilmaan. Hylkäys ei kuluta satunnaislukuja, joten muut esineet pysyvät paikoillaan.
+- **Karstitornit ovat deterministinen 640 m:n soluruudukko** (`terrain.js` `karstInCell`, `karstNear`, `insideKarst`), kuten järvet ja putoukset. Tornin törmäys lisätään jokaiseen chunkiin, johon se ulottuu. Syy: torni on chunkia isompi, ja pelaajan törmäys käy läpi vain lähimmät chunkit.
+- **Kalliolohkareet ovat oma esinetyyppinsä** (`cliffRock`), ja ne asetetaan 2,6 m:n maailmanruudukkoon vain jyrkkään seinään (kaltevuus noin 37° tai enemmän), etupuoli alamäkeen. Uudet tyypit lisättiin `OBJECT_TYPES`:n loppuun. Syy: vanhojen maailmojen esineet pysyvät paikoillaan.
+- **Kalkkikiven tekstuuri: ambientCG Rock026 (CC0).** Syy: vaalea, pystyjuovainen kalkkikivi on lähinnä käyttäjän karstikuvaa.
+- **Lehtien karheus 0,93–0,97 ja märkyyden kiilto 0,08–0,1.** Syy: käyttäjän mukaan lehdet kiilsivät muovisesti.
+
+## 2026-10-28 (sessio 57)
+- **Latvusto suljetaan tiheämmillä lehvillä ja isommilla korteilla, ei lisäämällä puita tai kortteja.** Syy: lehtiatlaksen leveälehtiset lehvät peittivät vain noin viidenneksen kortistaan; kortin peitto nousee ilman lisäkolmioita. Puiden tiheyttä sademetsässä ei muutettu.
+- **Lähipuiden varjo piirretään kaukomallilla** (`world.js` varjopoolit, kerros 1 näkyy vain auringon varjokameroille). Syy: lähipuut piirrettiin kuvaan ja varjokarttaan tarkkana; varjossa ero ei näy, ja kolmioita säästyy puolet. Kaukomallissa on neljännes korteista 1,95-kertaisina, joten varjon peitto on sama.
+- **Kaukomalli:** vain runko ja pääoksat, joka toinen rengas, ei juurilohkoja. Syy: kaukaisia puita on näköetäisyydellä 4 noin 5–7 kertaa enemmän kuin lähellä olevia, joten kaukomallin keveys ratkaisee eniten.
+- **Kaatopinnan syykuvio tehdään varjostimessa** (`kitMaterials.js` `endGrain`), ei tekstuurina. Kannen UV kertoo paikan kannen tasossa (100 + säteen yksiköt), väri kertoo puulajin. Syy: ei uusia tekstuureja, ja kuvio sopii kaikkiin rungon kokoihin.
+- **Kannen kiertosuunta tarkistetaan kolmio kerrallaan** (`treeCut.js`). Syy: kannen pinta osoitti alaspäin, mikä ei näkynyt vanhoilla kaksipuolisilla materiaaleilla mutta katosi yksipuolisella kaarnalla.
+- **Liaanien lehdet ovat puiden lehtiatlaksesta** ja atlaksen solutiedot (`leaf_cells.json`) siirrettiin `assets/models/trees/`-kansioon, josta peli lukee ne. Syy: liaanit näyttävät samalta kuin puiden lehdet, eikä tarvita omaa tekstuuria.
+- **Latvusten väliset aukot suljetaan leventämällä latvuksia samalla korttimäärällä** (`build_trees.py`: oksien pituus ja kulma). Syy, mitattu Blenderissä:
+  - sademetsäpuun latvuksen jalanjälki oli vain noin 57 m², mutta sen sisällä lehtikortteja oli noin 25 kerrosta päällekkäin;
+  - latvukset olivat siis umpinaisia, mutta niiden väliin jäi aukkoja (ylös katsoessa noin 35–38 % taivasta);
+  - nyt jalanjälki on noin 110 m² (kapokki 112 → 150, jättiläispuu 206 → 244), kerroksia on edelleen yli kymmenen, eikä kolmioita tule lisää.
+  - mitattu pelissä (siemen 4242, 8 kohtaa, kuva suoraan ylös): taivasta 38 % → 14 % (session 55 versio 23 %; scratchpad `s57/cover.mjs`).
+  - kolmioita ruudussa sademetsässä (näköetäisyys 4, sama paikka): 6,5 M → 6,4 M, eli leventäminen ei maksa mitään.
+- **Jyrkänteet ovat kohinakentän tasa-arvokäyrillä kaksi porrasta** (`terrain.js` `escarpment`), ja niistä on kaksi versiota:
+  - terävä (`escSharp`): todellinen maasto;
+  - loiva ramppi (`escSoft`): jokiverkon vertailukorkeus (`smoothRef`); joen laaksossa maasto liukuu terävästä loivaan (`applyRivers`).
+
+  Syy: jokiverkko näkee vain loivan rampin, joten joet kulkevat jyrkänteen läpi rotkona eivätkä hajoa.
+- **Loivan rampin leveys on ±0,16 kentän yksikköä** (ensin ±0,07). Syy: jyrkkä ramppi teki pienten purojen pintaan jopa 1,9 m:n hyppyjä (13 kohtaa, siemen 777). Leveämmällä rampilla hyppyjä on 4, kuten ennen jyrkänteitä (3), eikä yksikään ole jyrkänteellä (scratchpad `s57/rivcheck.mjs`).
+- **Vesiputoukset ovat jokiverkosta erillisiä lähdepuroja** (`terrain.js` `fallInCell`, `applyFalls`; `render/waterfalls.js`). Syy: käyttäjä pyysi varomaan, ettei jokigenerointi hajoa. Putous ei muuta jokiverkkoa eikä jokien pintoja; paikka valitaan vähintään 70 m:n päästä uomista ja järvistä.
+  - Paikka haetaan Newtonin askelin jyrkänteen tasa-arvokäyrälle. Seinämän pitää olla jyrkkä (puolileveys enintään 3,2 m), vähintään 5 m korkea ja suora 7 m kumpaankin suuntaan.
+  - Purojen solmut ovat 2 m:n välein, ja pinta laskee aina alavirtaan. Laskupuro katkaistaan jyrkkään pudotukseen tai jyrkänteeseen, ja se kapenee ja imeytyy maahan.
+  - Yläpuron vesi loppuu 1,5 m ennen reunaa, ja altaan takareuna on vähintään 1,3 m reunasta. Väliin jää siis kuivia ruudukon pisteitä, eikä vesiseinää synny (tarkistettu: 0 seinäparia, scratchpad `s57/fallwall.mjs`).
+  - Putoava vesi on oma verkkonsa: kaari reunan yli ja seinämää pitkin, jos kallio on loivempi kuin putoamiskaari. Juovien UV on lentoaika, joten juovat venyvät vauhdin kasvaessa.
+- **Putouksen ääni on proseduraalista kohinaa** (`sfx.js` `waterfall`), ei äänitiedosto. Syy: ei uutta tiedostoa eikä lisenssiä, ja kohina sopii vesiputoukseen hyvin; lähellä ääni on kirkkaampi (alipäästön raja nousee).
+
+## 2026-10-27 (sessio 56)
+- **Puut tehdään Blenderillä skripteistä** (`tools/blender/build_trees.py`), ei valmiita malleja ladaten. Syy: sama toistettava tapa kuin esineissä, ja puut sopivat pelin kaatoon, kantoihin, loviin ja liaaneihin (runko ensin, tarkka rengas kaatokorkeudella, kaatotiedot solmun extras-kentässä).
+- **Puut muunnetaan pelissä kitin muotoon** (`treeAssets.js`): kolmiot ilman indeksiä, ryhmä per materiaali (kaarna, lehdet), runkokolmiot ensin. Syy: kaato (`splitTree`), lovet ja hakattavat palat toimivat ilman erillistä polkua. `splitTree` säilyttää nyt materiaaliryhmät.
+- **Kaarnan verteksiväri on valkoinen, ja tuore puu sekoitetaan varjostimessa** (`freshWood`). Syy: tekstuuroidussa kaarnassa lovien ja kuorinnan värit eivät muuten näkyisi.
+- **Lehdet ovat atlaksesta otettuja kortteja; atlas renderöidään Blenderissä mallinnetuista lehvistä.** Syy: yksi tekstuuri kaikille lajeille ja yksi materiaali, ja lehvät näyttävät oikeilta lehdiltä.
+- **Tyven juurilohkot ovat osa runkoa** (säde kulman ja korkeuden funktiona), eivät erillisiä levyjä. Syy:
+  - käyttäjä piti kolmion muotoisia pönkkäjuuria ja kantoja kulmikkaina;
+  - lohko on pyöreä ja liittyy runkoon saumatta, ja kanto saa saman muodon kaadossa;
+  - tyvessä on tiheämmät renkaat ja kulmat, jotka ommellaan yläosan harvempaan putkeen, joten kolmioita ei tule turhaan koko rungon matkalle;
+  - juuret jatkuvat maan alle viistosti, jotta ne eivät jää ilmaan rinteessä.
+- **Kaarnan U kulkee juurilohkon kyljillä ylös ja alas (peilautuu harjalla)** ja V mitataan tyvessä pintaa pitkin. Syy: muuten kuvio venyisi lohkoilla tai vinoutuisi renkaiden välillä. Ympäri on kokonainen määrä tekstuurikierroksia, ettei saumaa näy.
+- **Tiheyttä lisättiin kertomalla kaikki biomit vähintään samalla kertoimella kuin suurin tiheys** (akasia: metsäsavanni 11 → 16 ja muut ≥ ×1,45; karite ×1,5, avoin savanni ×1,8).
+  - Ehdokkaiden satunnaisluvut ja hyväksymisraja (tiheys / suurin tiheys) pysyvät vanhoilla ehdokkailla samoina tai suurenevat.
+  - Siksi vanhojen maailmojen puut (ja tallennetut kannot) pysyvät paikoillaan, ja uudet puut tulevat lisäksi.
+  - Sademetsän tiheyksiä ei muutettu: se on jo tiheä, ja sen puut ovat raskaimpia.
+- **Baobabin kaarnatekstuuria vaalennettiin valmisteluvaiheessa** (`prep_textures.py`, `BARK_ADJ`). Syy: ambientCG:n Bark005 on tumman oliivinen, mutta baobabin kaarna on vaalean harmaanruskea.
+- **Esineissä parannettiin heikoimmat mallit** (17 kpl), ei kaikkia uudelleen. Syy: sessioissa 54–55 tehdyt työkalut, aseet ja panssarit näyttävät jo hyviltä; heikoimmat olivat yksinkertaisia möhkäleitä (kivi, piikivi, savi), ohuita tikkuja (ruoko, fonio) tai pallokasoja (pähkinät, hibiskus).
+  - Piikiven kuori on oma osansa (`split_part`), jossa on vaalea luutekstuuri. Syy: tekstuurin väriä voi vain tummentaa, joten vaalea kuori ei onnistu tumman piikiven tekstuurilla.
+  - Nuotion tuhka ja hiilet ovat omia verteksivärimateriaaleja (`ash`, `coal`).
+
+## 2026-10-27 (sessio 55)
+- **Kullakin tasolla on oma muotonsa, ei vain eri materiaali.**
+  - Kupari: pronssikauden muodot (puolikuukirves, lehtimiekka antenniponnella, kohokuvioitu kupera kilpi).
+  - Rauta: käytännölliset taotut muodot ja Sahelin perinne (partakirves, takouba-miekka, kolmiokilpi vantein).
+  - Rubiini: koristeelliset muodot ja hehkuva rubiini (kaksiteräinen kirves, kaareva sapeli, sotahakku).
+  - Taljakilpi on soikea lehmäntaljakilpi (Itä- ja Etelä-Afrikan malli).
+  - Syy: käyttäjä halusi tasojen erottuvan toisistaan.
+- **Otekohta ja koko pidetään ennallaan**, kun mallin muoto muuttuu. Syy: käden otteet (`holdFor`) ja jousen jänne (`bowPoints`) toimivat ilman muutoksia.
+- **Putket ja nyörit käyttävät rinnakkaissiirrettyjä kehyksiä** (`itemlib.transport_frames`). Syy: aiemmin poikkileikkauksen suunta hyppäsi tietyissä kulmissa, mistä tuli katkoja ja nipistyksiä (köysikerä, rannerengas).
+- **Kuvakkeet piirretään vasta, kun käyttäjän mallien (nuija, soihtu, puukko) tekstuurit ovat latautuneet** (`userTexturesReady`). Syy: muuten kuvake jäi ilman tekstuuria.
+
+## 2026-10-27 (sessio 54)
+- **Esinemallit tehdään Blenderillä Python-skripteistä** (`tools/blender/`), ei käsin eikä valmiita malleja lataamalla.
+  - Syy: yli 100 esinettä yhtenäisellä tyylillä, ja skriptiä muuttamalla ja ajamalla uudelleen työ on toistettavaa.
+  - Mitat on sovitettu vanhoihin malleihin, joten käden otteet (`holdFor`) ja kuvakkeiden kulmat toimivat sellaisenaan.
+  - Blender (4.0.2) ajetaan pilviympäristössä Ubuntun paketista; käyttäjän Steam-Blenderiä ei tarvita.
+- **Tekstuurit ovat yhteinen materiaalikirjasto, ei esinekohtaisia leivottuja tekstuureja.**
+  - 17 toistuvaa CC0-materiaalia (512 px WebP: väri, normaali, karheus) ja kaksi itse tehtyä (rengas- ja suomupanssari), yhteensä 3,1 Mt.
+  - UV:t ovat metreinä, joten tekstuurin tarkkuus on sama kaikissa esineissä. Sävy annetaan materiaalipaikan nimessä (esim. `cloth:8a6a4a`).
+  - Syy: pieni latauskoko, ja uusia esineitä voi tehdä ilman uusia tekstuureja.
+- **AO leivotaan verteksiväreihin, ja orgaaniset kuviot maalataan verteksiväreillä** (banaanin pilkut, sienten lakit, liha, sulat). Syy: ei tarvita esinekohtaisia tekstuureja.
+- **Kaikki esineet ovat yhdessä GLB:ssä (EXT_meshopt_compression), ja UV:t on pyöristetty 1/1024 ruudun tarkkuuteen.**
+  - Syy: yksi lataus, ja koko putosi 9,7 Mt → 2,9 Mt.
+  - Purkaja (meshoptimizer, MIT) on `vendor/meshopt/`-kansiossa.
+- **Vanhat proseduraaliset mallit jäävät varalle.** Syy: jos GLB ei lataudu, peli toimii silti.
+- **Panssarien etupuoli osoittaa kuvakekameraa kohti** (pelin +Z). Syy: vanhoissa malleissa etupuoli oli −Z:n suuntaan, joten kuvakkeessa näkyi lähinnä takapuoli.
+- **Jousen runko ja yksittäinen nuoli ovat GLB:ssä omina solmuinaan** (`bowbody_<tunnus>`, `arrow1_<tunnus>`), ja jänne piirretään pelissä kuten ennen. Syy: jänne liikkuu vedettäessä.
+- **Ladatun ambientCG-paketin `.blend`-tiedostoja ei avata**; vain JPG-kuvia käytetään. Syy: `.blend` voi sisältää ajettavaa Python-koodia.
+
+## 2026-10-14 (sessio 53)
+- **Isoille eläimille pehmeä kääntyminen** (`turnAcc` mobin määrittelyssä, `_steer`): kulmanopeus kiihtyy ja jarruttaa ennen kohdesuuntaa. Syy: leopardin "vaappuminen" johtui pääosin nopeista napsahtavista käännöksistä (5 rad/s) ja niiden kallistuksista, joita tiheän sademetsän esteiden kierto laukaisi jatkuvasti. Koskee nyt leopardia ja gorillaa; muut eläimet ennallaan.
+- **Leopardin askeltahti asetettu hieman todellista hitaammaksi** (kävely ~1 Hz). Syy: käyttäjän mielestä animaatiot olivat liian nopeita; pelissä rauhallinen tahti näyttää isolta kissalta.
+- **Gorillan animaatioita ohjataan itse** (`animateGorilla`): kaikkien klippien painot ja ajat asetetaan joka ruudussa. Syy: mallin klipit ovat hyvin lyhyitä (nousu 0,57 s, lyönti 0,2 s), ja ne piti venyttää pelin tilojen kestoille.
+- **Gorillan kävely tehdään laukasta raajojen vaiheita siirtämällä** (apinoiden ristikkäinen nelitahti), ja oikealle jalalle peilataan vasemman jalan liike. Syy: mallissa ei ole kävelyanimaatiota; laukan johtava oikea jalka potkaisee liian korkealle.
+- **Rinnan lyönti käsien IK:lla** (kädet rintaan, kyynärpäät sivuille). Syy: lähdeanimaatiossa ei ole lyöntiä, ja Biped-luiden akselit ovat hankalia suoraan kierrettäviksi.
+
+## 2026-10-13 (sessio 52)
+- **Gorillan ryntäys 4,6 m/s:** kävelyä (4,2) nopeampi, jotta kävellen ei pääse karkuun, mutta juoksua (7,2) hitaampi. Väistön juoksu on erikseen 4,2 m/s, ettei se hidastunut samalla.
+- **Rainforest-lintu on harmaapapukaija** (Keski-Afrikan sademetsän tunnetuin lintu, punainen pyrstö erottuu hämärässä). Käyttäjä sanoi vain "lintuja", joten laji on vahvistettava (DESIGN).
+- **Linnut istuvat esineiden päällä:**
+  - Paikat ovat lahopuu, sammalkivi ja lohkare; korkeus luetaan mallin rajauslaatikosta, ja paikan korkeus on 0,3–2,6 m.
+  - Syy: tiheä aluskasvillisuus peittäisi maassa olevat linnut, eikä puiden oksista ole paikkatietoa.
+  - Paikkoja on harvassa (noin 7 / 30 m), joten haku tehdään 14 m:n säteellä ja parvi jaetaan eri paikoille.
+- **Lyönti ei osu lintuihin** (`noMelee`): käyttäjän mukaan niitä ei voi tappaa käsin. Lisäksi lentoon lähtö lähestyttäessä.
+- **Leopardin luuranko rakennetaan latauksessa** (kuten norsulla):
+  - nivelet mitattu mallista;
+  - kyynär- ja polvinivel lasketaan luiden pituuksista (vasen ja oikea yhtä pitkät);
+  - painot: lähin sallittu luu ja pehmennys pintaa pitkin, ei eri jalkojen välillä.
+  - Animaatiot ovat proseduraalisia (IK sivutasossa), koska mallissa ei ole valmiita.
+- **Oikean etujalan alaosa korvataan vasemman peilikuvalla.**
+  - Syy: lähdemallin oikea tassu on käpristynyt ja sulautunut vasemman ranteen taakse.
+  - Kokeiltiin myös erottelua pintaetäisyydellä, lähimmällä luulla, koveruudella ja leikkaamalla ranteesta. Kaikissa tassut repesivät tai jäivät vajaiksi.
+  - Leikkaus tehdään vaakatasossa kyynärpään alta; kopio kohdistetaan leikkausrenkaiden keskipisteisiin.
+- **Leopardin käytös reiluksi** (ei käyttäjän sanoma, vrt. gorillan "ei liian vaikea"):
+  - jähmettyy, kun pelaaja katsoo sitä (näkölinja tarkistetaan), ja luovuttaa 5 s katsottuna;
+  - pelkää soihtua;
+  - murisee ennen loikkaa;
+  - raatelu kestää 2,5–4 s: passiivinen pelaaja menettää noin 38 terveyttä.
+- **Leopardin murina syntetisoidaan** (kohina + 25 Hz:n amplitudimodulaatio + matala sahalaita), koska äänitiedostoa ei ole.
+
+## 2026-10-13 (sessio 51)
+- **Gorillan malli:**
+  - Valmiit animaatiot (idle, run, stomp, attack) soitetaan `THREE.AnimationMixer`illa; jokaisella gorillalla on oma luurankokopio (`SkeletonUtils.clone`).
+  - Juoksussa ei ole juuren liikettä, joten pelin liike ohjaa paikkaa. Kävely on laukka hidastettuna (oma kävelyanimaatio puuttuu), ja lyönti venytetään valmistelun ja iskun ajalle (0,2 s → 0,74 s).
+  - Suunta (+Z) lasketaan pään ja lantion luista latauksessa, ja koko on 1,5 m.
+  - Tiedosto kevennetty 1,29 → 0,49 Mt (resample, JPEG-tekstuuri).
+- **Säikähdysmittari** (`m.startle`) eikä välitön reaktio, jotta yksittäinen vahinko (esim. ohimenevä hyppy 3 m:n päässä) ei suututa:
+  - hyppy alle 2,2 m:n päässä +1,1 (suuttuu heti), 2,2–3,5 m:n päässä +0,55;
+  - laskeutuminen viereen +0,6;
+  - isku lähellä +0,45;
+  - ryntäys päin yli 5,5 m/s alle 4,5 m:n päässä kertyy ajan mukana (kävely 4,2 m/s ei säikytä, juoksu 7,2 m/s säikyttää);
+  - mittari laskee 0,2 / s, ja puolivälissä (yli 0,45) gorilla varoittaa rintaan lyönnillä.
+
+  Syy: käyttäjän mukaan viidakosta ei saa tulla liian vaikea.
+- **Karjaisu vain uuden suuttumisen alussa**, ei jokaisella iskulla: käyttäjän mukaan karjaisu kuuluu, kun gorilla huomaa pelaajan ja hyökkää.
+- **Väistötila on `avoid` eikä `retreat`**, koska `retreat` on muilla olennoilla vihamielinen tila (nimilapun punainen silmä).
+
+## 2026-10-13 (sessio 50)
+- **Taustaäänten audio-elementeille `crossOrigin = 'anonymous'`.**
+  - Syy: raw.githack ohjaa mp3:t (301) raw.githubusercontent.comiin, eli eri alkuperään. Web Audio (`createMediaElementSource`) saa ilman CORS-pyyntöä vain hiljaisuutta.
+  - raw.githubusercontent palauttaa `access-control-allow-origin: *` ja tukee osittaisia latauksia, joten korjaus riittää.
+  - Paikallisissa testeissä (sama alkuperä) vika ei näkynyt, joten testaan äänet jatkossa myös githack-osoitteesta.
+  - Musiikki soittaa elementin omalla äänenvoimakkuudella eikä Web Audion kautta, siksi se kuului.
+- **Viidakon taso 0,4 → 0,55** (noin −26 LUFS, hieman sademetsän musiikin −28 LUFS:n yläpuolella).
+- **Kuoriainen NPC:ksi lipulla `npc`** (ei uutta järjestelmää):
+  - `inArc` (lähitaistelu) ja nuolet ohittavat sen;
+  - `damage()` ja `setOnFire()` palaavat heti (säikähtää lentoon), joten myöskään kaatuva puu ei tapa sitä;
+  - nimilapulla ja kohteen tiedoissa ei terveyspalkkia;
+  - sarvi-esine jää koodiin vanhoja tallennuksia varten, mutta sitä ei enää saa.
+- **Hyttysen ääni:** normalisoitu (+26 dB, rajoitin), mono 64 kbps (91 kt). Ininä on yksi pätkä, jonka rata kulkee pään suhteen, joten panorointi, voimakkuus ja kirkkaus ajastetaan käyrinä alussa eikä joka ruudulla.
+- **Mäkärät:** pisteen vähimmäiskoko 1,8 px. Ennen 5 m:n päässä piste oli noin 1,3 px ja käytännössä näkymätön. Siipien välähdys tehdään varjostimessa (ei lisäkustannusta).
+
+## 2026-10-13 (sessio 49, jatko)
+- **Banaanitertun kevennys osittain:** terttu on 160 erillistä banaania (52 kolmiota kukin) ja varsi. Koko verkon kevennys hajotti ne, joten nyt:
+  - kärkipisteet yhdistetään ja verkko jaetaan osiin;
+  - lähiversioon jää joka neljäs banaani 1,2-kertaisena ja kevennettynä (noin 900 kolmiota), kaukoversioon joka kymmenes;
+  - varsi säilyy.
+
+  Banaanipuun lähiversio on noin 1 800 kolmiota (ennen 1 074, mutta terttu oli rikki).
+- **Tekijät päävalikkoon** eikä vain tiedostoon: CC BY 4.0 vaatii nimeämisen siellä, missä sisältöä käytetään.
+
+## 2026-10-12 (sessio 49)
+- **Kuoriainen rungoilla:** rungon paikka ja säde lasketaan puun mallin rungon tiedoista (`userData.tree`: base, top, r0, r1) sekä objektin kierrosta ja koosta. Erillistä törmäyshakua ei tarvita, joten se on kevyt. Rungolla kuoriaisen suunta lasketaan kantavektoreista (selkä ulospäin, pää kulkusuuntaan). Kuolleena se putoaa painovoimalla.
+- **Käyttäjän mallit kit-muotoon** samalla muuntimella kuin Poly Havenin kasvit:
+  - solmujen muunnokset leivottu ja koko skaalattu metreihin;
+  - banaanin hedelmäterttu kevennetty 8 400 → 160 kolmioon (kärkipisteet ensin yhdistetty, koska verkossa oli irrallisia saumoja);
+  - bambunlehtien UV:t siirretty välille 0–1, koska alfatekstuurit eivät toistu, ja ilman siirtoa lehdet eivät näkyneet.
+
+  Kaukoversioissa bambun ja pensaan lehtikorteista jätetään osa ja ne suurennetaan.
+- **Bambuista ei peilattuja kopioita:** pyöritys riittää vaihteluun, ja tiedosto pysyy pienenä (userKit.js 480 kt).
+- **Vanhat proseduraaliset banaani ja bambu poistettu** (`palms.js` `makeBanana`, `plants.js` `makeBamboo`). Syy: käyttäjä toimitti paremmat mallit; muunnelmien määrän muutos ei siirrä objekteja (muunnelma valitaan viimeisenä).
+- **Latvusto leveämmäksi samalla korttimäärällä** (`trees.js` `widen`):
+  - leveys kerrottu (latvuspuu 1,3, viidakkopuu 1,25, jättiläispuu 1,15);
+  - tiheys jaettu pinta-alan kasvulla ja kortit suurennettu;
+  - kolmiomäärä mitattiin samaksi kuin ennen (5 317 / 1 734 / 3 823).
+
+  Syy: käyttäjä halusi lisää lehtikattoa ilman ruudunpäivityksen laskua; kortteja lisäämällä kolmiot olisivat kasvaneet.
+- **Suorituskyky** (sademetsä, näköetäisyys 4, kasvillisuus korkea; sessio 48 → 49):
+  - piirtokutsut 318 → 340 (uudet materiaalit);
+  - kolmiot 4,60 M → 4,58 M (uusi bambu on kevyempi kuin vanha proseduraalinen);
+  - ylöspäin katsottaessa 314 → 338 kutsua ja 4,59 M → 4,57 M kolmiota.
+- **Kenttäkerros:** vain koristetyyppien tiheyksiä nostettiin (`groundFern`, `undergrowth`, `tropicalPlant`), koska niiden paikkoja ei tallenneta. Bambupensas on uusi tyyppi listan lopussa.
+- **Kärpäset:**
+  - rata kulkee kameran suhteessa, jotta stereoäänen panorointi (tiedostossa vasemmalta oikealle) ja näkyvä lento täsmäävät pelaajan kääntyessäkin;
+  - toinen suunta saadaan vaihtamalla kanavat ristiin;
+  - tiedostosta leikattiin kolme ohilentoa (4,2 s, 59 kt alkuperäisen 12,5 s:n ja 400 kt:n sijaan);
+  - liike-epäterävyyden tilalla kärpäsen runkoa venytetään vauhdin mukaan.
+
+## 2026-10-12 (sessio 48)
+- **Ambienssi:** viidakkoäänen taso 0,22 → 0,4 ja alipäästö 4,2 → 8 kHz. Syy, mitattu EBU R128:lla:
+  - tiedosto on −20,9 LUFS, ja sen yläpää (yli 4,2 kHz, hyönteiset ja linnut) −27,5 LUFS;
+  - pelissä ääni oli noin −34 LUFS, kun sademetsän musiikki soi −28 LUFS:ssä;
+  - koodissa ääni soi oikein (testattu selaimessa).
+- **Uudet tyypit objektilistan loppuun** (`emergent`, `tropicalPlant`, `sapling`). Syy: tyyppien järjestys vaikuttaa siemeniin, joten olemassa olevien maailmojen puut eivät siirry. Vanhojen tyyppien tiheyksiä ei muutettu samasta syystä.
+- **Latvuskatto jättiläispuilla (6 / chunk)** eikä tiheämmillä nykyisillä puilla. Syy:
+  - muutama iso latvus 16–24 m:ssä peittää enemmän kuin monta pientä;
+  - kustannus pysyy kohtuullisena: kaukomallit kevyinä ja isommat lehtikortit korkealla;
+  - varjokartta tekee metsänpohjasta hämärän.
+- **Poly Havenin kasvit:** calathea ja saniainen, kevennettynä noin 800–1 100 kolmioon (lähteessä 800–5 900). Anthurium ja pachira jätettiin pois:
+  - anthurium on punakukkainen huonekasvi;
+  - kummankin lehdissä on saumoja joka puolella, joten ne eivät keventyneet (pachira 4 300–7 700 kolmiota);
+  - kun saumoja ei lukittu, UV:t osuivat väärille alueille (ruskeat läikät).
+
+  Keskikerroksen täyttää kevyt proseduraalinen taimi (noin 100 lehtikorttia).
+- **Herkuleskuoriainen:**
+  - koko noin 20 cm sarvineen (todellinen koiras enintään noin 17 cm, hieman suurennettu, jotta erottuu);
+  - ei hyökkää, koska todellinenkin on ihmiselle vaaraton; uhittelee sarvillaan ja lentää lyötynä pois;
+  - pudottaa uuden esineen, herkuleskuoriaisen sarven, jonka käyttö on avoin.
+
+  Syy: käyttäjä ei määritellyt käytöstä, joten valittiin luonnonmukainen ja kirjattiin kysymykset DESIGN.md:hen.
+- **Hyönteiset kahtena piirtokutsuna:** mäkärät Points-pisteinä (9 parvea × 34), perhoset InstancedMeshinä (siivet lepattavat shaderissa). Syy: halpa, ei vaikuta ruudunpäivitykseen.
+- **Suorituskyky (sademetsä, näköetäisyys 4, kasvillisuus korkea, varjot mukaan lukien):**
+  - piirtokutsut 293 → 318 (+8 %), kolmiot 3,84 M → 4,6 M (+20 %);
+  - ensimmäinen versio oli +30 %, joten jättiläispuun lehtikortit harvennettiin ja suurennettiin: lähimalli 7 800 → 5 300 kolmiota, kaukomalli 1 200 → 650;
+  - trooppisia kasveja 140 → 100 / chunk, taimet näkyvät 1 chunkin päähän;
+  - kasvu tulee lähinnä jättiläispuiden latvuksista ja niiden varjoista.
+
+  Session 43 muutos (joka pudotti ruudunpäivitystä) kasvatti kaikkien puiden kaukomalleja noin 2,8-kertaisiksi, mikä on paljon suurempi muutos. Säätövara: `emergent.density.rainforest` (6).
+
+## 2026-10-12 (sessio 47)
+- **Sademetsän päivän tunnelma.** Arvot ovat säädettävinä `Environment`-olion ominaisuuksina, ja kaikki on kerrottu kosteudella (`humid`) ja päivänvalolla (`daylight`), joten muut biomit ja yöt eivät muutu. Syy: käyttäjän ohje (latea ja haalea, ei syvyyttä) ja varoitus, ettei ulkonäköä saa pilata.
+
+  | Arvo | Ennen | Nyt |
+  |---|---|---|
+  | Auringon himmennys latvuston alla (`humidSunDim`; yöllä ennallaan 0,45) | 0,45 | 0,25 |
+  | Lämmin sävy (`humidSunWarm`, väri 1 / 0,8 / 0,55) | – | 0,2 |
+  | Hajavalon vähennys (`humidDayAmb`) | 0,2 | 0,4 |
+  | Usvan tummennus (`humidFogDark`) | 0,45 | 0,35 |
+  | Sävytys latvuston vihreään (`humidFogTint`) | – | 0,25 |
+  | Usvan alun siirto lähemmäs (`humidFogNear`) | – | 0,5 |
+  | Korkeussumu (`humidHaze`) | 0,006 | 0,008 |
+  | Valokeilat (`humidShafts`) | 0,6 | 0,75 |
+  | Värimäärittely (`post.gradeHumid`) | – | kontrasti +0,08, kylläisyys +0,12 |
+
+  Sumu (`scene.fog`) oli koko ajan päällä, mutta sessiossa 38 tummennettu usva häivytti taustan harmaaseen.
+- **Varjokartta hoitaa latvuston varjon**, joten auringon yleistä himmennystä voi pienentää. Ennen kaksinkertainen himmennys teki valoläikistä tuhruisia.
+
+## 2026-10-12 (sessio 46)
+- **Lehvästön pikselimössön syy selvitettiin vertailemalla:**
+  - sessio 36 (ennen grafiikkapäivitystä) ja nykyinen versio renderöitiin samasta kohdasta;
+  - latvusten rakenne ja välkyntä olivat molemmissa samat, ja muutos alle pikselin kameran käännöksessä oli samaa luokkaa;
+  - vika ei siis tullut grafiikkapäivityksestä. Päivityksen tummemmat varjot ja suurempi kontrasti tekivät siitä vain näkyvämmän.
+
+  Syy on alfaleikattujen lehtikorttien (satoja muutaman pikselin kortteja latvusta kohden) kovat reunat ja tekstuurin pienet yksityiskohdat.
+- **Korjaus `softFoliage` (materials.js):** mipmap-bias 0 → 1 välillä 4–20 m (`vViewPosition.z` on positiivinen etäisyys), ja alfareuna peittävyydeksi keskitetysti 1,5 pikselin matkalla. Testatut vaihtoehdot ja vaikutus välkyntään (muutos kameran käännöksessä):
+  - pelkkä reunan pehmennys: −10 %;
+  - kaukana tiheämmät lehdet: −10 %;
+  - varjojen pehmennys kaukana (40–60 %): ±0;
+  - varjot kokonaan pois: latvukset siistimpiä, mutta syvyys katoaa;
+  - jälkikäsittely tai syväterävyys pois: ei vaikutusta;
+  - mipmap-bias (1 kaikkialla) ja reunan pehmennys yhdessä: −15–34 %. Tämä valittiin.
+  - Lopullinen toteutus (bias vasta 8–30 m): −11–16 %. Siksi alue siirrettiin 4–20 m:iin, jotta myös lähempänä olevat latvukset hyötyvät. Lähellä (alle 4 m) lehdet ovat ennallaan.
+
+  TAA ei tule kysymykseen (käyttäjä ei halua suttua, sessio 42).
+- **Syväterävyys:** kaukana alkaen max(tarkennus × 2,5 + 12, 24) m, enintään 0,5, säde 3,5. Puolikkaan tarkkuuden kuva sekoittuu yhä vasta voimakkuudesta 0,2. Syy: käyttäjä pyysi hieman lisää.
+
+## 2026-10-12 (sessio 45)
+- **Okkluusiosta pois ohut geometria:** syvyyden toinen derivaatta suhteessa etäisyyteen (`thin`) häivyttää okkluusion välillä 0,015–0,06. Lisäksi näytteet alkavat 35 %:sta säteestä, säde 0,85 → 1,2, voimakkuus 0,62 → 0,5, kantama 90 → 70 m ja sumennusaskel 2 tekseliä. Syy: käyttäjän mukaan SSAO välkytti tiheää ruohoa ja lehtiä. Korret ja lehdet ovat pikselin levyisiä ja liikkuvat tuulessa, joten niiden okkluusio vaihtui ruudusta toiseen. Isot muodot (rungot, kivet, maaston kuopat) pitävät okkluusion.
+- **Terävöinti (CAS, sessio 38) poistettu kokonaan** (shader, uniformit, asetus, valikko). Syy: käyttäjä pyysi; tehoste korosti reunojen ja kasvillisuuden kohinaa.
+
+## 2026-10-12 (sessio 44)
+- **Session 43 kaukomallit peruttu** (`trees.js`, `flora.js`, `palms.js`, `world.js` palautettu). Syy: ruudunpäivitys putosi viidakossa, jossa puita on paljon.
+- **Syväterävyys session 25 arvoihin** (kaukana alkaen max(tarkennus × 3 + 15, 32) m, enintään 0,4, säde 3), ja puolikkaan tarkkuuden kuva sekoittuu vasta voimakkuudesta 0,2 alkaen (oli 0,12). Syy: kaukainen maisema näkyi puolikkaan tarkkuuden kuvana pienellä sumennuksella, eli pikselöityneenä. Pikselitiheyteen ja MSAA:han ei koskettu, koska ne eivät olleet syy.
+
+## 2026-10-12 (sessio 43)
+- **Kaukomallien laatu ylös:** lehtikorttien tiheys 0,3 → 0,85 ja koko 2,0 → 1,35 (`blob` sekä `trees.js`:ssä että `flora.js`:ssä), palmujen lehdykät 9 → 16 ja leveys × 2,2 → × 1,5, tarkan mallin raja `LOD_NEAR` 1,6 → 2,4 chunkia. Syy: käyttäjän mukaan kaukaiset puut näyttivät PS1-grafiikalta. Instanssipoolit kasvavat itse, ja kaukomallit eivät heitä varjoja, joten kustannus on kohtuullinen (enemmän kolmioita kaukana).
+
+## 2026-10-12 (sessio 42)
+- **Takapakki:** liike-epäterävyys 0,9 / 1,7 ja suurin siirtymä 0,08 (session 25 arvot), oletuksena pois. Okkluusio on oletuksena pois kaikilla laatutasoilla, ja asetusversio 6 kytkee liike-epäterävyyden, okkluusion ja terävöinnin kerran pois myös vanhoista asetuksista. Syy: käyttäjän mukaan peli näytti liikkeessä sotkuiselta ja kasvillisuus kohisi.
+- **Ei SMAA:ta eikä TAA:ta.** Maailma ja käsi piirretään jo 4× MSAA:lla, ja kasvillisuus käyttää alpha-to-coveragea, mikä on SMAA:ta terävämpi ilman ajallista suttua. Kuvassa näkyvä suttu tuli liike-epäterävyydestä, ei reunanpehmennyksestä.
+- **Käden reunavalo:** 0,01 + 0,05 × pimeys (oli 0,03 + 0,26 × pimeys), potenssi 4 ja vain pinnan värin mukaan (ennen vähintään 35 %, jolloin vaalea iho hehkui).
+
+## 2026-10-12 (sessio 41)
+- **Käden valaistus:**
+  - täyte-, reuna- ja AmbientLight-valot (sessiot 38–40) poistettiin;
+  - Fresnel-reunavalo shaderiin (`addRim`, väri ja voimakkuus `vmRim` pimeyden mukaan, 0,03 + 0,26 × pimeys);
+  - viewmodel-näkymään taivas–maa-liukuma ympäristökartaksi (`environmentIntensity` = taivaan kirkkaus × 0,8, enintään 0,5).
+
+  Syy: käyttäjän ohje, ja tasainen valo teki kädestä yöllä joko liian kirkkaan tai mustan.
+- **Kädessä olevien esineiden materiaalit kopioidaan** (`vmMaterial`), ja `onBeforeCompile` ja välimuistiavain siirretään käsin, koska `Material.copy` ei kopioi niitä. Syy: samoja materiaaleja käytetään maassa olevissa esineissä. Puun karheus enintään 0,62 (metallittomat), jotta heijastus näkyy. Käden oma materiaali muokataan suoraan (vain kädellä).
+
+## 2026-10-12 (sessio 40)
+- **Pushaus remoteen `studios`** (`KSPKtechStudios/Sahel_survivor_game`). Syy: työympäristö kirjoittaa `origin`-remoten toistuvasti vanhaan, jäädytettyyn repoon.
+- **Ruoho: alpha-to-coverage ja terävöity alfa** (`(a − 0,5) / fwidth(a) + 0,5`), ei kovaa `discard`ia. Syy: ruohokenttä oli ainoa kasvillisuus ilman alpha-to-coveragea, ja kova raja välkkyi ja teki moiré-kuvioita. Maailma piirretään 4× MSAA -kuvaan, joten peittävyys pehmentää reunat. Muut leikatut materiaalit (lehdet, kitin kasvit) käyttävät jo alpha-to-coveragea (three terävöi alfan itse), ja niillä on peittävyyden säilyttävät mipmapit. SMAA:ta ei lisätty, koska MSAA ja alpha-to-coverage hoitavat kasvillisuuden reunat, eikä ylimääräistä vaihetta tarvita.
+- **Anisotropia 16** (three rajaa näytönohjaimen maksimiin): maaston pinnat, lehdet, ruoho ja metsänpohja, maan yksityiskohtatekstuuri ja kitin sekä skannattujen mallien tekstuurit.
+- **Terävöinti oletuksena pois** (asetusversio 5 kytkee sen kerran pois myös vanhoista asetuksista). Syy: käyttäjä koki reunat rumiksi kahdesti terävöinnin jälkeen.
+- **Taivas × (1 − 0,22 × päivänvalo) koosteessa.** Syy: silmän mukautumisen painotus ei yksin estänyt sademetsän pilvisen taivaan puhkeamista valkoiseksi; suora taivaan tummennus pitää maiseman valotuksen ennallaan.
+- **Syväterävyys:**
+  - kaukainen sumennus alkaa nyt tarkennus × 2,2 + 12 m (oli × 1,8 + 8 m);
+  - suurin sumennus 0,55 (oli 0,85), säde 4 (oli 5);
+  - lähisumennus 0,45 (oli 0,6).
+- **Käsi yöllä:** mukautumisen eksponentti 0,3 (oli 0,4), täytevalot noin 70 % entisestä.
+- **Okkluusion voimakkuus 0,62** (oli 0,75), koska puolikkaan tarkkuuden okkluusio voi lisätä kohinaa tiheään ruohoon.
+
+## 2026-10-12 (sessio 39)
+- **Intro on index.html:n oma kerros, jonka käynnistää tavallinen (ei moduuli) skripti heti sivun alussa.** Peli latautuu taustalla, mutta `main.js` ei piirrä mitään, kun `window.sahelIntroActive` on tosi. Syy: video alkaa heti, eikä raskas piirto nyi sitä. Ääni yritetään ensin; jos selain estää, video alkaa äänettömänä ja vasen klikkaus avaa äänen. Virhe, tai jos toisto ei ala 9 sekunnissa, ohittaa intron. Syy: Playwrightin Chromium (ja jotkin Linux-selaimet) ei osaa H.264:ää, ja hidas yhteys ei saa jumittaa peliä.
+- **Video nimettiin `intro.mp4`:ksi ja ajettiin `-movflags +faststart -c copy`** (kuva ja ääni ennallaan). Syy: välilyönnit ja sulkeet ovat hankalia osoitteissa, ja moov-laatikko oli tiedoston lopussa, jolloin selain olisi ladannut 20 Mt ennen toistoa.
+- **Valoisuus:**
+  - ilmakehän sironta 0,9 → 0,5 × (1 − 0,4 × kosteus);
+  - valokeilat 0,011 → 0,0075 ja niiden ilma 0,8 → 0,6 × kosteus;
+  - valonsäteet 1,35 → 0,95;
+  - silmän mukautumisen taivaspaino 0,4 → 0,75 ja päivätavoite 0,25 → 0,22;
+  - bloomin yläraja 40 → 12.
+
+  Syy: käyttäjän kuvissa aurinkoa kohti koko kuva hukkui kultaiseen hehkuun, ja taivaan aukot lehtien välissä puhkesivat valkoisiksi läiskiksi.
+- **Terävöinti 0,5 → 0,25.** Syy: käyttäjä koki reunat rumiksi; terävöinti korosti lehtien reunoja.
+- **Kädelle osittainen silmän mukautuminen alfakanavan avulla:** kooste kirjoittaa HDR-kuvaan alfan 0, käsi ja esineet 1, ja lopullinen vaihe käyttää kädelle mukautumista potenssiin 0,4 (esim. 3,4 → 1,6). Lisäksi täytevalot ovat noin kolmasosa entisestä. Syy: täysi mukautuminen ja vahvat täytevalot tekivät kädestä yöllä liian kirkkaan, ja ilman niitä käsi oli musta.
+- **Syväterävyys:** kaukainen sumennus alkaa tarkennusetäisyys × 1,8 + 8 m ja on täysi × 3 + 60 m kohdalla (max 0,85, säde 5). Lähisumennus on alle ~1–2,5 m, kun katse on kaukana. Syy: käyttäjä halusi toimivamman ja huomattavamman (sessiossa 25 se oli hillitty liian voimakkaana).
+- **Liike-epäterävyys:** kerroin 0,9 → 1,4 (kevyt) ja 1,7 → 2,6 (vahva), suurin siirtymä 0,08 → 0,12.
+
 ## 2026-10-12 (sessio 38)
 - **Sumeuden syy oli bloom, korjaus kynnyksellä ja terävöinnillä.** Kynnys 2,0 ja polvi 0,7 (oli 1,25 ja 0,6), voimakkuus 0,2 (oli 0,32), ja ylösnäytteistyksen paino 0,65 (oli 0,85) tiivistää hehkun. Lisäksi CAS-terävöinti tehdään lopullisessa vaiheessa sävytetyille arvoille (5 näytettä). Syy: matalalla kynnyksellä kirkas taivas ja usva hehkuivat ja levittivät hohdetta koko kuvaan.
 - **Silmän mukautuminen siirrettiin viimeistelyvaiheeseen** (kun bloom, värimäärittely, vinjetti tai terävöinti on päällä). Syy: käsi piirretään koosteen jälkeen, joten se ei saanut mukautumista ja jäi yöllä mustaksi muun maailman kirkastuessa. Bloomin kynnys laskee mukautumisen kertoimen GPU:lla samasta kirkkaustekstuurista (ei lukua prosessorille, joka pysäyttäisi piirron).

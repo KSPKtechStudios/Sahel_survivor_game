@@ -53,7 +53,7 @@ export function createGroundDetailTexture(size = 256) {
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
+  tex.anisotropy = 16; // sessio 40 (three rajaa maksimiin)
   return tex;
 }
 

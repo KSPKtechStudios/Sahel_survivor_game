@@ -10,29 +10,58 @@
 // - Kun puu kaatuu, yläpää seuraa kaatuvaa latvaa; maahan kiinnittynyt pää
 //   repeää irti, kun köysi kiristyy liikaa. Kaatunut runko kantaa liaaneja,
 //   kunnes se pilkotaan; sitten ne putoavat ja häviävät.
+//
+// Sessio 57 (käyttäjä: liaanit näyttivät huonoilta, irrallisilta malleilta):
+// putki piirretään pehmeänä käyränä (Catmull-Rom fysiikkapisteiden välillä),
+// kaarnatekstuurilla ja kaksisäikeisenä kierteenä; lehdet ovat puiden
+// lehtiatlaksen kortteja. Osa liaaneista kaartuu kahden oksan välillä
+// (spec.onTree: molemmat päät puussa, treeAssets.vineSpecs).
+//
+// Sessio 58 (käyttäjä: liaanit liian paksuja, kaikki samanlaisia ja
+// puutekstuurilla): muototyypit (STYLE, spec.kind) ja kasvin varsitekstuuri
+// (tools/blender/vinetex.py: vasen puolisko vihreä varsi, oikea puutunut).
 import * as THREE from 'three';
 import { windUniforms } from './materials.js';
 import { OBJECT_TYPES } from '../world/objectTypes.js';
+import { loadAlphaTexture } from './alphaMips.js';
+import { leafCell } from '../models/treeAssets.js';
 
-const N = 11;            // pisteitä köydessä
-const SIDES = 5;         // putken sivut
-const LEAVES = 7;        // lehtiä köyttä kohti
-const MAX_VINES = 260;
+const N = 13;            // pisteitä köydessä (fysiikka)
+const SUB = 2;           // piirtorenkaita fysiikkavälin sisällä
+const RINGS = (N - 1) * SUB + 1;
+const SIDES = 6;         // putken sivut
+const LEAVES = 9;        // lehtikortteja köyttä kohti
+const MAX_VINES = 380;  // ilmajuuriverhot lisäävät säikeitä
 const RADIUS = 46;       // m: näin lähellä olevien puiden liaanit näytetään
 const SIM_RADIUS = 26;   // m: näin lähellä simuloidaan joka ruudulla
 const GRAV = -9.8;
 const ITER = 6;
 
-const VPR = N * SIDES + LEAVES * 4;      // verteksejä köyttä kohti
-const IPR = (N - 1) * SIDES * 6 + LEAVES * 6;
+const VPR = RINGS * (SIDES + 1);         // putken verteksit köyttä kohti (+ sauma)
+const IPR = (RINGS - 1) * SIDES * 6;
+const LPR = LEAVES * 4;                  // lehtien verteksit
+const LIPR = LEAVES * 6;
+const TREE_DIR = 'assets/models/trees/';
 
 const _v = new THREE.Vector3();
 const _t = new THREE.Vector3();
 const _n = new THREE.Vector3();
 const _b = new THREE.Vector3();
 const _up = new THREE.Vector3(0, 1, 0);
-const _c = new THREE.Color();
 const _pn = new THREE.Vector3();
+
+// Muototyypit: twist = kaksisäikeisen kierteen syvyys, flat = poikkileikkauksen
+// litteys (1 = pyöreä), coil = korkkiruuvin säde (köyden säteinä), wave =
+// litteän nauhan aaltoilu, wood = todennäköisyys puutuneelle tekstuurille,
+// leaves = lehtien määrä, taper = kapeneminen kärkeä kohti.
+const STYLE = {
+  thin: { twist: 0, flat: 1, coil: 0, wave: 0, wood: 0, leaves: 3, leafW: 0.22, taper: 0.4, tint: [0.92, 1, 0.8] },
+  medium: { twist: 0.2, flat: 1, coil: 0, wave: 0, wood: 0.35, leaves: 9, leafW: 0.35, taper: 0.3, tint: [0.95, 0.97, 0.86] },
+  coil: { twist: 0.05, flat: 1, coil: 2.4, wave: 0, wood: 0.15, leaves: 6, leafW: 0.28, taper: 0.3, tint: [0.92, 1, 0.82] },
+  thick: { twist: 0.24, flat: 1, coil: 0, wave: 0, wood: 1, leaves: 4, leafW: 0.4, taper: 0.25, tint: [0.96, 0.94, 0.86] },
+  ladder: { twist: 0, flat: 0.3, coil: 0, wave: 1.5, wood: 1, leaves: 3, leafW: 0.35, taper: 0.2, tint: [0.98, 0.94, 0.84] },
+  curtain: { twist: 0, flat: 1, coil: 0, wave: 0, wood: 0, leaves: 0, leafW: 0, taper: 0.55, tint: [0.85, 0.9, 0.72] },
+};
 
 function hash(n) {
   const s = Math.sin(n * 127.1) * 43758.5453;
@@ -54,6 +83,9 @@ class Rope {
     this.free = false;     // yläpää irti (puu pilkottu)
     this.age = 0;
     this.sleep = 0;
+    this.style = STYLE[spec.kind] || STYLE.medium;
+    this.wood = hash(seed + 21) < this.style.wood;
+    this.pitch = 0.28 + 0.25 * hash(seed + 23); // korkkiruuvin nousu (m / kierros)
   }
 }
 
@@ -70,37 +102,73 @@ export class Vines {
     this.pos = new Float32Array(MAX_VINES * VPR * 3);
     this.nrm = new Float32Array(MAX_VINES * VPR * 3);
     this.col = new Float32Array(MAX_VINES * VPR * 3);
+    this.uv = new Float32Array(MAX_VINES * VPR * 2);
     geo.setAttribute('position', new THREE.BufferAttribute(this.pos, 3).setUsage(THREE.DynamicDrawUsage));
     geo.setAttribute('normal', new THREE.BufferAttribute(this.nrm, 3).setUsage(THREE.DynamicDrawUsage));
     geo.setAttribute('color', new THREE.BufferAttribute(this.col, 3).setUsage(THREE.DynamicDrawUsage));
+    geo.setAttribute('uv', new THREE.BufferAttribute(this.uv, 2).setUsage(THREE.DynamicDrawUsage));
     const idx = new Uint32Array(MAX_VINES * IPR);
+    let o = 0;
     for (let v = 0; v < MAX_VINES; v++) {
       const b = v * VPR;
-      let o = v * IPR;
-      for (let i = 0; i < N - 1; i++) {
-        for (let s = 0; s < SIDES; s++) {
-          const a = b + i * SIDES + s, a2 = b + i * SIDES + ((s + 1) % SIDES);
-          const c = a + SIDES, c2 = a2 + SIDES;
+      for (let i = 0; i < RINGS - 1; i++) {
+        for (let k = 0; k < SIDES; k++) {
+          const a = b + i * (SIDES + 1) + k, a2 = a + 1;
+          const c = a + SIDES + 1, c2 = c + 1;
           idx[o++] = a; idx[o++] = c; idx[o++] = a2;
           idx[o++] = a2; idx[o++] = c; idx[o++] = c2;
         }
-      }
-      const lb = b + N * SIDES;
-      for (let l = 0; l < LEAVES; l++) {
-        const k = lb + l * 4;
-        idx[o++] = k; idx[o++] = k + 1; idx[o++] = k + 2;
-        idx[o++] = k; idx[o++] = k + 2; idx[o++] = k + 3;
       }
     }
     geo.setIndex(new THREE.BufferAttribute(idx, 1));
     geo.setDrawRange(0, 0);
     this.geo = geo;
-    this.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.88, metalness: 0, side: THREE.DoubleSide });
+    const tex = (f, srgb) => {
+      const t = new THREE.TextureLoader().load(TREE_DIR + f);
+      t.wrapS = t.wrapT = THREE.RepeatWrapping;
+      if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = 4;
+      return t;
+    };
+    this.material = new THREE.MeshStandardMaterial({
+      map: tex('vine_stem_c.webp', true), normalMap: tex('vine_stem_n.webp', false), vertexColors: true, roughness: 0.88, metalness: 0,
+    });
     this.mesh = new THREE.Mesh(geo, this.material);
     this.mesh.frustumCulled = false;
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
     scene.add(this.mesh);
+    // Lehdet omana verkkonaan (läpikuultava atlas, kaksipuolinen).
+    const lg = new THREE.BufferGeometry();
+    this.lpos = new Float32Array(MAX_VINES * LPR * 3);
+    this.lnrm = new Float32Array(MAX_VINES * LPR * 3);
+    this.lcol = new Float32Array(MAX_VINES * LPR * 3);
+    this.luv = new Float32Array(MAX_VINES * LPR * 2);
+    lg.setAttribute('position', new THREE.BufferAttribute(this.lpos, 3).setUsage(THREE.DynamicDrawUsage));
+    lg.setAttribute('normal', new THREE.BufferAttribute(this.lnrm, 3).setUsage(THREE.DynamicDrawUsage));
+    lg.setAttribute('color', new THREE.BufferAttribute(this.lcol, 3).setUsage(THREE.DynamicDrawUsage));
+    lg.setAttribute('uv', new THREE.BufferAttribute(this.luv, 2).setUsage(THREE.DynamicDrawUsage));
+    const lidx = new Uint32Array(MAX_VINES * LIPR);
+    o = 0;
+    for (let v = 0; v < MAX_VINES; v++) {
+      for (let l = 0; l < LEAVES; l++) {
+        const k = v * LPR + l * 4;
+        lidx[o++] = k; lidx[o++] = k + 1; lidx[o++] = k + 2;
+        lidx[o++] = k; lidx[o++] = k + 2; lidx[o++] = k + 3;
+      }
+    }
+    lg.setIndex(new THREE.BufferAttribute(lidx, 1));
+    lg.setDrawRange(0, 0);
+    this.lgeo = lg;
+    this.leafMaterial = new THREE.MeshStandardMaterial({
+      map: loadAlphaTexture(TREE_DIR + 'leaves.webp'), alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide,
+      vertexColors: true, roughness: 0.8, metalness: 0,
+    });
+    this.leafMesh = new THREE.Mesh(lg, this.leafMaterial);
+    this.leafMesh.frustumCulled = false;
+    this.leafMesh.castShadow = true;
+    this.leafMesh.receiveShadow = true;
+    scene.add(this.leafMesh);
   }
 
   _specsFor(obj) {
@@ -130,7 +198,13 @@ export class Vines {
       const a = this._anchor(set, spec, _v);
       rope.ground = obj.y;
       let ex, ey, ez;
-      if (spec.end) {
+      if (spec.onTree) {
+        // Molemmat päät puussa: alapää seuraa puuta (myös kaatuessa).
+        this._anchor(set, { top: spec.end }, _t);
+        rope.pin = _t.clone();
+        rope.pinTree = { top: spec.end };
+        ex = _t.x; ey = _t.y; ez = _t.z;
+      } else if (spec.end) {
         _t.fromArray(spec.end).applyMatrix4(set.matrix);
         rope.pin = _t.clone();
         ex = _t.x; ey = _t.y; ez = _t.z;
@@ -165,7 +239,7 @@ export class Vines {
   releaseLog(log) {
     const set = log.vineSet;
     if (!set) return;
-    for (const r of set.ropes) { r.free = true; r.pin = null; this.loose.push(r); }
+    for (const r of set.ropes) { r.free = true; r.pin = null; r.pinTree = null; this.loose.push(r); }
     set.ropes = [];
     this.sets.delete(set.obj.id);
     log.vineSet = null;
@@ -221,6 +295,7 @@ export class Vines {
       p[i + 2] += vz + az * dt2;
     }
     const anchor = rope.free ? null : this._anchor(set, rope.spec, _b);
+    if (rope.pinTree && rope.pin && !rope.free) this._anchor(set, rope.pinTree, rope.pin);
     for (let it = 0; it < ITER; it++) {
       if (anchor) { p[0] = anchor.x; p[1] = anchor.y; p[2] = anchor.z; }
       if (rope.pin) {
@@ -266,7 +341,7 @@ export class Vines {
   }
 
   update(dt, player) {
-    if (!this.enabled) { this.geo.setDrawRange(0, 0); return; }
+    if (!this.enabled) { this.geo.setDrawRange(0, 0); this.lgeo.setDrawRange(0, 0); return; }
     dt = Math.min(dt, 1 / 30);
     this.time += dt;
     this.scanT -= dt;
@@ -298,25 +373,48 @@ export class Vines {
       return true;
     });
     this.geo.setDrawRange(0, n * IPR);
-    for (const name of ['position', 'normal', 'color']) {
-      const a = this.geo.attributes[name];
-      a.clearUpdateRanges();
-      a.addUpdateRange(0, n * VPR * 3);
-      a.needsUpdate = true;
+    this.lgeo.setDrawRange(0, n * LIPR);
+    for (const [g, per] of [[this.geo, VPR], [this.lgeo, LPR]]) {
+      for (const name of ['position', 'normal', 'color', 'uv']) {
+        const a = g.attributes[name];
+        a.clearUpdateRanges();
+        a.addUpdateRange(0, n * per * a.itemSize);
+        a.needsUpdate = true;
+      }
     }
   }
 
   // Köyden putki ja lehdet verkkoon paikkaan v.
   _write(rope, v) {
-    const p = rope.p, P = this.pos, Nn = this.nrm, C = this.col;
+    const p = rope.p, P = this.pos, Nn = this.nrm, C = this.col, U = this.uv;
     const base = v * VPR;
-    const bark = _c.setHex(0x6b5a3a);
     const shrink = rope.fade;
+    const seed = rope.seed;
+    // Pehmeä käyrä fysiikkapisteiden kautta (Catmull-Rom).
+    const pts = this._curve || (this._curve = new Float32Array(RINGS * 3));
+    for (let k = 0; k < N - 1; k++) {
+      const i0 = Math.max(0, k - 1) * 3, i1 = k * 3, i2 = (k + 1) * 3, i3 = Math.min(N - 1, k + 2) * 3;
+      for (let s = 0; s < SUB; s++) {
+        const t = s / SUB, t2 = t * t, t3 = t2 * t;
+        const o = (k * SUB + s) * 3;
+        for (let c = 0; c < 3; c++) {
+          pts[o + c] = 0.5 * (2 * p[i1 + c] + (-p[i0 + c] + p[i2 + c]) * t + (2 * p[i0 + c] - 5 * p[i1 + c] + 4 * p[i2 + c] - p[i3 + c]) * t2 + (-p[i0 + c] + 3 * p[i1 + c] - 3 * p[i2 + c] + p[i3 + c]) * t3);
+        }
+      }
+    }
+    const e = (N - 1) * 3, eo = (RINGS - 1) * 3;
+    pts[eo] = p[e]; pts[eo + 1] = p[e + 1]; pts[eo + 2] = p[e + 2];
+    const st = rope.style;
+    const moss = (rope.wood ? 0.5 : 0.15) * hash(seed + 5);
+    const uOff = rope.wood ? 0.5 : 0;
+    const ra = st.wave ? 1.35 : 1; // litteän nauhan leveys
+    let len = 0;
     let havePrev = false;
-    for (let k = 0; k < N; k++) {
+    for (let k = 0; k < RINGS; k++) {
       const i = k * 3;
-      const a = Math.max(0, k - 1) * 3, b = Math.min(N - 1, k + 1) * 3;
-      _t.set(p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]).normalize();
+      if (k) len += Math.hypot(pts[i] - pts[i - 3], pts[i + 1] - pts[i - 2], pts[i + 2] - pts[i - 1]);
+      const a = Math.max(0, k - 1) * 3, b = Math.min(RINGS - 1, k + 1) * 3;
+      _t.set(pts[b] - pts[a], pts[b + 1] - pts[a + 1], pts[b + 2] - pts[a + 2]).normalize();
       // Kehyksen sivuvektori: edellinen projisoituna (ei kiertymistä).
       if (havePrev) _n.copy(_pn).addScaledVector(_t, -_pn.dot(_t));
       else _n.copy(Math.abs(_t.y) > 0.9 ? _v.set(1, 0, 0) : _up).cross(_t);
@@ -325,44 +423,80 @@ export class Vines {
       _pn.copy(_n);
       havePrev = true;
       _b.crossVectors(_t, _n);
-      const r = rope.r * (1 - 0.35 * (k / (N - 1))) * shrink;
-      const shade = 0.85 + 0.15 * hash(rope.seed + k);
-      for (let s = 0; s < SIDES; s++) {
-        const ang = (s / SIDES) * Math.PI * 2 + k * 0.5;
-        const cx = Math.cos(ang), sx = Math.sin(ang);
-        const nx = _n.x * cx + _b.x * sx, ny = _n.y * cx + _b.y * sx, nz = _n.z * cx + _b.z * sx;
-        const o = (base + k * SIDES + s) * 3;
-        P[o] = p[i] + nx * r; P[o + 1] = p[i + 1] + ny * r; P[o + 2] = p[i + 2] + nz * r;
+      const f = k / (RINGS - 1);
+      const r0 = rope.r * (1 - st.taper * f) * shrink * (1 + 0.12 * Math.max(0, Math.sin(len * 2.7 + seed)) ** 8);
+      // Keskilinjan siirto: korkkiruuvi tai litteän nauhan aaltoilu.
+      let cxo = 0, cyo = 0, czo = 0;
+      if (st.coil) {
+        const ph = (len / rope.pitch) * Math.PI * 2 + seed;
+        const A = st.coil * r0, c = Math.cos(ph) * A, sn = Math.sin(ph) * A;
+        cxo = _n.x * c + _b.x * sn; cyo = _n.y * c + _b.y * sn; czo = _n.z * c + _b.z * sn;
+      } else if (st.wave) {
+        const A = Math.sin((len / 0.3) * Math.PI * 2 + seed) * st.wave * r0;
+        cxo = _n.x * A; cyo = _n.y * A; czo = _n.z * A;
+      }
+      // Väri: vaihtelua ja paikoin sammalta (puutuneessa enemmän).
+      const sh = 0.8 + 0.2 * hash(seed + Math.floor(len * 2));
+      const mz = moss * (0.5 + 0.5 * Math.sin(len * 0.9 + seed));
+      for (let s = 0; s <= SIDES; s++) {
+        const ang = (s / SIDES) * Math.PI * 2;
+        // Kaksisäikeinen kierre: säde vaihtelee kulman ja pituuden mukaan.
+        const r = r0 * (1 + st.twist * Math.sin(2 * ang - len * 9 + seed));
+        const ca = Math.cos(ang), sa = Math.sin(ang);
+        // Poikkileikkaus: ellipsi (ra, flat); normaali ellipsin pinnasta.
+        let pa = ca / ra, pb = sa / st.flat;
+        const pl = Math.hypot(pa, pb) || 1;
+        pa /= pl; pb /= pl;
+        const nx = _n.x * pa + _b.x * pb, ny = _n.y * pa + _b.y * pb, nz = _n.z * pa + _b.z * pb;
+        const ex = ca * ra * r, eb = sa * st.flat * r;
+        const vi = base + k * (SIDES + 1) + s;
+        const o = vi * 3;
+        P[o] = pts[i] + cxo + _n.x * ex + _b.x * eb;
+        P[o + 1] = pts[i + 1] + cyo + _n.y * ex + _b.y * eb;
+        P[o + 2] = pts[i + 2] + czo + _n.z * ex + _b.z * eb;
         Nn[o] = nx; Nn[o + 1] = ny; Nn[o + 2] = nz;
-        const kk = shade * (0.85 + 0.15 * cx);
-        C[o] = bark.r * kk; C[o + 1] = bark.g * kk; C[o + 2] = bark.b * kk;
+        const groove = 1 - st.twist * 0.9 * (0.5 - 0.5 * Math.sin(2 * ang - len * 9 + seed + 1.2));
+        const g = sh * groove;
+        C[o] = g * st.tint[0] * (1 - mz * 0.45); C[o + 1] = g * st.tint[1] * (1 - mz * 0.15); C[o + 2] = g * st.tint[2] * (1 - mz * 0.6);
+        U[vi * 2] = uOff + (s / SIDES) * 0.47;
+        U[vi * 2 + 1] = len / 1.6;
       }
     }
-    // Lehdet köyden yläosassa (läpinäkymättömiä, ei leijuvia pikseleitä).
-    const leaf = _c.setHex(0x3f6a26);
+    // Lehtikortit köyden yläosassa: riippuvat ulos ja alas.
+    const cell = leafCell(hash(seed + 9) < 0.5 ? 'broad_b' : 'sapling');
+    const LP = this.lpos, LN = this.lnrm, LC = this.lcol, LU = this.luv;
+    const lb = v * LPR;
+    const nLeaves = Math.min(LEAVES, Math.round(st.leaves * (0.6 + 0.6 * hash(seed + 31))));
     for (let l = 0; l < LEAVES; l++) {
-      const k = 1 + Math.floor(l * (N - 3) / (LEAVES - 1) * (0.55 + 0.45 * hash(rope.seed + l)));
-      const i = Math.min(N - 2, k) * 3, j = i + 3;
-      _t.set(p[j] - p[i], p[j + 1] - p[i + 1], p[j + 2] - p[i + 2]).normalize();
+      const f = 0.06 + 0.7 * (l / Math.max(1, nLeaves - 1)) * (0.6 + 0.4 * hash(seed + l));
+      const k = Math.min(RINGS - 2, Math.floor(f * (RINGS - 1)));
+      const i = k * 3;
       const ang = rope.phase * 3 + l * 2.4;
       _n.set(Math.cos(ang), 0, Math.sin(ang));
-      const sz = (0.17 + 0.09 * hash(rope.seed + l * 7)) * shrink;
-      const cx = p[i] + (p[j] - p[i]) * 0.5, cy = p[i + 1] + (p[j + 1] - p[i + 1]) * 0.5, cz = p[i + 2] + (p[j + 2] - p[i + 2]) * 0.5;
-      // Lehti riippuu ulospäin ja alas (pystyasento näkyy sivulta).
-      const lx = _n.x * 0.6, ly = -0.8, lz = _n.z * 0.6;
+      const w = l < nLeaves ? (st.leafW + 0.25 * st.leafW * hash(seed + l * 7)) * shrink * (cell ? 1 : 0) : 0;
+      const h = w * (cell ? cell.aspect : 1);
+      // Kortin "ylös" (lehvän kärki) ulos ja alas, leveys vaakasuoraan.
+      const ux = _n.x * 0.55, uy = -0.85, uz = _n.z * 0.55;
       const wx = -_n.z, wz = _n.x;
-      const pts = [
-        [cx, cy, cz],
-        [cx + lx * sz * 0.5 + wx * sz * 0.24, cy + ly * sz * 0.5, cz + lz * sz * 0.5 + wz * sz * 0.24],
-        [cx + lx * sz, cy + ly * sz, cz + lz * sz],
-        [cx + lx * sz * 0.5 - wx * sz * 0.24, cy + ly * sz * 0.5, cz + lz * sz * 0.5 - wz * sz * 0.24],
+      const bx = pts[i], by = pts[i + 1], bz = pts[i + 2];
+      const q = [
+        [bx - wx * w / 2, by, bz - wz * w / 2],
+        [bx + wx * w / 2, by, bz + wz * w / 2],
+        [bx + wx * w / 2 + ux * h, by + uy * h, bz + wz * w / 2 + uz * h],
+        [bx - wx * w / 2 + ux * h, by + uy * h, bz - wz * w / 2 + uz * h],
       ];
-      const k2 = 0.85 + 0.3 * hash(rope.seed + l * 3);
+      const uv = cell ? cell.uv : [0, 0, 0, 0];
+      const uvs = [[uv[0], uv[1]], [uv[2], uv[1]], [uv[2], uv[3]], [uv[0], uv[3]]];
+      // Normaali ulos ja hieman ylös (pehmeä valaistus).
+      const nx = _n.x * 0.6, ny = 0.8, nz = _n.z * 0.6;
+      const kk = 0.75 + 0.3 * hash(seed + l * 3);
       for (let c = 0; c < 4; c++) {
-        const o = (base + N * SIDES + l * 4 + c) * 3;
-        P[o] = pts[c][0]; P[o + 1] = pts[c][1]; P[o + 2] = pts[c][2];
-        Nn[o] = 0; Nn[o + 1] = 1; Nn[o + 2] = 0;
-        C[o] = leaf.r * k2; C[o + 1] = leaf.g * k2; C[o + 2] = leaf.b * k2;
+        const o = (lb + l * 4 + c) * 3;
+        LP[o] = q[c][0]; LP[o + 1] = q[c][1]; LP[o + 2] = q[c][2];
+        LN[o] = nx; LN[o + 1] = ny; LN[o + 2] = nz;
+        LC[o] = kk; LC[o + 1] = kk; LC[o + 2] = kk * 0.9;
+        LU[(lb + l * 4 + c) * 2] = uvs[c][0];
+        LU[(lb + l * 4 + c) * 2 + 1] = uvs[c][1];
       }
     }
   }

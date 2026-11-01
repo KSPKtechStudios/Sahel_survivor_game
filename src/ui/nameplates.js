@@ -15,8 +15,9 @@ const HIT_RANGE = 32;    // lyödyn olennon lappu näkyy tähän asti
 const LINGER = 1.2;      // lappu viipyy katseen siirryttyä (s)
 const HIT_LINGER = 5;    // lyödyn olennon lappu (s)
 // Tilat, joissa olento on huomannut pelaajan.
-const AWARE = new Set(['circle', 'retreat', 'alert', 'flee', 'fly', 'chase', 'attack', 'recover', 'windup', 'dive', 'rise', 'stalk', 'stagger', 'escape']);
-const HOSTILE = new Set(['circle', 'retreat', 'chase', 'attack', 'windup', 'dive', 'stalk', 'recover']);
+// Sessio 51: gorillan varovaisuus (watch, avoid, display) ja karjaisu (roar).
+const AWARE = new Set(['circle', 'retreat', 'alert', 'flee', 'fly', 'chase', 'attack', 'recover', 'windup', 'dive', 'rise', 'stalk', 'stagger', 'escape', 'watch', 'avoid', 'display', 'roar', 'freeze', 'snarl', 'gather', 'pounce', 'land', 'maul']);
+const HOSTILE = new Set(['circle', 'retreat', 'chase', 'attack', 'windup', 'dive', 'stalk', 'recover', 'roar', 'snarl', 'gather', 'pounce', 'land', 'maul']);
 const EYE = '<svg viewBox="0 0 24 24"><path d="M12 5C6.5 5 2.4 9.2 1 12c1.4 2.8 5.5 7 11 7s9.6-4.2 11-7c-1.4-2.8-5.5-7-11-7zm0 11.2A4.2 4.2 0 1 1 12 7.8a4.2 4.2 0 0 1 0 8.4zm0-6.4a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 0 0 0-4.4z"/></svg>';
 
 const _v = new THREE.Vector3();
@@ -70,6 +71,8 @@ export class Nameplates {
     el.className = 'plate';
     el.innerHTML = `<div class="pl-name"></div><div class="pl-act"></div><div class="pl-hp"><i></i></div><div class="pl-spot">${EYE}</div>`;
     el.children[0].textContent = MOB_TYPES[m.type].name;
+    // Sessio 50: NPC:llä (kuoriainen) ei terveyspalkkia eikä huomasi-merkkiä.
+    if (MOB_TYPES[m.type].npc) el.classList.add('npc');
     this.root.appendChild(el);
     // Esiin pehmeästi (seuraavassa ruudussa, jotta siirtymä käynnistyy).
     requestAnimationFrame(() => el.classList.add('on'));
@@ -133,7 +136,7 @@ export class Nameplates {
       }
       p.el.style.transform = `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) translate(-50%, -100%)`;
       p.hp.style.width = `${Math.max(0, Math.min(1, m.hp / m.def.hp)) * 100}%`;
-      const aware = AWARE.has(m.state);
+      const aware = AWARE.has(m.state) && !m.def.npc;
       p.spot.style.display = aware ? '' : 'none';
       p.spot.classList.toggle('hostile', aware && HOSTILE.has(m.state));
       const isTarget = prompt && prompt.mob === m;

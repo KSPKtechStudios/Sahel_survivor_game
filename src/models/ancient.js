@@ -1,7 +1,7 @@
 // Sessio 24: ympäristön tarinankerronta ja köynnökset.
 // - Muinainen kivipylväs: murenevat rummut, osa kaatunut viereen.
 // - Ruostunut kilpi maassa (osassa katkennut miekka vieressä).
-// - Ikivanhat juuret, jotka nousevat kaarina maasta ja painuvat takaisin.
+// - Muinainen juurakko: juuret nousevat kaarina maasta ja painuvat takaisin.
 // - Liaanit ja runkoa kiertävät köynnökset sademetsän puihin (trees.js).
 // Kaikki vertex-väritettyjä; pinnat saavat tekstuurit materiaalista
 // (muinainen kivi: sammaloitunut kivi + sammal yläpinnoille).
@@ -163,7 +163,7 @@ export function makeRustyShield(seed, q = 1) {
   return merge(out);
 }
 
-// --- Ikivanhat juuret --------------------------------------------------------
+// --- Muinainen juurakko --------------------------------------------------------
 
 export function makeAncientRoots(seed, q = 1) {
   const rand = mulberry32(seed);

@@ -14,7 +14,13 @@
 const BEDS = {
   wind: { file: 'assets/sfx/wind.mp3', level: 0.3, tau: 1.6 },
   // Viidakko: hiljempi ja pehmeämpi (sessio 12: linnut kuuluivat terävästi).
-  jungle: { file: 'assets/sfx/jungle.mp3', level: 0.22, tau: 0.9, lowpass: 4200 },
+  // Sessio 48: käyttäjä ei kuullut sitä enää. Mitattu: tiedosto −20,9 LUFS,
+  // joten taso 0,22 = n. −34 LUFS, ja 4,2 kHz:n alipäästö leikkasi hyönteiset
+  // ja linnut (tiedoston yläpää −27,5 LUFS). Sademetsän musiikki soi
+  // −28 LUFS:ssä ja peitti sen. Nyt n. −29 LUFS ja alipäästö 8 kHz
+  // (terävin kirkuna pois, sirinä ja linnut kuuluvat).
+  // Sessio 50: taso 0,4 -> 0,55 (n. −26 LUFS, hieman musiikin yläpuolella).
+  jungle: { file: 'assets/sfx/jungle.mp3', level: 0.55, tau: 0.9, lowpass: 8000 },
   rain: { file: 'assets/sfx/rain.mp3', level: 0.42, tau: 1.2 },
   thunder: { file: 'assets/sfx/thunder-distant.mp3', level: 0.42, tau: 2.2 },
   // Sessio 12c: aavikon tuuli (aina hyvin hiljaa, hiekkamyrskyssä kovaa) ja
@@ -41,11 +47,23 @@ const ONESHOTS = {
   whoosh2: 'assets/sfx/whoosh2.mp3',
   punch1: 'assets/sfx/punch1.mp3',
   punch2: 'assets/sfx/punch2.mp3',
+  // Sessio 49: kärpäsen ohilennot (käyttäjän tuoma, kolme pätkää).
+  fly: 'assets/sfx/fly-buzz.mp3',
+  // Sessio 50: hyttysen ininä (käyttäjän tuoma; normalisoitu, mono).
+  mosquito: 'assets/sfx/mosquito-buzz.mp3',
+  // Sessio 51: gorillan karjaisu (käyttäjän tuoma; leikattu 3,2 s).
+  gorillaRoar: 'assets/sfx/gorilla-roar.mp3',
 };
 // Huitominen: tasattu huipputason mukaan (tiedostojen huiput −1,6 / −6,8 dB),
 // jolloin huitaisu on n. −24 dB ja olentoon osuessa n. −31 dB.
 const WHOOSH_LEVEL = { whoosh1: 0.06, whoosh2: 0.11 };  // sessio 12e: −2 dB
 const BIRD_LEVEL = 0.22;
+// Kärpänen korvan vieressä: tiedoston huippu n. −20 dB. Sessio 50: 0,75 -> 1.
+const FLY_LEVEL = 1.0;
+// Hyttynen korvan vieressä (tiedosto n. −16 dB keskimäärin): n. −25 dB.
+const MOSQUITO_LEVEL = 0.35;
+// Gorillan karjaisu: kova lähellä, kuuluu kauas viidakossa.
+const GORILLA_ROAR_LEVEL = 0.8;
 // Puun kaatuminen: räsähdyksen kohta tiedostossa (s) ja voimakkuus 10 m:stä.
 // Räsähdyksen jälkeen ääni häivytetään pois (TREE_TAIL s), ettei maassa
 // makaava puu jää rätisemään.
@@ -62,6 +80,8 @@ const CLAP_LEVEL = 0.65;
 const GHOST_LEVEL = { ghostSpawn: 0.25, ghostIdle: 0.21, ghostIdle2: 0.2, ghostAttack: 0.23 };
 const GHOST_REF = 22, GHOST_RANGE = 95;
 const CLICK_LEVEL = 0.45;  // tiedosto on hiljainen (n. −31 LUFS); sessio 12e hiljemmaksi
+// Vesiputous lähellä (proseduraalinen kohina, sessio 57).
+const FALL_LEVEL = 0.5;
 const CHOP_LEVEL = 0.1;    // puun lyönti: hiljaa (väistö auttaa erottumaan)
 // Isku elävään olentoon (sessio 12e): terävä, joten hiljaa ja tummennettuna.
 const PUNCH_LEVEL = { punch1: 0.11, punch2: 0.13 };
@@ -91,6 +111,11 @@ class Bed {
   _el(i) {
     if (!this.els[i]) {
       const el = new window.Audio();
+      // Sessio 50: raw.githack ohjaa mp3-tiedostot raw.githubusercontent.comiin
+      // (eri alkuperä). Ilman CORS-pyyntöä selain syöttää Web Audioon pelkkää
+      // hiljaisuutta, joten taustaäänet (viidakko, tuuli, sade, ukkonen) eivät
+      // kuuluneet verkkoversiossa lainkaan (paikallisesti kuuluivat).
+      el.crossOrigin = 'anonymous';
       el.src = this.def.file;
       el.preload = 'auto';
       const g = this.sfx.ctx.createGain();
@@ -235,6 +260,148 @@ export class Sfx {
     for (const [k, b] of Object.entries(this.beds)) {
       b.target = this.levels[k];
       b.update(dt);
+    }
+  }
+
+  // Vesiputouksen kohina (sessio 57): proseduraalinen silmukka (ruskea + valkoinen
+  // kohina), taso ja suunta päivitetään joka ruudulla. Pysähtyy hiljaisena.
+  waterfall(level, pan = 0, dt = 0) {
+    const ctx = this.ctx;
+    if (!ctx || ctx.state !== 'running') return;
+    let f = this.fallNode;
+    if (!f) {
+      if (level < 0.003) return;
+      const n = ctx.sampleRate * 4;
+      const fade = Math.floor(ctx.sampleRate * 0.25);
+      const buf = ctx.createBuffer(2, n, ctx.sampleRate);
+      for (let c = 0; c < 2; c++) {
+        const d = buf.getChannelData(c);
+        let b = 0;
+        for (let i = 0; i < n + fade; i++) {
+          const w = Math.random() * 2 - 1;
+          b = (b + 0.02 * w) / 1.02;
+          const v = w * 0.3 + b * 3.2;
+          // Silmukan sauma ristiinhäivytetään (ei napsahdusta).
+          if (i < n) d[i] = v;
+          else { const k = (i - n) / fade; d[i - n] = d[i - n] * k + v * (1 - k); }
+        }
+      }
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
+      const hp = ctx.createBiquadFilter();
+      hp.type = 'highpass';
+      hp.frequency.value = 90;
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 1500;
+      const g = ctx.createGain();
+      g.gain.value = 0;
+      const p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+      src.connect(hp).connect(lp).connect(g);
+      if (p) g.connect(p).connect(this.bedBus); else g.connect(this.bedBus);
+      src.start();
+      f = this.fallNode = { src, g, p, lp, idle: 0 };
+    }
+    const now = ctx.currentTime;
+    f.g.gain.setTargetAtTime(level * FALL_LEVEL, now, 0.3);
+    if (f.p) f.p.pan.setTargetAtTime(pan, now, 0.25);
+    // Lähellä kirkkaampi (enemmän korkeita taajuuksia).
+    f.lp.frequency.setTargetAtTime(900 + level * 3600, now, 0.3);
+    f.idle = level < 0.003 ? f.idle + dt : 0;
+    if (f.idle > 6) {
+      f.src.stop();
+      f.g.disconnect();
+      this.fallNode = null;
+    }
+  }
+
+  // Sessio 59: nuotion rätinä ja illan sirkat (proseduraaliset). fire = tulen
+  // läheisyys 0..1 (valikon leiri tai pelin lähin nuotio), night = sirkkojen
+  // voimakkuus 0..1. Rätinä: lyhyitä kohinapoksahduksia satunnaisin välein ja
+  // matala huminapohja; sirkat: korkea siniääni sirityksinä.
+  campfire(fire, night, dt) {
+    const ctx = this.ctx;
+    if (!ctx || ctx.state !== 'running') return;
+    const now = ctx.currentTime;
+    let c = this.campNode;
+    if (!c) {
+      if (fire < 0.01 && night < 0.01) return;
+      const out = ctx.createGain();
+      out.gain.value = 1;
+      out.connect(this.bedBus);
+      // Huminapohja: ruskea kohina alipäästön läpi.
+      const n = ctx.sampleRate * 3;
+      const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      let b = 0;
+      for (let i = 0; i < n; i++) { b = (b + 0.03 * (Math.random() * 2 - 1)) / 1.03; d[i] = b * 4; }
+      const roar = ctx.createBufferSource();
+      roar.buffer = buf;
+      roar.loop = true;
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 380;
+      const rg = ctx.createGain();
+      rg.gain.value = 0;
+      roar.connect(lp).connect(rg).connect(out);
+      roar.start();
+      // Sirkat: kaksi korkeaa siniääntä, joiden voimakkuutta sirityttää ajastus.
+      const crickets = [4650, 5320].map((f, i) => {
+        const o = ctx.createOscillator();
+        o.frequency.value = f;
+        const g = ctx.createGain();
+        g.gain.value = 0;
+        const p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+        o.connect(g);
+        if (p) { p.pan.value = i ? 0.55 : -0.45; g.connect(p).connect(out); } else g.connect(out);
+        o.start();
+        return { g, next: now + 0.3 + i * 0.37, period: 0.62 + i * 0.21 };
+      });
+      c = this.campNode = { out, roar, rg, crickets, pop: 0, fire: 0, night: 0, idle: 0 };
+    }
+    c.fire = fire;
+    c.night = night;
+    c.rg.gain.setTargetAtTime(fire * 0.05, now, 0.4);
+    // Poksahdukset: tiheys ja voimakkuus vaihtelevat.
+    c.pop -= dt;
+    while (fire > 0.01 && c.pop <= 0) {
+      c.pop += 0.04 + Math.random() * Math.random() * 0.45;
+      const t = now + Math.random() * 0.03;
+      const len = 0.006 + Math.random() * 0.03;
+      const src = ctx.createBufferSource();
+      src.buffer = this.noise;
+      const hp = ctx.createBiquadFilter();
+      hp.type = 'bandpass';
+      hp.frequency.value = 1200 + Math.random() * 4200;
+      hp.Q.value = 0.7 + Math.random() * 1.5;
+      const g = ctx.createGain();
+      const big = Math.random() < 0.12 ? 2.4 : 1;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(fire * (0.05 + Math.random() * 0.12) * big, t + 0.002);
+      g.gain.exponentialRampToValueAtTime(0.0005, t + len);
+      src.connect(hp).connect(g).connect(c.out);
+      src.start(t, Math.random() * 0.8, len + 0.02);
+    }
+    // Sirkat: kolmen pulssin siritys jaksoittain, hiukan epäsäännöllisesti.
+    for (const k of c.crickets) {
+      while (night > 0.02 && k.next < now + 0.25) {
+        const t0 = Math.max(k.next, now);
+        for (let i = 0; i < 3; i++) {
+          const t = t0 + i * 0.045;
+          k.g.gain.setValueAtTime(0, t);
+          k.g.gain.linearRampToValueAtTime(0.012 * night, t + 0.008);
+          k.g.gain.linearRampToValueAtTime(0, t + 0.032);
+        }
+        k.next = t0 + k.period * (0.85 + Math.random() * 0.3);
+      }
+      if (night <= 0.02) k.next = now + 0.5;
+    }
+    c.idle = fire < 0.01 && night < 0.01 ? c.idle + dt : 0;
+    if (c.idle > 4) {
+      c.roar.stop();
+      c.out.disconnect();
+      this.campNode = null;
     }
   }
 
@@ -410,6 +577,136 @@ export class Sfx {
     pan.pan.value = 0.15 + Math.random() * 0.15;
     src.connect(g).connect(pan).connect(this.bus);
     src.start();
+  }
+
+  // Sessio 49: kärpäsen ohilento. Pätkä tiedostosta (alku, kesto); peilattuna
+  // kanavat ristiin, jolloin kärpänen kulkee toiseen suuntaan.
+  flyBuzz(offset, dur, mirror = false, level = 1) {
+    const buf = this.bufs.fly;
+    if (!this.ctx || !buf || this.ctx.state !== 'running') return false;
+    const ctx = this.ctx;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const g = ctx.createGain();
+    g.gain.value = FLY_LEVEL * level;
+    if (mirror) {
+      const sp = ctx.createChannelSplitter(2), mg = ctx.createChannelMerger(2);
+      src.connect(sp);
+      sp.connect(mg, 0, 1);
+      sp.connect(mg, 1, 0);
+      mg.connect(g);
+    } else {
+      src.connect(g);
+    }
+    g.connect(this.bus);
+    src.start(ctx.currentTime + 0.01, offset, dur);
+    return true;
+  }
+
+  // Sessio 51: gorilla karjuu suuttuessaan (huomaa pelaajan ja hyökkää).
+  gorillaRoar(x, z, listener) {
+    this._oneShot('gorillaRoar', GORILLA_ROAR_LEVEL, x, z, listener, 14, 0, 130, 0.95 + Math.random() * 0.1);
+    if (Math.hypot(x - listener.x, z - listener.z) < 50) this.duck(0.55, 1.6);
+  }
+
+  // Sessio 52: leopardin murina (syntetisoitu; omaa äänitiedostoa ei ole).
+  // Kohina kaistanpäästösuotimen läpi, voimakkuutta moduloi n. 25 Hz:n
+  // värähtely (kurkun rahina), alla matala sahalaitaääni. kind: 'growl'
+  // (matala, pitkä: ennen loikkaa) tai 'snarl' (kova, lyhyt sähähdys: varoitus).
+  leopardGrowl(x, z, listener, kind = 'growl') {
+    if (!this.ctx || this.ctx.state !== 'running') return;
+    const sp = this._spatial(x, z, listener, 8, 70);
+    if (sp.gain < 0.01) return;
+    const ctx = this.ctx, t0 = ctx.currentTime + 0.01;
+    const snarl = kind === 'snarl';
+    const dur = snarl ? 0.9 : 1.5;
+    if (!this.noiseBuf) {
+      const n = ctx.sampleRate * 2;
+      this.noiseBuf = ctx.createBuffer(1, n, ctx.sampleRate);
+      const d = this.noiseBuf.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const out = ctx.createGain();
+    const level = (snarl ? 0.55 : 0.45) * sp.gain;
+    out.gain.setValueAtTime(0.0001, t0);
+    out.gain.exponentialRampToValueAtTime(Math.max(0.0002, level), t0 + (snarl ? 0.05 : 0.18));
+    out.gain.setValueAtTime(level, t0 + dur * 0.6);
+    out.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    // Rahina: kohina -> kaistanpäästö -> amplitudimodulaatio.
+    const src = ctx.createBufferSource();
+    src.buffer = this.noiseBuf;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.setValueAtTime(snarl ? 900 : 380, t0);
+    bp.frequency.exponentialRampToValueAtTime(snarl ? 600 : 300, t0 + dur);
+    bp.Q.value = snarl ? 0.8 : 1.6;
+    const am = ctx.createGain();
+    am.gain.value = 0.55;
+    const lfo = ctx.createOscillator();
+    lfo.frequency.setValueAtTime(snarl ? 34 : 24, t0);
+    lfo.frequency.linearRampToValueAtTime(snarl ? 28 : 19, t0 + dur);
+    const lfoG = ctx.createGain();
+    lfoG.gain.value = 0.45;
+    lfo.connect(lfoG).connect(am.gain);
+    src.connect(bp).connect(am).connect(out);
+    // Matala ääni (kurkku).
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(snarl ? 120 : 72, t0);
+    osc.frequency.linearRampToValueAtTime(snarl ? 95 : 62, t0 + dur);
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = snarl ? 700 : 320;
+    const og = ctx.createGain();
+    og.gain.value = snarl ? 0.18 : 0.32;
+    osc.connect(lp).connect(og).connect(am);
+    const pan = ctx.createStereoPanner();
+    pan.pan.value = sp.pan;
+    out.connect(pan).connect(this.bus);
+    src.start(t0, Math.random() * 0.5);
+    src.stop(t0 + dur + 0.05);
+    lfo.start(t0); lfo.stop(t0 + dur + 0.05);
+    osc.start(t0); osc.stop(t0 + dur + 0.05);
+  }
+
+  // Sessio 50: hyttynen pörrää pään ympärillä. Pätkä satunnaisesta kohdasta;
+  // rata on pään suhteen (lähestyy, kiertää korvan ohi, loittonee), joten
+  // panorointi, voimakkuus ja kirkkaus ajastetaan käyrinä alussa.
+  mosquito(level = 1) {
+    const buf = this.bufs.mosquito;
+    if (!this.ctx || !buf || this.ctx.state !== 'running') return false;
+    const ctx = this.ctx, t0 = ctx.currentTime + 0.02;
+    const rate = 0.9 + Math.random() * 0.2;
+    const dur = Math.min((buf.duration - 0.2) / rate, 2.5 + Math.random() * 3.5);
+    const off = Math.random() * Math.max(0, buf.duration - dur * rate - 0.1);
+    const N = 64;
+    const pan = new Float32Array(N), gain = new Float32Array(N), freq = new Float32Array(N);
+    const a0 = Math.random() * Math.PI * 2, w = (Math.random() < 0.5 ? -1 : 1) * (1.2 + Math.random() * 2.2);
+    const rMin = 0.1 + Math.random() * 0.3, rMax = 1.4 + Math.random() * 0.8, peak = 0.3 + Math.random() * 0.4;
+    for (let i = 0; i < N; i++) {
+      const u = i / (N - 1);
+      // Etäisyys: kaukaa lähelle (kohdassa peak) ja taas kauas.
+      const k = u < peak ? u / peak : (1 - u) / (1 - peak);
+      const r = rMax - (rMax - rMin) * Math.sin(k * Math.PI * 0.5);
+      const ang = a0 + w * u * dur;
+      pan[i] = Math.sin(ang) * Math.min(1, 0.6 + 0.4 / Math.max(0.3, r));
+      const fade = Math.min(1, u / 0.1, (1 - u) / 0.12);
+      gain[i] = MOSQUITO_LEVEL * level * fade * Math.min(1, 0.25 / r);
+      freq[i] = 2200 + 9000 * Math.min(1, 0.3 / r);
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = rate;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    const g = ctx.createGain();
+    const p = ctx.createStereoPanner();
+    lp.frequency.setValueCurveAtTime(freq, t0, dur);
+    g.gain.setValueCurveAtTime(gain, t0, dur);
+    p.pan.setValueCurveAtTime(pan, t0, dur);
+    src.connect(lp).connect(g).connect(p).connect(this.bus);
+    src.start(t0, off, dur * rate); // puskurin aikaa: soi tasan dur sekuntia
+    return true;
   }
 
   // Lintu jossain lähellä (satunnainen suunta ja etäisyys).

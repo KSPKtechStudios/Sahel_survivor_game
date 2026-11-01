@@ -1,10 +1,14 @@
 // Sahel: käynnistys, tilat (päävalikko / lataus / peli / tauko / reppu) ja pääsilmukka.
 import * as THREE from 'three';
+import { fogMist } from './render/fogPatch.js'; // sessio 58: korkeusriippuvainen sumu (ennen materiaalien kääntämistä)
+import './render/shaderSafety.js'; // sessio 58: ei negatiivisia värejä (mustat pikselit lehtien reunoilla)
+import { FarTerrain } from './render/farTerrain.js';
+import { PeakMist } from './render/peakMist.js';
 import { loadSurfaces, addSurfaceDetail, leafTexture, surfaceUniforms } from './render/surfaces.js';
 import { updateGlow } from './render/itemGlow.js';
 import { CONFIG } from './config.js';
 import { createGroundDetailTexture } from './render/textures.js';
-import { createSharedMaterials, wetUniforms, addWet, addTranslucency, sunUniforms } from './render/materials.js';
+import { createSharedMaterials, wetUniforms, addWet, addTranslucency, softFoliage, sunUniforms } from './render/materials.js';
 import { grassUniforms } from './render/grassField.js';
 import { Sky } from './render/sky.js';
 import { Environment, WEATHER_KEYS } from './render/environment.js';
@@ -13,6 +17,7 @@ import { Ambient } from './render/ambient.js';
 import { Debris } from './render/debris.js';
 import { Footprints } from './render/footprints.js';
 import { Vines } from './render/vines.js';
+import { Waterfalls } from './render/waterfalls.js';
 import { Coconuts } from './game/coconuts.js';
 import { createWaterMaterial, updateWaterMaterial } from './render/water.js';
 import { Ripples } from './render/ripples.js';
@@ -23,6 +28,7 @@ import { Rain } from './render/rain.js';
 import { PostFX } from './render/post.js';
 import { Music, BIOME_MUSIC } from './audio/music.js';
 import { Sfx } from './audio/sfx.js';
+import { Flies } from './render/flies.js';
 import { createModelLibrary } from './models/models.js';
 import { World } from './world/world.js';
 import { OBJECT_TYPES } from './world/objectTypes.js';
@@ -50,6 +56,11 @@ import { PIECES } from './game/pieces.js';
 import { events } from './game/events.js';
 import { loadWorldData, saveWorldData, loadSettings } from './game/save.js';
 import { renderItemIcons } from './ui/icons.js';
+import { loadItemAssets } from './models/itemAssets.js';
+import { userTexturesReady } from './models/userItems.js';
+import { loadTreeAssets } from './models/treeAssets.js';
+import { loadOrganicAssets } from './models/organicAssets.js';
+import { loadArokierija } from './models/arokierija.js';
 import { Hud, RESPAWN_WAIT } from './ui/hud.js';
 import { Nameplates } from './ui/nameplates.js';
 import { Minimap } from './ui/minimap.js';
@@ -61,6 +72,7 @@ import { BuildMenu } from './ui/buildMenu.js';
 import { RunePanel } from './ui/runePanel.js';
 import { BoatHud } from './ui/boatHud.js';
 import { Menu } from './ui/menu.js';
+import { MenuCamp, CAMP_SHOTS } from './ui/menuCamp.js';
 import { DevTools } from './ui/devtools.js';
 
 const $ = (id) => document.getElementById(id);
@@ -68,7 +80,9 @@ const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
 const MENU_SEED = seedFromString('sahel-valikko');
 // Maisemallinen paikka valikon taustalle (savannia, akasioita ja kallioita
 // auringonlaskussa). Sessio 9: siirretty uuden biomijaon mukaan.
-const MENU_SPOT = { x: -2296, z: 582, yaw: 1.6, time: 17.1 };
+// Sessio 59: valikon aika alkaa kultaisesta hetkestä (time) ja hämärtyy yöksi
+// (nightEnd) dusk sekunnissa.
+const MENU_SPOT = { x: -2296, z: 582, yaw: 1.6, time: 17.55, nightEnd: 20.3, dusk: 330 };
 
 // --- Renderöijä ja kamera ----------------------------------------------------
 const canvas = $('game');
@@ -85,8 +99,11 @@ const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerH
 // --- Järjestelmät -------------------------------------------------------------
 const materials = createSharedMaterials(createGroundDetailTexture());
 // Hakattavat ja kaatuvat puut: sama kaarna kuin seisovissa (sessio 23).
-const activeMaterial = addTranslucency(addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, map: leafTexture, alphaTest: 0.42, alphaToCoverage: true, side: THREE.DoubleSide }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 0.3, 0), 0.38);
+const activeMaterial = softFoliage(addTranslucency(addWet(addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, map: leafTexture, alphaTest: 0.42, alphaToCoverage: true, side: THREE.DoubleSide }), 'bark', { scale: 0.9, strength: 0.9, mask: 'notGreen' }), 0.3, 0), 0.38));
 loadSurfaces(renderer);
+// Sessio 54: Blenderissä tehdyt esinemallit ladataan ennen mallikirjastoa.
+await loadItemAssets();
+await Promise.all([loadTreeAssets(), loadOrganicAssets(), loadArokierija()]); // sessio 56: Blenderillä tehdyt puut; sessio 58: juurakot, rungot ja arokierijä
 const models = createModelLibrary();
 const sky = new Sky(scene);
 materials.water = createWaterMaterial(sky);
@@ -104,14 +121,18 @@ const gameHours = () => env.day * 24 + env.time;
 const fallen = new FallenTrees({ scene, world, models, material: activeMaterial, debris, drops, bursts });
 // Sessio 27: liaanien fysiikka (tuuli, pelaaja, kaatuvat puut).
 const vines = new Vines(scene, world, models);
+const farTerrain = new FarTerrain(scene, world); // sessio 58: kaukaisten vuorten siluetit
 fallen.vines = vines;
 const breakables = new Breakables({ world, models, debris, drops, fallen, material: activeMaterial });
 const structures = new Structures(scene, models, world);
 const ruins = new Ruins({ scene, world, drops, bursts });
 const ripples = new Ripples(renderer);
 const post = new PostFX(renderer);
+const peakMist = new PeakMist(post); // sessio 58: pilviverho karstihuippujen tuntumassa
 const splashes = new Splashes(scene);
+const waterfalls = new Waterfalls(scene, splashes, ripples);
 const fire = new FireFx(scene);
+const camp = new MenuCamp(scene); // sessio 59: valikon nuotioleiri
 const blood = new Blood(scene);
 const rain = new Rain(scene, renderer);
 env.onStrike = (angle, dist, near) => {
@@ -135,6 +156,8 @@ env.onStrike = (angle, dist, near) => {
 const music = new Music();
 // Selain sallii äänen vasta käyttäjän ensimmäisen klikkauksen tai näppäimen jälkeen.
 const sfx = new Sfx();
+// Sessio 49: kärpäset vilahtavat ohi sademetsässä (ääni sfx:stä).
+const flies = new Flies(scene, sfx);
 // Pelin fontti ladataan heti (kartat piirtävät tekstiä kankaalle).
 if (document.fonts) document.fonts.load("700 16px 'Philosopher'").catch(() => {});
 const lightningEl = document.getElementById('lightning');
@@ -177,6 +200,7 @@ const survival = new Survival(player);
 const archery = new Archery({ scene, camera, player, inventory, viewmodel, mobs, world, drops, debris });
 const build = new BuildSystem({ camera, player, inventory, structures, world, viewmodel, drops, boats });
 
+await userTexturesReady();
 const icons = renderItemIcons(models.items);
 const pieceIcons = renderItemIcons(models.build);
 const hud = new Hud(inventory, icons, survival);
@@ -304,6 +328,10 @@ function applySettings(s) {
   camera.updateProjectionMatrix();
   if (world.viewRadius !== s.viewDistance) world.setViewRadius(s.viewDistance);
   env.maxVis = s.viewDistance * 64 + 10;
+  // Sessio 58: kaukaiset vuoret (siluetit) ja kameran kaukotaso niiden mukaan.
+  farTerrain.setRange(s.farView ?? 1400);
+  camera.far = Math.max(1500, (s.farView || 0) + 200);
+  camera.updateProjectionMatrix();
   // Ultra: tarkkuus myös tarkoilla näytöillä (enintään 2× pikselitiheys).
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, s.quality === 'ultra' ? 2 : 1.5) * s.renderScale);
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -332,7 +360,6 @@ function applySettings(s) {
   post.bloom = s.bloom !== false;
   post.grade = s.grade !== false;
   post.vignette = s.vignette !== false;
-  post.sharpen = s.sharpen !== false ? 0.5 : 0; // sessio 38
   // Sessio 25: silmän mukautuminen on aina päällä (yön valotus riippuu siitä).
   env.autoExposure = post.autoExposure;
   // Sessio 24: ruohon ja aluskasvien tiheys sekä ruohon näkyvyyssäde.
@@ -393,10 +420,14 @@ function clearWorldState(seed) {
   drops.clear();
   fallen.clear();
   vines.clear();
+  waterfalls.clear();
+  farTerrain.clear();
+  peakMist.clear();
   coconuts.clear();
   debris.clear();
   tumbleweeds.clear();
   ambient.clear();
+  flies.clear();
   explored.clear();
   splashes.clear();
   fire.clear();
@@ -429,13 +460,16 @@ async function enterMenu(first = false) {
   env.setTime(MENU_SPOT.time);
   env.setWeather('menu', true);
   env.setLocalHumidity(0);
-  const sp = MENU_SPOT;
-  menuCam.x = sp.x;
-  menuCam.z = sp.z;
+  // Sessio 59: nuotioleiri valikkomaailman aukiolla; kamera alkaa leirin
+  // yleiskuvasta, ja hämärä vaihtuu hiljalleen yöksi (updateMenuCamera).
+  camp.build();
+  menuCam.x = camp.x;
+  menuCam.z = camp.z;
   menuCam.t = 0;
-  player.teleport(sp.x, sp.z);
+  menuCam.ready = false;
+  player.teleport(camp.x, camp.z);
   if (first) menu.showLoading('Ladataan…');
-  await buildAround(sp.x, sp.z, (p) => menu.setLoading(p));
+  await buildAround(camp.x, camp.z, (p) => menu.setLoading(p));
   state = 'menu';
   if (first && !music.unlocked) {
     // Ensimmäisellä kerralla klikkaus: selain päästää musiikin soimaan vasta sen jälkeen.
@@ -690,7 +724,7 @@ async function teleportTo(x, z, look = null) {
   player.update(0, input, world);
 }
 const devtools = new DevTools({
-  player, env, world, mobs, inventory, explored, ruins, drops, fps: null, teleport: teleportTo, fmtTime, music, boats,
+  player, env, world, mobs, inventory, explored, ruins, drops, fps: null, teleport: teleportTo, fmtTime, music, boats, flies,
 });
 
 // --- Koko ------------------------------------------------------------------------------
@@ -742,6 +776,9 @@ function updateSfx(game, rainAmt, realDt) {
       // Raju tuuli: merellä ukkosella ja hiekkamyrskyssä puuskittain.
       stormWind: Math.max(thunder * _sm(0.2, 0.7, _s.ocean || 0), sand * Math.max(0, Math.sin(elapsed * 0.21) * Math.sin(elapsed * 0.077 + 1)) * 1.6),
     });
+    sfx.waterfall(waterfalls.sound.level, waterfalls.sound.pan, realDt);
+    // Sessio 59: lähimmän nuotion rätinä (illan sirkat vain valikon leirissä).
+    sfx.campfire(Math.max(0, 1 - structures.nearestFire / 14) * 0.8, 0, realDt);
     // Linnut (sessio 12d): välillä viidakossa, savannilla harvemmin; päivällä
     // eikä kovassa sateessa.
     birdT -= realDt;
@@ -753,6 +790,9 @@ function updateSfx(game, rainAmt, realDt) {
     }
   } else {
     sfx.setLevels({});
+    // Sessio 59: valikon nuotioleirin rätinä ja sirkat (voimistuvat illan pimetessä).
+    sfx.campfire(state === 'menu' ? 1 : 0, state === 'menu' ? 0.25 + 0.75 * (1 - Math.min(1, env.daylight * 2)) : 0, realDt);
+    sfx.waterfall(0, 0, realDt);
   }
   sfx.update(realDt);
 }
@@ -806,6 +846,9 @@ events.on('woodHit', ({ x, z }) => sfx.chop(x, z, { x: player.position.x, z: pla
 events.on('haamuSound', ({ kind, x, z }) => {
   sfx.ghost(kind, x, z, { x: player.position.x, z: player.position.z, yaw: player.yaw });
 });
+// Sessio 51: gorilla karjuu suuttuessaan.
+events.on('gorillaRoar', ({ x, z }) => sfx.gorillaRoar(x, z, { x: player.position.x, z: player.position.z, yaw: player.yaw }));
+events.on('leopardGrowl', ({ x, z, kind }) => sfx.leopardGrowl(x, z, { x: player.position.x, z: player.position.z, yaw: player.yaw }, kind));
 events.on('treeFell', ({ x, z, fallTime, size }) => {
   if (x === undefined) return;
   sfx.treeFall(x, z, fallTime, size, { x: player.position.x, z: player.position.z, yaw: player.yaw });
@@ -814,6 +857,7 @@ events.on('treeFell', ({ x, z, fallTime, size }) => {
 // --- Pääsilmukka --------------------------------------------------------------------------
 let last = performance.now();
 let elapsed = 0;
+const _fireWind = { x: 0, z: 0 }; // sessio 59: tuuli nuotioiden liekkeihin
 let saveTimer = CONFIG.autosaveSec;
 let edgeMsgTimer = 0;
 let drawTimer = 0;
@@ -848,16 +892,29 @@ function handleHotbar() {
   }
 }
 
+// Sessio 59: valikon kamera nuotioleirissä. Kuva vaihtuu valikon paneelin
+// mukaan (menu.shot), siirtymä on pehmeä, ja kamera "hengittää" hiljaa.
+// Aika kulkee kultaisesta hetkestä yöhön noin viidessä minuutissa.
+const _camPos = new THREE.Vector3(), _camAt = new THREE.Vector3();
+const _tPos = new THREE.Vector3(), _tAt = new THREE.Vector3();
 function updateMenuCamera(dt) {
   menuCam.t += dt;
   const t = menuCam.t;
-  const x = menuCam.x + Math.sin(t * 0.03) * 5;
-  const z = menuCam.z + Math.cos(t * 0.021) * 3;
-  const y = Math.max(heightAt(x, z), CONFIG.waterLevel) + 3 + Math.sin(t * 0.2) * 0.12;
-  camera.position.set(x, y, z);
-  // Katse kohti laskevaa aurinkoa, hidas panorointi.
-  camera.rotation.set(0.05 + Math.sin(t * 0.07) * 0.02, MENU_SPOT.yaw + Math.sin(t * 0.045) * 0.18, 0, 'YXZ');
-  player.position.set(x, y - 3, z);
+  env.setTime(Math.min(MENU_SPOT.nightEnd, MENU_SPOT.time + t * ((MENU_SPOT.nightEnd - MENU_SPOT.time) / MENU_SPOT.dusk)));
+  const shot = CAMP_SHOTS[menu.shot] || CAMP_SHOTS.main;
+  camp.world(shot.pos, _tPos);
+  camp.world(shot.at, _tAt);
+  _tPos.y = Math.max(_tPos.y, heightAt(_tPos.x, _tPos.z) + 0.5);
+  if (!menuCam.ready) { _camPos.copy(_tPos); _camAt.copy(_tAt); menuCam.ready = true; }
+  const k = 1 - Math.exp(-dt * 1.4);
+  _camPos.lerp(_tPos, k);
+  _camAt.lerp(_tAt, k);
+  camera.position.copy(_camPos);
+  camera.position.x += Math.sin(t * 0.13) * 0.05;
+  camera.position.y += Math.sin(t * 0.21) * 0.025;
+  camera.position.z += Math.cos(t * 0.11) * 0.05;
+  camera.lookAt(_camAt.x + Math.sin(t * 0.07) * 0.15, _camAt.y + Math.sin(t * 0.09) * 0.05, _camAt.z);
+  player.position.set(camp.x, camp.y, camp.z);
 }
 
 function frame(now) {
@@ -873,6 +930,8 @@ function frame(now) {
 
   if (state === 'playing') handleHotbar();
 
+  camp.setVisible(state === 'menu');
+  camp.update(dt, elapsed, camera, env.windDir.x * env.w.wind * 3, env.windDir.y * env.w.wind * 3);
   if (state === 'menu') updateMenuCamera(dt);
   else if (inGame) {
     // Vene liikkuu ennen pelaajaa (kyydissä pelaajan paikka tulee veneeltä).
@@ -920,14 +979,24 @@ function frame(now) {
     const wetland = Math.min(1, _s.mare + _s.oasis * 0.7);
     const hf = post.hfog;
     hf.density = inGame && state !== 'menu'
-      ? Math.max(env.humid * 0.006, env.w.rain * 0.026, dawn * (0.008 + wetland * 0.022) * dryK, night * 0.006 * dryK)
+      ? Math.max(env.humid * env.humidHaze, env.w.rain * 0.026, dawn * (0.008 + wetland * 0.022) * dryK, night * 0.006 * dryK)
       : 0;
-    hf.base = Math.max(CONFIG.waterLevel, _s.h - 1.5);
+    // Sessio 58: usva lepää laakson pohjalla (karstimassiivin korotus pois),
+    // joten massiivin laelta näkee kauas ja huiput nousevat usvasta.
+    const floorY = _s.h - (_s.escSharp || 0);
+    hf.base = Math.max(CONFIG.waterLevel, floorY - 1.5);
+    const mistTop = Math.max(CONFIG.waterLevel, floorY) + 18;
+    fogMist.x += (mistTop - camera.position.y - fogMist.x) * Math.min(1, rawDt * 2);
+    farTerrain.mistTop = mistTop;
+    // Latvuston yläpuolella (massiivin laella) avoin taivas: environment.js.
+    env.canopy += ((1 - _sm(16, 30, camera.position.y - floorY)) - env.canopy) * Math.min(1, rawDt * 1.5);
+    post.horizon = 0.75 * (1 - env.canopy * env.humid);
+    peakMist.update(Math.min(0.25, rawDt), player.position, Math.max(CONFIG.waterLevel, floorY), env.windDir, 0.12 + 0.88 * env.daylight, inGame && state !== 'menu');
     hf.falloff = 0.1 + 0.06 * (1 - env.humid);
     hf.color.copy(scene.fog.color);
     // Sessio 26: valokeilojen ilman tiheys (sademetsän kostea ilma, aamu-usva, utu).
     post.shafts = inGame && state !== 'menu'
-      ? Math.min(1.2, env.humid * 0.8 + dawn * 0.6 * dryK + env.w.haze * 0.35 + env.w.rain * 0.3)
+      ? Math.min(1.0, env.humid * env.canopy * env.humidShafts + dawn * 0.45 * dryK + env.w.haze * 0.3 + env.w.rain * 0.3)
       : 0;
   }
   world.grass.update(camera.position, player.position, env);
@@ -967,11 +1036,13 @@ function frame(now) {
   materials.water.uniforms.uRipple.value = ripples.texture;
   materials.water.uniforms.uRippleRect.value = ripples.rect;
   splashes.update(simDt, env.lightColor, materials.water.uniforms.uAmbient.value);
+  if (inGame) waterfalls.update(simDt, player.position, player.yaw, env.lightColor, materials.water.uniforms.uAmbient.value);
   fire.update(simDt, materials.water.uniforms.uAmbient.value);
   blood.update(simDt, 0.35 + 0.65 * env.daylight);
   footprints.update(simDt, env.sun.position, env.hemi.intensity / Math.max(0.05, env.sun.intensity) * 0.9);
   if (inGame) {
     vines.update(simDt, player.position);
+    farTerrain.update(simDt, camera.position);
     coconuts.update(simDt, player.position, gameHours());
   }
   tumbleweeds.update(simDt, player.position, env.w.wind, env.windDir);
@@ -1063,7 +1134,9 @@ function frame(now) {
     respawnPlayer();
   }
 
-  structures.update(simDt, elapsed, player.position);
+  _fireWind.x = env.windDir.x * env.w.wind * 3;
+  _fireWind.z = env.windDir.y * env.w.wind * 3;
+  structures.update(simDt, elapsed, player.position, camera, _fireWind);
   ruins.update(running || state === 'menu' ? dt : 0, player.position);
   drops.update(running ? dt : 0, elapsed, player, inventory);
   updateGlow(elapsed);
@@ -1072,6 +1145,7 @@ function frame(now) {
   bursts.update(simDt);
   dust.update(elapsed, camera.position, env);
   ambient.update(simDt, elapsed, camera.position, env, env.w.rain);
+  flies.update(running ? simDt : 0, camera, env, env.w.rain);
   sky.update(camera.position);
 
   if (inGame) {
@@ -1116,7 +1190,8 @@ function frame(now) {
     if (menuShadowTimer <= 0) { menuShadowTimer = 0.5; renderer.shadowMap.needsUpdate = true; }
   }
   drawTimer -= dt;
-  if (state !== 'paused' || drawTimer <= 0) {
+  // Sessio 39: intron aikana ei piirretä (peli latautuu taustalla).
+  if ((state !== 'paused' || drawTimer <= 0) && !window.sahelIntroActive) {
     drawTimer = 0.25;
     // Maailma tehosteineen, sitten käsi päälle (ei sumennuksia; sessio 37:
     // bloom ja sävytys koskevat myös kättä).
@@ -1150,5 +1225,5 @@ window.sahel = {
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
   ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, sfx, blood,
   startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
-  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient, vines,
+  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient, vines, flies, waterfalls, farTerrain, peakMist,
 };

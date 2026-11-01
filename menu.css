@@ -1,6 +1,9 @@
-/* Päävalikko, taukovalikko, lataus, maailmat ja asetukset.
-   Tyyli mallikuvan mukaan: pergamenttikäärö koristekehyksessä ja
-   puukehyksiset liitutaulunapit. Kaikki on CSS:ää (ei kuvatiedostoja). */
+/* Sessio 59: valikot kokonaan uusiksi (käyttäjä: ammattimaisempi,
+   Valheim-henkinen, tunnelmallinen ja kotoisa; sahelilainen käsityö).
+   Tausta on 3D-nuotioleiri (ui/menuCamp.js); valikko on ruudun reunassa
+   tumma nahkapaneeli, jossa on ommeltu reuna, messinkiniitit ja
+   bògòlanfini-kangasnauha (assets/ui/bogolan.png). Otsikot Cinzel-fontilla
+   (OFL), leipäteksti Alegreya. */
 
 @font-face { font-family: 'Philosopher'; src: url('assets/fonts/philosopher-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'Philosopher'; src: url('assets/fonts/philosopher-latin-700-normal.woff2') format('woff2'); font-weight: 700; font-display: swap; }
@@ -10,402 +13,354 @@
 @font-face { font-family: 'Alegreya'; src: url('assets/fonts/alegreya-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'Alegreya'; src: url('assets/fonts/alegreya-latin-700-normal.woff2') format('woff2'); font-weight: 700; font-display: swap; }
 @font-face { font-family: 'Alegreya'; src: url('assets/fonts/alegreya-latin-400-italic.woff2') format('woff2'); font-style: italic; font-display: swap; }
+@font-face { font-family: 'Cinzel'; src: url('assets/fonts/cinzel-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Cinzel'; src: url('assets/fonts/cinzel-latin-600-normal.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Cinzel'; src: url('assets/fonts/cinzel-latin-700-normal.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Cinzel'; src: url('assets/fonts/cinzel-latin-900-normal.woff2') format('woff2'); font-weight: 900; font-display: swap; }
 
 :root {
   --ease-soft: cubic-bezier(0.22, 0.9, 0.25, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --paper-noise: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.22  0 0 0 0 0.08  0 0 0 0.32 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='60'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.012 0.55' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 0.12  0 0 0 0 0.06  0 0 0 0 0.02  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
-  --chalk: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='c'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.09 0'/></filter><rect width='100%' height='100%' filter='url(%23c)'/></svg>");
-  --orn: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><g fill='none' stroke-linecap='round'><path d='M6 58 C6 32 14 14 36 7 C48 3 58 10 54 21 C51 29 40 27 41 20 C42 15 48 15 48 19' stroke='%232a2610' stroke-width='6'/><path d='M6 58 C12 47 22 45 28 49 C33 53 30 59 25 57' stroke='%232a2610' stroke-width='5'/><path d='M6 58 C6 32 14 14 36 7 C48 3 58 10 54 21 C51 29 40 27 41 20 C42 15 48 15 48 19' stroke='%23b8ad74' stroke-width='3'/><path d='M6 58 C12 47 22 45 28 49 C33 53 30 59 25 57' stroke='%23b8ad74' stroke-width='2.5'/></g></svg>");
+  --m-ink: #f1e4c8;          /* vaalea pellava */
+  --m-ink-dim: rgba(241, 228, 200, 0.62);
+  --m-gold: #e8b862;
+  --m-gold-hi: #ffe4a6;
+  --m-gold-lo: #a8691f;
+  --m-leather: #1b120b;
+  --m-leather-2: #2a1b11;
+  --m-line: rgba(232, 184, 98, 0.32);
+  --m-title: 'Cinzel', 'Alegreya', serif;
+  --m-body: 'Alegreya', 'Philosopher', serif;
+  --leather-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.38  0 0 0 0 0.22  0 0 0 0.16 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  --leather-mottle: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='0.006' numOctaves='3' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.22  0 0 0 0 0.12  0 0 0 0.4 -0.12'/></filter><rect width='100%' height='100%' filter='url(%23m)'/></svg>");
 }
 
 .screen {
   position: fixed; inset: 0;
   z-index: 10;
-  font-family: var(--font);
-  color: #3a2814;
+  font-family: var(--m-body);
+  color: var(--m-ink);
 }
 
-/* ---------------- Tausta ---------------- */
-.mm-vignette {
+/* ---------------- Tausta: leiri näkyy, reuna tummuu paneelin alle ---------------- */
+.mm-shade {
   position: absolute; inset: 0; pointer-events: none;
   background:
-    radial-gradient(ellipse at 50% 42%, rgba(0, 0, 0, 0) 45%, rgba(25, 10, 0, 0.45) 100%),
-    linear-gradient(180deg, rgba(60, 20, 10, 0.2), rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0) 75%, rgba(30, 12, 0, 0.35));
+    radial-gradient(ellipse 80% 70% at 70% 55%, rgba(0, 0, 0, 0) 40%, rgba(8, 4, 1, 0.55) 100%),
+    linear-gradient(90deg, rgba(8, 4, 1, 0.55) 0%, rgba(8, 4, 1, 0) 45%);
+  animation: mFade 1.4s ease-out both;
 }
 .pm-dim {
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 40% 45%, rgba(20, 10, 2, 0.35), rgba(10, 5, 0, 0.75));
-  backdrop-filter: blur(3px);
-  animation: fadeIn 0.35s ease-out;
+  background: radial-gradient(ellipse at 60% 50%, rgba(14, 8, 3, 0.35), rgba(8, 4, 1, 0.78));
+  backdrop-filter: blur(4px) saturate(0.85);
+  animation: mFade 0.35s ease-out;
 }
 
-.mm-stage {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center;
-  padding-top: max(3vh, 16px);
-  overflow-y: auto;
+/* ---------------- Nahkapaneeli ---------------- */
+.mm-side {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: clamp(330px, 29vw, 430px);
+  display: flex; flex-direction: column;
+  padding: 26px 46px 18px 36px;
+  background:
+    var(--leather-grain),
+    var(--leather-mottle),
+    linear-gradient(180deg, #24170e 0%, var(--m-leather) 55%, #140d08 100%);
+  box-shadow: 10px 0 40px rgba(0, 0, 0, 0.55), inset -1px 0 0 rgba(255, 210, 140, 0.08), inset 0 0 90px rgba(0, 0, 0, 0.55), inset 0 60px 80px -40px rgba(255, 170, 90, 0.07);
+  transition: width 0.55s var(--ease-soft);
+  animation: mSideIn 0.9s var(--ease-soft) both;
+  overflow: hidden;
 }
-.mm-stage.compact { padding-top: max(5vh, 16px); right: min(330px, 30vw); }
-.mm-footer {
-  position: absolute; right: 16px; bottom: 12px;
-  font: 400 14px var(--font); color: rgba(255, 236, 200, 0.7);
-  text-shadow: 0 1px 2px #000;
-}
-
-/* ---------------- Pergamenttikäärö ---------------- */
-.scroll-slot { width: min(760px, calc(100vw - 48px)); transition: transform 0.6s var(--ease-soft); transform-origin: 50% 0; flex: none; }
-.scroll-slot.shrink { transform: scale(0.5); margin-bottom: max(-130px, -18vh); }
-.compact .scroll-slot { width: min(560px, calc(100vw - 48px)); }
-.compact .scroll-title, .load-box .scroll-title { font-size: clamp(52px, 7.5vw, 104px); }
-.compact .scroll-paper, .load-box .scroll-paper { min-height: clamp(120px, 20vh, 200px); }
-
-.scroll { position: relative; padding: 0 22px; }
-.scroll-frame {
-  position: relative;
-  padding: 14px;
+/* Ommeltu sisäreuna */
+.mm-side::before {
+  content: ''; position: absolute; inset: 12px 34px 12px 12px; pointer-events: none;
+  border: 1.5px dashed rgba(232, 184, 98, 0.28);
   border-radius: 6px;
-  background:
-    linear-gradient(135deg, #8a8350 0%, #4a4421 22%, #7c7540 45%, #3d381b 70%, #8b8452 100%);
-  box-shadow:
-    0 0 0 2px #221f0c,
-    inset 0 0 0 2px rgba(255, 245, 190, 0.25),
-    inset 0 0 0 6px rgba(30, 26, 10, 0.55),
-    0 18px 40px rgba(0, 0, 0, 0.55);
 }
-.scroll-paper {
-  position: relative;
-  min-height: clamp(150px, 26vh, 260px);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 10px 82px 14px;
-  border-radius: 3px;
-  background:
-    radial-gradient(ellipse at 50% 50%, rgba(255, 250, 230, 0) 50%, rgba(120, 80, 30, 0.42) 100%),
-    var(--paper-noise),
-    linear-gradient(180deg, #f1e5c6, #e2cd9f);
-  box-shadow: inset 0 0 38px rgba(110, 70, 25, 0.5), inset 0 0 4px rgba(70, 40, 10, 0.8);
-  /* Aukeaminen pelkällä transformilla: animaatio pyörii näytönohjaimella
-     eikä nyi, vaikka taustalla piirretään 3D-maailmaa. */
-  transform: none;
-  transition: transform 1.1s var(--ease-soft);
-  will-change: transform;
+/* Bògòlanfini-nauha oikeassa reunassa, messinkiniitit */
+.mm-band {
+  position: absolute; top: 0; bottom: 0; right: 0; width: 24px;
+  background: url('assets/ui/bogolan.png') 0 0 / 220px auto repeat;
+  box-shadow: inset 2px 0 0 rgba(0, 0, 0, 0.6), inset 4px 0 6px rgba(0, 0, 0, 0.5), inset -1px 0 0 rgba(255, 220, 160, 0.12);
 }
-.scroll:not(.open) .scroll-paper { transform: scaleX(0.03); }
-.scroll-title {
-  margin: 0;
-  font-family: 'Eagle Lake', Georgia, serif; /* logo pysyy Eagle Lakena */
-  font-weight: 400;
-  font-size: clamp(60px, 10.5vw, 150px);
-  line-height: 1.05;
-  letter-spacing: 0.02em;
-  background: linear-gradient(180deg, #aaa565 0%, #7b7735 36%, #4d4a1d 52%, #8d8949 76%, #5e5b27 100%);
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent;
-  -webkit-text-stroke: 1.6px #29270e;
-  filter: drop-shadow(0 3px 0 rgba(80, 52, 16, 0.35)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.5));
-  opacity: 0; transform: scale(0.9);
-  transition: opacity 0.7s ease 0.6s, transform 0.9s var(--ease-spring) 0.6s;
-  padding: 0 0.12em;
+.mm-band::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 50%, #ffe7ad 0 1.2px, #c99a45 2px, #6b4513 3.6px, rgba(0, 0, 0, 0.5) 4.4px, transparent 5px) 0 18px / 24px 120px repeat-y;
 }
-.scroll.open .scroll-title { opacity: 1; transform: none; }
-.scroll-sub {
-  font: 400 clamp(16px, 2vw, 22px) var(--font);
-  color: #5b4520; margin-top: -4px; letter-spacing: 0.1em;
-  opacity: 0; transition: opacity 0.6s ease 1s;
-}
-.scroll-sub:empty { display: none; }
-.scroll.open .scroll-sub { opacity: 0.85; }
-.glyphs {
-  position: absolute; font: 400 11px var(--font); color: rgba(70, 50, 20, 0.55); letter-spacing: 0.15em;
-  opacity: 0; transition: opacity 0.6s ease 1.2s;
-}
-.scroll.open .glyphs { opacity: 1; }
-.glyphs.g1 { right: 86px; top: 12px; }
-.glyphs.g2 { left: 86px; bottom: 10px; }
+.mm-side.wide { width: clamp(520px, 48vw, 760px); }
+.mm-side.compact { animation-duration: 0.45s; }
 
-.orn { position: absolute; width: 54px; height: 54px; background: var(--orn) center / contain no-repeat; z-index: 5; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)); }
-.orn.tl { left: -14px; top: -14px; transform: scaleY(-1); }
-.orn.tr { right: -14px; top: -14px; transform: scale(-1, -1); }
-.orn.bl { left: -14px; bottom: -14px; }
-.orn.br { right: -14px; bottom: -14px; transform: scaleX(-1); }
+/* ---------------- Logo ---------------- */
+.logo-slot { flex: none; display: flex; justify-content: center; transition: transform 0.55s var(--ease-soft), margin 0.55s var(--ease-soft); transform-origin: 50% 0; }
+.logo-slot.shrink { transform: scale(0.62); margin-bottom: -84px; }
+.logo { display: flex; flex-direction: column; align-items: center; text-align: center; user-select: none; }
+.logo-emblem {
+  width: 92px; height: 92px;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 16px rgba(255, 150, 50, 0.18));
+  animation: mLogoIn 1.2s var(--ease-soft) 0.15s both;
+}
+.logo-word {
+  margin-top: 6px;
+  font: 900 clamp(46px, 4.4vw, 64px)/1 var(--m-title);
+  letter-spacing: 0.12em;
+  padding-left: 0.12em;
+  background: linear-gradient(180deg, #fff3cc 0%, #f6cf7c 38%, #d79a3f 62%, #8e5419 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 0 #3a2009) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 22px rgba(255, 150, 50, 0.28));
+  animation: mLogoIn 1.2s var(--ease-soft) 0.3s both;
+}
+.logo-rule { display: flex; align-items: center; gap: 8px; margin-top: 10px; width: 210px; animation: mLogoIn 1.2s var(--ease-soft) 0.45s both; }
+.logo-rule i { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--m-gold) 40%, var(--m-gold)); }
+.logo-rule i:last-child { background: linear-gradient(270deg, transparent, var(--m-gold) 40%, var(--m-gold)); }
+.logo-rule b { width: 7px; height: 7px; transform: rotate(45deg); background: var(--m-gold); box-shadow: 0 0 8px rgba(255, 190, 90, 0.6); }
+.logo-sub { margin-top: 8px; font: 600 13px var(--m-title); letter-spacing: 0.32em; text-transform: uppercase; color: var(--m-ink-dim); }
+.logo-sub:empty { display: none; }
 
-.roll-track {
-  position: absolute; top: 8px; bottom: 8px; left: 12px; right: 12px; z-index: 3;
-  pointer-events: none;
-  transition: transform 1.1s var(--ease-soft);
-  will-change: transform;
+/* ---------------- Paneelit ---------------- */
+.panels { position: relative; flex: 1; min-height: 0; margin-top: 22px; }
+.panel { position: absolute; inset: 0; display: none; flex-direction: column; }
+.panel.active { display: flex; animation: mPanelIn 0.5s var(--ease-soft) both; }
+.panel.leaving { display: flex; animation: mPanelOut 0.25s ease-in both; pointer-events: none; }
+.ptitle {
+  margin: 0 0 12px; font: 700 26px var(--m-title); letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--m-gold); text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  display: flex; align-items: center; gap: 12px;
 }
-.scroll:not(.open) .roll-track.left { transform: translateX(calc(50% - 20px)); }
-.scroll:not(.open) .roll-track.right { transform: translateX(calc(20px - 50%)); }
-.roll {
-  position: absolute; top: 0; bottom: 0; width: 40px;
-  border-radius: 20px / 14px;
-  background:
-    linear-gradient(90deg, rgba(90, 60, 25, 0.55), rgba(255, 250, 230, 0) 30%, rgba(255, 250, 230, 0) 62%, rgba(90, 60, 25, 0.6)),
-    var(--paper-noise),
-    linear-gradient(90deg, #b39a68, #f3e8ca 36%, #e6d4aa 58%, #a48a5a);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(70, 45, 15, 0.5);
+.ptitle::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--m-line), transparent); }
+.pbody {
+  flex: 1; min-height: 0; overflow-y: auto; padding: 4px 10px 14px 2px;
+  scrollbar-width: thin; scrollbar-color: rgba(232, 184, 98, 0.4) transparent;
 }
-.roll::before, .roll::after {
-  content: ''; position: absolute; left: 3px; right: 3px; height: 12px; border-radius: 50%;
-  background: radial-gradient(ellipse at center, #6b5530 0 30%, #c9b283 32% 60%, #8d7447 62%);
-  box-shadow: 0 0 0 1px rgba(60, 40, 12, 0.6);
-}
-.roll::before { top: -5px; }
-.roll::after { bottom: -5px; }
-.roll.left { left: 0; }
-.roll.right { right: 0; }
+.pbody::-webkit-scrollbar { width: 6px; }
+.pbody::-webkit-scrollbar-thumb { background: rgba(232, 184, 98, 0.35); border-radius: 3px; }
+.pbody h3 { margin: 16px 0 8px; font: 600 15px var(--m-title); letter-spacing: 0.16em; text-transform: uppercase; color: var(--m-gold); }
+.pbody h3:first-child { margin-top: 0; }
 
-/* ---------------- Puukehyksiset napit ---------------- */
-.wood-btn {
-  position: relative;
-  display: inline-block;
-  padding: 9px;
-  border: none; border-radius: 7px;
-  cursor: pointer;
-  background:
-    var(--grain),
-    repeating-linear-gradient(91deg, rgba(40, 20, 5, 0.18) 0 2px, rgba(0, 0, 0, 0) 2px 9px),
-    linear-gradient(180deg, #8f6a40, #6e4b28 55%, #5a3b1e);
-  box-shadow:
-    inset 0 0 0 2px rgba(35, 18, 5, 0.75),
-    inset 0 2px 0 rgba(255, 220, 170, 0.28),
-    inset 0 -3px 0 rgba(20, 10, 0, 0.4),
-    0 7px 16px rgba(0, 0, 0, 0.5);
-  transition: transform 0.25s var(--ease-spring);
-  font: inherit;
-  -webkit-tap-highlight-color: transparent;
+/* ---------------- Valikon napit ---------------- */
+.menu-list { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.mbtn {
+  position: relative; display: flex; flex-direction: column; align-items: flex-start;
+  width: 100%; padding: 11px 16px 11px 30px;
+  background: none; border: 0; border-radius: 4px; cursor: pointer;
+  color: var(--m-ink); text-align: left;
+  transition: background 0.35s var(--ease-soft), color 0.25s, transform 0.25s var(--ease-soft);
 }
-/* Hehku ja syvempi varjo hoverissa: vain läpinäkyvyys animoituu (kevyt). */
-.wood-btn::after {
-  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.35), 0 0 26px rgba(255, 170, 70, 0.4);
-  opacity: 0;
-  transition: opacity 0.25s ease;
+.mbtn .label { font: 600 23px/1.15 var(--m-title); letter-spacing: 0.14em; text-transform: uppercase; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.7); transition: color 0.25s, letter-spacing 0.4s var(--ease-soft); }
+.mbtn small { margin-top: 3px; font: italic 400 14.5px var(--m-body); color: var(--m-ink-dim); transition: color 0.25s; }
+.mbtn small:empty { display: none; }
+/* Kultainen vinoneliö liukuu esiin, lämmin hehku taustalla */
+.mbtn::before {
+  content: ''; position: absolute; left: 8px; top: 21px; width: 8px; height: 8px;
+  background: var(--m-gold); transform: rotate(45deg) scale(0); opacity: 0;
+  box-shadow: 0 0 10px rgba(255, 180, 80, 0.9);
+  transition: transform 0.35s var(--ease-spring), opacity 0.25s;
 }
-.wood-btn:hover::after, .wood-btn:focus-visible::after { opacity: 1; }
-/* Naulat kulmissa */
-.wood-btn::before {
-  content: ''; position: absolute; inset: 4px; pointer-events: none; z-index: 2;
-  background:
-    radial-gradient(circle at 4px 4px, #d9d2c0 0 1px, #77706a 1.5px 2.6px, rgba(0, 0, 0, 0.6) 3px, transparent 3.6px) left top / 9px 9px no-repeat,
-    radial-gradient(circle at 5px 4px, #d9d2c0 0 1px, #77706a 1.5px 2.6px, rgba(0, 0, 0, 0.6) 3px, transparent 3.6px) right top / 9px 9px no-repeat,
-    radial-gradient(circle at 4px 5px, #d9d2c0 0 1px, #77706a 1.5px 2.6px, rgba(0, 0, 0, 0.6) 3px, transparent 3.6px) left bottom / 9px 9px no-repeat,
-    radial-gradient(circle at 5px 5px, #d9d2c0 0 1px, #77706a 1.5px 2.6px, rgba(0, 0, 0, 0.6) 3px, transparent 3.6px) right bottom / 9px 9px no-repeat;
+.mbtn::after {
+  content: ''; position: absolute; left: 30px; right: 30%; bottom: 6px; height: 1px;
+  background: linear-gradient(90deg, var(--m-gold), transparent);
+  transform: scaleX(0); transform-origin: 0 50%; transition: transform 0.45s var(--ease-soft);
 }
-.wood-btn .label {
-  position: relative;
-  display: block;
-  padding: 10px 34px 12px;
-  border-radius: 3px;
-  background: var(--chalk), radial-gradient(ellipse at 50% 40%, #4c4c49, #353533 70%, #2c2c2a);
-  box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.65), 0 0 0 2px #2b1a0b, 0 1px 0 3px rgba(255, 220, 170, 0.12);
-  font-family: var(--font);
-  font-weight: 600;
-  font-size: 22px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #f3efe6;
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45), 0 0 1px rgba(255, 255, 255, 0.4);
-  transition: color 0.25s ease;
-  white-space: nowrap;
-}
-.wood-btn.big .label { font-size: clamp(26px, 3.4vw, 40px); padding: 10px clamp(36px, 5vw, 64px) 13px; min-width: min(320px, 70vw); }
-.wood-btn.small .label { font-size: 18px; padding: 8px 22px 9px; }
-.wood-btn:hover, .wood-btn:focus-visible {
-  transform: translateY(-3px) rotate(-0.6deg);
+.mbtn:hover, .mbtn:focus-visible {
   outline: none;
+  background: linear-gradient(90deg, rgba(232, 160, 70, 0.16), rgba(232, 160, 70, 0) 80%);
 }
-.wood-btn:hover .label { color: #fff8e6; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45), 0 0 12px rgba(255, 210, 140, 0.55); }
-.wood-btn:active, .wood-btn.pressed {
-  transform: translateY(1px) scale(0.96);
-  transition-duration: 0.08s;
+.mbtn:hover .label, .mbtn:focus-visible .label { color: var(--m-gold-hi); letter-spacing: 0.17em; }
+.mbtn:hover small, .mbtn:focus-visible small { color: rgba(241, 228, 200, 0.9); }
+.mbtn:hover::before, .mbtn:focus-visible::before { transform: rotate(45deg) scale(1); opacity: 1; }
+.mbtn:hover::after, .mbtn:focus-visible::after { transform: scaleX(1); }
+.mbtn:active { transform: translateX(3px) scale(0.99); }
+.mbtn:disabled { opacity: 0.45; pointer-events: none; }
+.mbtn.continue .label { color: var(--m-gold); }
+.panel .mbtn.back { flex: none; width: auto; align-self: flex-start; margin-top: 10px; padding: 8px 16px 8px 30px; }
+.panel .mbtn.back .label { font-size: 16px; }
+.panel .mbtn.back::before { top: 15px; }
+/* Korostettu toimintonappi (luo maailma, klikkaa pelaamaan): messinkikehys */
+.mbtn.cta {
+  align-items: center; width: auto; padding: 11px 30px;
+  background: linear-gradient(180deg, #3a2615, #24170d);
+  border: 1px solid rgba(232, 184, 98, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 220, 160, 0.18), 0 4px 14px rgba(0, 0, 0, 0.5);
 }
-.wood-btn:disabled { filter: grayscale(0.6) brightness(0.7); cursor: default; transform: none; }
+.mbtn.cta .label { font-size: 17px; color: var(--m-gold-hi); }
+.mbtn.cta::before, .mbtn.cta::after { display: none; }
+.mbtn.cta:hover, .mbtn.cta:focus-visible { background: linear-gradient(180deg, #57391c, #2f1e10); border-color: var(--m-gold); box-shadow: inset 0 1px 0 rgba(255, 220, 160, 0.25), 0 0 18px rgba(255, 160, 60, 0.25); }
 
-.btn-col { display: flex; flex-direction: column; align-items: center; gap: clamp(14px, 3vh, 26px); margin-top: clamp(18px, 4vh, 40px); }
-.panel.entering .btn-col > *, .panel.active.intro .btn-col > * { animation: dropIn 0.7s var(--ease-spring) both; }
-.btn-col > *:nth-child(2) { animation-delay: 0.08s !important; }
-.btn-col > *:nth-child(3) { animation-delay: 0.16s !important; }
-.panel.active.intro .btn-col > *:nth-child(1) { animation-delay: 0.9s !important; }
-.panel.active.intro .btn-col > *:nth-child(2) { animation-delay: 1.02s !important; }
+.menu-list > .mbtn { animation: mItemIn 0.7s var(--ease-soft) both; }
+.menu-list > .mbtn:nth-child(1) { animation-delay: 0.35s; }
+.menu-list > .mbtn:nth-child(2) { animation-delay: 0.43s; }
+.menu-list > .mbtn:nth-child(3) { animation-delay: 0.51s; }
+.menu-list > .mbtn:nth-child(4) { animation-delay: 0.59s; }
 
-/* ---------------- Paneelit ja siirtymät ---------------- */
-.panels { position: relative; width: 100%; display: flex; justify-content: center; flex: 1; }
-.panel {
-  display: none;
-  flex-direction: column; align-items: center;
-  width: 100%;
-  padding: 0 16px 24px;
+.mm-quote {
+  margin: auto 6px 6px; padding-top: 18px;
+  font: italic 400 15px/1.45 var(--m-body); color: rgba(241, 228, 200, 0.5);
+  border-top: 1px solid rgba(232, 184, 98, 0.14);
+  animation: mFade 1.6s ease 0.8s both;
 }
-.panel.active { display: flex; animation: panelIn 0.45s var(--ease-soft) both; }
-.panel.leaving { display: flex; position: absolute; left: 0; right: 0; top: 0; animation: panelOut 0.26s ease-in both; pointer-events: none; }
-@keyframes panelIn { from { opacity: 0; transform: translateY(22px) scale(0.97); } to { opacity: 1; transform: none; } }
-@keyframes panelOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-14px) scale(0.98); } }
-@keyframes dropIn { from { opacity: 0; transform: translateY(-26px) scale(0.92); } to { opacity: 1; transform: none; } }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.mm-footer {
+  flex: none; margin-top: 8px;
+  font: 600 11px var(--m-title); letter-spacing: 0.22em; text-transform: uppercase; color: rgba(241, 228, 200, 0.38);
+}
 
-/* ---------------- Lauta (paneelin tausta) ---------------- */
-.board {
-  position: relative;
-  width: min(820px, calc(100vw - 32px));
-  margin-top: 8px;
-  padding: 12px;
-  border-radius: 9px;
-  background:
-    var(--grain),
-    repeating-linear-gradient(91deg, rgba(40, 20, 5, 0.18) 0 2px, rgba(0, 0, 0, 0) 2px 9px),
-    linear-gradient(180deg, #8f6a40, #6e4b28 55%, #5a3b1e);
-  box-shadow: inset 0 0 0 2px rgba(35, 18, 5, 0.75), inset 0 2px 0 rgba(255, 220, 170, 0.28), 0 14px 30px rgba(0, 0, 0, 0.55);
-}
-.board-inner {
-  padding: 12px 22px 16px;
-  border-radius: 4px;
-  background:
-    radial-gradient(ellipse at 50% 50%, rgba(255, 250, 230, 0) 55%, rgba(120, 80, 30, 0.35) 100%),
-    var(--paper-noise),
-    linear-gradient(180deg, #f1e5c6, #e2cd9f);
-  box-shadow: inset 0 0 28px rgba(110, 70, 25, 0.45), 0 0 0 2px #2b1a0b;
-}
-.board h2 {
-  margin: 0 0 8px; text-align: center;
-  font: 600 34px var(--font); color: #4c4a1e;
-}
-.board h3 { margin: 0 0 8px; font: 600 15px var(--font); letter-spacing: 0.1em; text-transform: uppercase; color: #6b4a1e; }
-.panel .back { margin-top: 14px; }
-.world-new .wood-btn { align-self: center; margin-top: 2px; }
-
-/* Maailmat */
-.worlds-layout { display: grid; grid-template-columns: 1fr 250px; gap: 22px; }
-#world-list { display: flex; flex-direction: column; gap: 8px; max-height: min(320px, 42vh); overflow-y: auto; padding-right: 4px; }
-.world-row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 10px 9px 14px;
-  border-radius: 6px;
-  background: rgba(255, 248, 228, 0.55);
-  box-shadow: inset 0 0 0 1px rgba(120, 85, 40, 0.35);
-  transition: transform 0.2s var(--ease-spring), background 0.2s;
-  animation: dropIn 0.5s var(--ease-spring) both;
-}
-.world-row:hover { transform: translateX(3px); background: rgba(255, 250, 235, 0.85); }
-.world-row .w-info { flex: 1; min-width: 0; }
-.world-row .w-name { font-weight: 700; font-size: 18px; color: #3a2814; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.world-row .w-meta { font-size: 13px; color: #7a5a30; }
-.world-empty { font-style: italic; color: #7a5a30; padding: 12px 4px; }
+/* ---------------- Pienet napit ---------------- */
 .mini-btn {
-  border: none; cursor: pointer; border-radius: 5px;
-  padding: 6px 12px;
-  font: 400 14px var(--font); color: #f6efdc;
-  background: linear-gradient(180deg, #7a5632, #5a3b1e);
-  box-shadow: inset 0 0 0 1px rgba(30, 15, 0, 0.7), inset 0 1px 0 rgba(255, 220, 170, 0.3), 0 2px 5px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s var(--ease-spring), filter 0.2s;
-  display: inline-flex; align-items: center; gap: 4px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 7px 14px; border-radius: 4px; cursor: pointer;
+  font: 600 13px var(--m-title); letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--m-ink); background: linear-gradient(180deg, #3a2615, #24170d);
+  border: 1px solid rgba(232, 184, 98, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 220, 160, 0.14);
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
 }
-.mini-btn:hover { transform: translateY(-2px); filter: brightness(1.12); }
-.mini-btn:active { transform: scale(0.94); }
-.mini-btn.play { background: linear-gradient(180deg, #6d7a34, #4b5520); }
-.mini-btn.del { background: linear-gradient(180deg, #8a3d26, #632716); padding: 6px 9px; }
-.mini-btn.del.confirm { animation: pulseRed 0.8s ease-in-out infinite alternate; }
-@keyframes pulseRed { to { filter: brightness(1.35); } }
+.mini-btn:hover { background: linear-gradient(180deg, #55381b, #2f1e10); border-color: var(--m-gold); color: var(--m-gold-hi); }
+.mini-btn:active { transform: scale(0.96); }
+.mini-btn.play { color: var(--m-gold-hi); }
+.mini-btn.del { padding: 7px 10px; color: rgba(241, 228, 200, 0.6); }
+.mini-btn.del.confirm { color: #ffd0b0; background: linear-gradient(180deg, #7a2a14, #4e180a); border-color: #c4562c; }
 
-.world-new { display: flex; flex-direction: column; gap: 8px; }
-.field { display: flex; flex-direction: column; gap: 3px; font-size: 14px; color: #6b4a1e; font-weight: 700; }
+/* ---------------- Maailmat ---------------- */
+.worlds-layout { display: grid; grid-template-columns: 1.15fr 1fr; gap: 26px; }
+#world-list { display: flex; flex-direction: column; gap: 8px; }
+.world-row {
+  display: flex; align-items: center; gap: 8px; padding: 10px 10px 10px 14px;
+  background: linear-gradient(90deg, rgba(255, 220, 160, 0.06), rgba(255, 220, 160, 0.02));
+  border: 1px solid rgba(232, 184, 98, 0.18); border-radius: 5px;
+  animation: mItemIn 0.5s var(--ease-soft) both;
+  transition: border-color 0.25s, background 0.25s;
+}
+.world-row:hover { border-color: rgba(232, 184, 98, 0.5); background: linear-gradient(90deg, rgba(255, 190, 110, 0.12), rgba(255, 220, 160, 0.03)); }
+.world-row .w-info { flex: 1; min-width: 0; }
+.world-row .w-name { font: 600 17px var(--m-title); letter-spacing: 0.06em; color: var(--m-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.world-row .w-meta { font: italic 13.5px var(--m-body); color: var(--m-ink-dim); }
+.world-empty { padding: 14px; font: italic 15px var(--m-body); color: var(--m-ink-dim); border: 1px dashed rgba(232, 184, 98, 0.25); border-radius: 5px; }
+.world-new { display: flex; flex-direction: column; gap: 10px; }
+.field { display: flex; flex-direction: column; gap: 4px; font: 600 12px var(--m-title); letter-spacing: 0.14em; text-transform: uppercase; color: var(--m-ink-dim); }
 .field input {
-  font: 400 16px var(--font); color: #3a2814;
-  padding: 6px 9px; border-radius: 5px; border: none;
-  background: rgba(255, 252, 240, 0.85);
-  box-shadow: inset 0 1px 3px rgba(90, 60, 20, 0.35), 0 0 0 1px rgba(120, 85, 40, 0.45);
-  outline: none; width: 100%;
-  user-select: text; -webkit-user-select: text;
+  width: 100%; padding: 9px 11px; border-radius: 4px;
+  font: 400 16px var(--m-body); color: var(--m-ink);
+  background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(232, 184, 98, 0.25);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
-.field input:focus { box-shadow: inset 0 1px 3px rgba(90, 60, 20, 0.35), 0 0 0 2px #c58a32; }
+.field input::placeholder { color: rgba(241, 228, 200, 0.35); font-style: italic; }
+.field input:focus { outline: none; border-color: var(--m-gold); box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(232, 184, 98, 0.15); }
 .seed-row { display: flex; gap: 6px; }
-.nw-hint { margin: 4px 0 6px; font-size: 14px; font-style: italic; color: #7a5a2e; max-width: 260px; line-height: 1.35; }
+.seed-row input { flex: 1; }
+.nw-hint { margin: 2px 0 4px; font: italic 14px/1.4 var(--m-body); color: var(--m-ink-dim); }
+.world-new .mbtn.cta { align-self: flex-start; }
 
-/* Asetukset */
-.settings-grid { display: flex; flex-direction: column; gap: 10px; max-width: 560px; margin: 0 auto; max-height: min(520px, 56vh); overflow-y: auto; padding-right: 6px; }
-.set-row { display: grid; grid-template-columns: 180px 1fr 70px; align-items: center; gap: 12px; font-size: 17px; color: #3a2814; }
-.set-row output { font-size: 15px; color: #7a5a30; text-align: right; }
-.set-head { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(90, 60, 20, 0.25); font: 400 13px var(--font); letter-spacing: 0.14em; text-transform: uppercase; color: #7a5a30; }
-.set-note { font-size: 13px; color: #7a5a30; margin-top: -4px; }
-.set-row input[type='range'] { width: 100%; accent-color: #8a5a28; cursor: pointer; }
-.toggle { appearance: none; -webkit-appearance: none; width: 46px; height: 24px; border-radius: 12px; background: #b9a074; position: relative; cursor: pointer; box-shadow: inset 0 1px 3px rgba(60, 30, 0, 0.45); transition: background 0.25s; }
-.toggle::after { content: ''; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff8e6; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); transition: transform 0.3s var(--ease-spring); }
-.toggle:checked { background: #6d7a34; }
-.toggle:checked::after { transform: translateX(22px); }
-.seg { display: inline-flex; border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 1px rgba(90, 60, 20, 0.6); }
-.seg button { border: none; cursor: pointer; padding: 5px 12px; font: 400 14px var(--font); color: #5a3b1e; background: rgba(255, 250, 235, 0.7); transition: background 0.2s, color 0.2s; }
-.seg button + button { box-shadow: -1px 0 0 rgba(90, 60, 20, 0.5); }
-.seg button.on { background: #6e4b28; color: #fff3dc; }
+/* ---------------- Asetukset ---------------- */
+.settings-grid { display: flex; flex-direction: column; }
+.set-row {
+  display: grid; grid-template-columns: minmax(120px, 0.9fr) minmax(0, 1.6fr) 58px; align-items: center; gap: 10px;
+  padding: 7px 4px; border-bottom: 1px solid rgba(232, 184, 98, 0.09);
+  font: 400 16px var(--m-body); color: var(--m-ink);
+}
+.set-row:hover { background: linear-gradient(90deg, rgba(232, 160, 70, 0.07), transparent); }
+.set-row output { font: 600 12.5px var(--m-title); letter-spacing: 0.06em; color: var(--m-gold); text-align: right; }
+.set-head { margin: 18px 0 4px; font: 600 15px var(--m-title); letter-spacing: 0.16em; text-transform: uppercase; color: var(--m-gold); }
+.set-note { margin-top: 10px; font: italic 14px var(--m-body); color: var(--m-ink-dim); }
+.set-row input[type='range'] { -webkit-appearance: none; appearance: none; width: 100%; height: 18px; background: transparent; cursor: pointer; }
+.set-row input[type='range']::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--m-gold-lo), var(--m-gold)); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); }
+.set-row input[type='range']::-moz-range-track { height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--m-gold-lo), var(--m-gold)); }
+.set-row input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 15px; height: 15px; margin-top: -6px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffe9b4, #c99236 55%, #6b4513); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); }
+.set-row input[type='range']::-moz-range-thumb { width: 15px; height: 15px; border: 0; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffe9b4, #c99236 55%, #6b4513); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); }
+.toggle {
+  -webkit-appearance: none; appearance: none; position: relative; width: 42px; height: 22px; border-radius: 11px; cursor: pointer;
+  background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(232, 184, 98, 0.3); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+  transition: background 0.25s, border-color 0.25s;
+}
+.toggle::after {
+  content: ''; position: absolute; left: 3px; top: 2px; width: 16px; height: 16px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e8dcc2, #8c7f6a 60%, #4a3f30);
+  transition: transform 0.3s var(--ease-spring), background 0.25s;
+}
+.toggle:checked { background: linear-gradient(180deg, #6a4314, #3d2509); border-color: var(--m-gold); }
+.toggle:checked::after { transform: translateX(19px); background: radial-gradient(circle at 35% 30%, #ffe9b4, #d9a246 55%, #7a4f17); box-shadow: 0 0 8px rgba(255, 180, 80, 0.55); }
+.seg { display: flex; flex-wrap: nowrap; border: 1px solid rgba(232, 184, 98, 0.28); border-radius: 4px; overflow: hidden; background: rgba(0, 0, 0, 0.3); }
+.seg button {
+  flex: 1; padding: 6px 6px; border: 0; cursor: pointer; background: transparent; white-space: nowrap;
+  font: 600 10.5px var(--m-title); letter-spacing: 0.08em; text-transform: uppercase; color: var(--m-ink-dim);
+  transition: background 0.2s, color 0.2s;
+}
+.seg button + button { border-left: 1px solid rgba(232, 184, 98, 0.18); }
+.seg button:hover { color: var(--m-ink); background: rgba(232, 160, 70, 0.1); }
+.seg button.on { color: #2a1607; background: linear-gradient(180deg, #f2cc7c, #c48a34); }
 
-/* ---------------- Taukovalikon sivupalkki ---------------- */
+/* ---------------- Tekijät ---------------- */
+.credits-list p { margin: 4px 0; font: 400 15.5px/1.45 var(--m-body); color: var(--m-ink); }
+.credits-list .credits-note { font-style: italic; font-size: 13.5px; color: var(--m-ink-dim); }
+
+/* ---------------- Taukovalikon sivukortit ---------------- */
 .pm-side {
-  position: absolute; right: 18px; top: 18px; bottom: 18px;
-  width: min(300px, 28vw);
-  display: flex; flex-direction: column; gap: 14px;
-  overflow-y: auto;
-  animation: slideInRight 0.5s var(--ease-soft) both;
+  position: absolute; right: 24px; top: 24px; bottom: 24px; width: min(330px, 28vw);
+  display: flex; flex-direction: column; gap: 14px; overflow-y: auto;
+  animation: mSideInR 0.5s var(--ease-soft) both;
 }
-@keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: none; } }
 .side-card {
-  padding: 12px 14px;
-  border-radius: 6px;
-  background: var(--paper-noise), linear-gradient(180deg, #efe2c2, #dfc99a);
-  box-shadow: 0 0 0 2px #3b2510, 0 0 0 5px #7a5632, 0 10px 22px rgba(0, 0, 0, 0.45);
-  font-size: 14px;
+  padding: 16px 18px; border-radius: 6px;
+  background: var(--leather-grain), linear-gradient(180deg, rgba(36, 23, 14, 0.94), rgba(22, 14, 8, 0.94));
+  border: 1px solid rgba(232, 184, 98, 0.22);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5);
 }
-.side-card h3 { margin: 0 0 8px; font: 400 13px var(--font); letter-spacing: 0.12em; text-transform: uppercase; color: #6b4a1e; }
-.side-card dl.keys { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 0; }
-.side-card dt { font-weight: 700; white-space: nowrap; }
-.side-card dd { margin: 0; color: #6b4a1e; }
-.pm-status { margin-bottom: 8px; color: #6b4a1e; font-style: italic; }
-.test-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
-.test-row > span { width: 40px; padding-top: 4px; color: #6b4a1e; font-weight: 700; }
-.btns { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; }
-.btns .mini-btn { padding: 3px 8px; font-size: 12.5px; }
-.btns .mini-btn.on { background: linear-gradient(180deg, #a87b38, #7c5320); }
-.test-note { font-size: 12px; color: #7a5a30; }
+.side-card h3 { margin: 0 0 10px; font: 600 14px var(--m-title); letter-spacing: 0.18em; text-transform: uppercase; color: var(--m-gold); }
+.side-card dl.keys { display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; margin: 0; font-size: 14px; }
+.side-card dt { font: 600 11.5px var(--m-title); letter-spacing: 0.06em; color: var(--m-gold-hi); white-space: nowrap; padding: 2px 6px; border: 1px solid rgba(232, 184, 98, 0.25); border-radius: 3px; align-self: start; background: rgba(0, 0, 0, 0.25); }
+.side-card dd { margin: 0; color: var(--m-ink); }
+.pm-status { font-size: 14.5px; line-height: 1.5; color: var(--m-ink); white-space: pre-line; }
+.test-note { margin-top: 10px; font: italic 13px var(--m-body); color: var(--m-ink-dim); }
+.btns { display: flex; flex-wrap: wrap; gap: 6px; }
 
 /* ---------------- Lataus ---------------- */
-#loading { display: flex; align-items: center; justify-content: center; background: #1b0f07; }
+#loading { z-index: 20; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at 50% 45%, #2a1a0e, #0c0703 70%); }
 #loading.over-world { background: transparent; }
-.load-box { position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.load-box .scroll-slot { width: min(520px, calc(100vw - 48px)); }
-.load-text { font: 400 20px var(--font); color: #f3e3c3; text-shadow: 0 2px 4px #000; }
-.load-bar {
-  width: min(360px, 70vw); height: 16px; padding: 3px; border-radius: 6px;
-  background: linear-gradient(180deg, #6e4b28, #4a3018);
-  box-shadow: inset 0 0 0 1px #2b1a0b, 0 4px 10px rgba(0, 0, 0, 0.5);
-}
-.load-bar i { display: block; height: 100%; width: 0; border-radius: 3px; background: linear-gradient(90deg, #e2a648, #f6d27a); transition: width 0.15s; box-shadow: 0 0 10px rgba(246, 210, 122, 0.5); }
-#btn-enter { animation: breathe 1.6s ease-in-out infinite; }
-@keyframes breathe { 50% { transform: scale(1.05); } }
+.ld-shade { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, rgba(10, 5, 2, 0.15), rgba(10, 5, 2, 0.75)); }
+#loading.over-world .ld-shade { background: radial-gradient(ellipse at 50% 50%, rgba(10, 5, 2, 0.35), rgba(10, 5, 2, 0.8)); }
+.load-box { position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px; width: min(520px, 86vw); }
+.load-box .logo-emblem { width: 110px; height: 110px; }
+.load-text { font: italic 18px var(--m-body); color: var(--m-ink); text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8); text-align: center; }
+.load-bar { position: relative; width: min(340px, 70vw); height: 3px; border-radius: 2px; background: rgba(232, 184, 98, 0.15); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); }
+.load-bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 2px; background: linear-gradient(90deg, var(--m-gold-lo), var(--m-gold-hi)); transition: width 0.3s ease; }
+.load-bar i::after { content: ''; position: absolute; right: -4px; top: -4px; width: 11px; height: 11px; border-radius: 50%; background: radial-gradient(circle, #fff2c8, rgba(255, 170, 70, 0.6) 45%, transparent 70%); }
+#btn-enter { margin-top: 4px; animation: mPulse 2.4s ease-in-out infinite; }
 
-/* ---------------- Klikkauksen hiekkapöllähdys ---------------- */
-#puffs { position: fixed; inset: 0; pointer-events: none; z-index: 30; }
-.puff {
-  position: absolute; width: 7px; height: 7px; margin: -3.5px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(240, 210, 160, 0.95), rgba(220, 170, 100, 0));
-  animation: puff 0.7s var(--ease-soft) forwards;
-}
-@keyframes puff {
-  from { transform: translate(0, 0) scale(0.6); opacity: 1; }
-  to { transform: translate(var(--dx), var(--dy)) scale(var(--s)); opacity: 0; }
-}
+/* Hiekkapöllähdykset poistettu (sessio 59); säiliö jää DOMiin. */
+#puffs { display: none; }
 
 .error-card { margin: 10vh auto; width: min(640px, 90vw); padding: 20px; background: #f1e5c6; border-radius: 8px; color: #3a2814; }
 .error-card pre { white-space: pre-wrap; font-size: 12px; color: #8a2a10; }
 
+/* ---------------- Animaatiot ---------------- */
+@keyframes mFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes mSideIn { from { transform: translateX(-40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes mSideInR { from { transform: translateX(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes mLogoIn { from { transform: translateY(10px); opacity: 0; filter: blur(4px); } to { transform: none; opacity: 1; } }
+@keyframes mItemIn { from { transform: translateX(-18px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes mPanelIn { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes mPanelOut { from { opacity: 1; } to { transform: translateY(-8px); opacity: 0; } }
+@keyframes mPulse { 0%, 100% { box-shadow: inset 0 1px 0 rgba(255, 220, 160, 0.18), 0 0 0 rgba(255, 160, 60, 0); } 50% { box-shadow: inset 0 1px 0 rgba(255, 220, 160, 0.18), 0 0 24px rgba(255, 160, 60, 0.35); } }
+
 @media (max-width: 760px) {
+  .mm-side, .mm-side.wide { width: 100vw; padding-right: 40px; }
   .worlds-layout { grid-template-columns: 1fr; }
-  .set-row { grid-template-columns: 1fr 1fr 50px; font-size: 15px; }
+  .set-row { grid-template-columns: 1fr 1fr 56px; font-size: 15px; }
   .pm-side { display: none; }
-  .mm-stage.compact { right: 0; }
-  .scroll-paper { padding: 10px 46px 12px; }
-  .glyphs { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Sessio 39: intro ennen valikoita */
+#intro { position: fixed; inset: 0; z-index: 100000; background: #000; display: flex; align-items: center; justify-content: center; transition: opacity 0.6s ease; cursor: default; }
+#intro.out { opacity: 0; pointer-events: none; }
+#intro video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+#intro .intro-hint { position: absolute; color: rgba(255, 240, 215, 0.55); font-size: 13px; letter-spacing: 0.04em; text-shadow: 0 1px 3px #000; pointer-events: none; }
+#intro #intro-skip { right: 22px; bottom: 18px; animation: introHint 1.2s ease 1s both; }
+#intro #intro-sound { left: 50%; bottom: 18px; transform: translateX(-50%); color: rgba(255, 240, 215, 0.8); }
+#intro .intro-hint.hidden { display: none; }
+@keyframes introHint { from { opacity: 0; } to { opacity: 1; } }
+
+/* Latausruudun logo näkyy heti (lataus kuormittaa, animaatio ei ehtisi alkaa). */
+#loading .logo-emblem, #loading .logo-word, #loading .logo-rule { animation: none; }

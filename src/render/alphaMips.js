@@ -168,7 +168,8 @@ export function applyCoverageMips(texture, img, cutoff = 0.5) {
 }
 
 // Lataa alfatestattavan tekstuurin (palauttaa heti, kuva täyttyy latauksen jälkeen).
-export function loadAlphaTexture(url, { cutoff = 0.5, srgb = true, anisotropy = 4, manager } = {}) {
+// Sessio 40: anisotrooppinen suodatus 16 (three rajaa näytönohjaimen maksimiin).
+export function loadAlphaTexture(url, { cutoff = 0.5, srgb = true, anisotropy = 16, manager } = {}) {
   const t = new THREE.Texture();
   if (srgb) t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = anisotropy;

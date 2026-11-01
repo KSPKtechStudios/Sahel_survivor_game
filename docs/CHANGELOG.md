@@ -2,6 +2,464 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-11-01 (sessio 59, jatko): valikot uusiksi, nuotioleiri ja uusi tuli
+
+- **Kaikki valikot uudistettu** (käyttäjä: entiset "intialaisen mobiilipelin tasoa"; ammattimaisempi, Valheim-henkinen, tunnelmallinen ja kotoisa):
+  - **taustalla elävä 3D-nuotioleiri** valikkomaailman kumpareella joen äärellä: akaasia auringonlaskua vasten, rätisevä nuotio, istumapuut, talja ja kartta, jousi ja nuolet, keihäs, kilpi, kirves ja muhennoskattila sekä tuulessa lepattava bògòlanfini-katos;
+  - **kultaisesta hetkestä yöhön**: valikossa viipyessä aurinko laskee ja tähdet syttyvät (noin 5½ minuutissa);
+  - **kamera liukuu leirin eri kohtiin**: maailmat = kartta taljalla, asetukset = varusteet, tekijät = taivas;
+  - **uusi logo**: kultainen SAHEL-nimi (Cinzel) ja tunnus, jossa baobab laskevaa aurinkoa vasten (introvideon henkeen);
+  - **käsityötyyli**: tumma nahkapaneeli, ommeltu reuna, messinkiniitit ja bògòlanfini-kangasnauha, kultaiset otsikot ja hehkuvat valinnat;
+  - **"Jatka"** viimeksi pelattuun maailmaan suoraan päävalikosta;
+  - uudistettu myös maailmat, asetukset, tekijät, taukovalikko ja latausruutu;
+  - **äänet**: nuotion rätinä ja sirkat, jotka voimistuvat illan pimetessä.
+- **Nuotio kokonaan uusiksi pelissä ja valikossa** (käyttäjä: nuotio huono ja "harva"):
+  - uusi malli: tiivis kivikehä, paksut kekopuut kaarnatekstuurilla ja hiiltyneine päineen, tuhkapohja ja hiilet;
+  - uusi tuli: yhtenäinen, elävä liekki (kolme liekin kieltä), hehkuvat sykkivät hiilet, kipinät ja savu, joka ajautuu tuulen mukana; myös soihtutelineessä;
+  - rakennetun nuotion lähellä kuuluu rätinä.
+
+## 2026-11-01 (sessio 59): reunan vesipisarat korjattu
+
+- **Kuvan vasemmassa alakulmassa näkyneet oudot vesipisarat poistettu** (käyttäjä: reunan vesipisarabugi). Syy: keularoiskeiden linssipisaroiden neljä tyhjää paikkaa olivat alusta asti päällä, joten pisaroita piirtyi ilman purjehdusta, myös valikossa.
+
+## 2026-10-30 (sessio 58, jatko 12): paljon enemmän karstitorneja ja vuoristojärviä
+
+- **Kalkkikivitorneja noin kolme kertaa jatkoa 11 enemmän** (käyttäjä: niitä ei juuri löydy). Ne seisovat laajemmin koko karstivuoristossa.
+- **Vuoristojärviä yli kolme kertaa aiempaa enemmän, ja ne ovat aina vuorten ympäröimiä** (käyttäjä: järvien pitää olla vuorten ympäröimänä). Järvi syntyy laaksotaskuun, jota massiivit ympäröivät vähintään yli puolelta, ja täyttää sen kallioseinämiin asti.
+
+## 2026-10-30 (sessio 58, jatko 11): karstitorneja enemmän, vuoristojärvet
+
+- **Kalkkikivitorneja on taas karstivuoristossa** (käyttäjä: niitä ei enää näkynyt missään): noin 4–5 kertaa aiempaa enemmän (koealueella 30 → 139). Ne saavat seistä myös loivalla laakson pohjalla ja sademetsän reunalla.
+- **Vuoristojärvet karstilaaksoihin** (käyttäjä: silmiä hiveleviä vuoristojärviä): kirkkaan turkoosit järvet massiivien välisten laaksojen pohjalla, ranta saa rajautua kallioseinämiin. Nimilappu "Vuoristojärvi".
+
+## 2026-10-29 (sessio 58, jatko 10): arokierijä
+
+- **Tumbleweedin nimi on nyt Arokierijä**: nimilappu, kun katsoo sitä.
+- **Uusi malli ja loikkiva liike käyttäjän antamasta mallista** ("Tumbleweed Jumping", ThymKruijt, Sketchfab, CC-BY-4.0):
+  - risupallo valokuvatekstuurilla, sisäkerrokset tummempia, jolloin vyyhdissä näkyy syvyyttä;
+  - loikat tulevat mallin animaatiosta: kovemmassa tuulessa arokierijä loikkii noin oman säteensä korkuisia loikkia, hiljaisella tuulella se vain vierii pienin töyssyin;
+  - pyöriminen seuraa vierimistä kuten ennenkin.
+- Hakattaessa lentää risuja kuten ennen, ja saalis on sama.
+- Tekijä lisätty päävalikon Tekijät-sivulle ja tiedostoon `assets/CREDITS.txt`.
+
+## 2026-10-29 (sessio 58, jatko 9): aidompi aurinko, uusi savipeikko ja haamu
+
+- **Aurinko aidommaksi** (käyttäjä: yhä tosi häikäisevä, "kuin toinen tuleminen"):
+  - taivaalla aurinko on nyt pieni, kirkas kiekko ja tiivis kehä; laaja hehku sen ympärillä on paljon heikompi;
+  - linssiheijastuksen hehku on tiiviimpi ja himmeämpi, tähtisäteet ja vaakajuova puolet entisestä;
+  - iso rengas auringon ympärillä lähes pois (näytti keinotekoiselta kehältä);
+  - bloom ei enää levitä auringon hehkua laajalle.
+- **Savipeikolle kunnon 3D-malli käyttäjän tarinan mukaan** (kuolleiden sielut, jotka nousevat yöllä maasta ja ottavat ruumiikseen maan aineksia):
+  - vartalo on muovattu savesta: kumara, laiha ja halkeillut, selässä kyttyrä, kasvoina kallomainen naama syvine silmäkuoppineen ja riippuvine leukoineen;
+  - savessa on kiviä, risuja ja juuria: rintakehän aukosta näkyvät risukylkiluut, sormet päättyvät risukynsiin, juuret roikkuvat jaloista ja hartioista;
+  - ihmisten jäänteitä: ruukunsiru rinnassa ja otsassa, savihelmiä kaulalla;
+  - kolme muunnelmaa; pinnassa maan ja kiven tekstuuri.
+- **Haamun malli ja tekstuurit realistisemmiksi:**
+  - oikea kaapumainen huppu laskoksineen: otsan yli ulottuva lippa, paksumpi käännetty reuna, päälaen sauma ja selkään roikkuva kärki;
+  - hupun pimeydessä erottuu hämärästi riutunut kallo, ja silmät hehkuvat silmäkuopissa;
+  - hartioilla ohut kangasviitta, jonka helma aaltoilee viitan päällä;
+  - hihojen suista roikkuvat luiset, nivelikkäät sormet (näkyvät hyvin, kun haamu nostaa kätensä);
+  - kangas on tarkempaa: toimikaskudos, langat vaihtelevat sävyltään, haalistuneita ja pölyisiä kohtia, kosteita tummia tahroja helmaa kohti, koinsyömiä reikiä ja rispaantunut helma, josta roikkuu irtonaisia lankoja; kudoksella on myös pinnanmuoto (normaalikartta);
+  - riimukirjailut ovat pistoina ommeltuja.
+
+## 2026-10-29 (sessio 58, jatko 8): lehdet kuultavat vain auringossa
+
+- **Latvusto ei enää hehku valkoisena seinänä aurinkoa kohti katsottaessa** (käyttäjä: lehvästöt pilaavat, avoimella paikalla valo on ok; aurinko saa kuultaa lehvästön välistä, mutta ei saa sokaista).
+  - Lehtien läpikuultavuus toimii nyt vain siellä, mihin aurinko oikeasti osuu (auringon varjo otetaan huomioon).
+  - Latvuston varjossa olevat lehdet jäävät tummiksi siluetteiksi, ja auringon valaisemat lehdet ja aukot kuultavat.
+- Koskee kaikkia lehtiä: puut, pensaat, aluskasvillisuus ja karstin kasvit.
+
+## 2026-10-29 (sessio 58, jatko 7): valonsäteet takaisin maltillisina
+
+- Edellinen korjaus vei valonsäteet käytännössä kokonaan pois (käyttäjä: säteitä saa ja pitää olla, mutta ei överinä). Nyt sademetsässä säteitä on noin puolet alkuperäisestä, ja latvuston läpi tulevat valokeilat ovat lähes ennallaan. Taivaan himmennys ja valotus pysyvät jatkon 6 mukaisina, joten taivas erottuu edelleen.
+
+## 2026-10-28 (sessio 58, jatko 6): vähemmän "jumalallista valoa"
+
+- **Auringonvaloa ja hehkua vähemmän** (käyttäjä: valon määrä on yhä överi, taivasta ei erota, kun katsoo ylös):
+  - valonsäteet heikommat (kosteus ja sade eivät enää lähes kaksinkertaista niitä, ja latvuston alla niitä on vähemmän);
+  - taivas on latvuston alla himmeämpi, joten aukoista näkyy taivaan väri eikä valkoista hehkua;
+  - sumun hehku auringon suuntaan, taivaan hehku auringon ympärillä, valokeilat ja bloom ovat miedompia.
+  - kun katsoo ylös latvuston aukkoihin, silmä mukautuu kirkkaaseen taivaaseen enemmän, joten taivas erottuu.
+- Silmän tottuminen aurinkoon toimii kuten ennenkin.
+
+## 2026-10-28 (sessio 58, jatko 5): sademetsäpuut, juurakko ja lahopuu uusiksi
+
+- **Sademetsäpuiden oksisto ja latvus:**
+  - oksat kasvavat nyt luonnollisesti haarautuen kohti latvuksen muotoa (ennen kaikki pääoksat lähtivät yhdestä kohdasta rungon latvasta kuin sateenvarjon puolat);
+  - latvus on tuuhea ja epäsäännöllinen, kuin useasta pienemmästä lehvästöpaakusta koottu, ja oksat näkyvät latvuksen sisällä;
+  - lehtikortteja on noin puolitoista kertaa aiempaa enemmän (kaukomalleissa vähemmän ja isompina).
+- **Puiden tyvet (pönkkäjuuret):** ohuiden, terävien evien sijaan pyöreähköjä, mutkittelevia juuria, joiden väliin jää notkot.
+- **Muinainen juurakko**, kolme muunnelmaa:
+  - ontto, katkennut kanto, jonka uurteisesta tyvestä lähtee paksuja juuria;
+  - kuristajaviikunan juurihäkki: juuret kiertyvät onton lieriön muotoon, isäntäpuu on lahonnut pois;
+  - matala laho kanto ja laaja juurimatto.
+  
+  Juuret haarautuvat, kaartuvat ja sukeltavat maan alle. Pinnassa on kaarnan uurteet, sammalpatjoja, jäkälää ja lahoa punaruskeaa puuta, ja koloissa on tummempaa.
+- **Sammaloitunut runko**, kolme muunnelmaa:
+  - kaatunut, lahoava runko, jonka latvapää on katkennut ontoksi;
+  - tyvessä joko irti revennyt juuripaakku multineen tai katkeama;
+  - painunut ja halkeillut kylki, kuoriutuneita kohtia, katkenneita oksantynkiä, kääpiä ja laikukas sammal.
+- Molemmilla on oikea kaarna- ja sammaltekstuuri.
+- **Mustat pikselit lehtien reunoilla korjattu:** reunanpehmennyksessä reunapikselin väri saattoi laskeutua negatiiviseksi (lehtikortin ulkopuolelle ekstrapoloitu väri), ja koko pikseli näkyi mustana. Nyt värit rajataan nollaan kaikissa materiaaleissa. Mittaus samasta näkymästä: ennen 10–11 tällaista pikseliä ruudussa, nyt 0. Mäkäräisiin ei koskettu.
+- Muinaisen juurakon läpi ei enää voi kävellä.
+
+## 2026-10-28 (sessio 58, jatko 4): aurinkoon katsominen, usva pilven sisällä
+
+- **Silmä tottuu aurinkoon:** kun katsoo suoraan aurinkoon, ensimmäiset pari sekuntia häikäisee kuten ennenkin, mutta sitten silmä tottuu: valotus laskee, ja säteet, linssiheijastus ja hehku himmenevät, joten maisema alkaa erottua. Kun katse kääntyy pois, tottuminen palautuu muutamassa sekunnissa. Toimii vain, kun automaattinen valotus on päällä.
+- **Pilven sisällä ei näy pilveä:** kun pelaaja on pilviverhon korkeudella, verhoa ei piirretä enää vyönä silmien eteen, vaan näkökenttään tulee vain kevyt, etäisyyden mukaan kasvava usva. Verhon reunat ovat nyt vaihtelevan paksuisia ja korkuisia (ei tasainen vyö), ja verho kietoutuu pehmeämmin huippujen ympärille.
+- **Usva uskottavammaksi:** latvuston alla sademetsän kostea, tumma sumu säilyy, mutta massiivin laella (latvuston yläpuolella) ilma on kirkkaampi ja valoisampi, ja horisontti häipyy kevyeen usvaan (ilmaperspektiivi). Siirtymä on pehmeä noustessa ja laskeutuessa.
+- "Ikivanhat juuret" on nyt **"Muinainen juurakko"**.
+
+## 2026-10-28 (sessio 58, jatko 3): pilviverho karstihuipuilla
+
+- **Ohut pilviverho karstihuippujen tuntumassa:**
+  - laikukas, valkoinen höyryvyö leijuu massiivien yläkolmanneksen korkeudella (noin 30–52 m laakson pohjasta) ja ajelehtii hitaasti tuulen mukana;
+  - huiput nousevat verhon läpi, ja verho pehmenee itsestään kallion ja puiden kohdalla;
+  - auringon puolella se hehkuu valoisana, yöllä se on himmeä;
+  - sitä on vain karstimassiivien kohdalla ja vähän niiden ympärillä, eikä sitä tule aivan kasvojen eteen, kun seisoo laella;
+  - verho on hento (enintään noin puoliksi peittävä).
+- Toteutus jälkikäsittelyssä, ei uusia piirrettäviä kappaleita: kustannus on muutama laskutoimitus kuvapistettä kohden.
+
+## 2026-10-28 (sessio 58, jatko 2): kaukaiset vuoret usvassa, säädettävä etäisyys
+
+- **Vuoret näkyvät kaukaa usvaisina siluetteina:**
+  - usva lepää laakson pohjalla (noin 18 m korkeudelle asti), ja sen yläpuolelle nousevat massiivien seinät, laet ja vuorenhuiput häipyvät usvaan vain osittain etäisyyden mukaan (ennen sademetsän sumu peitti kaiken jo noin 200 metrissä);
+  - massiivin laelta näkee alapuolisen latvuston yli muille huipuille;
+  - näköetäisyyden takana näkyvät kevyet siluetit kaikista vuorista, karstimassiiveista ja kallioista (oletuksena 1,4 km asti).
+- **Uusi asetus "Kaukaiset vuoret"** (pois tai 200–2000 m) näköetäisyyden vieressä. Laatutasot: matala 800 m, keskitaso 1200 m, korkea 1400 m, ultra 2000 m. Vanha "Näköetäisyys" (192–512 m) säätää edelleen yksityiskohtaista maastoa, puita ja esineitä.
+- **Siluetit ovat kevyitä:**
+  - vain korkeuserojen kohdat piirretään, tasainen maa ei;
+  - kaukana harvempi verkko (8 / 16 / 32 m);
+  - usvaan kokonaan jäävät ruudut piilotetaan;
+  - ei varjoja;
+  - lasketaan vähitellen 3 ms:n paloissa.
+  Mitattu massiivin laelta 1,4 km:n asetuksella: noin 46 000 kolmiota (sademetsän maasto ja puut noin 6,4 miljoonaa).
+
+## 2026-10-28 (sessio 58, jatko): karstivuoristo, liaanivariantit, kaatuvan puun osuma
+
+- **Karstivuoristo sademetsän sisälle** (korvaa session 57 jyrkänneportaat):
+  - tavallinen sademetsä on ennallaan tasaista viidakkoa;
+  - laikuittain, noin kolmanneksessa sademetsää, tasaisesta laaksonpohjasta nousee 20–60 m korkeita pystyseinäisiä kalkkikivimassiiveja (Krabin ja Phang Ngan tapaan). Niiden laki on kumpuileva ja huippuinen, ja siellä kasvaa metsää;
+  - massiivien välissä on tasaiset laaksot ja solat, ja joet kulkevat laaksoissa tai rotkoissa massiivien läpi (jokiverkko ennallaan);
+  - noin kolmanneksessa massiivien reunoista on loiva rinne tai satula, jota pitkin pääsee ylös;
+  - kaikki karstin jyrkät seinät ovat vaaleaa kalkkikiveä, jossa on oransseja ja tummia valumajuovia (ennen tummanruskea seinä).
+- **Jyrkkä seinä pysäyttää pelaajan:** yli noin 51° rinnettä ei voi kävellä ylös, vaan pelaaja liukuu seinän suuntaisesti. Ennen pelaaja nousi minkä tahansa seinän päälle hetkessä.
+- **Kasvillisuus karstissa:** puita ei kasva yli noin 40° rinteillä, eikä ruohoa tai aluskasveja pystyseinillä. Mitattu karstialueella: jyrkillä rinteillä puita 39 → 4, seinillä koristekasveja 1115 → 122, leijuvia tai maan sisällä olevia esineitä 0.
+- **Vesiputoukset** putoavat nyt karstimassiivin seinältä, 30–50 m korkeina. Niitä on 2–3 maailmaa kohden (ennen noin 10–19 matalampaa).
+- **Kalkkikivitornit** seisovat karstin laaksonpohjilla, eivät massiivien päällä.
+- **Roikkuvat liaanit:**
+  - ohuempia: säde 0,4–3,8 cm (ennen 3–7,5 cm);
+  - eri muotoja: ohut sileä varsi, kierteinen kaksisäikeinen, korkkiruuvi, vanha puutunut liaani, litteä aaltoileva "apinanportaat" sekä ohuiden ilmajuurien verho;
+  - kasvimainen varsitekstuuri: vihreä varsi kuituineen ja solmukohtineen tai vihertävänharmaa puutunut varsi sammaleineen (ennen puun kaarna). Rungon ympäri kiertävä liaani käyttää puutunutta versiota.
+- **Kaatuvan puun osuma:** kun kaatuva puu osuu toiseen puuhun, pensaaseen, kiveen tai termiittikekoon, osumakohtaan tulee pieni pölähdys ja muutama roiskahtava partikkeli (lehtiä, kaarnaa, kiveä tai multaa osuman mukaan). Pelkkään maahan kaatuessa tätä ei tule.
+
+## 2026-10-28 (sessio 58): karstikalliot, rungon liaani, tuuheammat palmut, mattalehdet
+
+- **Kalliot kalkkikiveksi:** jyrkänteen seinä on vaaleaa, oranssin ja tumman juovaista kalkkikiveä (ennen vihreä "ruohoseinä"). Jyrkkiin kohtiin on upotettu kalliolohkareita, joissa on kerroksia, halkeamia, sammalta päällä ja roikkuvia köynnöksiä.
+- **Kalkkikivitornit sademetsään:** käyttäjän kuvan kaltaisia 25–48 m korkeita pylväitä, joiden laella ja kielekkeillä kasvaa puustoa ja kasvillisuutta. Seinillä kasvaa pensaita ja köynnöksiä, ja juurella on sammalta.
+  - Torneja on koko maailmassa 35–54 (siemenellä 777: 54).
+  - Tornien läpi ei kävellä, eikä niiden kohdalle synny puita tai rakennelmia.
+- **Puut eivät enää synny kielekkeille:** puu, muinainen juuri, kivi ja muut isot esineet syntyvät vain, jos maa on koko niiden juurella suunnilleen samalla tasolla. Tämä koskee kaikkia biomeja (ennen ne saattoivat jäädä roikkumaan jyrkänteen reunalle).
+- **Liaani rungon ympärillä:** noin kolmea neljästä sademetsäpuusta kiertää taas liaani. Se nousee juurilohkojen välistä ja kiertyy 1,5–3 kierrosta ylös kohti latvusta, ja varressa on lehtiä.
+- **Akasiat:** vanhat akasiamallit ovat taas mukana uusien rinnalla sekaisin.
+- **Palmut tuuheammiksi:**
+  - lehtiä on 19–22 (ennen 14–16), kookospalmussa 17–19 (13–15);
+  - lehdykköjä on 36 lehteä kohden (ennen 21–22), ja ne ovat leveämpiä;
+  - kaukomalleissa lehdykköjä on 13 (ennen 9).
+- **Lehdet mattapintaisiksi:** puiden, palmujen, banaanien, pensaiden ja aluskasvien lehdet eivät enää kiillä muovisesti. Märkyyden kiilto lehdissä on enää hyvin pieni.
+
+## 2026-10-28 (sessio 57): umpinainen latvusto, realistinen kaatojälki, uudet liaanit, jyrkänteet ja vesiputoukset
+
+- **Jyrkänteet sademetsään:** sademetsässä on laikuittain 6–10 m korkeita kallioreunoja, paikoin kaksi porrasta peräkkäin. Muualla sademetsä on ennallaan melko tasainen.
+  - Seinämä on rosoista harmaata kiveä ja jäkälää, ja juurella on lohkareita ja kivirouhetta.
+  - Seinämällä ei kasva puita, eikä sinne synny järviä tai rakennelmia.
+  - Joet ja purot kulkevat jyrkänteen läpi loivaa rotkoa pitkin. Jokiverkko ei hajonnut: vedenpinnan hyppyjä on yhtä vähän kuin ennen.
+- **Vesiputoukset:**
+  - jyrkänteen päältä alkaa lähdepuro, joka putoaa 5–10 m syvään altaaseen;
+  - altaasta lähtee laskupuro, joka kapenee ja imeytyy maahan;
+  - putoavassa vedessä on valuvat vaahtojuovat, ja juurella vaahtoa, roiskeita, väreilyä ja sumua;
+  - lähellä kuuluu kohina, joka voimistuu ja kirkastuu lähestyessä;
+  - altaassa voi uida, ja kartalla paikan nimi on Vesiputous;
+  - putouksia on maailmassa noin kymmenkunta (siemenellä 777 13 kpl), aina kaukana joista ja järvistä.
+- **Latvusto umpeen, toinen kierros:** sademetsäpuiden latvukset ovat noin kaksi kertaa leveämpiä (kapokki 1,35, jättiläispuu 1,2 kertaa) samalla määrällä lehtiä, joten latvusten väliin ei jää enää isoja aukkoja. Suoraan ylös katsoessa taivasta näkyy keskimäärin 14 % (8 kohtaa sademetsässä; aamupäivällä ennen tätä muutosta 38 %, session 55 versiossa 23 %).
+- Vanhoissa maailmoissa sademetsän maasto muuttuu jyrkännealueilla, ja joet voivat siirtyä niissä hieman. Puut ja rakennelmat pysyvät muualla paikoillaan.
+- **Sademetsän latvusto umpeen:** lehvät peittävät korteista noin kaksinkertaisen alan (leveälehtiset 20 % → 42–50 %, kapokki 26 % → 45 %), latvukset ovat leveämpiä ja osa lehtikorteista on vaakatasossa, joten taivasta näkyy alhaalta katsottuna paljon vähemmän.
+- **Savannin akasiat tuuheammiksi:** akasian lehvät ovat tiheää hienolehtistä massaa (peitto 36 % → 49 %).
+- **Kaatojälki:** kannossa ja kaatuneen rungon päässä on vuosirenkaat, tumma sydänpuu, vaalea pintapuu, ydin, pieniä halkeamia ja kaarnareuna (ennen pelkkä valkoinen kiekko). Pinta on hieman epätasainen kuin kirveellä hakattu, ja lovessa näkyvät puun syyt. Lovelle on rungossa tiheämmin renkaita, joten se saa muodon.
+- **Liaanit uusiksi:** kierteinen, kaksisäikeinen varsi kaarnatekstuurilla ja pehmeä kaari (ennen suora, tasavärinen viiva). Lehdet ovat puiden lehtiatlaksesta. Osa liaaneista kaartuu kahden oksan välillä, useimmat laskeutuvat vinosti maahan ja vain osa riippuu vapaana (ennen moni riippui suorana pystyviivana). Fysiikka (tuuli, törmäys, kaatuminen) ennallaan.
+- **Suorituskyky:** puiden kaukomallit ovat 4–5 kertaa kevyempiä, ja lähellä olevat puut piirretään varjoon kevyenä kaukomallina (ennen tarkka malli piirrettiin kahdesti). Kolmioita ruudussa (näköetäisyys 4): sademetsä 13,7 M → 6,4 M (ennen session 56 puita 6,2 M; leveämmät latvukset mukana), savanni 2,1 M → 1,0 M (0,86 M), metsäsavanni 2,8 M → 1,3 M (1,1 M).
+
+## 2026-10-27 (sessio 56): puut Blenderillä, pyöreät kannot ja juuret, tiheämpi savanni, paremmat esineet
+
+- **Uudet puut** (akasia, karite, baobab, sademetsäpuu, kapokki, jättiläispuu ja taimi), tehty Blenderillä:
+  - oikeat haarautuvat oksat ja runko kaarnatekstuurilla (ambientCG, CC0);
+  - tuuheat latvukset lehtikorteista, joiden lehvät on renderöity Blenderissä (akasian parilehdet, karitteen lehtiruusukkeet, baobabin ja kapokin sormilehdet, leveät sademetsän lehdet);
+  - akasian latvus on leveä ja litteä kuin sateenvarjo, karitteen pyöreä ja tiheä;
+  - jättiläispuun rungon varrella on lehtiryppäitä 6–14 metrissä, kuten ennenkin;
+  - lähellä tarkka malli, kaukana kevyempi;
+  - kaato, kanto, lovet, baobabin kuorinta, tuuli, varjot ja liaanit toimivat kuten ennen.
+- **Kannot ja juuret pyöreiksi** (käyttäjän kuvat):
+  - tyvi levenee pyöreästi ja paksut juuret kaartuvat maahan; kaarnan syy seuraa juuria;
+  - sademetsän pönkkäjuuret ovat korkeita ja ohuita mutta pyöreäreunaisia (ennen terävät kolmiolevyt);
+  - kaadetusta puusta jää samanlainen juurekas kanto.
+- **Baobabin runko** on vaalean harmaanruskea (ennen lähes musta).
+- **Savannilla ja metsäsavannilla on enemmän puita:**
+  - akasioita noin 1,5-kertaisesti (avoimella savannilla 1,7-kertaisesti);
+  - karitepuita 1,5-kertaisesti (avoimella savannilla 1,8-kertaisesti);
+  - vanhojen maailmojen puut pysyvät paikoillaan, uudet tulevat lisäksi.
+- **Paremmat esinemallit:**
+  - kivi: lohkeamispinnat, kirjava pinta, kvartsijuova ja jäkälää;
+  - piikivi: liitumainen vaalea kuori ja kiiltävät lohkaisuarvet aaltorenkaineen;
+  - savi: sormien painaumat, märät kohdat ja kuivuva, halkeileva pinta;
+  - ruoko: nippu korsia, lehtiä ja pörröiset huiskilot, sidottu kuidulla;
+  - fonio: lyhde, jossa sormimaiset tähkät ja jyvät;
+  - kuoriaisen sarvi: kaartuva sarvi, hampaat ja kullanruskea karvaharja;
+  - nuotio: lohkokivet, halot kotana, hiillos ja tuhka;
+  - karitepähkinät: kiiltävät pähkinät ja vaalea napa-arpi; paahdetuissa haljenneita;
+  - baobabin hedelmä: samettinen, kyhmyinen kota pitkässä varressa;
+  - hibiskus: rosellin mehevät punaiset verhiöt (bissap-juoman raaka-aine);
+  - moringa: kaksoisparilehti pienine lehdykkäineen;
+  - bissap-kuppi ja rohtopullo: kalebasseissa poltettu koristekuvio;
+  - halot (puu, jalopuu, ydinpuu): oksantyngät ja kirveellä lyöty kiilapää.
+- Soihtu, nuija ja kivipuukko ovat ennallaan.
+
+## 2026-10-27 (sessio 55): eri tasojen aseet ja kilvet erinäköisiksi, heikoimmat mallit uusiksi
+
+- **Nuijan kuvake näkyy nyt tekstuurein** pikapalkissa ja repussa (myös soihtu ja kivipuukko). Kuvakkeet piirrettiin ennen kuin tekstuurit olivat latautuneet.
+- **Eri tasojen aseet ja kilvet näyttävät nyt erilaisilta:**
+  - kirveet: kuparinen puolikuukirves holkilla, rautainen partakirves vasarapäällä ja varren rautaliuskoilla, kaksiteräinen rubiinikirves piikillä;
+  - hakut: kuparinen piikki + viuhkaterä, rautainen kaksipiikkinen hakku, rubiininen sotahakku (rubiinikide kärjessä, vasarapää);
+  - miekat: kuparinen lehtimiekka antenniponnella (pronssikausi), rautainen takouba (tuaregien miekka), kaareva rubiinisapeli hehkuvalla rubiininauhalla;
+  - rubiinitikari: kaareva tikari, messinkikahva ja rubiini;
+  - rautakeihäs: leveä lehtikärki, messinkirenkaat, punainen tupsu ja tyvipiikki;
+  - kilvet: korkea soikea lehmäntaljakilpi (keppi ja nauhapunos), kupera kuparikilpi kohokuvioin, rautainen kolmiokilpi rautavanteineen; puukilpi ennallaan;
+  - jouset: pitkäjousessa sarvikärjet ja nuolituki, ydinpuujousessa kaksoiskaari ja punaiset sidokset, rubiinijousessa teräksiset kärkilevyt ja isompi rubiini.
+- **Heikoimmat mallit tehty uusiksi:**
+  - simpukankuori: kierteinen meritorvi;
+  - rautarenkaat: pala rengaspunosta;
+  - akasiankumi: kellertäviä kumikyyneliä;
+  - jänne: kierretty vyyhti;
+  - nahka: pino taiteltuja nahkoja;
+  - taljat: eläimen muoto, häntä, paksu reuna ja turkkipinta; pahkasialla harjaraita, ketulla tuuhea häntä;
+  - paahdetut sienet: kolme sientä vartaassa;
+  - raaka liha: tummempi, marmoroitu;
+  - kookospähkinä: pyöreä ja kuituinen;
+  - köysikerän katko korjattu.
+- Taljat, nahka, renkaat ja simpukka näkyvät kuvakkeessa hieman ylhäältä.
+
+## 2026-10-27 (sessio 54): uudet esinemallit ja tekstuurit (Blender)
+
+- **Kaikille esineille uudet 3D-mallit** (106 esinettä). Ne on tehty Blenderillä skripteistä (`tools/blender/`):
+  - työkalut: kirveet, hakut ja vasara;
+  - aseet: tikarit, miekat, viidakkoveitsi, nuijat, moukari, keihäät ja kilvet;
+  - jouset (5) ja nuolet (5). Kädessä näkyy uusi jousen runko, ja jänteellä ja lennossa uusi nuoli;
+  - panssarit: 7 kypärää, 5 ylävartalon panssaria, 2 housut ja säärikääreet;
+  - materiaalit, ruoat ja lääkkeet, arvoesineet (kultahippu, kaurikotilot, pronssirengas, kello), kuitu ja nuotio.
+- Puunuija, soihtu ja kivipuukko ovat ennallaan (käyttäjän pyyntö).
+- **Oikeat tekstuurit:**
+  - puu, kuori, kivi, metallit, nahka, köysi, kangas, luu ja turkki ovat ambientCG:n CC0-tekstuureja (väri, normaali ja karheus);
+  - rengas- ja suomupanssarin tekstuurit on tehty itse;
+  - varjostus (AO) on leivottu malleihin;
+  - hedelmien, sienten, lihan, sulkien ym. kuviot on maalattu malleihin.
+- Kuvakkeet, maassa olevat esineet ja kädessä pidettävät esineet käyttävät samoja malleja.
+- Kaikki mallit ovat yhdessä tiedostossa `assets/models/items/items.glb` (2,9 Mt, meshopt-pakattu). Jos lataus epäonnistuu, käytetään vanhoja malleja.
+- Korjattu: toisessa kädessä olevalla kilvellä on nyt kilven oma materiaali.
+
+## 2026-10-14 (sessio 53): rauhallisemmat ja paremmat animaatiot (leopardi, gorilla)
+
+- **Leopardin kävely ei enää vaapu:**
+  - kääntyminen on pehmeää: kulmanopeus kiihtyy ja hidastuu, enintään 3,2 rad/s (ennen 5 rad/s napsahtaen);
+  - kaarteessa kallistus vain vauhdissa (kävellen enintään noin 2°, ennen 9°);
+  - paikallaan kääntyessä askelletaan hitaasti, ei ravin tahtiin;
+  - takajalkojen kintereet pysyvät ylhäällä (kissa kulkee varpaillaan, ennen kantapää laski maahan);
+  - tassut taittuvat heilahduksessa maltillisemmin;
+  - hännän sivuheilunta puoleen.
+- **Leopardin askeltahti hitaammaksi:** kävely noin 1 askelsykli sekunnissa (ennen 1,4), kävelyvauhti 1,25 → 0,95 m/s, ravi ja laukka noin 20 % rauhallisemmin. Tassun iskun valmistelu 0,45 → 0,55 s.
+- **Gorillan animaatiot:**
+  - lyönnissä malli hyppäsi 1,7–2,2 m eteen ja liukui takaisin (lähdeanimaation juurisiirto). Nyt lyönti tapahtuu paikallaan;
+  - lyönti tahdistettu: käsi nousee valmistelun ajan ja isku osuu samalla hetkellä kuin vahinko;
+  - varoitus ja karjaisu: nousu pystyyn venytetty koko tilan ajalle (ennen 0,57 s ja jähmettyminen), pidon aikana gorilla lyö rintaansa vuorotellen molemmilla käsillä;
+  - kävely rystysillä: oikea nelitahtinen käynti (ennen hidastettu laukka), oikea jalka ei enää potkaise lantion korkeudelle;
+  - kääntyminen pehmeää (enintään 2,8 rad/s, ennen 4,2), siirtymät liikkeiden välillä pehmeämpiä.
+
+## 2026-10-13 (sessio 52): linnut ja leopardi sademetsään, gorillan syöksy hitaammaksi
+
+- **Gorillan hyökkäys on hitaampi:**
+  - ryntäys 6,0 → 4,6 m/s, eli kävelyä nopeampi mutta juoksua hitaampi;
+  - valmistelu ennen lyöntiä 0,32 → 0,6 s;
+  - syöksy 4,2 → 2,4 m/s.
+- **Harmaapapukaijat sademetsään:**
+  - harmaita, punainen pyrstö;
+  - parvet (3–5) istuvat lahopuiden, sammalkivien ja lohkareiden päällä, katselevat ympärilleen, nokkivat, sukivat ja hyppivät paikasta toiseen.
+- **Papukaijat pakenevat:**
+  - kun pelaaja huomataan, ne pysähtyvät katsomaan;
+  - jos pelaaja tulee lähemmäs, juoksee, hyppää, huitoo tai nuoli osuu lähelle, koko parvi pyrähtää lentoon ja laskeutuu 25–45 m päähän;
+  - kolmannella kerralla tai ammuttaessa ne lentävät pois;
+  - lyönnit eivät osu niihin, vain nuolet. Nuolesta lintu putoaa (lennosta maahan), ja siitä saa 2–4 sulkaa.
+  - Nuoli ei enää pysähdy ilmaan kivien ja pensaiden yläpuolella, joten kiven päällä istuvaan lintuun voi osua.
+- **Uusi olento: leopardi** (sinun mallisi).
+- **Leopardin malli ja animaatiot:**
+  - Malli oli staattinen, joten sille rakennettiin luuranko (selkäranka, kaula, pää, kuusiosainen häntä, kissan jalat lapoineen) ja animaatiot:
+    - käynti, ravi ja laukka;
+    - hiiviskely matalana;
+    - loikka (kyyristyy, heiluttaa takapäätä, ponnistaa);
+    - tassun isku, ärjyminen hännän piiskatessa;
+    - kuolema kyljelleen.
+  - Tassut pysyvät maassa askeltaessa, pää seuraa pelaajaa ja häntä elää tilan mukaan.
+  - Mallin oikea etutassu oli sulautunut vasempaan, joten oikean etujalan alaosa on vasemman peilikuva.
+- **Leopardin käytös:**
+  - harvinainen (yksi kerrallaan), öisin yleisempi;
+  - vaanii ja hiipii selän taakse; jos katsot sitä suoraan, se jähmettyy, ja pitkään katsottuna se luovuttaa;
+  - liian lähellä se ärjyy varoitukseksi;
+  - huomaamatta se loikkaa, raapii tassuilla hetken ja vetäytyy viidakkoon;
+  - pelkää palavaa soihtua ja pakenee haavoittuneena;
+  - siitä saa lihaa, taljan, luita ja jänteitä.
+- [F3] → Olennot → **Leopardi** ja **Papukaijat**.
+- Tekijät-paneeliin lisätty leopardin malli (CC BY 4.0).
+
+## 2026-10-13 (sessio 51): gorilla
+
+- **Uusi olento: gorilla** sademetsään (sinun mallisi ja animaationsa: seisominen, laukka, rintaan lyönti ja lyönti; kävely on hidastettu laukka). Gorilloja on enintään kaksi kerralla, joskus pareittain, ja päivällä useammin.
+- **Rauhallinen ja vähän arka:**
+  - syö ja vaeltaa;
+  - kun huomaa pelaajan (alle 11 m), pysähtyy katsomaan;
+  - jos pelaaja tulee lähemmäs kuin noin 6 m, väistää kävellen poispäin, ja jos pelaaja juoksee perään, juoksee pois.
+  - Kyykyssä hiipien sen ohi pääsee lähempää.
+- **Suuttuu vain uhattuna:**
+  - kun sitä lyö, ampuu tai sytyttää palamaan;
+  - kun pelaaja hyppää tai laskeutuu aivan sen viereen, juoksee suoraan sitä kohti (tavallinen kävely ei säikytä) tai huitoo aseella lähellä;
+  - säikyttely kertyy, ja ennen suuttumista gorilla varoittaa nousemalla ja lyömällä rintaansa.
+- **Vihaisena:** karjuu (sinun äänesi), lyö rintaansa, ryntää kimppuun ja lyö kovaa. Viha laantuu noin 22 sekunnissa tai kun pelaaja pakenee kauas, ja vähillä voimilla gorilla pakenee. Siitä saa lihaa, taljan ja luita.
+- [F3] → Olennot → **Gorilla** kutsuu gorillan eteen.
+- Tekijät-paneeliin lisätty gorillan malli (CC BY 4.0).
+
+## 2026-10-13 (sessio 50): taustaäänet verkkoversioon, kuoriainen NPC:ksi, hyttyset
+
+- **Taustaäänet kuuluvat taas verkossa pelattaessa** (sademetsän ambienssi, tuuli, sade, kaukainen ukkonen). Ne eivät olleet kuuluneet githack-linkin kautta lainkaan: palvelu ohjaa mp3-tiedostot toiselle palvelimelle, ja ilman CORS-merkintää selain syötti niiden tilalle hiljaisuutta. Musiikki kuului, koska se soi eri reittiä. Lisäksi sademetsän ambienssia on hieman enemmän.
+- **Herkuleskuoriainen on NPC, ei mobi:** sitä ei voi tappaa, eikä sillä ole terveyspalkkia. Lyönti, nuoli tai kaatuva puu vain säikäyttää sen lentoon. Kuoriaisia on enemmän (enintään 6, ennen 3) ja ne ilmestyvät useammin. Sarvi-esinettä ei enää saa.
+- **Kärpäset:** ohilento korvan ohi 4–13 s välein (ennen 10–35 s), ja hiljaisimmat pätkät ovat kovempia.
+- **Mäkäräparvet:** parvia ja mäkäriä on enemmän ja ne ovat lähempänä, pisteet näkyvät kauempaakin, ja siivet välähtävät valossa, joten parvet erottuvat myös tummaa lehvästöä vasten.
+- **Hyttynen** (sinun äänesi) pörrää silloin tällöin pään ympärillä: lähestyy, kiertää korvan ohi ja loittonee. Hämärässä ja yöllä useammin. [F3] → Olennot → **Hyttynen** soittaa sen heti.
+
+## 2026-10-13 (sessio 49, jatko): banaanitertut kuntoon, tekijät valikkoon
+
+- **Banaanin hedelmäterttu** näkyy taas oikeana terttuna: ensimmäisessä versiossa kevennys oli hajottanut banaanit litteiksi keltaisiksi siruiksi.
+- **Päävalikkoon Tekijät-paneeli:** CC BY 4.0 -mallien (banaanipuu, bambu, bambupensas) tekijät näkyvät pelissä, kuten lisenssi vaatii; lisäksi CC0-lähteet lyhyesti. Koko lista on edelleen `assets/CREDITS.txt`:ssä.
+
+## 2026-10-12 (sessio 49): kuoriainen puissa, uudet banaanit ja bambut, kärpäset
+
+- **Herkuleskuoriainen:**
+  - noin 1,4 kertaa isompi (noin 28 cm sarvineen), joten se erottuu;
+  - lentelee pöristen puulta toiselle ja kiipeilee puunrungoilla enimmäkseen silmien korkeudella (1–3 m), selkä ulospäin;
+  - puolet kuoriaisista syntyy suoraan rungolle; maahan se laskeutuu vain välillä;
+  - jos puu kaadetaan alta, se lähtee lentoon; lyötynä se lentää pois, ja kuollut kuoriainen putoaa rungolta maahan.
+- **Uudet mallisi peliin** (Sketchfab, CC-BY-4.0, tekijät `assets/CREDITS.txt`):
+  - **banaanipuu** korvaa vanhan villibanaanin; muunnelmissa on 0–2 pientä sivuversoa, ja isossa on hedelmäterttu ja kukka;
+  - **bambu** korvaa vanhan bamburyhmän (noin 6–9 m);
+  - **bambupensas** on uusi kasvi sademetsän kenttäkerrokseen (noin 2–3 m); siitä saa bambua ja kuitua.
+- **Kenttäkerros tiheämmäksi:** saniaisia, aluskasvillisuutta ja trooppisia kasveja on noin 25–35 % enemmän, ja lisäksi tulevat bambupensaat.
+- **Latvusto umpinaisemmaksi:** sademetsän puiden latvukset ovat 15–30 % leveämpiä, ja lehtikortteja on yhtä monta kuin ennen (isompia), joten taivasta näkyy vähemmän eikä kolmioita tule lisää.
+- **Kärpäset ja paarmat** (vain sademetsässä, päivällä enemmän):
+  - muutama kärpänen sinkoilee lähistöllä nopein syöksyin, joskus aivan kasvojen edestä;
+  - silloin tällöin kärpänen surisee korvan ohi; ääni (sinun tiedostosi) ja kärpäsen lentorata kulkevat samaan suuntaan;
+  - [F3] → Olennot → **Kärpänen ohi** laukaisee ohilennon heti.
+
+## 2026-10-12 (sessio 48): sademetsä tiheämmäksi ja eläväisemmäksi
+
+- **Ambienssiäänet kuuluvat taas:**
+  - viidakon taustaääni oli koko ajan päällä, mutta sademetsän musiikki peitti sen;
+  - ääntä on nyt noin 5 dB enemmän, ja hyönteisten sirinä ja linnut (yläpää) eivät enää leikkaudu pois.
+- **Latvuskatto:** uusi **jättiläispuu** (16–24 m, isot pönkkäjuuret, leveä sateenvarjolatvus ja liaanit) muodostaa ylimmän lehtikaton nykyisten puiden yläpuolelle. Puu varjostaa metsänpohjan, ja auringonvalo pääsee maahan vain latvusten raoista. Rungon varrella on lehtiryppäitä myös 6–14 m:n korkeudella. Jättiläispuun voi kaataa kuparikirveellä tai paremmalla, ja siitä saa ydinpuuta, jalopuuta, puuta ja risuja.
+- **Tiheikkö:**
+  - uusia trooppisia aluskasveja (calathea ja saniainen, Poly Haven, CC0);
+  - **taimia** (1,8–4,2 m) keskikerrokseen; niistä saa hakattua risuja ja kuitua.
+- **Hyönteiset:**
+  - mäkäräparvet pörräävät ilmassa;
+  - perhoset (sininen morfo, oranssi, keltainen, mustavalkoinen) lentävät päivällä sademetsässä.
+- **Uusi olento: herkuleskuoriainen:**
+  - oma 3D-malli: oliivinkeltaiset täplikkäät peitinsiivet, pitkä etuselän sarvi, pään sarvi ja kuusi jalkaa;
+  - kulkee verkkaisesti sademetsän pohjalla, öisin useammin;
+  - liian lähelle tulevalle se nostaa sarvensa; lyötynä tai ahdisteltuna se avaa siipensä ja lentää pöristen pois;
+  - pudottaa herkuleskuoriaisen sarven.
+
+## 2026-10-12 (sessio 47): sademetsän tunnelma ja syvyys takaisin
+
+Kaikki muutokset koskevat vain sademetsää päivällä. Savanni, muut biomit ja yöt ovat ennallaan. Liike-epäterävyyttä, TAA:ta tai terävöintiä ei kytketty takaisin.
+- **Auringonvalo latvuston läpi:** suora aurinko on voimakkaampi ja lämpimämpi, joten valoläikät maassa ja lehdillä sekä valokeilat erottuvat selvästi varjosta.
+- **Syvemmät varjot:** hajavaloa on vähemmän, joten varjot eivät ole enää tasaisen haaleita.
+- **Värit:** hieman enemmän kontrastia ja kylläisyyttä (täyteläisemmät vihreät).
+- **Usva ja syvyys:** usva alkaa lähempää ja sävyttyy latvuston vihertävään valoon, joten keskietäisyyden ja kaukaiset puut häipyvät pehmeästi taustaan. Maata myötäilevää usvaa ja valokeilojen ilmaa on hieman enemmän.
+
+## 2026-10-12 (sessio 46): lehvästöjen pikselimössö ja välkyntä, syväterävyys hieman takaisin
+
+- **Puiden latvukset siistimmiksi kaukana:**
+  - yli 4 metrin päässä lehdet piirretään hieman pehmeämmästä tekstuuritasosta, joten latvusten sisällä ei enää ole rakeista tummien ja vaaleiden pikselien sotkua eikä pikselin kokoisia reikiä;
+  - lehtien reunat pehmenevät reunanpehmennykseen tasaisemmin.
+
+  Testinäkymässä latvukset muuttuivat kameraa käännettäessä noin 10–30 % vähemmän (eniten kaukaisissa puissa). Lähellä lehdet näyttävät samalta kuin ennen. Koskee puita, pensaita, kaadettavia puita, puun paloja sekä aluskasvien lehtiä ja kukkia.
+- **Syväterävyys hieman voimakkaammaksi:** tausta alkaa sumentua aiemmin ja vähän enemmän kuin sessiossa 44, mutta lievemmin kuin sessioissa 39–40.
+
+## 2026-10-12 (sessio 45): okkluusio ei välky kasvillisuudessa, terävöinti poistettu
+
+- **Ambienttiokkluusio (SSAO) ei enää välky ruohossa ja lehdissä:**
+  - ohuet korret ja lehdet jätetään okkluusiosta pois (tunnistetaan syvyyden äkillisestä vaihtelusta naapuripikseleihin);
+  - okkluusio lasketaan vain isommista muodoista (säde 1,2 m, näytteet vasta 35 %:n etäisyydeltä), joten pienet liikkuvat yksityiskohdat eivät varjosta;
+  - kevyempi (voimakkuus 0,5), lyhyempi kantama (70 m) ja leveämpi pehmennys.
+
+  Okkluusio on yhä oletuksena pois; sen saa päälle asetuksista.
+- **Terävöinti poistettu kokonaan:** asetusrivi, asetus ja koko tehoste. Vanha tallennettu arvo poistetaan asetuksista.
+
+## 2026-10-12 (sessio 44): ruudunpäivitys takaisin ja kaukainen pikselimössö pois
+
+- **Session 43 muutos peruttu:** kaukomallit ja tarkan mallin raja ovat taas ennallaan (ruudunpäivitys putosi viidakossa).
+- **Kaukainen pikselimössö korjattu:** syy oli syväterävyys. Se lasketaan puolikkaalla tarkkuudella, ja sessioiden 39–40 voimakkaampi syväterävyys korvasi kaukaisen maiseman lähes kokonaan tällä pienemmällä kuvalla. Syväterävyys on nyt palautettu session 25 arvoihin, ja puolikkaan tarkkuuden sumennus sekoittuu kuvaan vain selvästi sumeissa kohdissa.
+- Renderöintitarkkuus ja reunanpehmennys tarkistettiin: pikselitiheys on ennallaan (`min(devicePixelRatio, 1,5)` × Tarkkuus-asetus), ja maailma piirretään 4× MSAA:lla. Niitä ei ole muutettu.
+
+## 2026-10-12 (sessio 43): kaukaiset puut siistimmiksi
+
+- **Kaukomallit paremmiksi:**
+  - kaukaisten puiden lehvästöissä on noin 2,8 kertaa enemmän ja pienempiä lehtikortteja (ennen harvat ja isot, joten latvukset olivat kulmikkaita möhkäleitä);
+  - palmujen lehdissä on 16 lehdykkää (oli 9), ja ne ovat kapeampia.
+- **Tarkka malli ulottuu kauemmas:** noin 150 metriin (oli noin 100), joten vaihto ei näy niin lähellä, ja lähimmillä puilla on varjo pidemmälle.
+
+## 2026-10-12 (sessio 42): takapakki – ei suttua, ei välkyntää, luonnollinen käsi
+
+- **Käsi yöllä:** reunavalo on nyt hyvin hienovarainen. Käsi näkyy luonnollisen tummana eikä enää hehku.
+- **Ei suttua liikkeessä:** liike-epäterävyys palautettiin session 25 voimakkuuteen, ja se on nyt oletuksena pois (myös vanhoista asetuksista kerran). Pelissä ei ole TAA:ta eikä muuta ajallista kertymää.
+- **Vähemmän kohinaa kasvillisuudessa:** ambienttiokkluusio on oletuksena pois kaikilla laatutasoilla (sen kohina eli tuulessa liikkuvassa ruohossa). Asetuksista sen saa takaisin. Terävöinti on pois, ja ruohon alpha-to-coverage, mipmapit ja anisotropia (sessio 40) ovat ennallaan.
+
+## 2026-10-12 (sessio 41): käden valaistus yöllä reunavalolla
+
+- **Tasaiset täytevalot pois.** Käden ja esineiden materiaaleissa on nyt reunavalo (Fresnel): pimeässä vain ääriviivat erottuvat viileässä kuunvalossa, ja pinnan keskiosa jää varjoon. Päivällä reunavalo on lähes huomaamaton.
+- **Himmeä taivasheijastus:** kädessä olevat esineet heijastavat taivasta (ympäristökartta, jonka voimakkuus seuraa taivaan kirkkautta). Terät ja kiviosat poimivat heijastuksen yöllä, ja puiset kahvat ovat hieman sileämpiä (kädessä kuluneita).
+- **Maassa olevat esineet eivät muutu:** kädellä on omat kopiot materiaaleista.
+
+## 2026-10-12 (sessio 40): kasvillisuuden reunat, taivas, syväterävyys ja käsi yöllä
+
+- **Ruoho ei enää välky:** ruohokenttä käyttää nyt alpha-to-coveragea. Korsien reunat pehmenevät reunanpehmennyksellä, eivätkä ne enää tee portaita tai moiré-kuvioita kauempana (ennen kova leikkausraja). Lehdillä ja muilla kasveilla tämä oli jo käytössä, samoin peittävyyden säilyttävät mipmapit (`LinearMipmapLinearFilter`).
+- **Anisotrooppinen suodatus suurimmaksi** (16 tai näytönohjaimen maksimi) maaston, lehtien, ruohon, metsänpohjan ja kasvimallien tekstuureille: viistossa näkyvät pinnat pysyvät terävinä eivätkä välky.
+- **Terävöinti oletuksena pois.** Se korosti lehtien reunoja. Asetuksista sen saa takaisin.
+- **Taivas päivällä noin 22 % tummempi,** ei puhkea valkoiseksi.
+- **Syväterävyys lievempi:** tausta sumenee vasta kauempana ja vähemmän.
+- **Ambienttiokkluusio hieman kevyempi.**
+- **Käsi ja työkalut yöllä hieman tummempia.**
+
+## 2026-10-12 (sessio 39): intro, hillitympi päivänvalo, liike-epäterävyys ja syväterävyys, käsi yöllä
+
+- **Intro:** käyttäjän video soi pelin alussa ennen valikkoa ja latausta, ja peli latautuu taustalla. Ohitus: Esc, välilyönti tai hiiren oikea.
+  - Jos selain estää äänellisen automaattitoiston, video alkaa äänettömänä ja näyttää vihjeen "Klikkaa: ääni päälle".
+  - Jos video ei käynnisty 9 sekunnissa tai selain ei osaa toistaa sitä, intro ohitetaan.
+  - Tiedosto on nimetty uudelleen: `assets/videos/intro.mp4`. Lisäksi sen hakemisto (moov) on siirretty alkuun häviöttömästi, joten toisto alkaa ennen kuin koko tiedosto on ladattu.
+- **Päivä ei enää huku valoon:**
+  - auringon suuntaan hohtava sironta noin puoleen (sademetsässä vielä vähemmän);
+  - valokeilat ja valonsäteet miedommiksi;
+  - silmän mukautuminen painottaa kirkasta taivasta enemmän, joten aurinkoon katsottaessa valotus laskee eikä taivas puhkea;
+  - päivän valotus hieman matalampi.
+- **Siistimmät reunat:** bloomin yläraja on matalampi (ei suuria hehkuläiskiä lehtien väleissä), ja terävöinti on puolet kevyempi.
+- **Liike-epäterävyys:** noin 1,5 kertaa voimakkaampi (kevyt ja vahva).
+- **Syväterävyys tarkennuksen mukaan:** lähelle katsottaessa tausta sumenee selvästi; kauas katsottaessa vain aivan kameran edessä oleva sumenee. Sumennus on isompi.
+- **Käsi ja työkalut yöllä:** täytevalot noin kolmasosaan, ja kädelle tulee vain osa silmän mukautumisesta. Pimeys ja heijastukset näkyvät, mutta esineet eivät katoa mustaan.
+
 ## 2026-10-12 (sessio 38): terävämpi kuva, näkyvät työkalut pimeässä ja sademetsän valo
 
 - **Ei enää sumeaa kuvaa:**

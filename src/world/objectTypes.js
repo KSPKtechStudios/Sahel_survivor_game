@@ -16,7 +16,10 @@
 export const OBJECT_TYPES = {
   acacia: {
     name: 'Akasia', model: 'acacia', kind: 'tree', material: 'vegetation', castShadow: true,
-    density: { savanna: 2.2, woodland: 11, mare: 4, laterite: 0.6, dunes: 0.25, desert: 0.04, mountains: 0.5, oasis: 1 },
+    // Sessio 56: tiheämmäksi. Kaikki biomit kerrottu vähintään samalla
+    // kertoimella kuin suurin (woodland ×1,45), jotta vanhojen maailmojen puut
+    // pysyvät paikoillaan ja uudet tulevat lisäksi (ks. DECISIONS).
+    density: { savanna: 3.8, woodland: 16, mare: 5.85, laterite: 0.9, dunes: 0.37, desert: 0.06, mountains: 0.73, oasis: 1.46 },
     scale: [0.85, 1.25], maxSlope: 0.45, collider: 0.3, hit: { y: 1.2, r: 0.6 }, drawDist: 99,
     harvest: { tool: 'axe', hp: 5, needMsg: 'Tarvitset kirveen' },
     log: { name: 'Kaatunut akasia', hp: 4, drops: [['wood', 3], ['stick', 2], ['gum', 1]] },
@@ -44,7 +47,7 @@ export const OBJECT_TYPES = {
   },
   shea: {
     name: 'Karitepuu', model: 'shea', kind: 'tree', material: 'vegetation', castShadow: true,
-    density: { savanna: 1.0, woodland: 2.6, mare: 0.6, laterite: 0.3 },
+    density: { savanna: 1.8, woodland: 3.9, mare: 0.91, laterite: 0.46 }, // sessio 56: ×1,5 (savanni ×1,8)
     scale: [0.85, 1.2], maxSlope: 0.45, collider: 0.34, hit: { y: 1.2, r: 0.65 }, drawDist: 99,
     harvest: { tool: 'axe', hp: 6, needMsg: 'Tarvitset kirveen' },
     log: { name: 'Kaatunut karitepuu', hp: 4, drops: [['wood', 4], ['stick', 2], ['shea_nuts', 3]] },
@@ -94,6 +97,7 @@ export const OBJECT_TYPES = {
     harvest: { tool: null, hp: 3, drops: [['fiber', 2], ['stick', 1]] },
   },
   bamboo: {
+    // Sessio 49: malli käyttäjän tuoma (models/kit/userKit.js), materiaali kitistä.
     name: 'Bambu', model: 'bamboo', kind: 'bush', material: 'tall', castShadow: true,
     density: { rainforest: 5, mare: 0.4 },
     scale: [0.9, 1.3], maxSlope: 0.6, collider: 0.55, hit: { y: 1.0, r: 0.8 }, drawDist: 3,
@@ -106,7 +110,7 @@ export const OBJECT_TYPES = {
     harvest: { tool: 'axe', hp: 3, drops: [['wood', 2], ['stick', 1]], needMsg: 'Tarvitset kirveen' },
   },
   mossyLog: {
-    name: 'Sammaloitunut runko', model: 'mossyLog', kind: 'bush', material: 'solid', surface: 'wood', castShadow: false,
+    name: 'Sammaloitunut runko', model: 'mossyLog', kind: 'bush', material: 'solid', surface: 'wood', look: 'mossy', castShadow: false,
     density: { rainforest: 2.4 },
     scale: [0.9, 1.3], maxSlope: 0.5, collider: 0, hit: { y: 0.3, r: 1.0 }, drawDist: 3,
     harvest: { tool: 'axe', hp: 3, drops: [['wood', 2], ['fiber', 1]], needMsg: 'Tarvitset kirveen' },
@@ -154,7 +158,7 @@ export const OBJECT_TYPES = {
   },
   boulder: {
     name: 'Lohkare', model: 'boulder', kind: 'rock', material: 'solid', surface: 'rock', castShadow: true,
-    density: { savanna: 0.9, woodland: 0.6, mare: 0.4, laterite: 5, dunes: 0.3, desert: 0.9, rainforest: 0.8, mountains: 10, beach: 0.6, rock: 22, mesa: 5 },
+    density: { savanna: 0.9, woodland: 0.6, mare: 0.4, laterite: 5, dunes: 0.3, desert: 0.9, rainforest: 0.8, mountains: 10, beach: 0.6, rock: 22, mesa: 5, cliff: 16 },
     scale: [0.7, 1.6], maxSlope: 1, collider: 1.05, hit: { y: 0.5, r: 1.25 }, drawDist: 99,
     harvest: { tool: 'pickaxe', hp: 4, drops: [['stone', 4]], needMsg: 'Liian kovaa!' },
   },
@@ -189,7 +193,7 @@ export const OBJECT_TYPES = {
   },
   undergrowth: {
     name: 'Aluskasvillisuus', model: 'undergrowth', kind: 'decor', material: 'bush', castShadow: false, decorative: true,
-    density: { rainforest: 85, oasis: 15 },
+    density: { rainforest: 115, oasis: 15 }, // sessio 49: 85 -> 115 (kenttäkerros)
     scale: [0.8, 1.6], maxSlope: 0.8, collider: 0, hit: null,
   },
   tallGrass: {
@@ -224,7 +228,7 @@ export const OBJECT_TYPES = {
   },
   scree: {
     name: 'Kivikko', model: 'scree', kind: 'decor', material: 'solid', surface: 'rock', castShadow: false, decorative: true,
-    density: { mountains: 30, rock: 25, mesa: 20, beach: 4 },
+    density: { mountains: 30, rock: 25, mesa: 20, beach: 4, cliff: 30 },
     scale: [0.8, 1.6], maxSlope: 1, collider: 0, hit: null,
   },
   reeds: {
@@ -348,7 +352,7 @@ export const OBJECT_TYPES = {
   // Lisätty loppuun, jotta vanhojen esineiden siemenet eivät muutu.
   groundFern: {
     name: 'Saniainen', model: 'groundFern', kind: 'decor', material: 'bush', castShadow: false, decorative: true,
-    density: { rainforest: 110, oasis: 20, mare: 10, woodland: 3 },
+    density: { rainforest: 150, oasis: 20, mare: 10, woodland: 3 }, // sessio 49: 110 -> 150
     scale: [0.45, 1.0], maxSlope: 0.3, slopeCheck: true, collider: 0, hit: null, decorDist: 44,
   },
   forestPlant: {
@@ -411,9 +415,51 @@ export const OBJECT_TYPES = {
     scale: [0.8, 1.3], maxSlope: 1, collider: 0, hit: null, nearWater: true, decorDist: 44,
   },
   ancientRoots: {
-    name: 'Ikivanhat juuret', model: 'ancientRoots', kind: 'static', material: 'solid', surface: 'wood', castShadow: true,
+    name: 'Muinainen juurakko', model: 'ancientRoots', kind: 'static', material: 'solid', surface: 'wood', look: 'mossy', castShadow: true,
     density: { rainforest: 3.5, oasis: 0.6, mare: 0.4, woodland: 0.3 },
-    scale: [0.8, 1.4], maxSlope: 0.5, collider: 0, hit: { y: 0.3, r: 1.3 }, drawDist: 3,
+    scale: [0.8, 1.4], maxSlope: 0.5, collider: 0.7, hit: { y: 0.4, r: 1.3 }, drawDist: 3,
+  },
+  // --- Sessio 48: sademetsän latvuskatto ja tiheikkö (listan lopussa, jotta
+  // vanhojen esineiden siemenet ja sijainnit eivät muutu).
+  // Jättiläispuu: ylin latvuskerros (16–24 m), varjostaa metsänpohjan.
+  emergent: {
+    name: 'Jättiläispuu', model: 'emergent', kind: 'tree', material: 'vegetation', castShadow: true,
+    density: { rainforest: 6 },
+    scale: [0.9, 1.15], maxSlope: 0.45, collider: 0.95, hit: { y: 1.8, r: 1.2 }, drawDist: 99,
+    harvest: { tool: 'axe', hp: 18, minTier: 3, needMsg: 'Tarvitset kirveen' }, noChain: true,
+    log: { name: 'Kaatunut jättiläispuu', hp: 12, drops: [['heartwood', 4], ['hardwood', 4], ['wood', 3], ['stick', 3]] },
+  },
+  // Trooppiset aluskasvit (Poly Haven, CC0): calathea ja saniainen.
+  tropicalPlant: {
+    name: 'Trooppinen kasvi', model: 'tropicalPlant', kind: 'decor', material: 'bush', castShadow: false, decorative: true,
+    density: { rainforest: 125, oasis: 8 }, // sessio 49: 100 -> 125
+    scale: [0.8, 1.25], maxSlope: 0.45, slopeCheck: true, collider: 0, hit: null, decorDist: 44,
+  },
+  // Taimi: nuori puu keskikerrokseen (1,8–4,2 m). Läpi pääsee kulkemaan;
+  // hakkaamalla risuja ja kuitua.
+  sapling: {
+    name: 'Taimi', model: 'sapling', kind: 'bush', material: 'vegetation', castShadow: false,
+    density: { rainforest: 30 },
+    scale: [0.85, 1.25], maxSlope: 0.6, collider: 0, hit: { y: 1.0, r: 0.5 }, drawDist: 1,
+    harvest: { tool: null, hp: 2, drops: [['stick', 2], ['fiber', 1]] },
+  },
+  // Sessio 49: bambupensas kenttäkerrokseen (käyttäjän tuoma malli, CC-BY-4.0).
+  bambooBush: {
+    name: 'Bambupensas', model: 'bambooBush', kind: 'bush', material: 'bush', castShadow: false,
+    density: { rainforest: 8, mare: 0.3 },
+    scale: [0.75, 1.2], maxSlope: 0.6, collider: 0.2, hit: { y: 1.0, r: 0.7 }, drawDist: 2,
+    harvest: { tool: null, hp: 3, drops: [['bamboo', 1], ['fiber', 1]] },
+  },
+  // --- Sessio 58: karstimaisema (käyttäjän kuvat kalkkikiviseinämistä ja
+  // -tornista). Paikat tulevat suoraan maastosta (special: chunkGen), ei
+  // tiheydestä: lohkareet upotetaan jyrkänteen seinään, tornit terrain.js:stä.
+  cliffRock: {
+    name: 'Kalkkikivi', model: 'cliffRock', kind: 'static', material: 'solid', surface: 'rock', castShadow: true, special: true,
+    density: {}, scale: [0.75, 1.25], maxSlope: 1, collider: 0, hit: null, drawDist: 99,
+  },
+  karstTower: {
+    name: 'Kalkkikivitorni', model: 'karstTower', kind: 'static', material: 'solid', surface: 'rock', castShadow: true, special: true,
+    density: {}, scale: [0.85, 1.2], maxSlope: 1, collider: 0, hit: { y: 3, r: 6.5 }, drawDist: 99,
   },
 };
 

@@ -1,5 +1,6 @@
 // Esinemallit (kädessä, maassa ja kuvakkeissa). Kahva origossa, esine +Y-suuntaan.
 import { userClub } from './userItems.js';
+import { itemAsset } from './itemAssets.js';
 import * as THREE from 'three';
 import { mulberry32 } from '../noise.js';
 import { V, displace, paint, limb, flatNormals, merge, prep } from './util.js';
@@ -8,27 +9,67 @@ import { createItemModels2 } from './items2.js';
 import { createItemModels3 } from './items3.js';
 
 // Nuotion runko (kivikehä + tukit). Liekit lisätään erikseen.
+// Sessio 59 (käyttäjä: nuotio oli huono ja harva): tiivis kivikehä
+// pyöreistä, maahan painuneista kivistä, paksut tukit kekona (sisäpäät
+// hiiltyneet), kaksi ristikkäistä pohjatukkia, tuhkapohja ja hiilenmurikat.
+// Värit valitsevat pintatekstuurit (harmaa = kivi, tumma puu = lauta).
 export function makeCampfireBase(seed = 3) {
   const rand = mulberry32(seed);
   const parts = [];
-  const ns = 9;
+  // Tuhkapohja: vaalea reuna, tummempi keskus.
+  const ash = new THREE.CylinderGeometry(0.4, 0.44, 0.05, 18, 1);
+  displace(ash, () => [0, (rand() - 0.5) * 0.02, 0]);
+  ash.translate(0, 0.0, 0);
+  parts.push(paint(ash, 0x6e6a64, { rand, jitter: 0.25 }));
+  const ash2 = new THREE.CylinderGeometry(0.26, 0.3, 0.05, 14, 1);
+  ash2.translate(0, 0.012, 0);
+  parts.push(paint(ash2, 0x2c2826, { rand, jitter: 0.2 }));
+  // Kivikehä: 15 kiveä, koko ja sävy vaihtelevat, painuneet maahan.
+  const ns = 15;
   for (let i = 0; i < ns; i++) {
-    const a = (i / ns) * Math.PI * 2;
-    let s = new THREE.DodecahedronGeometry(0.13, 0);
-    displace(s, () => [(rand() - 0.5) * 0.05, (rand() - 0.5) * 0.04, (rand() - 0.5) * 0.05]);
-    s.scale(1.2, 0.8, 1);
-    s.rotateY(a);
-    s.translate(Math.cos(a) * 0.48, 0.06, Math.sin(a) * 0.48);
-    parts.push(paint(flatNormals(s), rand() < 0.5 ? 0x7a746c : 0x8f5a3e, { rand }));
+    const a = (i / ns) * Math.PI * 2 + (rand() - 0.5) * 0.15;
+    const r = 0.095 + rand() * 0.05;
+    const g = new THREE.IcosahedronGeometry(r, 1);
+    displace(g, (x, y, z) => {
+      const k = (rand() - 0.5) * 0.28;
+      return [x * k, y * k, z * k];
+    });
+    g.scale(1.25 + rand() * 0.3, 0.7 + rand() * 0.2, 1);
+    g.rotateY(a + Math.PI / 2 + (rand() - 0.5) * 0.4);
+    const R = 0.52 + (rand() - 0.5) * 0.05;
+    g.translate(Math.cos(a) * R, r * 0.35, Math.sin(a) * R);
+    const tone = [0x7c766e, 0x6a655e, 0x8a8278, 0x5f5a54][Math.floor(rand() * 4)];
+    parts.push(paint(flatNormals(g), tone, { rand, jitter: 0.12 }));
   }
-  const nl = 5;
+  // Kaksi ristikkäistä pohjatukkia.
+  for (let i = 0; i < 2; i++) {
+    const a = i * Math.PI / 2 + 0.35 + rand() * 0.2;
+    const ca = Math.cos(a), sa = Math.sin(a);
+    parts.push(paint(limb(V(-ca * 0.42, 0.06, -sa * 0.42), V(-ca * 0.1, 0.07, -sa * 0.1), 0.06, 0.055, 12, true), 0x4a3424, { rand, jitter: 0.1 }));
+    parts.push(paint(limb(V(-ca * 0.1, 0.07, -sa * 0.1), V(ca * 0.1, 0.07, sa * 0.1), 0.055, 0.055, 12, true), 0x2a1f18, { rand, jitter: 0.1 }));
+    parts.push(paint(limb(V(ca * 0.1, 0.07, sa * 0.1), V(ca * 0.42, 0.06, sa * 0.42), 0.055, 0.06, 12, true), 0x4a3424, { rand, jitter: 0.1 }));
+  }
+  // Keko: 8 tukkia nojaa toisiinsa; ulkopää kuorta, sisäpää hiiltynyt.
+  const nl = 8;
   for (let i = 0; i < nl; i++) {
-    const a = (i / nl) * Math.PI * 2 + 0.3;
-    parts.push(paint(limb(V(Math.cos(a) * 0.4, 0.02, Math.sin(a) * 0.4), V(Math.cos(a) * 0.05, 0.45, Math.sin(a) * 0.05), 0.05, 0.035, 5), 0x5a4030, { rand }));
+    const a = (i / nl) * Math.PI * 2 + (rand() - 0.5) * 0.3;
+    const ca = Math.cos(a), sa = Math.sin(a);
+    const out = 0.36 + rand() * 0.08, top = 0.42 + rand() * 0.12;
+    const r0 = 0.045 + rand() * 0.02;
+    const base = V(ca * out, 0.04, sa * out);
+    const mid = V(ca * out * 0.3, 0.04 + top * 0.7, sa * out * 0.3);
+    const tip = V(ca * 0.05 + (rand() - 0.5) * 0.04, top, sa * 0.05 + (rand() - 0.5) * 0.04);
+    parts.push(paint(limb(base, mid, r0, r0 * 0.9, 12, true), [0x4e3826, 0x5a4230, 0x463020][i % 3], { rand, jitter: 0.12 }));
+    parts.push(paint(limb(mid, tip, r0 * 0.9, r0 * 0.6, 12, true), 0x3b2c21, { rand, jitter: 0.15 }));
   }
-  const ash = new THREE.CylinderGeometry(0.3, 0.34, 0.04, 10);
-  ash.translate(0, 0.01, 0);
-  parts.push(paint(ash, 0x2e2925, { rand, jitter: 0.2 }));
+  // Hiilenmurikat tuhkassa.
+  for (let i = 0; i < 12; i++) {
+    const a = rand() * Math.PI * 2, r = Math.sqrt(rand()) * 0.3;
+    const g = new THREE.DodecahedronGeometry(0.025 + rand() * 0.03, 0);
+    g.scale(1.3, 0.7, 1);
+    g.translate(Math.cos(a) * r, 0.035, Math.sin(a) * r);
+    parts.push(paint(flatNormals(g), 0x151210, { rand, jitter: 0.2 }));
+  }
   return merge(parts);
 }
 
@@ -307,7 +348,7 @@ function itemClay() {
 }
 
 export function createItemModels() {
-  return {
+  const out = {
     stick: itemStick(),
     stone: itemStone(),
     fiber: itemFiber(),
@@ -328,4 +369,11 @@ export function createItemModels() {
     ...createItemModels2(),
     ...createItemModels3(),
   };
+  // Sessio 54: Blender-mallit (itemAssets.js) korvaavat koodilla tehdyt,
+  // kun ne on ladattu. Puunuija, soihtu ja kivipuukko pysyvät ennallaan.
+  for (const id of Object.keys(out)) {
+    const a = itemAsset(id);
+    if (a) out[id] = a;
+  }
+  return out;
 }

@@ -84,15 +84,58 @@ uniform vec3 uTrSunCol;`)
     vec3 trV = normalize(vViewPosition);
     float trBack = pow(clamp(dot(-trV, trL), 0.0, 1.0), 4.0);
     float trDiff = clamp(-dot(normal, trL), 0.0, 1.0);
+    // Sessio 58: vain auringonvalossa olevat lehdet kuultavat (käyttäjä:
+    // lehvästön läpi aurinkoa kohti katsottaessa koko latvusto hehkui
+    // valkoisena ja sokaisi). Valaistus on jo laskenut auringon varjon
+    // (directLight = viimeinen suunnattu valo eli aurinko); sen suhde
+    // varjottomaan valoon kertoo, osuuko aurinko lehteen. Syvällä latvuston
+    // varjossa olevat lehdet jäävät tummiksi siluetteiksi, ja hehku syntyy
+    // vain aukoista ja lehdistä, joihin valo osuu.
+    float trSh = 1.0;
+#if NUM_DIR_LIGHTS > 0
+    trSh = clamp(dot(directLight.color, vec3(1.0)) / max(dot(directionalLights[ 0 ].color, vec3(1.0)), 1e-4), 0.0, 1.0);
+#endif
     // Läpäisevä valo on vihertävää (lehtivihreä suodattaa).
     vec3 trCol = diffuseColor.rgb * vec3(0.9, 1.15, 0.7);
-    outgoingLight += trCol * uTrSunCol * (trBack * 0.7 + trDiff * 0.45 + 0.1) * ${k.toFixed(3)} * trM;
+    outgoingLight += trCol * uTrSunCol * ((trBack * 0.7 + trDiff * 0.45) * trSh + 0.08) * ${k.toFixed(3)} * trM;
   }
 }
 #include <opaque_fragment>`);
   };
   const prevKey = material.customProgramCacheKey;
-  material.customProgramCacheKey = () => `${prevKey ? prevKey.call(material) : ''}-tr${k}${leafOnly ? 'L' : ''}`;
+  material.customProgramCacheKey = () => `${prevKey ? prevKey.call(material) : ''}-tr${k}${leafOnly ? 'L' : ''}s`;
+  return material;
+}
+
+// Sessio 46: lehvästöjen "pikselimössö" ja välkyntä kameraa käännettäessä.
+// Syy: kaukaisissa latvuksissa on satoja muutaman pikselin kokoisia
+// lehtikortteja, joiden kova alfareuna ja tekstuurin pienet yksityiskohdat
+// (tummat ja vaaleat lehdet, pikselin kokoiset reiät) vaihtuvat pikselistä
+// toiseen pienimmästäkin liikkeestä. Korjaus:
+// 1) yli 4 m:n päässä lehdet luetaan pehmeämmältä mipmap-tasolta (20 m:stä
+//    alkaen yhden tason verran); lähellä tekstuuri on ennallaan;
+// 2) alfareuna muuttuu MSAA:n peittävyydeksi keskitetysti noin 1,5 pikselin
+//    matkalla (three: 1 pikseli ja vain rajan yläpuolella), joten reunat ja
+//    reiät eivät hypi pikselistä toiseen.
+// Mittaus (sama näkymä, kamera kääntyy alle pikselin): latvusten muutos
+// pieneni 15-33 %. Käytä uloimpana kääreenä (korvaa map- ja alfakohdan).
+const FOLIAGE_MAP = THREE.ShaderChunk.map_fragment.replace(
+  'texture2D( map, vMapUv )',
+  'texture2D( map, vMapUv, smoothstep( 4.0, 20.0, vViewPosition.z ) )',
+);
+export function softFoliage(material) {
+  const prev = material.onBeforeCompile;
+  material.onBeforeCompile = (shader, renderer) => {
+    if (prev) prev(shader, renderer);
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <map_fragment>', FOLIAGE_MAP)
+      .replace('#include <alphatest_fragment>', `#ifdef USE_ALPHATEST
+  diffuseColor.a = clamp((diffuseColor.a - alphaTest) / max(fwidth(diffuseColor.a) * 1.5, 1e-4) + 0.5, 0.0, 1.0);
+  if (diffuseColor.a <= 0.0) discard;
+#endif`);
+  };
+  const prevKey = material.customProgramCacheKey;
+  material.customProgramCacheKey = () => `${prevKey ? prevKey.call(material) : ''}-soft`;
   return material;
 }
 
@@ -267,7 +310,7 @@ export function createSharedMaterials(groundDetail) {
   // Sessio 23: puiden latvuksissa lehtikortit (lehtiatlas, läpikuultavat
   // kohdat leikataan pois); rungot käyttävät atlaksen valkoista nurkkaa.
   const vegetation = addWind(
-    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0, map: leafTexture, alphaTest: 0.42, side: THREE.DoubleSide , alphaToCoverage: true }),
+    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.97, metalness: 0, map: leafTexture, alphaTest: 0.42, side: THREE.DoubleSide , alphaToCoverage: true }),
     0.0045,
   );
   const bush = addWind(
@@ -297,6 +340,13 @@ export function createSharedMaterials(groundDetail) {
     { layer: 'mossrock', scale: 1.8, strength: 0.95, normal: 1.0 },
     { layer: 'moss', mask: 'top', scale: 1.2, strength: 1.0, cover: true },
   ]);
+  // Sessio 58: sammaloitunut puu (muinainen juurakko, sammaloitunut runko):
+  // kaarna ruskeissa kohdissa, sammal vihreäksi väritetyissä.
+  const solidMossy = addSurfaceDetail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.93, metalness: 0 }), [
+    { layer: 'bark', mask: 'notGreen', scale: 0.7, strength: 0.95, normal: 1.0 },
+    { layer: 'moss', mask: 'green', scale: 0.55, strength: 0.9, normal: 0.8 },
+  ]);
+  addWet(solidMossy, 0.8, 0.45);
   addWet(solidAncient, 0.9, 0.6);
   addWet(solidRock, 0.8, 0.6);
   addWet(solidWood, 0.8, 0.5);
@@ -304,14 +354,17 @@ export function createSharedMaterials(groundDetail) {
   addWet(terrain);
   // Sessio 26: lehdet eivät saa kiiltää (märkyys teki niistä peilaavia, yöllä
   // kuunvalo heijastui sinisenä); vain lievä tummuminen.
-  for (const m of [vegetation, bush]) addWet(m, 0.3, 0);
+  // Sessio 58: lehdet eivät kiillä märkinäkään muovisesti (ennen 0,3).
+  for (const m of [vegetation, bush]) addWet(m, 0.1, 0);
   addWet(tall, 0.6, 0.2);
   addTranslucency(vegetation, 0.38);
   addTranslucency(bush, 0.3);
+  softFoliage(vegetation); // sessio 46 (uloimpana)
+  softFoliage(bush);
   addWet(grass, 1, 0.5);
   addWet(solid, 0.8, 0.6);
   const puddle = createPuddleMaterial();
 
   // Vesi luodaan erikseen (render/water.js), koska se tarvitsee taivaan värit.
-  return { terrain, vegetation, bush, grass, tall, solid, solid_rock: solidRock, solid_wood: solidWood, solid_earth: solidEarth, solid_ancient: solidAncient, puddle };
+  return { terrain, vegetation, bush, grass, tall, solid, solid_rock: solidRock, solid_wood: solidWood, solid_earth: solidEarth, solid_ancient: solidAncient, solid_mossy: solidMossy, puddle };
 }
