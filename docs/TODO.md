@@ -1,6 +1,14 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 60:
+  - Pelaa → Takaisin (ja Asetukset → Takaisin): kameran siirtymä pehmeä eikä nykäise;
+  - leirin tallattu maa: muta, polut, tuhka ja jäljet; erottuuko, ja onko liian tumma tai vaalea;
+  - uusi valikkoulkoasu: logo, napit, Maailmat, Asetukset, taukovalikko ja latausruutu.
+- [x] Valikon kameran siirtymä takaisin päävalikkoon liian nopea (sessio 60).
+- [x] Nuotioleirin maa tallatuksi ja mutaiseksi (sessio 60).
+- [x] Valikon elementit ja grafiikka laadukkaammiksi (sessio 60; odottaa käyttäjän arviota).
+- [x] Valikon nuotion kekopuut näkyivät mustina (valo nostettu liekin kohdalle, sessio 60).
 - [ ] Käyttäjä testaa session 59 valikot:
   - nuotioleiri ja aika: odota valikossa muutama minuutti, jolloin ilta vaihtuu yöksi;
   - kameran liikkeet paneelien välillä, logo, Jatka-nappi, asetukset, taukovalikko ja latausruutu;

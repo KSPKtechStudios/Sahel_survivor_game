@@ -2,6 +2,14 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-11-01 (sessio 60)
+- **Valikon kameran siirtymä ajastetaan (2,6 s, smootherstep), ja suunta interpoloidaan kvaternionina** (`main.js` `updateMenuCamera`). Syy: eksponentiaalinen liu'utus katsepisteelle käänsi kuvaa rajusti, kun katsepiste siirtyi läheltä (kartta 1,5 m:n päässä) kauas (horisontti), koska kulmanopeus on katsepisteen nopeus jaettuna etäisyydellä. Mittaus näennäiskellolla (60 kuvaa/s): pelisilmukka etenee pelaamisen jälkeen yhtä nopeasti kuin ennen, joten vika oli kamerassa eikä ajastuksessa.
+- **Tallattu maa on oma läpikuultava verkko leirin päällä** (`menuCamp.js` `trampledGround`), ei maaston värejä. Syy: maaston verkko on 1,33 m:n ruudukko, joten jäljet, hankaumat ja kivet eivät mahdu siihen. Kuvat (768², 1,35 cm/kuvapiste) lasketaan kerran: väri ja läpinäkyvyys, karheus ja normaalikartta pinnanmuodosta. Verkko seuraa maaston verkkoa bilineaarisesti ja on 2 cm sen yläpuolella (polygonOffset).
+- **Jalanjälkien sijaan pääosin hankaumia.** Syy: ensimmäisessä kokeilussa selkeät erilliset jäljet näyttivät leimasimelta (∞-kuvioita); tallattu maa näyttää uskottavammalta, kun jäljet ovat harvoja ja osittaisia.
+- **Valikon tyyli hillitymmäksi:** ei CSS:llä jäljiteltyjä materiaaleja (nahka, ompeleet, niitit), vaan typografia, väljyys, ohuet viivat ja sumennettu lasi. Syy: käyttäjän mukaan elementit eivät näyttäneet laadukkailta; jäljitellyt materiaalit näyttävät helposti halvoilta, kun taas pelien ammattimaiset valikot ovat yleensä pelkistettyjä. Bògòlanfini-kangas säilyy leirin katoksessa.
+- **Valikon nuotion valo 1,0 m:n korkeudelle (ennen 0,55 m), voimakkuus 9 → 10,5.** Syy: keon latva on 0,5–0,6 m:ssä, joten valo osui tukkien ulkopintoihin vain sivuttain, ja kekopuut näkyivät auringonlaskua vasten mustina. Pelin nuotioissa valo on jo 0,9 m:ssä.
+- **Nappien selitetekstit pois päävalikosta ja taukovalikosta** (paitsi Jatka-napin maailma ja aika). Syy: lyhyet napit ovat selkeämpiä, ja selitteet toistivat napin nimen.
+
 ## 2026-11-01 (sessio 59, jatko)
 - **Valikon tausta on oikea pelimaailma** (valikkomaailma, siemen 'sahel-valikko'), johon rakennetaan leiri (`ui/menuCamp.js`). Leirin paikka (x −2576, z 662) valittiin skriptillä kumpareista, joiden länsipuolella on vettä. Aukio (`terrain.js` `MENU_CAMP`, `CLEARINGS`) estää puut, pensaat ja ruohon, ja akaasia lisätään chunkiin (`campProps`). Syy: käyttäjä halusi 3D-scenen; erillinen scene olisi vaatinut oman valaistuksen, taivaan ja jälkikäsittelyn, nyt kaikki on pelin omaa.
 - **Leirin varusteet ovat pelin Blender-esinemalleja** (`itemAsset`), tilat `lay`, `flat`, `stand` ja `lean`; rajat lasketaan leirin paikallisissa koordinaateissa. Syy: valmiit, laadukkaat mallit ja yhtenäinen tyyli.

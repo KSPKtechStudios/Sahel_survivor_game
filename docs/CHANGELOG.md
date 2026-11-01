@@ -2,6 +2,24 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-11-01 (sessio 60): valikon kamera, tallattu leirimaa ja uusi valikkoulkoasu
+
+- **Korjattu: kameran siirtymä Maailmat-näkymästä takaisin päävalikkoon oli super nopea** (käyttäjä: kun painaa Pelaa ja palaa päävalikkoon, animaatio menee tosi nopeasti). Syy: kamera liu'utti katsepistettä läheltä katsotusta kartasta kaukaiseen horisonttiin, jolloin kuva kääntyi alussa rajusti. Nyt jokainen siirtymä kestää saman ajan (2,6 s), kiihtyy ja jarruttaa pehmeästi, ja katsesuunta kääntyy tasaisesti. Kamera nousee siirtymässä hieman kaarelle.
+- **Nuotioleirin maa on tallattu** (käyttäjä: maa voisi olla mutaista tai eri väristä, että huomaa, että siinä on kävelty):
+  - nuotion ympärillä tummempaa, tiivistynyttä multaa, joka haihtuu epätasaisesti ruohikkoon;
+  - mutaisia ja märkiä kohtia, eniten polulla joelle; polut myös itään ja taljan ohi etelään;
+  - tuhkaa ja nokea nuotion ympärillä, hankaumia, osittaisia jalanjälkiä, pikkukiviä, hiilenpaloja ja risunpätkiä;
+  - pinnanmuoto: jäljet ja hankaumat painuvat, kivet ja kokkareet erottuvat, märkä muta kiiltää hieman.
+- **Valikoiden ulkoasu uusittu** (käyttäjä: valikon elementit ja grafiikka eivät ole laadukkaita):
+  - nahkapaneeli, ompeleet, niitit ja kangasnauha pois: valikko leijuu leirikuvan päällä, ja vasen reuna tummuu pehmeästi tekstin alle;
+  - logo: harvennettu SAHEL-nimi ja ohut horisonttiviiva, jossa aurinko laskee (vanha piirretty tunnus ja WordArt-liukuväri pois);
+  - napit ovat pelkkää tekstiä: korostettaessa teksti kirkastuu, siirtyy hieman ja vasemmalle liukuu ohut kultaviiva; selitetekstit nappien alta pois;
+  - Maailmat, Asetukset ja Tekijät avautuvat sumennetulle tummalle lasipaneelille, jossa on ohuet kulmat;
+  - säätimet uusiksi: ohut liukusäädin, joka täyttyy arvoon asti, pieni kytkin ja tekstivalinnat alleviivauksella; nimi- ja siemenkentät viivan päällä;
+  - taukovalikko, ohjainkortit ja latausruutu samaan tyyliin; "Päävalikkoon" on nyt "Tallenna ja poistu".
+- **Valikon nuotion kekopuut eivät enää näy mustina tikkuina:** tulen valo nostettiin liekin kohdalle (ennen se oli keon latvan tasalla, jolloin tukkien kameran puoleiset pinnat jäivät pimeään).
+- Maailmat-näkymässä kamera katsoo hieman kartan vasemmalle puolelle, joten kartta näkyy paneelin vieressä.
+
 ## 2026-11-01 (sessio 59, jatko): valikot uusiksi, nuotioleiri ja uusi tuli
 
 - **Kaikki valikot uudistettu** (käyttäjä: entiset "intialaisen mobiilipelin tasoa"; ammattimaisempi, Valheim-henkinen, tunnelmallinen ja kotoisa):
