@@ -2,6 +2,14 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-11-02 (sessio 61): Godot-siirtokoe, vaihe 1 (kohina ja pelaajan liikkuminen)
+
+- **Uusi kansio `godot/`:** Godot 4.7 -projekti, johon peliä kokeillaan siirtää pienin askelin. Selainpeli ei muutu.
+- **Siirretty:** siemennetty satunnaisuus ja kohina (`noise.js`) sekä pelaajan liikkuminen (`player.js`: kävely, juoksu, hyppy, kyykky, jyrkät seinät, kestävyys, terveys ja pään heilunta) samoilla arvoilla (`config.js`).
+- **Väliaikainen koemaasto** (kumpuja ja jyrkkä tasanne), aurinko, taivas, sumu ja tietoruutu (FPS, paikka, nopeus, kestävyys, terveys, askeleet).
+- **Testit vertaavat alkuperäiseen JS-koodiin:** kohina on bitilleen sama, ja sama 780 ruudun näppäinsarja tuottaa Godotissa täsmälleen saman reitin kuin `player.js` Nodessa (paikka, katse, kestävyys, kyykky, kamera, askeleet). 23 tarkistusta, kaikki läpi.
+- **Kuvakaappaukset pilvessä:** autopilotti (`-- --shots=<kansio>`); toimii sekä kevyellä (OpenGL) että varsinaisella Forward+-renderöijällä (ohjelmisto-Vulkan).
+
 ## 2026-11-02 (sessio 60, jatko 2): oikeat kipinät, kekäleet, selkeämpi logo, ei klikkausruutuja
 
 - **Kipinät näyttävät kipinöiltä** (käyttäjä: eivät vain keltaisena hohtavia palloja; koskee soihtua ja nuotiota) kaikkialla pelissä ja valikossa:
