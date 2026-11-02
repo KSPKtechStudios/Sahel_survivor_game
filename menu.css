@@ -78,15 +78,15 @@
 .logo-slot.shrink { transform: scale(0.5); margin-bottom: -70px; opacity: 0.9; }
 .logo { display: flex; flex-direction: column; align-items: flex-start; user-select: none; }
 .logo-word {
-  font: 700 clamp(64px, 6.2vw, 104px)/0.9 var(--m-title);
+  font: 900 clamp(64px, 6.2vw, 104px)/0.9 var(--m-title);
   letter-spacing: 0.3em;
   margin-right: -0.3em;
   color: #f2e7d2;
   /* Kulunut pronssi: liukuväri + SVG-suodin (index.html #logo-worn). */
-  background: linear-gradient(180deg, #f8ecd2 0%, #e6c993 45%, #b98a4e 78%, #8a5f31 100%);
+  background: linear-gradient(180deg, #fff4da 0%, #f2d397 42%, #d09a52 75%, #9c6a34 100%);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
   text-shadow: none;
-  filter: url(#logo-worn) drop-shadow(0 2px 14px rgba(0, 0, 0, 0.55));
+  filter: url(#logo-worn);
   animation: mRiseSolid 1.4s var(--ease-out) 0.1s both; /* ei filter-animaatiota: se korvaisi kulumasuotimen */
 }
 .logo-rule {
@@ -144,12 +144,12 @@
   position: relative; display: flex; flex-direction: column; align-items: flex-start;
   width: max-content; max-width: 100%; padding: 10px 0 10px 0;
   background: none; border: 0; cursor: pointer;
-  color: var(--m-ink-2); text-align: left;
+  color: rgba(239, 230, 214, 0.82); text-align: left;
   transition: color 0.3s, transform 0.45s var(--ease-out);
 }
 .mbtn .label {
   font: 600 clamp(19px, 1.6vw, 26px)/1.2 var(--m-title); letter-spacing: 0.24em; text-transform: uppercase;
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.8), 0 2px 14px rgba(0, 0, 0, 0.7);
   transition: color 0.3s, text-shadow 0.4s;
 }
 .mbtn small { margin-top: 4px; font: italic 400 14.5px var(--m-body); letter-spacing: 0.01em; color: var(--m-ink-3); transition: color 0.3s; }
@@ -162,7 +162,7 @@
   transition: transform 0.45s var(--ease-out), opacity 0.3s;
 }
 .mbtn:hover, .mbtn:focus-visible { outline: none; color: var(--m-ink); transform: translateX(8px); }
-.mbtn:hover .label, .mbtn:focus-visible .label { color: #fff8ea; text-shadow: 0 0 18px rgba(255, 196, 120, 0.35), 0 1px 12px rgba(0, 0, 0, 0.6); }
+.mbtn:hover .label, .mbtn:focus-visible .label { color: #fff8ea; text-shadow: 0 0 2px rgba(0, 0, 0, 0.9), 0 0 18px rgba(255, 196, 120, 0.35), 0 2px 14px rgba(0, 0, 0, 0.7); }
 .mbtn:hover small, .mbtn:focus-visible small { color: var(--m-ink-2); }
 .mbtn:hover::before, .mbtn:focus-visible::before { transform: scaleX(1); opacity: 1; }
 .mbtn:active { transform: translateX(6px) scale(0.985); }
@@ -195,11 +195,6 @@
 .menu-list > .mbtn:nth-child(3) { animation-delay: 0.59s; }
 .menu-list > .mbtn:nth-child(4) { animation-delay: 0.66s; }
 
-.mm-quote {
-  margin: auto 0 0; max-width: 360px; padding-top: 18px;
-  font: italic 400 15px/1.5 var(--m-body); color: var(--m-ink-3);
-  animation: mFade 2s ease 1s both;
-}
 .mm-footer {
   flex: none; margin-top: 18px; display: flex; gap: 14px; align-items: center;
   font: 600 10.5px var(--m-title); letter-spacing: 0.32em; text-transform: uppercase; color: rgba(239, 230, 214, 0.3);
@@ -353,8 +348,6 @@
 .load-bar { position: relative; width: min(300px, 70vw); height: 1px; background: rgba(239, 230, 214, 0.14); }
 .load-bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(90deg, rgba(216, 176, 108, 0.2), var(--m-gold-hi)); transition: width 0.3s ease; }
 .load-bar i::after { content: ''; position: absolute; right: -3px; top: -3px; width: 7px; height: 7px; border-radius: 50%; background: radial-gradient(circle, #fff4d8, rgba(255, 190, 110, 0.5) 45%, transparent 72%); }
-#btn-enter { margin-top: 2px; }
-#btn-enter:not(.cta) { animation: mBreath 2.6s ease-in-out infinite; }
 
 /* Hiekkapöllähdykset poistettu (sessio 59); säiliö jää DOMiin. */
 #puffs { display: none; }
@@ -370,7 +363,6 @@
 @keyframes mItemIn { from { transform: translateX(-14px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes mPanelIn { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes mPanelOut { from { opacity: 1; } to { transform: translateY(-6px); opacity: 0; } }
-@keyframes mBreath { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
 
 @media (max-width: 900px) {
   .mm-side, .mm-side.wide { width: 100vw; padding-left: 28px; padding-right: 28px; }

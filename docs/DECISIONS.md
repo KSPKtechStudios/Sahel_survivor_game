@@ -2,6 +2,13 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-11-02 (sessio 60, jatko 2)
+- **Gasellit jäävät ennalleen** (käyttäjä: näkyvät hänestä tarpeeksi hyvin).
+- **Kipinät viiruina** (`render/sparks.js` `SparkStreaks`): nelikulmio kärjestä pyrstöön (pyrstö = nopeus × 0,04–0,045 s, kuin kameran suljinaika), leveys ruudulla 1,3–3,5 px, väri lämpötilasta (`sparkColor`, HDR, bloom hehkuttaa). Syy: Points-hiukkaset ovat aina pyöreitä palloja eivätkä voi venyä liikkeen suuntaan. Simulaatio on omistajalla (nuotio, soihtu). Kolmiot piirretään molemmin puolin, koska kiertosuunta riippuu liikkeen suunnasta (ensimmäisessä testissä kaikki karsittiin).
+- **Kekäle hiilen sävyttimellä** (`campfire.js` `_updateBrands`): kuhmurainen sylinteri, jonka toinen pää hehkuu (aHeat). Painovoima, yksi pomppu, kytee 6–12 s, kutistuu pois. Enintään 3 kerrallaan, vain nuotiossa (ei soihtutelineessä). Ensimmäinen versio (valkoinen läiskä, lensi 2,5 m) oli liian kirkas ja kaukana.
+- **Logon reunus SVG-suotimessa** (laajennettu alfa tummana reunana + sumennettu varjo), fontti 900, reikiä harvemmin (−24n + 18,7). Syy: ohut vaalea teksti hukkui vaaleaan taivaaseen ja tummaan puuhun.
+- **Klikkausruudut pois:** musiikki ja äänet avautuvat ensimmäisestä eleestä (jo ennestään yleiskuuntelija); intron ohitusnäppäin pysäyttää tapahtuman, joten se kutsuu `window.sahelUnlockAudio`. Hiiren lukitus vaatii eleen: `input.lock()` kokeillaan heti latauksen jälkeen, ja tilassa `ready` klikkaus tai näppäin lukitsee. Maailma pysyy siihen asti paikallaan (taistelu ja olennot käyttävät samaa aika-askelta, joten niitä ei käynnistetä ennen pelaajaa).
+
 ## 2026-11-01 (sessio 60, jatko)
 - **Käyttäjän linjaukset:** pushaa aina ja päivitä changelog samaan haaraan; käyttäjä yhdistää PR:t itse; kysy välillä suunnasta (kirjattu CLAUDE.md:hen). Valikon tyyli: pelkistetty pohja + kulunut logo; fontti Cinzel säilyy.
 - **Leirin maa kahdesta Poly Havenin mullasta** (`forest_ground_06` tiivis, `brown_mud_dry` irtonainen; `assets/textures/camp/`). Syy: Sahelin ruskeaan maahan sopivat; harmaa `brown_mud_02` ja männynneulasia sisältävä `burned_ground_01` eivät sovi savanniin. Sekoitus tehdään sävyttimessä maskin mukaan (R irtonainen, G tuhka, B kosteus, A peitto), joten tekstuurit laattautuvat tarkkoina (2,4 m:n laatta) ja maski voi olla pehmeä. Irtonaisen mullan murut terävöittävät sekoitusta hieman, ettei siirtymä näytä läpikuultavalta.

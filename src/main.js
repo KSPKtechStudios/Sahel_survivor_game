@@ -164,6 +164,8 @@ const flies = new Flies(scene, sfx);
 if (document.fonts) document.fonts.load("700 16px 'Philosopher'").catch(() => {});
 const lightningEl = document.getElementById('lightning');
 for (const ev of ['pointerdown', 'keydown']) window.addEventListener(ev, () => { music.unlock(); sfx.unlock(); }, { capture: true });
+// Intro pysäyttää ohitusnäppäimen tapahtuman, joten se avaa äänet tällä (sessio 60).
+window.sahelUnlockAudio = () => { music.unlock(); sfx.unlock(); };
 
 const inventory = new Inventory();
 const guide = new Guide();
@@ -479,17 +481,11 @@ async function enterMenu(first = false) {
   if (first) menu.showLoading('Ladataan…');
   await buildAround(camp.x, camp.z, (p) => menu.setLoading(p));
   state = 'menu';
-  if (first && !music.unlocked) {
-    // Ensimmäisellä kerralla klikkaus: selain päästää musiikin soimaan vasta sen jälkeen.
-    menu.loadingReady('Tervetuloa Saheliin', () => {
-      music.unlock();
-      menu.hideLoading();
-      menu.showMain();
-    }, 'Klikkaa jatkaaksesi');
-  } else {
-    menu.hideLoading();
-    menu.showMain();
-  }
+  // Sessio 60: suoraan valikkoon (käyttäjä: "Klikkaa jatkaaksesi" on turha).
+  // Musiikki ja äänet käynnistyvät ensimmäisestä klikkauksesta tai
+  // näppäimestä (selaimen vaatimus); intron ohitus avaa ne jo.
+  menu.hideLoading();
+  menu.showMain();
 }
 
 async function startWorld(meta) {
@@ -531,8 +527,12 @@ async function startWorld(meta) {
   explored.load(data ? data.map : null);
   mobs.prepare();
   player.update(0, input, world);
+  // Sessio 60: ei "Klikkaa pelaamaan" -ruutua. Hiiri lukitaan heti, jos selain
+  // sallii (pelaa-klikkauksesta on vähän aikaa); muuten peli alkaa ensimmäisestä
+  // klikkauksesta tai näppäimestä (maailma odottaa paikallaan siihen asti).
   state = 'ready';
-  menu.loadingReady('Maailma on valmis', () => input.lock());
+  menu.hideLoading();
+  input.lock();
 }
 
 function persist() {
@@ -605,9 +605,10 @@ document.addEventListener('pointerlockchange', () => {
 document.addEventListener('pointerlockerror', () => {
   if (state === 'inventory' || state === 'map' || state === 'dev' || state === 'build') setState('paused');
 });
-canvas.addEventListener('click', () => { if (state === 'playing' && !input.locked) input.lock(); });
+canvas.addEventListener('click', () => { if ((state === 'playing' || state === 'ready') && !input.locked) input.lock(); });
 
 window.addEventListener('keydown', (e) => {
+  if (state === 'ready' && !input.locked && e.code !== 'Escape' && e.code !== 'F3') input.lock();
   // F3 avaa selaimessa haun; pelissä se avaa kehittäjätyökalut.
   if (e.code === 'F3') e.preventDefault();
   if (state === 'playing' && e.code === 'F3') {

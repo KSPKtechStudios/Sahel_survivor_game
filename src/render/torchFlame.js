@@ -23,6 +23,7 @@
 //  - Piilotus koskee vain liekkiä: ilmassa jo olevat kipinät ja savu jatkavat
 //    lentoaan ja häipyvät elinikänsä loppuun.
 import * as THREE from 'three';
+import { SparkStreaks, sparkColor } from './sparks.js';
 
 const NOISE = /* glsl */`
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -248,6 +249,7 @@ class PointPool {
 const _v = new THREE.Vector3();
 const _w = new THREE.Vector3();
 const _v2 = new THREE.Vector2();
+const _sc = [0, 0, 0];
 const _qi = new THREE.Quaternion();
 const _up = new THREE.Vector3();
 
@@ -280,7 +282,10 @@ export class TorchFlame {
       this.group.add(m);
     });
     scene.add(this.group);
-    this.embers = new PointPool(scene, 48, true, 1.6);
+    // Sessio 60: kipinät viiruina (render/sparks.js), simulaatio kuten ennen.
+    this.embers = { list: [], max: 48 };
+    this.sparks = new SparkStreaks(48, { fog: false });
+    scene.add(this.sparks.mesh);
     this.smoke = new PointPool(scene, 40, false, 1.2);
     this.bend = new THREE.Vector2();
     this.bendV = new THREE.Vector2();
@@ -304,9 +309,10 @@ export class TorchFlame {
 
   // Kaikki pois heti (esim. kamera puuttuu).
   clearParticles() {
-    this.embers.clear();
+    this.embers.list.length = 0;
+    this.sparks.begin();
+    this.sparks.end();
     this.smoke.clear();
-    this.embers.points.visible = false;
     this.smoke.points.visible = false;
   }
 
@@ -408,16 +414,22 @@ export class TorchFlame {
         p.p.addScaledVector(p.v, dt);
       }
     };
-    step(this.embers.list, 1.4, 0.3, 4);
+    step(this.embers.list, 1.4, 0.3, 9);
     step(this.smoke.list, 1.8, 0.05, 0.6);
-    this.embers.points.visible = this.embers.list.length > 0;
     this.smoke.points.visible = this.smoke.list.length > 0;
     const inv = cam.matrixWorldInverse;
-    this.embers.write(inv, (p) => {
-      const f = 1 - p.age / p.life;
-      const fl = 0.75 + 0.25 * Math.sin(time * 30 + p.ph);
-      return [1.0, 0.45 + 0.45 * f, 0.1 + 0.3 * f * f, f * fl, p.sz * (0.6 + 0.4 * f)];
-    });
+    // Kipinät näkymän koordinaateissa: kärki nyt, pyrstö nopeus × suljinaika sitten.
+    const sp = this.sparks, c = _sc;
+    sp.begin();
+    for (const p of this.embers.list) {
+      const k = p.age / p.life;
+      _v.copy(p.p).applyMatrix4(inv);
+      _w.copy(p.p).addScaledVector(p.v, -0.04).applyMatrix4(inv);
+      sparkColor(1 - k * 0.95, c);
+      const fl = k > 0.7 ? 0.55 + 0.45 * Math.sin(time * 40 + p.ph * 7) : 1;
+      sp.push(_v.x, _v.y, _v.z, _w.x, _w.y, _w.z, c[0], c[1], c[2], Math.min(1, p.age * 25) * (1 - k * k) * fl, p.sz * 0.9);
+    }
+    sp.end();
     this.smoke.write(inv, (p) => {
       const f = p.age / p.life;
       return [0.13, 0.12, 0.11, 0.22 * Math.sin(Math.PI * f) * (0.6 + 0.4 * power), 0.035 + 0.11 * f];

@@ -2,6 +2,27 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-11-02 (sessio 60, jatko 2)
+**Tehtiin**
+- Käyttäjän palaute:
+  - logo kaipaa reunuksia;
+  - gasellit näkyvät tarpeeksi;
+  - kipinät oikean näköisiksi (soihtu ja nuotio);
+  - kekäleitä nuotiosta;
+  - iskulause pois;
+  - klikkausruudut pois.
+- `render/sparks.js` (uusi): kipinät viiruina; `campfire.js` kipinäsimulaatio ja kekäleet; `torchFlame.js` käyttää viiruja.
+- Testisivulla (`firetest2`) kipinät ja kekäle; ensin kolmiot karsittiin (takapinta) ja varattu sana `half` esti kääntämisen; korjattu.
+- Logo: reunus ja varjo SVG-suotimessa, fontti 900, reikiä vähemmän (`logotest`, 3 kierrosta).
+- Klikkausruudut pois (`main.js`, `menu.js`, `index.html`), äänten avaus intron ohituksessa.
+- eslint puhdas.
+
+**Kesken / tiedossa**
+- Kipinöiden tiheys ja kekäleiden väli ovat arvioita; käyttäjä arvioi.
+
+**Seuraavaksi**
+- Käyttäjän palaute; avoin kysymys oikeista äänitteistä itse peliin.
+
 ## 2026-11-02 (sessio 60, jatko)
 **Tehtiin**
 - Käyttäjän palaute:

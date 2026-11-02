@@ -2,6 +2,19 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-11-02 (sessio 60, jatko 2): oikeat kipinät, kekäleet, selkeämpi logo, ei klikkausruutuja
+
+- **Kipinät näyttävät kipinöiltä** (käyttäjä: eivät vain keltaisena hohtavia palloja; koskee soihtua ja nuotiota) kaikkialla pelissä ja valikossa:
+  - jokainen kipinä on ohut, kirkas viiru, joka venyy liikkeen suuntaan (kuten kipinä näkyy silmälle ja kameralle);
+  - kuuma kipinä on valkokeltainen, viiletessään oranssi ja lopuksi tummanpunainen, ja sammuessaan se välkkyy;
+  - kipinät nousevat kuumuuden mukana, mutkittelevat levottomasti ja kulkevat tuulen mukana; nuotiosta purkautuu välillä rätinän kipinäsuihku.
+- **Nuotiosta lentää silloin tällöin kekäle** (noin 7–20 s välein): hehkuva puunpala lentää kaaressa kipinävana perässään, pomppaa maahan kipinöiden saattelemana, kytee hiipuen ja sammuu.
+- **Logo erottuu taustasta** (käyttäjä: logo kaipaa reunuksia, ohut teksti hukkuu): kirjaimilla on tumma reunus ja pehmeä varjo, ne ovat paksumpia ja kullanvärisempiä, ja kolhuja on vähemmän. Valikon napit erottuvat paremmin (tummempi varjo, kirkkaampi teksti).
+- **Iskulause poistettu** päävalikon alalaidasta.
+- **Ei enää "Klikkaa jatkaaksesi" eikä "Klikkaa pelaamaan" -ruutuja:**
+  - intron jälkeen avautuu suoraan päävalikko;
+  - kun maailma on ladattu, peli alkaa heti, jos selain sallii hiiren lukituksen; muuten maailma odottaa ja peli alkaa ensimmäisestä klikkauksesta tai näppäimestä.
+
 ## 2026-11-01 (sessio 60, jatko): multamaa, soihdun liekit nuotioon, kulunut logo ja elävä ilta
 
 - **Leirin maa on oikeaa multaa** (käyttäjä: multatekstuuria, aivan pari jalanjälkeä, pehmeä siirtymä maamateriaalien välillä):
