@@ -2,6 +2,21 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-11-02 (sessio 61)
+**Tehtiin**
+- Keskusteltiin pelimoottoriin siirrosta (Unity, Unreal, Godot). Käyttäjä: WebGL tulee vastaan, tavoite on Minecraft- ja Valheim-tyylinen avoimen maailman selviytymispeli Afrikassa ja melko hyvä grafiikka; valittiin kokeiluun Godot, aloitetaan perusmekaniikasta.
+- Godot 4.7.2 toimii pilvessä: testit ilman näyttöä, kuvat Xvfb:llä (OpenGL llvmpipe ja Vulkan lavapipe, `apt install mesa-vulkan-drivers`).
+- `godot/`: projekti, kohina, asetukset, pelaaja, koemaasto, pääscene, testit ja vertailuarvot alkuperäisestä JS:stä. 23/23 tarkistusta läpi; pelaajan reitti täsmälleen sama kuin JS:ssä 780 ruudun ajan.
+- Löydökset: 32-bittinen `Vector3` erotti reitin (korjattu 64-bittisellä simulaatiolla); Godotin JSON-jäsennys heittää viimeisen bitin; JS-pelaaja pääsi koetasanteen päälle liukumalla seinää pitkin; kamera menee seinän läpi, kun seinän vieressä käännytään.
+- Kuvat (scratchpad `shots/`, `shotsfp/`).
+
+**Kesken / tiedossa**
+- Käyttäjä pyysi aluksi, ettei GitHubiin kirjoiteta; muutokset on commitoitu paikallisesti, pushaus kysytään.
+- Ei selaintestilinkkiä: Godot-versio ajetaan Godot-editorissa (ohje `godot/README.md`).
+
+**Seuraavaksi**
+- Käyttäjä kokeilee omalla koneellaan (F5). Sitten vaihe 2: oikea maasto (`terrain.js`) vertailutesteineen.
+
 ## 2026-11-02 (sessio 60, jatko 2)
 **Tehtiin**
 - Käyttäjän palaute:

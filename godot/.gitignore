@@ -1,0 +1,4 @@
+# Godotin välimuisti ja käännökset (luodaan uudelleen).
+# Huom. assettien .import-tiedostot kuuluvat versionhallintaan.
+.godot/
+/build/

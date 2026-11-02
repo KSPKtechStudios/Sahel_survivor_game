@@ -1,5 +1,18 @@
 # TODO
 
+## Godot-siirto (sessio 61)
+- [x] Vaihe 1: kohina (`noise.js`), pelaajan liikkuminen (`player.js`), koemaasto, vertailutestit JS:ään.
+- [ ] Käyttäjä kokeilee vaihetta 1 omalla koneellaan (Godot 4.7, `godot/project.godot`, F5): liikkumisen tuntuma, juoksu, hyppy, kyykky, seinä; mikä FPS omalla koneella.
+- [ ] Avoin: pushataanko Godot-kokeilu GitHubiin (käyttäjä pyysi aluksi, ettei kirjoiteta).
+- [ ] Vaihe 2: oikea maasto (`src/world/terrain.js`, 2 085 riviä) vertailutesteineen; chunkkien lataus säikeissä. Arvioi GDScriptin nopeus (nyt 1,3 µs / kohinanäyte) vs. C#.
+- [ ] Vaihe 3: vesi, aallot ja uinti (`waves.js`, pelaajan uinti ja hukkuminen).
+- [ ] Vaihe 4: objektien sijoittelu (`chunkGen.js`) ja törmäykset puihin ja kiviin (`world.collidersNear`).
+- [ ] Vaihe 5: kädet ja työkalu (`arms.js`, `viewmodel.js`); sitten puun kaato, saaliit ja reppu.
+- [ ] Rinnakkain: grafiikkakoe (savannin pala: ruoho, akaasiat, auringonlasku, sumu, nuotio) ja FPS-mittaus.
+- [ ] GitHub Actions: Godot-vienti (Windows/Linux zip) jokaisesta PR:stä, jotta käyttäjä voi ladata pelin ilman editoria.
+- [ ] Havainto (koskee myös JS-peliä, ei korjattu): koetasanteen jyrkän seinän pääsee ylös liukumalla viistosti seinää pitkin (vertailuajon lopussa pelaaja tasanteen päällä). Tarkista, toistuuko oikean maaston karstiseinillä.
+- [ ] Havainto (luultavasti myös JS-pelissä): jyrkän seinän vieressä kamera on alle 0,1 m päässä seinästä, ja lähin piirtotaso leikkaa seinän läpi.
+
 ## Heti (odottaa käyttäjää)
 - [ ] Käyttäjä testaa session 60 jatkon 2: kipinät (nuotio, soihtu, soihtuteline), kekäleet, logon reunus, ei klikkausruutuja (intro → valikko, maailman lataus → peli).
 - [ ] Käyttäjä testaa session 60 jatkon:

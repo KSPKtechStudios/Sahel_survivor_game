@@ -2,6 +2,19 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-11-02 (sessio 61): Godot-siirtokoe
+- **Siirtokohteeksi kokeillaan Godotia (4.7.2), ei Unitya tai Unrealia.** Syy (keskustelu käyttäjän kanssa): selaimen WebGL tulee vastaan raskaassa avoimessa maailmassa; Godotin projekti on kokonaan tekstiä (scenet `.tscn`, skriptit), joten Claude voi muokata myös scenejä, ja Godot toimii pilvessä ilman näyttöä (testit ja kuvakaappaukset). Valheim-tason grafiikka on Godotilla mahdollinen; Unrealin fotorealismi ei ole tavoite.
+- **Godot-projekti samaan repoon kansioon `godot/`**, ei uuteen repoon. Syy: JS-peli on siirron speksi, ja testit ajavat alkuperäistä `src/`-koodia vertailuarvoiksi.
+- **JS-peli on speksi; käytöstä ei muuteta siirrossa.** Havainnot (esim. seinän kiipeäminen) kirjataan TODO:hon ja korjataan erikseen. Esimerkki: `teleport` ei nollaa edellistä maan korkeutta, koska JS ei nollaa.
+- **Testaus vertailuajoilla:** `godot/tests/make_golden.mjs` ajaa alkuperäisen `noise.js`:n ja `player.js`:n Nodessa (moduulikoukut: `three` → `vendor/three`, pelaajan maasto → JS-kaksonen `tests/js/test_terrain.mjs`), ja `tests/run_tests.gd` vertaa. Syy: siirtovirheet löytyvät heti eivätkä vasta pelatessa.
+- **Pelaajan simulaatio 64-bittisillä luvuilla** (`_px`, `_vx` …; `position` ja `velocity` päivitetään niistä). Syy: Godotin `Vector3` on 32-bittinen; sillä laskettuna jyrkän seinän nousupäätös kääntyi ruudussa 418 ja reitti erkani JS:stä 5 cm. 64-bittisenä reitti on täsmälleen sama.
+- **32-bittiset bittioperaatiot emuloidaan** (`SahelNoise.imul`, maski `0xFFFFFFFF`). Syy: GDScriptin `int` on 64-bittinen; `Math.imul` jaetaan 16-bittisiin puolikkaisiin, ettei kertolasku vuoda yli.
+- **Vertailuarvot verrataan toleranssilla tai kokonaislukuina.** Syy: Godotin desimaalijäsennys (JSON, `to_float`) ei ole tarkka viimeiseen bittiin (`"0.016666666666666666"` ≠ `1.0 / 60.0`). Aika-askel lasketaan testissä itse; mulberry32 verrataan muodossa k / 2^32.
+- **Näppäimet fyysisinä (`physical_keycode`)** projektiasetuksissa. Syy: WASD samoissa kohdissa näppäimistön kielestä riippumatta.
+- **Syöte erillisenä oliona (`PlayerInput`).** Syy: testi ja autopilotti syöttävät liikkeet ilman näppäimistöä.
+- **Sävytys ACES** kuten JS:ssä (`renderer.toneMapping`), näkökenttä 72° pystysuunnassa (sama tulkinta molemmissa).
+- **Kieli GDScript (ei C#) ensimmäisessä vaiheessa.** Syy: ei .NET-asennusta käyttäjälle. Mitattu: simplex-näyte 1,2–1,3 µs GDScriptillä; 25 chunkin koemaasto 0,8 s. Oikean maaston (`terrain.js`) kohdalla arvioidaan, riittääkö GDScript säikeistettynä vai tarvitaanko C#.
+
 ## 2026-11-02 (sessio 60, jatko 2)
 - **Gasellit jäävät ennalleen** (käyttäjä: näkyvät hänestä tarpeeksi hyvin).
 - **Kipinät viiruina** (`render/sparks.js` `SparkStreaks`): nelikulmio kärjestä pyrstöön (pyrstö = nopeus × 0,04–0,045 s, kuin kameran suljinaika), leveys ruudulla 1,3–3,5 px, väri lämpötilasta (`sparkColor`, HDR, bloom hehkuttaa). Syy: Points-hiukkaset ovat aina pyöreitä palloja eivätkä voi venyä liikkeen suuntaan. Simulaatio on omistajalla (nuotio, soihtu). Kolmiot piirretään molemmin puolin, koska kiertosuunta riippuu liikkeen suunnasta (ensimmäisessä testissä kaikki karsittiin).
