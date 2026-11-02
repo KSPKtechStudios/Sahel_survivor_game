@@ -1,6 +1,12 @@
 # TODO
 
 ## Heti (odottaa käyttäjää)
+- [ ] Käyttäjä testaa session 60 jatkon:
+  - leirin multamaa, jalanjäljet (joelta päin) ja pehmeät siirtymät ruohikkoon;
+  - nuotion uudet liekit valikossa ja pelissä (rakennettu nuotio ja soihtuteline), myös tuulessa;
+  - kulunut logo;
+  - valikon ilta: gasellit kaukana, lintuparvet hämärässä, tulikärpäset ja yöäänet pimeällä (odota valikossa noin 5 min), illan sää eri kerroilla.
+- [ ] Avoin (sessio 60): jos käyttäjä haluaa lisää rustiikkia, ehdotetut vaihtoehdot olivat tulen hehku napeissa ja kipinät, oikeat materiaalit paneeleissa ja käsin piirretyt koristeet (eivät valittuja nyt).
 - [ ] Käyttäjä testaa session 60:
   - Pelaa → Takaisin (ja Asetukset → Takaisin): kameran siirtymä pehmeä eikä nykäise;
   - leirin tallattu maa: muta, polut, tuhka ja jäljet; erottuuko, ja onko liian tumma tai vaalea;

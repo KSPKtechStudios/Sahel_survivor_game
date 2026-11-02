@@ -14,6 +14,10 @@ Tekstuurit (assets/textures/), ambientCG (https://ambientcg.com), CC0:
   grass.png = Clauden piirtämä ruohoatlas (sessio 24, CC0)
   forestfloor.png = koottu Quaterniuksen lehtikuvista (ks. alla)
 
+Valikon leirin multa (assets/textures/camp/), sessio 60: Poly Haven
+  (https://polyhaven.com), CC0: soil_compact = forest_ground_06,
+  soil_loose = brown_mud_dry (1k; väri- ja normaalikartta (GL), uudelleenpakattu JPEG:ksi)
+
 Mallit (assets/models/, src/models/scanned/), Poly Haven (https://polyhaven.com), CC0:
   rocks/boulder_02..06 = namaqualand_boulder_02 .. namaqualand_boulder_06
   (1k glTF, kevennetty gltf-transform + meshoptimizer)

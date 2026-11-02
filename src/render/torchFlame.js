@@ -424,3 +424,7 @@ export class TorchFlame {
     });
   }
 }
+
+// Sessio 60: samat liekkikuoret nuotiolle (render/campfire.js; käyttäjä: nuotiolle
+// samanlaiset liekkifysiikat kuin soihdussa).
+export { VERT as FLAME_VERT, FRAG as FLAME_FRAG, shellGeometry as flameShellGeometry, LAYERS as FLAME_LAYERS };

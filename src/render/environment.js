@@ -52,6 +52,13 @@ export const WEATHER = {
 export const WEATHER_KEYS = Object.keys(WEATHER);
 // Päävalikon taustan tunnelmallinen auringonlasku (ei satunnaisessa säässä).
 WEATHER.menu = { name: 'Selkeä', cloud: 0.5, vis: 330, sunMul: 1.0, wind: 0.25, dust: 0.08, haze: 0.04, tint: 0xffffff, tintAmt: 0, grey: 0, rain: 0, thunder: 0 };
+// Sessio 60: valikon ilta vaihtelee (käyttäjä: sää vaihtelee): tyyni ja kirkas,
+// tuulinen, pilvinen ja utuisen kultainen. main.js valitsee ja vaihtaa näitä.
+WEATHER.menuCalm = { name: 'Selkeä', cloud: 0.28, vis: 340, sunMul: 1.0, wind: 0.1, dust: 0.05, haze: 0.02, tint: 0xffffff, tintAmt: 0, grey: 0, rain: 0, thunder: 0 };
+WEATHER.menuBreeze = { name: 'Selkeä', cloud: 0.5, vis: 320, sunMul: 1.0, wind: 0.48, dust: 0.1, haze: 0.05, tint: 0xffffff, tintAmt: 0, grey: 0, rain: 0, thunder: 0 };
+WEATHER.menuClouds = { name: 'Puolipilvinen', cloud: 0.72, vis: 310, sunMul: 0.85, wind: 0.32, dust: 0.06, haze: 0.08, tint: 0xf0d8c0, tintAmt: 0.12, grey: 0.15, rain: 0, thunder: 0 };
+WEATHER.menuHaze = { name: 'Utuinen', cloud: 0.35, vis: 250, sunMul: 0.92, wind: 0.3, dust: 0.22, haze: 0.3, tint: 0xe8b870, tintAmt: 0.28, grey: 0, rain: 0, thunder: 0 };
+export const MENU_WEATHERS = ['menu', 'menuCalm', 'menuBreeze', 'menuClouds', 'menuHaze'];
 const HUMID_TINT = new THREE.Color(0xa9b5a2);
 const CANOPY_GREEN = new THREE.Color(0x6f9a5a);
 
@@ -195,7 +202,7 @@ export class Environment {
     if (!WEATHER[key]) return;
     // Ilman vyöhykettä vain niille vyöhykkeille, joilla sää on mahdollinen
     // (esim. hiekkamyrsky ei tule merelle eikä sade aavikolle).
-    const zones = zone ? [zone] : CLIMATE_KEYS.filter((k) => key === 'clear' || key === 'menu' || CLIMATES[k].table[key] !== undefined);
+    const zones = zone ? [zone] : CLIMATE_KEYS.filter((k) => key === 'clear' || key.startsWith('menu') || CLIMATES[k].table[key] !== undefined);
     for (const k of zones) {
       const z = this.zones[k];
       z.target = key;

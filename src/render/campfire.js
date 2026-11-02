@@ -12,68 +12,34 @@
 //    ja pehmeä hehku maassa.
 //  - Kipinät ja savu: kevyet pistejärjestelmät (kipinät nousevat pyörteinä
 //    ja sammuvat, savu laajenee ja ajautuu tuulen mukana).
+// Sessio 60 (käyttäjä: nuotiolle realistisemmat tulifysiikat, samanlaiset
+// liekkifysiikat kuin soihtu-itemissä): litteät tasot vaihdettu soihdun
+// tilavuusliekkeihin (render/torchFlame.js). Jokainen liekin kieli on neljä
+// sisäkkäistä pisaranmuotoista kuorta, joita nouseva 3D-kohina muovaa; reunat
+// häipyvät katselukulman mukaan, joten liekki on tilava joka suunnasta. Tuli
+// on yksi iso pääliekki ja pienempiä kieliä sen ympärillä, kullakin oma
+// vaihe, sykkivä korkeus ja jousella taipuva kärki, jota tuuli ja puuskat
+// taivuttavat (kuten soihdussa). Sumu häivyttää kaukaiset tulet.
 // Valot hoitaa kutsuja (game/structures.js, ui/menuCamp.js).
 import * as THREE from 'three';
+import { FLAME_VERT, FLAME_FRAG, flameShellGeometry, FLAME_LAYERS } from './torchFlame.js';
 
-const NOISE = /* glsl */`
-float fh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-float fn(vec2 p) {
-  vec2 i = floor(p), f = fract(p);
-  vec2 u = f * f * (3.0 - 2.0 * f);
-  return mix(mix(fh(i), fh(i + vec2(1.0, 0.0)), u.x), mix(fh(i + vec2(0.0, 1.0)), fh(i + vec2(1.0, 1.0)), u.x), u.y);
-}
-float fbm(vec2 p) {
-  float v = 0.0, a = 0.5;
-  for (int i = 0; i < 5; i++) { v += a * fn(p); p = p * 2.03 + vec2(1.7, 9.2); a *= 0.5; }
-  return v;
-}`;
-
-const flameVS = /* glsl */`
-varying vec2 vUv;
-#include <fog_pars_vertex>
-void main() {
-  vUv = uv;
-  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-  gl_Position = projectionMatrix * mvPosition;
-  #include <fog_vertex>
-}`;
-
-const flameFS = /* glsl */`
-uniform float uTime;
-uniform float uSeed;
-uniform float uPower;
-uniform float uLean;
-varying vec2 vUv;
-#include <fog_pars_fragment>
-${NOISE}
-void main() {
-  float y = vUv.y;
-  float x = vUv.x * 2.0 - 1.0;
-  float t = uTime + uSeed * 17.0;
-  // Tuuli kallistaa kärkeä.
-  x -= uLean * y * y;
-  vec2 q = vec2(x * 1.7, y * 2.4 - t * 1.9);
-  float w = fbm(q * 1.2 + vec2(t * 0.35, -t * 0.2));
-  float n = fbm(q + vec2(w * 1.1, 0.0));
-  // Muoto: leveä tyvi, kapeneva kärki, reunat ja kärki repeilevät kohinassa.
-  float width = mix(0.9, 0.06, pow(y, 0.85));
-  float dx = abs(x + (n - 0.5) * 0.45 * y);
-  float body = 1.0 - smoothstep(width * 0.45, width, dx);
-  float top = 1.0 - smoothstep(0.25, 0.95, y + (n - 0.5) * 0.7);
-  float f = body * top * (0.45 + 1.0 * n);
-  f *= smoothstep(0.0, 0.07, y);
-  f = clamp(f * 1.55 - 0.3, 0.0, 1.0);
-  // Väri voimakkuuden mukaan: tummanpunainen reuna -> oranssi -> keltainen -> valkoinen ydin.
-  vec3 c = mix(vec3(0.45, 0.05, 0.01), vec3(1.0, 0.36, 0.05), smoothstep(0.05, 0.45, f));
-  c = mix(c, vec3(1.0, 0.72, 0.28), smoothstep(0.45, 0.8, f));
-  c = mix(c, vec3(1.0, 0.95, 0.78), smoothstep(0.8, 1.0, f));
-  // Tyvessä hento sininen palamisvyöhyke.
-  c = mix(c, vec3(0.35, 0.45, 1.0), (1.0 - smoothstep(0.0, 0.1, y)) * 0.35 * f);
-  gl_FragColor = vec4(c * 2.4 * uPower, f);
-  #include <tonemapping_fragment>
-  #include <colorspace_fragment>
-  #include <fog_fragment>
-}`;
+// Sessio 60: soihdun liekkikuoret maailmaan: sumu ja kirkkauskerroin lisätty.
+const flameVS = FLAME_VERT
+  .replace('varying vec3 vPv;', 'varying vec3 vPv;\n#include <fog_pars_vertex>')
+  .replace('gl_Position = projectionMatrix * mv;', 'gl_Position = projectionMatrix * mv;\n  vec4 mvPosition = mv;\n  #include <fog_vertex>');
+const flameFS = FLAME_FRAG
+  .replace('varying vec3 vPv;', 'varying vec3 vPv;\nuniform float uGain;\n#include <fog_pars_fragment>')
+  .replace('gl_FragColor = vec4(col * a * 1.3, a * 0.5);', `gl_FragColor = vec4(col * a * 1.3 * uGain, a * 0.5);
+  #ifdef USE_FOG
+    #ifdef FOG_EXP2
+      float fogF = 1.0 - exp(-fogDensity * fogDensity * vFogDepth * vFogDepth);
+    #else
+      float fogF = smoothstep(fogNear, fogFar, vFogDepth);
+    #endif
+    gl_FragColor *= 1.0 - fogF;
+  #endif`);
+if (!flameFS.includes('uGain;') || !flameVS.includes('fog_vertex')) console.warn('campfire: liekin sävyttimen korvaus epäonnistui');
 
 // Hiilet: väri tummasta hehkuvaan, kukin murikka sykkii omassa tahdissaan.
 const coalVS = /* glsl */`
@@ -253,12 +219,78 @@ function groundGlowTexture() {
   return glowTex;
 }
 
-const OFFSETS = [0, 1.05, 2.1];
-// Kielet: [sivusiirto, leveys, korkeus] (osuus pääliekistä).
-const TONGUES = [[0, 1, 1], [-0.17, 0.62, 0.72], [0.19, 0.58, 0.66]];
-const _w = new THREE.Vector3();
+let shellGeo = null;
 const _wq = new THREE.Quaternion();
 const _e = new THREE.Euler();
+
+// Liekin kieli: soihdun neljä (tai kolme) sisäkkäistä kuorta, oma vaihe,
+// jousella taipuva kärki ja sykkivä korkeus.
+class Tongue {
+  constructor(parent, { x, z, w, h, lean, seed, shells, speed, k, gain }) {
+    if (!shellGeo) shellGeo = flameShellGeometry();
+    this.uni = {
+      uTime: { value: 0 }, uFlow: { value: seed * 3.7 }, uBend: { value: new THREE.Vector2() }, uStretch: { value: 1 },
+      uPower: { value: 1 }, uWind: { value: new THREE.Vector2() }, uGain: { value: gain },
+    };
+    const fog = THREE.UniformsUtils.clone(THREE.UniformsLib.fog);
+    this.group = new THREE.Group();
+    this.group.position.set(x, 0, z);
+    this.mats = [];
+    FLAME_LAYERS.slice(4 - shells).forEach(([lw, lh, layer, s], i) => {
+      const mat = new THREE.ShaderMaterial({
+        uniforms: { ...fog, ...this.uni, uSeed: { value: seed * 13.7 + s }, uLayer: { value: layer } },
+        vertexShader: flameVS, fragmentShader: flameFS, fog: true,
+        transparent: true, depthWrite: false, side: THREE.FrontSide,
+        blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
+      });
+      const m = new THREE.Mesh(shellGeo, mat);
+      m.scale.set(lw, lh, lw);
+      m.renderOrder = 3 + i; // uloin ensin, ydin päällimmäisenä
+      m.frustumCulled = false;
+      this.group.add(m);
+      this.mats.push(mat);
+    });
+    this.w = w; this.h = h; this.lean = lean; this.speed = speed; this.k = k;
+    this.bend = new THREE.Vector2(lean[0], lean[1]);
+    this.bendV = new THREE.Vector2();
+    this.flick = 1; this.flickT = 1; this.ph = seed * 2.17;
+    parent.add(this.group);
+  }
+
+  // wx, wz = tuuli liekin omassa koordinaatistossa (m/s).
+  update(dt, time, wx, wz, power) {
+    const u = this.uni, ph = this.ph;
+    const gust = Math.max(0.15, 1 + 0.35 * Math.sin(time * 1.37 + ph) + 0.25 * Math.sin(time * 3.1 + ph * 2) * Math.sin(time * 0.53 + ph)
+      + 0.15 * Math.sin(time * 7.3 + ph * 3));
+    const wl = Math.hypot(wx, wz);
+    const wk = Math.min(1.5, wl * 0.4 * gust);
+    if (wl > 1e-4) u.uWind.value.set(wx / wl * wk, wz / wl * wk);
+    else u.uWind.value.set(0, 0);
+    u.uFlow.value += dt * this.speed * (1 + wk * 1.1);
+    // Kärjen taipuma: tuuli + kielen oma kallistus ulospäin (jousi).
+    let tx = this.lean[0] + (wl > 1e-4 ? wx / wl * wk * 0.85 : 0);
+    let tz = this.lean[1] + (wl > 1e-4 ? wz / wl * wk * 0.85 : 0);
+    const tl = Math.hypot(tx, tz);
+    if (tl > 1.5) { tx *= 1.5 / tl; tz *= 1.5 / tl; }
+    const c = 8;
+    this.bendV.x += ((tx - this.bend.x) * this.k - this.bendV.x * c) * dt;
+    this.bendV.y += ((tz - this.bend.y) * this.k - this.bendV.y * c) * dt;
+    this.bend.x += this.bendV.x * dt;
+    this.bend.y += this.bendV.y * dt;
+    u.uBend.value.set(this.bend.x, this.bend.y);
+    // Korkeus sykkii satunnaisesti (liekki nuolaisee välillä korkealle).
+    if (Math.random() < dt * 2.2) this.flickT = 0.82 + Math.random() * 0.36;
+    this.flick += (this.flickT - this.flick) * Math.min(1, dt * 6);
+    const bl = Math.hypot(this.bend.x, this.bend.y);
+    u.uStretch.value = this.flick - Math.min(0.2, bl * 0.1);
+    u.uTime.value = time;
+    u.uPower.value = 0.5 + 0.5 * power;
+    const s = this.h * (0.65 + 0.35 * power);
+    this.group.scale.set(this.w * (0.85 + 0.15 * power), s, this.w * (0.85 + 0.15 * power));
+  }
+
+  dispose() { for (const m of this.mats) m.dispose(); }
+}
 
 export class CampfireFx {
   // size: liekin koko (1 = nuotio, n. 1,2 m korkea liekki); opts: smoke,
@@ -267,21 +299,22 @@ export class CampfireFx {
     this.size = size;
     this.group = new THREE.Group();
     this.uniforms = { uTime: { value: 0 }, uPower: { value: 1 } };
-    this.flames = [];
-    // Pääliekki ja kaksi pienempää sivukieltä (kameran suunnassa sivuttain).
-    const geos = TONGUES.map(([dx, w, h]) => new THREE.PlaneGeometry(0.95 * size * w, 1.35 * size * h, 1, 1).translate(dx * size, 0.62 * size * h, 0));
-    for (let i = 0; i < OFFSETS.length; i++) {
-      const geo = geos[i];
-      const mat = new THREE.ShaderMaterial({
-        vertexShader: flameVS, fragmentShader: flameFS,
-        uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog, { uTime: { value: 0 }, uSeed: { value: seed * 3.1 + i * 1.37 }, uPower: { value: 1 }, uLean: { value: 0 } }]),
-        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: true,
-      });
-      const m = new THREE.Mesh(geo, mat);
-      m.renderOrder = 3;
-      m.frustumCulled = false;
-      this.group.add(m);
-      this.flames.push(m);
+    // Pääliekki ja pienemmät kielet sen ympärillä (pienessä tulessa kaksi).
+    let rs = Math.floor(seed * 1000) % 2147483646 + 1;
+    const rnd = () => { rs = (rs * 16807) % 2147483647; return (rs - 1) / 2147483646; };
+    this.flames = [new Tongue(this.group, { x: 0, z: 0, w: 0.95 * size, h: 1.45 * size, lean: [0, 0], seed: seed + 0.3, shells: 4, speed: 1.05, k: 36, gain: 1.8 })];
+    const n = size >= 0.6 ? 5 : 2;
+    const a0 = rnd() * Math.PI * 2;
+    for (let i = 0; i < n; i++) {
+      const a = a0 + (i / n) * Math.PI * 2 + (rnd() - 0.5) * 0.6;
+      const r = (0.12 + rnd() * 0.08) * size;
+      const lean = 0.14 + rnd() * 0.14;
+      this.flames.push(new Tongue(this.group, {
+        x: Math.cos(a) * r, z: Math.sin(a) * r,
+        w: (0.5 + rnd() * 0.16) * size, h: (0.72 + rnd() * 0.3) * size,
+        lean: [Math.cos(a) * lean, Math.sin(a) * lean], seed: seed + 1.7 + i * 2.3,
+        shells: 3, speed: 1.15 + rnd() * 0.3, k: 42 + rnd() * 20, gain: 1.6,
+      }));
     }
     if (coals) {
       this.coals = new THREE.Mesh(coalGeometry(size, Math.floor(seed * 1000) + 7), new THREE.ShaderMaterial({
@@ -312,20 +345,12 @@ export class CampfireFx {
   // Pistehiukkaset ovat ryhmän koordinaateissa (ryhmä ei saa kiertyä).
   update(dt, time, camera, windX = 0, windZ = 0) {
     const S = this.size, pw = this.power;
-    this.group.getWorldPosition(_w);
-    // Kameraan päin maailmassa (emon kierto vähennetään).
+    // Emon kierto (tuulen suunta liekin koordinaatistoon).
     _e.setFromQuaternion(this.group.getWorldQuaternion(_wq), 'YXZ');
-    const yaw = Math.atan2(camera.position.x - _w.x, camera.position.z - _w.z);
-    const lean = Math.max(-0.5, Math.min(0.5, (windX * Math.cos(yaw) - windZ * Math.sin(yaw)) * 0.12));
-    for (let i = 0; i < this.flames.length; i++) {
-      const m = this.flames[i];
-      m.rotation.y = yaw - _e.y + OFFSETS[i] * 0.12;
-      const u = m.material.uniforms;
-      u.uTime.value = time;
-      u.uPower.value = pw * (i === 0 ? 1 : 0.85);
-      u.uLean.value = lean;
-      m.scale.set(1, 0.85 + 0.15 * Math.sin(time * 2.3 + i * 2.1) + 0.1 * pw, 1);
-    }
+    // Tuuli nuotion omaan koordinaatistoon (rakennettu nuotio voi olla käännetty).
+    const cy = Math.cos(_e.y), sy = Math.sin(_e.y);
+    const lx = windX * cy - windZ * sy, lz = windX * sy + windZ * cy;
+    for (let i = 0; i < this.flames.length; i++) this.flames[i].update(dt, time, lx, lz, i === 0 ? pw : pw * 0.92);
     if (this.coals) {
       this.coals.material.uniforms.uTime.value = time;
       this.coals.material.uniforms.uPower.value = 0.6 + 0.4 * pw;
@@ -359,8 +384,7 @@ export class CampfireFx {
   }
 
   dispose() {
-    for (const m of this.flames) m.material.dispose();
-    for (const m of this.flames) m.geometry.dispose();
+    for (const t of this.flames) t.dispose();
     if (this.coals) { this.coals.geometry.dispose(); this.coals.material.dispose(); this.glow.material.dispose(); this.glow.geometry.dispose(); }
     for (const p of [this.embers, this.smoke]) if (p) { p.points.geometry.dispose(); p.mat.dispose(); }
   }

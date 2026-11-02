@@ -91,6 +91,8 @@ class Fireflies {
     this.points.visible = false;
     scene.add(this.points);
     this.scan = null;      // keskeneräinen etsintä (rivi kerrallaan)
+    // Sessio 60: aina mukaan otettavat parvet (valikon leiri): { x, y, z, r, n }.
+    this.extra = [];
     this.lastX = 1e9;
     this.lastZ = 1e9;
     this._s = {};
@@ -149,6 +151,7 @@ class Fireflies {
       }
     }
     for (const w of list) w.d2 = (w.x - sc.px) ** 2 + (w.z - sc.pz) ** 2;
+    for (const w of this.extra) list.push({ ...w, d2: -1 });
     list.sort((a, b) => a.d2 - b.d2);
     const cen = this.geo.attributes.aCenter, rad = this.geo.attributes.aR;
     let k = 0;

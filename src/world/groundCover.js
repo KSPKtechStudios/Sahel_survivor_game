@@ -8,7 +8,7 @@
 //   4 = saniaisryhmä, 5 = lehväkasvi, 6 = apilamatto, 7 = korkea lehtiyrtti
 import { CONFIG } from '../config.js';
 import { mulberry32, hashSeed, createNoise2D, smoothstep } from '../noise.js';
-import { getWorldSeed, insideStructure } from './terrain.js';
+import { getWorldSeed, insideStructure, clearingFade } from './terrain.js';
 
 const SIZE = CONFIG.chunkSize;
 const SEG = CONFIG.chunkSegments;
@@ -114,6 +114,9 @@ export function generateCover(cx, cz, samples, positions, normals, gw) {
     d *= (1 - rock * 0.95) * (1 - sand * 0.92);
     if (s.chan > 0.3) d *= 1 - s.chan;
     if (insideStructure(x, z, -1)) d = 0;
+    // Sessio 60: valikon leirin aukion reuna: ruoho harvenee ja on tallattua (matalampaa).
+    const cf = clearingFade(x, z);
+    if (cf < 1) { d *= cf; hm *= 0.55 + 0.45 * cf; }
     dens[v] = Math.max(0, d);
     let ks = 0;
     for (let i = 0; i < 8; i++) ks += k4[i];

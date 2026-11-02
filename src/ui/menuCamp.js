@@ -139,12 +139,15 @@ function mapTexture() {
   return t;
 }
 
-// Sessio 60: tallattu maa leirin ympärillä (käyttäjä: maa voisi olla vähän
-// mutaista tai eri väristä, että huomaa, että siinä on kävelty ja temmelletty).
-// Kuvat lasketaan kerran: väri ja läpinäkyvyys, karheus ja pinnanmuodosta
-// normaalikartta (jalanjäljet painuvat maahan). Pikseli (i, j) vastaa
-// leirin paikallista kohtaa x = −R + 2R·i/N, z = −R + 2R·j/N.
-const TRAMPLE_R = 5.2;
+// Sessio 60: leirin multamaa (käyttäjä: maa voisi olla multatekstuuria, jossa
+// on aivan pari jalanjälkeä jossain, ja maamateriaalien välillä pehmeä
+// siirtymä). Pinta on kahta Poly Havenin CC0-multaa (assets/textures/camp):
+// tiivistynyt multa nuotion ympärillä ja poluilla, irtonainen kuiva multa
+// reunoilla. Kerran laskettu maski kertoo sekoituksen: R = irtonainen multa,
+// G = tuhka ja noki, B = kosteus, A = peitto (pehmeä liukuma ympäröivään
+// maahan). Oma normaalikartta tuo vain jalanjäljet ja loivan kumpuilun.
+// Pikseli (i, j) vastaa leirin paikallista kohtaa x = −R + 2R·i/N, z = −R + 2R·j/N.
+const TRAMPLE_R = 5.6;
 function hash2(x, y) {
   let h = Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263);
   h = Math.imul(h ^ (h >>> 13), 1274126177);
@@ -168,228 +171,180 @@ function segDist(px, pz, ax, az, bx, bz) {
   const t = Math.min(1, Math.max(0, ((px - ax) * dx + (pz - az) * dz) / (dx * dx + dz * dz)));
   return Math.hypot(px - ax - dx * t, pz - az - dz * t);
 }
-// Polut: itään (kameran taakse, kuivempi) ja lounaaseen joelle akaasian ohi (märkä).
+// Polut: lounaaseen joelle akaasian ohi (kostea) ja itään (kuiva). Leveät ja
+// pehmeäreunaiset, jotta ne sulautuvat.
 const PATHS = [
-  { pts: [[0.6, 0.2], [2.6, 0.9], [5.4, 1.5]], w: 0.55, wet: 0.15 },
-  { pts: [[-0.9, 1.0], [-2.2, 2.6], [-3.6, 3.6], [-5.4, 4.4]], w: 0.6, wet: 1 },
-  { pts: [[0.8, -0.8], [1.6, -1.6], [2.4, -2.6], [3.0, -5.4]], w: 0.42, wet: 0.3 },
+  { pts: [[-0.9, 1.0], [-2.2, 2.6], [-3.6, 3.6], [-5.8, 4.6]], w: 0.9, wet: 1 },
+  { pts: [[0.6, 0.2], [2.6, 0.9], [5.8, 1.6]], w: 0.8, wet: 0.2 },
 ];
 function pathAt(x, z) {
   let best = 0, wet = 0;
   for (const p of PATHS) {
     let d = Infinity;
     for (let k = 0; k < p.pts.length - 1; k++) d = Math.min(d, segDist(x, z, p.pts[k][0], p.pts[k][1], p.pts[k + 1][0], p.pts[k + 1][1]));
-    const m = 1 - smooth(p.w * 0.35, p.w, d + (fbm(x * 1.7 + 3, z * 1.7) - 0.5) * 0.35);
+    const m = 1 - smooth(p.w * 0.2, p.w, d + (fbm(x * 0.9 + 3, z * 0.9) - 0.5) * 0.3);
     if (m > best) { best = m; wet = p.wet; }
   }
   return [best, wet];
 }
+// Muutama paljaan jalan jälki: joelta tullessa neljä askelta ja yksi
+// yksinäinen taljan vieressä. [x, z, suunta (rad), puoli (1 = vasen)]
+const FOOTPRINTS = [
+  [-3.05, 3.15, -0.75, 1], [-2.72, 2.72, -0.8, -1], [-2.43, 2.42, -0.72, 1], [-2.08, 2.0, -0.85, -1],
+  [2.35, -0.55, 2.4, 1],
+];
 
-function trampledGround() {
-  const N = 768, R = TRAMPLE_R, px = (2 * R) / N;
+function campGroundMaps() {
+  const N = 1024, R = TRAMPLE_R, px = (2 * R) / N;
+  const M = new Uint8ClampedArray(N * N * 4);
   const H = new Float32Array(N * N);
-  const col = new Float32Array(N * N * 3);
-  const alpha = new Float32Array(N * N);
-  const rough = new Float32Array(N * N);
   const P = (i) => -R + 2 * R * (i + 0.5) / N;
-  // Maan sävyt (lineaarinen 0..1, muunnetaan sRGB:ksi lopuksi).
-  // sRGB: maa (138, 104, 72) ja (112, 82, 56), muta (82, 60, 41), märkä muta
-  // (54, 40, 29), tuhka (150, 145, 138), noki (45, 40, 36).
-  const EARTH = [0.254, 0.141, 0.064], EARTH2 = [0.162, 0.084, 0.039], MUD = [0.085, 0.045, 0.022], WETMUD = [0.037, 0.021, 0.012];
-  const ASH = [0.30, 0.28, 0.25], SOOT = [0.026, 0.021, 0.018];
   for (let j = 0; j < N; j++) {
     const z = P(j);
     for (let i = 0; i < N; i++) {
-      const x = P(i);
-      const p = j * N + i;
+      const x = P(i), p = j * N + i, o = p * 4;
       const r = Math.hypot(x, z);
-      const eN = fbm(x * 0.55 + 11, z * 0.55 - 4, 3);
+      const eN = fbm(x * 0.35 + 11, z * 0.35 - 4, 3);
       const [path, pathWet] = pathAt(x, z);
-      // Tallattu alue: nuotion ympärys, istumapuiden ja taljan kohdat ja polut.
-      let wear = 1 - smooth(2.3 + eN * 0.9, 3.9 + eN * 1.1, r);
-      wear = Math.max(wear, path * 0.92);
-      // Rikkonainen reuna: tallattu laikku haihtuu ruohikkoon epätasaisesti.
-      const grain = fbm(x * 6 + 2, z * 6 - 7, 3);
-      const a = smooth(0.08, 0.55, wear + (grain - 0.5) * 0.45 * (1 - wear));
-      alpha[p] = a;
-      // Pohjaväri: tiivistynyt maa, jossa sävyvaihtelua.
-      const n1 = fbm(x * 1.3, z * 1.3, 4), n2 = fbm(x * 9 + 5, z * 9 + 1, 3);
-      const c = [0, 0, 0];
-      for (let k = 0; k < 3; k++) c[k] = EARTH[k] + (EARTH2[k] - EARTH[k]) * n1;
-      // Muta: notkelmissa ja polulla joelle (vettä kannettu, kengät märkinä).
-      const mudN = fbm(x * 0.7 - 21, z * 0.7 + 13, 4);
-      let mud = smooth(0.5, 0.68, mudN + pathWet * path * 0.28) * wear;
-      mud = Math.max(mud, smooth(0.25, 0.9, path * pathWet) * 0.85 * (0.6 + 0.4 * n1));
-      const wetCore = smooth(0.62, 0.8, mudN + pathWet * path * 0.3) * mud;
-      for (let k = 0; k < 3; k++) {
-        c[k] += (MUD[k] - c[k]) * mud * 0.85;
-        c[k] += (WETMUD[k] - c[k]) * wetCore * 0.8;
-      }
+      // Kuljettu alue: leveä ja pehmeä nuotion ympärys ja polut.
+      const worn = Math.max(1 - smooth(1.6 + eN * 0.8, 3.6 + eN * 1.0, r), path);
+      // Peitto: pitkä pehmeä liukuma ympäröivään maahan, ei rikkonaista reunaa.
+      const cover = Math.max(1 - smooth(2.6 + eN * 0.9, 5.3, r), path * (1 - smooth(4.8, 5.55, r)));
+      // Irtonainen multa siellä, missä ei kuljeta (pehmeästi laikuittain).
+      const loose = Math.min(1, Math.max(0, (1 - worn) * 0.9 + (fbm(x * 0.8 - 5, z * 0.8 + 2, 3) - 0.5) * 0.5));
       // Tuhka ja noki nuotion ympärillä (tuulen mukana enemmän itään).
-      const ashR = Math.hypot(x - 0.25, z + 0.05);
-      const ash = (1 - smooth(0.75, 1.75 + eN * 0.6, ashR)) * smooth(0.3, 0.7, fbm(x * 3 + 40, z * 3, 3) + 0.15);
-      for (let k = 0; k < 3; k++) {
-        c[k] += (ASH[k] - c[k]) * ash * 0.55;
-        c[k] += (SOOT[k] - c[k]) * (1 - smooth(0.7, 1.15, ashR)) * 0.55;
-      }
-      // Hienojakoinen kirjo (murut, kuivuneet kokkareet).
-      const g = 0.86 + n2 * 0.28;
-      col[p * 3] = c[0] * g; col[p * 3 + 1] = c[1] * g; col[p * 3 + 2] = c[2] * g;
-      // Pinnanmuoto: kokkareinen maa, muta sileämpää.
-      H[p] = (fbm(x * 4, z * 4, 4) * 0.012 + n2 * 0.004) * (1 - mud * 0.6) - mud * 0.006;
-      rough[p] = 0.97 - wetCore * 0.45 - mud * 0.12;
+      const ashR = Math.hypot(x - 0.2, z + 0.05);
+      const ash = (1 - smooth(0.7, 1.9 + eN * 0.5, ashR)) * (0.75 + 0.25 * fbm(x * 2 + 40, z * 2, 3));
+      // Kosteus: notkelmat ja polku joelle.
+      const wet = Math.min(1, smooth(0.55, 0.75, fbm(x * 0.5 - 21, z * 0.5 + 13, 3)) * worn * 0.6 + path * pathWet * 0.55);
+      M[o] = 255 * smooth(0, 1, loose);
+      M[o + 1] = 255 * ash;
+      M[o + 2] = 255 * wet;
+      M[o + 3] = 255 * cover;
+      // Loiva kumpuilu ja kuljetun maan tasaisuus.
+      H[p] = (fbm(x * 1.6, z * 1.6, 3) - 0.5) * 0.02 * (1 - 0.5 * worn);
     }
   }
-
-  // Leimasimet: kuvapisteet kohdan (x, z) ympäriltä säteellä rr.
+  // Hiilenpaloja nuotion vierellä (G täyteen = noki).
+  const rand = (() => { let s = 98765; return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; })();
   const stamp = (x, z, rr, fn) => {
     const ci = (x + R) / px - 0.5, cj = (z + R) / px - 0.5, rp = Math.ceil(rr / px) + 1;
     for (let j = Math.max(0, Math.floor(cj - rp)); j <= Math.min(N - 1, Math.ceil(cj + rp)); j++) {
-      for (let i = Math.max(0, Math.floor(ci - rp)); i <= Math.min(N - 1, Math.ceil(ci + rp)); i++) {
-        fn(j * N + i, (i - ci) * px, (j - cj) * px);
-      }
+      for (let i = Math.max(0, Math.floor(ci - rp)); i <= Math.min(N - 1, Math.ceil(ci + rp)); i++) fn(j * N + i, (i - ci) * px, (j - cj) * px);
     }
   };
-  const rand = (() => { let s = 1234567; return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; })();
-
-  // Hankaumat: pitkulaisia, tummempia ja sileämpiä laikkuja, enimmäkseen
-  // nuotion ympäri kiertäen (askeleet ja raahatut puut). Ne tekevät maasta
-  // tallatun näköisen paremmin kuin erilliset jäljet.
-  for (let k = 0; k < 170; k++) {
-    const a = rand() * Math.PI * 2, r = 0.9 + Math.pow(rand(), 0.8) * 2.9;
-    const x = Math.cos(a) * r, z = Math.sin(a) * r;
-    const ang = a + Math.PI / 2 + (rand() - 0.5) * 0.9;
-    const len = 0.12 + rand() * 0.3, wid = 0.04 + rand() * 0.06, dk = 0.06 + rand() * 0.12;
-    const ca = Math.cos(ang), sa = Math.sin(ang);
-    stamp(x, z, len, (p, dx, dz) => {
-      const u = dx * ca + dz * sa, v = -dx * sa + dz * ca;
-      const d = Math.hypot(u / len, v / wid);
-      const m = (1 - smooth(0.4, 1, d)) * alpha[p];
-      if (m <= 0) return;
-      const kk = 1 - dk * m;
-      col[p * 3] *= kk; col[p * 3 + 1] *= kk; col[p * 3 + 2] *= kk;
-      H[p] = H[p] * (1 - 0.5 * m) - 0.002 * m;
-      rough[p] -= 0.08 * m;
+  for (let k = 0; k < 26; k++) {
+    const a = rand() * Math.PI * 2, r = 0.75 + Math.pow(rand(), 1.6) * 1.3, s = 0.012 + rand() * 0.02;
+    stamp(Math.cos(a) * r, Math.sin(a) * r, s * 1.4, (p, dx, dz) => {
+      const m = 1 - smooth(0.6, 1.1, Math.hypot(dx, dz * 1.3) / s);
+      if (m > 0) { M[p * 4 + 1] = Math.max(M[p * 4 + 1], 255 * m); H[p] += m * s * 0.4; }
     });
   }
-
-  // Jalanjäljet: harvoja ja osittaisia (kuivunut maa, päällekkäiset askeleet).
-  const print = (x, z, ang, side, depth) => {
+  // Jalanjäljet: kantapää, kaari ulkosyrjällä, päkiä ja viisi varvasta.
+  for (const [fx, fz, ang, side] of FOOTPRINTS) {
     const ca = Math.cos(ang), sa = Math.sin(ang);
-    const keep = rand();
-    stamp(x, z, 0.16, (p, dx, dz) => {
-      // Jalan suuntaan u (pituus), sivulle v; kantapää kapeampi kuin päkiä.
-      const u = dx * ca + dz * sa, v = -dx * sa + dz * ca;
-      const t = Math.min(1, Math.max(0, (u + 0.08) / 0.15));
-      const uc = -0.08 + t * 0.15;
-      const rad = 0.034 + 0.016 * Math.sin(t * Math.PI * 0.85);
-      const d = Math.hypot(u - uc, v - side * 0.008 * t) / rad;
-      const brk = smooth(0.3, 0.6, fbm(dx * 30 + x * 7, dz * 30 + z * 7, 2) + keep * 0.35);
-      const inside = (1 - smooth(0.7, 1.1, d)) * brk;
-      const rim = smooth(1.0, 1.2, d) * (1 - smooth(1.2, 1.7, d)) * brk;
+    stamp(fx, fz, 0.17, (p, dx, dz) => {
+      const u = dx * ca + dz * sa, v = (-dx * sa + dz * ca) * side; // v > 0 = sisäsyrjä
+      const heel = Math.hypot((u + 0.085) / 0.036, (v + 0.002) / 0.03);
+      const arch = Math.hypot((u + 0.015) / 0.06, (v + 0.016) / 0.016);
+      const ball = Math.hypot((u - 0.055) / 0.03, (v - 0.006) / 0.043);
+      let d = Math.min(heel, arch, ball);
+      const toes = [[0.1, 0.03, 0.016], [0.106, 0.008, 0.012], [0.103, -0.01, 0.011], [0.097, -0.025, 0.01], [0.088, -0.038, 0.009]];
+      for (const [tu, tv, tr] of toes) d = Math.min(d, Math.hypot(u - tu, v - tv) / tr);
+      const inside = 1 - smooth(0.75, 1.1, d);
+      const rim = smooth(1.05, 1.3, d) * (1 - smooth(1.3, 1.9, d));
       if (inside <= 0 && rim <= 0) return;
-      H[p] += -depth * inside + depth * 0.3 * rim;
-      const k = 1 - 0.1 * inside * alpha[p];
-      col[p * 3] *= k; col[p * 3 + 1] *= k; col[p * 3 + 2] *= k;
-    });
-  };
-  const walk = (pts, n, depth) => {
-    let side = 1;
-    for (let k = 0; k < n; k++) {
-      const t = (k + rand() * 0.6) / n * (pts.length - 1);
-      const s = Math.min(pts.length - 2, Math.floor(t)), f = t - s;
-      const ax = pts[s][0], az = pts[s][1], bx = pts[s + 1][0], bz = pts[s + 1][1];
-      const ang = Math.atan2(bz - az, bx - ax) + (rand() < 0.5 ? 0 : Math.PI) + (rand() - 0.5) * 0.35;
-      const ox = -Math.sin(ang) * 0.09 * side, oz = Math.cos(ang) * 0.09 * side;
-      print(ax + (bx - ax) * f + ox + (rand() - 0.5) * 0.2, az + (bz - az) * f + oz + (rand() - 0.5) * 0.2, ang, side, depth);
-      side = -side;
-    }
-  };
-  for (const p of PATHS) walk(p.pts, 14, 0.008);
-  const ring = [];
-  for (let k = 0; k <= 16; k++) { const a = k / 16 * Math.PI * 2; ring.push([Math.cos(a) * 1.85, Math.sin(a) * 1.75]); }
-  walk(ring, 18, 0.007);
-
-  // Pikkukivet, hiilenpalat ja risunpätkät.
-  for (let k = 0; k < 110; k++) {
-    const a = rand() * Math.PI * 2, r = Math.sqrt(rand()) * 3.6;
-    const x = Math.cos(a) * r, z = Math.sin(a) * r, s = 0.008 + rand() * rand() * 0.03;
-    const grey = 0.1 + rand() * 0.14, warm = rand() * 0.025;
-    stamp(x, z, s * 1.6, (p, dx, dz) => {
-      const d = Math.hypot(dx, dz * (1.2 + (k % 3) * 0.2)) / s;
-      if (d > 1.4) return;
-      const m = 1 - smooth(0.85, 1.05, d);
-      const sh = smooth(1.0, 1.4, d) * 0.25 * (dz > 0 ? 1 : 0.3); // varjo kiven alla
-      H[p] += m * s * 0.5 * Math.sqrt(Math.max(0, 1 - d * d));
-      for (let c = 0; c < 3; c++) col[p * 3 + c] = col[p * 3 + c] * (1 - m) * (1 - sh) + m * (grey + (c === 0 ? warm : 0)) * (0.85 + 0.15 * (1 - d));
-      rough[p] = rough[p] * (1 - m) + m * 0.75;
+      // Päkiä ja kantapää painuvat syvimmälle.
+      const depth = 0.009 * (0.7 + 0.3 * Math.min(1, 1 / Math.max(0.5, Math.min(heel, ball))));
+      H[p] += -depth * inside + 0.003 * rim;
+      M[p * 4 + 2] = Math.min(255, M[p * 4 + 2] + 40 * inside);
     });
   }
-  for (let k = 0; k < 70; k++) {
-    // Hiiltä ja nokea lähinnä nuotion ympärillä.
-    const a = rand() * Math.PI * 2, r = 0.7 + Math.pow(rand(), 1.8) * 2.2;
-    const x = Math.cos(a) * r, z = Math.sin(a) * r, s = 0.006 + rand() * 0.016;
-    stamp(x, z, s * 1.3, (p, dx, dz) => {
-      const d = Math.hypot(dx, dz) / s;
-      const m = 1 - smooth(0.6, 1.1, d + (hash2(p, k) - 0.5) * 0.4);
-      if (m <= 0) return;
-      for (let c = 0; c < 3; c++) col[p * 3 + c] *= 1 - m * 0.85;
-      H[p] += m * s * 0.3;
-    });
-  }
-  for (let k = 0; k < 60; k++) {
-    const a = rand() * Math.PI * 2, r = 0.8 + rand() * 3.3;
-    const x = Math.cos(a) * r, z = Math.sin(a) * r, ang = rand() * Math.PI, len = 0.05 + rand() * 0.14, w = 0.004 + rand() * 0.004;
-    const ca = Math.cos(ang), sa = Math.sin(ang), dark = 0.035 + rand() * 0.05;
-    stamp(x, z, len, (p, dx, dz) => {
-      const u = dx * ca + dz * sa, v = -dx * sa + dz * ca;
-      if (Math.abs(u) > len) return;
-      const m = 1 - smooth(w * 0.6, w, Math.abs(v));
-      if (m <= 0) return;
-      col[p * 3] = col[p * 3] * (1 - m) + m * (dark * 1.6 + 0.02);
-      col[p * 3 + 1] = col[p * 3 + 1] * (1 - m) + m * (dark * 1.2 + 0.01);
-      col[p * 3 + 2] = col[p * 3 + 2] * (1 - m) + m * dark * 0.7;
-      H[p] += m * w;
-    });
-  }
-
-  // Kuvat: väri + läpinäkyvyys, karheus ja normaalit pinnanmuodosta.
-  const make = () => { const c = document.createElement('canvas'); c.width = c.height = N; return c; };
-  const cC = make(), cR = make(), cN = make();
-  const iC = cC.getContext('2d').createImageData(N, N);
-  const iR = cR.getContext('2d').createImageData(N, N);
-  const iN = cN.getContext('2d').createImageData(N, N);
-  const toS = (v) => 255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055);
-  const NS = 1 / (2 * px) * 0.9;
+  // Normaalikartta korkeudesta.
+  const cM = document.createElement('canvas'), cN = document.createElement('canvas');
+  cM.width = cM.height = cN.width = cN.height = N;
+  cM.getContext('2d').putImageData(new ImageData(M, N, N), 0, 0);
+  const nd = new Uint8ClampedArray(N * N * 4);
+  const NS = 1 / (2 * px);
   for (let j = 0; j < N; j++) {
     for (let i = 0; i < N; i++) {
       const p = j * N + i, o = p * 4;
-      iC.data[o] = toS(Math.min(1, col[p * 3]));
-      iC.data[o + 1] = toS(Math.min(1, col[p * 3 + 1]));
-      iC.data[o + 2] = toS(Math.min(1, col[p * 3 + 2]));
-      iC.data[o + 3] = 255 * alpha[p];
-      iR.data[o] = iR.data[o + 1] = iR.data[o + 2] = 255 * Math.min(1, Math.max(0, rough[p]));
-      iR.data[o + 3] = 255;
-      const hl = H[j * N + Math.max(0, i - 1)], hr = H[j * N + Math.min(N - 1, i + 1)];
-      const hu = H[Math.max(0, j - 1) * N + i], hd = H[Math.min(N - 1, j + 1) * N + i];
-      let nx = (hl - hr) * NS, ny = (hd - hu) * NS;
+      const nx = (H[j * N + Math.max(0, i - 1)] - H[j * N + Math.min(N - 1, i + 1)]) * NS;
+      const ny = (H[Math.min(N - 1, j + 1) * N + i] - H[Math.max(0, j - 1) * N + i]) * NS;
       const nl = Math.hypot(nx, ny, 1);
-      iN.data[o] = 127.5 + 127.5 * nx / nl;
-      iN.data[o + 1] = 127.5 + 127.5 * ny / nl;
-      iN.data[o + 2] = 127.5 + 127.5 / nl;
-      iN.data[o + 3] = 255;
+      nd[o] = 127.5 + 127.5 * nx / nl; nd[o + 1] = 127.5 + 127.5 * ny / nl; nd[o + 2] = 127.5 + 127.5 / nl; nd[o + 3] = 255;
     }
   }
-  cC.getContext('2d').putImageData(iC, 0, 0);
-  cR.getContext('2d').putImageData(iR, 0, 0);
-  cN.getContext('2d').putImageData(iN, 0, 0);
-  const tex = (c, srgb) => {
-    const t = new THREE.CanvasTexture(c);
-    if (srgb) t.colorSpace = THREE.SRGBColorSpace;
-    t.anisotropy = 8;
-    return t;
+  cN.getContext('2d').putImageData(new ImageData(nd, N, N), 0, 0);
+  const tex = (c) => { const t = new THREE.CanvasTexture(c); t.anisotropy = 8; return t; };
+  return { mask: tex(cM), normal: tex(cN) };
+}
+
+// Multatekstuurit (ladataan kerran).
+function soilTex(name, srgb) {
+  const t = new THREE.TextureLoader().load(`assets/textures/camp/${name}.jpg`);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = 8;
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+// Maan materiaali: kaksi multaa sekoitetaan maskin mukaan sävytinpuolella.
+function campGroundMaterial() {
+  const { mask, normal } = campGroundMaps();
+  const mat = new THREE.MeshStandardMaterial({
+    map: mask, normalMap: normal, transparent: true, depthWrite: false, roughness: 1, metalness: 0,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4,
+  });
+  const uni = {
+    uSoilA: { value: soilTex('soil_compact_col', true) },
+    uSoilB: { value: soilTex('soil_loose_col', true) },
+    uNrmA: { value: soilTex('soil_compact_nrm', false) },
+    uNrmB: { value: soilTex('soil_loose_nrm', false) },
+    // Laattojen määrä halkaisijalla (noin 2,4 m:n laatta).
+    uTile: { value: (2 * TRAMPLE_R) / 2.4 },
+    uTint: { value: new THREE.Vector3(1.08, 0.94, 0.84) },
   };
-  return { map: tex(cC, true), roughnessMap: tex(cR, false), normalMap: tex(cN, false) };
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, uni);
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', `#include <common>
+uniform sampler2D uSoilA, uSoilB, uNrmA, uNrmB;
+uniform float uTile;
+uniform vec3 uTint;`)
+      .replace('#include <map_fragment>', `
+  vec4 cm = texture2D(map, vMapUv);
+  vec2 tuvA = vMapUv * uTile;
+  vec2 tuvB = vMapUv * uTile * 0.87 + vec2(0.37, 0.61);
+  vec3 sA = texture2D(uSoilA, tuvA).rgb;
+  vec3 sB = texture2D(uSoilB, tuvB).rgb;
+  // Pehmeä sekoitus, jota irtonaisen mullan murut terävöittävät hieman
+  // (korkeampi kohta voittaa), ettei siirtymä näytä läpikuultavalta.
+  float hB = dot(sB, vec3(0.333));
+  float wB = smoothstep(0.0, 1.0, clamp(cm.r + (hB - 0.18) * 0.6 * cm.r * (1.0 - cm.r) * 4.0, 0.0, 1.0));
+  vec3 soil = mix(sA, sB, wB) * uTint;
+  float lum = dot(soil, vec3(0.299, 0.587, 0.114));
+  vec3 ash = vec3(lum * 1.7 + 0.035) * vec3(1.0, 0.97, 0.93);
+  float ashK = smoothstep(0.0, 0.6, cm.g);
+  soil = mix(soil, ash, ashK * 0.7);
+  soil *= mix(1.0, 0.18, smoothstep(0.6, 1.0, cm.g));
+  soil *= 1.0 - cm.b * 0.45;
+  diffuseColor.rgb *= soil;
+  diffuseColor.a *= cm.a;`)
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+  roughnessFactor = mix(0.97, 0.62, cm.b * cm.b);`)
+      .replace('#include <normal_fragment_maps>', `
+  vec3 mapN = texture2D(normalMap, vNormalMapUv).xyz * 2.0 - 1.0;
+  vec3 nA = texture2D(uNrmA, tuvA).xyz * 2.0 - 1.0;
+  vec3 nB = texture2D(uNrmB, tuvB).xyz * 2.0 - 1.0;
+  vec3 nT = mix(nA, nB, wB);
+  nT.xy *= (1.0 - 0.55 * cm.b) * (1.0 - 0.5 * ashK);
+  mapN = normalize(vec3(mapN.xy + nT.xy, mapN.z * nT.z));
+  mapN.xy *= normalScale;
+  normal = normalize(tbn * mapN);`);
+  };
+  mat.customProgramCacheKey = () => 'campGround';
+  return mat;
 }
 
 export class MenuCamp {
@@ -456,7 +411,7 @@ export class MenuCamp {
     this.group.position.set(this.x, this.y, this.z);
     const G = this.group;
 
-    // Sessio 60: tallattu maa. Verkko seuraa maaston verkkoa (sama 1,33 m:n
+    // Sessio 60: leirin multamaa. Verkko seuraa maaston verkkoa (sama 1,33 m:n
     // ruudukko bilineaarisesti), joten laikku ei uppoa maahan eikä leiju.
     {
       const R = TRAMPLE_R, STEP = 64 / 48;
@@ -473,12 +428,7 @@ export class MenuCamp {
         gp.setY(i, Math.max(meshH(this.x + lx, this.z + lz), heightAt(this.x + lx, this.z + lz)) - this.y + 0.02);
       }
       geo.computeVertexNormals();
-      const maps = trampledGround();
-      const mat = new THREE.MeshStandardMaterial({
-        ...maps, transparent: true, depthWrite: false, roughness: 1, metalness: 0,
-        normalScale: new THREE.Vector2(1, 1), polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4,
-      });
-      const ground = new THREE.Mesh(geo, mat);
+      const ground = new THREE.Mesh(geo, campGroundMaterial());
       ground.receiveShadow = true;
       ground.renderOrder = -1;
       G.add(ground);

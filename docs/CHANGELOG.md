@@ -2,6 +2,25 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-11-01 (sessio 60, jatko): multamaa, soihdun liekit nuotioon, kulunut logo ja elävä ilta
+
+- **Leirin maa on oikeaa multaa** (käyttäjä: multatekstuuria, aivan pari jalanjälkeä, pehmeä siirtymä maamateriaalien välillä):
+  - nuotion ympärillä ja poluilla tiivistynyttä, tallattua multaa, reunoilla irtonaista kuivaa multaa (Poly Havenin valokuvatekstuurit, CC0);
+  - mullat, tuhka, kostea polku joelle ja ympäröivä maa liukuvat toisiinsa pehmeästi ilman rajoja;
+  - vain viisi paljaan jalan jälkeä: neljä askelta joelta päin ja yksi taljan vieressä;
+  - aukion reunalla ruoho harvenee ja madaltuu vähitellen eikä lopu kuin seinään.
+- **Nuotion tuli tehty soihdun liekkitekniikalla** (käyttäjä: realistisemmat tulifysiikat, samanlaiset kuin soihdussa), sekä pelin nuotioissa ja soihtutelineissä että valikossa:
+  - iso pääliekki ja sen ympärillä pienempiä liekin kieliä, jotka ovat tilavia joka suunnasta;
+  - liekit lepattavat ja venyvät nousevassa kohinassa, nuolaisevat välillä korkealle, ja tuuli ja puuskat taivuttavat niitä jousen tavoin;
+  - hiillos, kipinät ja savu kuten ennen.
+- **Kulunut logo:** SAHEL-kirjaimet ovat kuin kulunutta valettua pronssia: rosoiset reunat, harvoja kolhuja ja painaumia, pinnan rae ja kulumalaikut, viistetty kohokuvio. Fontti on edelleen Cinzel.
+- **Valikon ilta elää** (käyttäjä: valikossa pitää haluta viettää aikaa):
+  - kaukana auringonlaskua vasten laiduntaa ja vaeltaa gasellilauma;
+  - hämärässä taivaan poikki lentää välillä lintuparvi (V-muodostelma tai löyhä parvi);
+  - pimeän tultua leirin ympärillä vilkkuu tulikärpäsiä;
+  - yöllä kuuluu täplähuuhkajan huhuilua, kaukaisen hyeenan huutoja, kehrääjän surinaa ja ruokosammakoiden kilahduksia;
+  - ilta vaihtelee kerrasta toiseen (tyyni, tuulinen, puolipilvinen tai utuisen kultainen) ja vaihtuu hiljalleen toiseen valikossa viipyessä.
+
 ## 2026-11-01 (sessio 60): valikon kamera, tallattu leirimaa ja uusi valikkoulkoasu
 
 - **Korjattu: kameran siirtymä Maailmat-näkymästä takaisin päävalikkoon oli super nopea** (käyttäjä: kun painaa Pelaa ja palaa päävalikkoon, animaatio menee tosi nopeasti). Syy: kamera liu'utti katsepistettä läheltä katsotusta kartasta kaukaiseen horisonttiin, jolloin kuva kääntyi alussa rajusti. Nyt jokainen siirtymä kestää saman ajan (2,6 s), kiihtyy ja jarruttaa pehmeästi, ja katsesuunta kääntyy tasaisesti. Kamera nousee siirtymässä hieman kaarelle.

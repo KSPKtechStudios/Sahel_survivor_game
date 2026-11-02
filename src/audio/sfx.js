@@ -405,6 +405,124 @@ export class Sfx {
     }
   }
 
+  // Sessio 60: yön eläinäänet valikon leirissä (käyttäjä: tulikärpäset ja
+  // yöäänet). Kaikki syntetisoidaan: täplähuuhkajan kaksiosainen huhuilu,
+  // kaukainen hyeenan nouseva "whoop"-sarja, kehrääjän pitkä surina ja
+  // ruokosammakoiden kilahdukset joen suunnalta. Äänet kulkevat kevyen kaiun
+  // (viive + alipäästö) läpi, jolloin ne kuulostavat kaukaisilta.
+  // night = 0..1 (päivällä 0: mitään ei ajasteta).
+  nightCalls(night) {
+    const ctx = this.ctx;
+    if (!ctx || ctx.state !== 'running') return;
+    const now = ctx.currentTime;
+    let n = this.nightNode;
+    if (!n) {
+      if (night < 0.05) return;
+      const dry = ctx.createGain();
+      dry.gain.value = 1;
+      dry.connect(this.bedBus);
+      // Kaiku: kaksi viivettä takaisinkytkennällä, korkeat pois.
+      const wet = ctx.createGain();
+      wet.gain.value = 0.35;
+      const d1 = ctx.createDelay(1), d2 = ctx.createDelay(1);
+      d1.delayTime.value = 0.13; d2.delayTime.value = 0.29;
+      const fb = ctx.createGain(); fb.gain.value = 0.32;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1800;
+      dry.connect(d1); d1.connect(lp); lp.connect(d2); d2.connect(fb); fb.connect(d1); lp.connect(wet); d2.connect(wet);
+      wet.connect(this.bedBus);
+      n = this.nightNode = { dry, next: { owl: now + 6 + Math.random() * 10, hyena: now + 25 + Math.random() * 40, jar: now + 12 + Math.random() * 20, frog: now + 3 + Math.random() * 5 } };
+    }
+    if (night < 0.05) {
+      for (const k in n.next) n.next[k] = Math.max(n.next[k], now + 4 + Math.random() * 6);
+      return;
+    }
+    const pan = () => (Math.random() * 2 - 1) * 0.8;
+    const N = n.next;
+    if (now > N.owl) { N.owl = now + 16 + Math.random() * 26; if (night > 0.3) this._owl(now + 0.05, pan(), 0.05 * night); }
+    if (now > N.hyena) { N.hyena = now + 50 + Math.random() * 70; if (night > 0.5) this._hyena(now + 0.05, pan(), 0.035 * night); }
+    if (now > N.jar) { N.jar = now + 22 + Math.random() * 35; if (night > 0.25) this._nightjar(now + 0.05, pan(), 0.012 * night); }
+    if (now > N.frog) { N.frog = now + 7 + Math.random() * 12; this._frogs(now + 0.05, -0.55 + Math.random() * 0.3, 0.02 * night); }
+  }
+
+  // Siniääni korkeuskäyrällä ja verhokäyrällä yöäänten väylään.
+  _tone(t, f0, f1, dur, vol, pan, { attack = 0.05, type = 'sine', lowpass = 2400, vib = 0 } = {}) {
+    const ctx = this.ctx;
+    const o = ctx.createOscillator();
+    o.type = type;
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+    if (vib) {
+      const l = ctx.createOscillator(); const lg = ctx.createGain();
+      l.frequency.value = 5.5; lg.gain.value = vib;
+      l.connect(lg).connect(o.frequency); l.start(t); l.stop(t + dur + 0.05);
+    }
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + attack);
+    g.gain.setTargetAtTime(0, t + dur * 0.6, dur * 0.18);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = lowpass;
+    const p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    o.connect(lp).connect(g);
+    if (p) { p.pan.value = pan; g.connect(p).connect(this.nightNode.dry); } else g.connect(this.nightNode.dry);
+    o.start(t);
+    o.stop(t + dur + 0.4);
+  }
+
+  // Täplähuuhkaja: "huu-HUUU" (lyhyt ja pidempi, hieman laskeva).
+  _owl(t, pan, vol) {
+    const f = 330 + Math.random() * 40;
+    this._tone(t, f, f * 0.94, 0.28, vol * 0.8, pan, { attack: 0.05, lowpass: 900 });
+    this._tone(t, f * 2, f * 1.88, 0.28, vol * 0.08, pan, { attack: 0.05, lowpass: 1400 });
+    this._tone(t + 0.42, f * 1.06, f * 0.9, 0.62, vol, pan, { attack: 0.08, lowpass: 900, vib: 4 });
+    this._tone(t + 0.42, f * 2.12, f * 1.8, 0.62, vol * 0.08, pan, { attack: 0.08, lowpass: 1400 });
+  }
+
+  // Täplähyeena kaukana: 2–4 nousevaa "whoop"-huutoa.
+  _hyena(t, pan, vol) {
+    const k = 2 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < k; i++) {
+      const tt = t + i * (2.2 + Math.random() * 0.8);
+      const f0 = 260 + Math.random() * 40;
+      this._tone(tt, f0, f0 * 2.9, 1.1, vol, pan, { attack: 0.25, type: 'triangle', lowpass: 1300, vib: 6 });
+    }
+  }
+
+  // Kehrääjä: nopea, tasainen surina (kantoaalto amplitudimoduloituna).
+  _nightjar(t, pan, vol) {
+    const ctx = this.ctx;
+    const dur = 2.5 + Math.random() * 3.5;
+    const o = ctx.createOscillator();
+    o.frequency.value = 1050 + Math.random() * 200;
+    const am = ctx.createGain(); am.gain.value = 0;
+    const lfo = ctx.createOscillator(); lfo.type = 'square'; lfo.frequency.value = 36 + Math.random() * 6;
+    const lg = ctx.createGain(); lg.gain.value = 0.5;
+    const bias = ctx.createConstantSource ? ctx.createConstantSource() : null;
+    lfo.connect(lg).connect(am.gain);
+    if (bias) { bias.offset.value = 0.5; bias.connect(am.gain); bias.start(t); bias.stop(t + dur + 0.3); }
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.3);
+    g.gain.setValueAtTime(vol, t + dur - 0.4);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    const p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    o.connect(am).connect(g);
+    if (p) { p.pan.value = pan; g.connect(p).connect(this.nightNode.dry); } else g.connect(this.nightNode.dry);
+    o.start(t); lfo.start(t);
+    o.stop(t + dur + 0.2); lfo.stop(t + dur + 0.2);
+  }
+
+  // Ruokosammakot: kirkkaita, lyhyitä kilahduksia epäsäännöllisesti.
+  _frogs(t, pan, vol) {
+    const k = 4 + Math.floor(Math.random() * 9);
+    let tt = t;
+    const base = 2700 + Math.random() * 500;
+    for (let i = 0; i < k; i++) {
+      tt += 0.12 + Math.random() * 0.5;
+      const f = base * (0.96 + Math.random() * 0.08);
+      this._tone(tt, f, f * 0.985, 0.045, vol * (0.6 + Math.random() * 0.4), pan + (Math.random() - 0.5) * 0.3, { attack: 0.004, lowpass: 6000 });
+    }
+  }
+
   // Suunta ja etäisyys kuulijaan: palauttaa { gain, pan, dist }.
   _spatial(x, z, listener, ref = 10, range = 140) {
     const dx = x - listener.x, dz = z - listener.z;

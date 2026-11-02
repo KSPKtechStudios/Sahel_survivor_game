@@ -205,6 +205,39 @@
   <div id="devtools" class="hidden"></div>
 
   <!-- ===================== Valikon osat (sessio 59) ===================== -->
+  <!-- Sessio 60: logon kulunut metalli (SVG-suodin, menu.css .logo-word): rosoiset
+       reunat, harvat lohkeamat ja painaumat, pinnan rae ja kulumalaikut, viistetty
+       kohokuvio valolla ylävasemmalta ja tumma reunaviiva. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <filter id="logo-worn" x="-4%" y="-14%" width="108%" height="128%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="4" result="nEdge"/>
+      <feDisplacementMap in="SourceGraphic" in2="nEdge" scale="2.6" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.08 0.16" numOctaves="3" seed="11" result="nPit"/>
+      <feColorMatrix in="nPit" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -18 13.6" result="pitMask"/>
+      <feComposite in="rough" in2="pitMask" operator="in" result="pitted"/>
+      <feColorMatrix in="nPit" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 7 -4.3" result="dent"/>
+      <feComposite in="dent" in2="pitted" operator="in" result="dentIn"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="nGrain"/>
+      <feColorMatrix in="nGrain" type="matrix" values="0 0 0 0 0.1  0 0 0 0 0.06  0 0 0 0 0.03  0 0 0 1.4 -0.45" result="grain"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="3" seed="2" result="nWear"/>
+      <feColorMatrix in="nWear" type="matrix" values="0 0 0 0 0.1  0 0 0 0 0.06  0 0 0 0 0.03  0 0 0 1.7 -0.85" result="grime"/>
+      <feColorMatrix in="dentIn" type="matrix" values="0 0 0 0 0.12  0 0 0 0 0.07  0 0 0 0 0.03  0 0 0 0.6 0" result="dentDark"/>
+      <feMerge result="dirt"><feMergeNode in="grain"/><feMergeNode in="grime"/></feMerge>
+      <feComposite in="dirt" in2="pitted" operator="in" result="dirtIn"/>
+      <feMerge result="base"><feMergeNode in="pitted"/><feMergeNode in="dirtIn"/><feMergeNode in="dentDark"/></feMerge>
+      <feComposite in="pitted" in2="dentIn" operator="arithmetic" k1="0" k2="1" k3="-0.55" k4="0" result="heightA"/>
+      <feGaussianBlur in="heightA" stdDeviation="1.2" result="blurA"/>
+      <feSpecularLighting in="blurA" surfaceScale="4" specularConstant="1.0" specularExponent="20" lighting-color="#fff0cc" result="spec">
+        <feDistantLight azimuth="235" elevation="42"/>
+      </feSpecularLighting>
+      <feComposite in="spec" in2="pitted" operator="in" result="specIn"/>
+      <feComposite in="specIn" in2="base" operator="arithmetic" k1="0" k2="0.6" k3="1" k4="0" result="lit"/>
+      <feMorphology in="pitted" operator="erode" radius="1" result="inner"/>
+      <feComposite in="pitted" in2="inner" operator="out" result="rim"/>
+      <feColorMatrix in="rim" type="matrix" values="0 0 0 0 0.08  0 0 0 0 0.04  0 0 0 0 0.01  0 0 0 0.55 0" result="rimDark"/>
+      <feMerge><feMergeNode in="lit"/><feMergeNode in="rimDark"/></feMerge>
+    </filter>
+  </svg>
   <!-- Logo (sessio 60): harvennettu nimi ja ohut horisontti, jossa aurinko laskee. -->
   <template id="tpl-logo">
     <div class="logo">

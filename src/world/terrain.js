@@ -1731,6 +1731,13 @@ export function structuresNear(x, z, r) {
   return out;
 }
 
+// Sessio 60: aukion reunalla kasvillisuus harvenee pehmeästi (0 sisällä, 1 ulkona).
+export function clearingFade(x, z) {
+  let f = 1;
+  for (const c of CLEARINGS) f = Math.min(f, smoothstep(c.r - 1.2, c.r + 2.8, Math.hypot(x - c.x, z - c.z)));
+  return f;
+}
+
 // Onko piste rakennelman alueella (esineitä ei sijoiteta sinne).
 export function insideStructure(x, z, margin = 2) {
   for (const c of CLEARINGS) if (Math.hypot(x - c.x, z - c.z) < c.r + margin) return true;

@@ -11,7 +11,7 @@ import { createGroundDetailTexture } from './render/textures.js';
 import { createSharedMaterials, wetUniforms, addWet, addTranslucency, softFoliage, sunUniforms } from './render/materials.js';
 import { grassUniforms } from './render/grassField.js';
 import { Sky } from './render/sky.js';
-import { Environment, WEATHER_KEYS } from './render/environment.js';
+import { Environment, WEATHER_KEYS, MENU_WEATHERS } from './render/environment.js';
 import { Dust, Bursts } from './render/particles.js';
 import { Ambient } from './render/ambient.js';
 import { Debris } from './render/debris.js';
@@ -73,6 +73,7 @@ import { RunePanel } from './ui/runePanel.js';
 import { BoatHud } from './ui/boatHud.js';
 import { Menu } from './ui/menu.js';
 import { MenuCamp, CAMP_SHOTS } from './ui/menuCamp.js';
+import { MenuLife } from './ui/menuLife.js';
 import { DevTools } from './ui/devtools.js';
 
 const $ = (id) => document.getElementById(id);
@@ -133,6 +134,7 @@ const splashes = new Splashes(scene);
 const waterfalls = new Waterfalls(scene, splashes, ripples);
 const fire = new FireFx(scene);
 const camp = new MenuCamp(scene); // sessio 59: valikon nuotioleiri
+const life = new MenuLife(scene); // sessio 60: gasellit, linnut ja tulikärpäset valikossa
 const blood = new Blood(scene);
 const rain = new Rain(scene, renderer);
 env.onStrike = (angle, dist, near) => {
@@ -458,11 +460,17 @@ async function enterMenu(first = false) {
   mobs.enabled = false;
   env.frozen = true;
   env.setTime(MENU_SPOT.time);
-  env.setWeather('menu', true);
+  // Sessio 60: illan sää vaihtelee kerrasta toiseen ja hiljalleen valikossa ollessa.
+  menuCam.weather = MENU_WEATHERS[Math.floor(Math.random() * MENU_WEATHERS.length)];
+  menuCam.weatherT = 100 + Math.random() * 80;
+  env.setWeather(menuCam.weather, true);
   env.setLocalHumidity(0);
   // Sessio 59: nuotioleiri valikkomaailman aukiolla; kamera alkaa leirin
   // yleiskuvasta, ja hämärä vaihtuu hiljalleen yöksi (updateMenuCamera).
   camp.build();
+  life.build(camp, [CAMP_SHOTS.main.pos, CAMP_SHOTS.main.at]);
+  life.clearFlocks();
+  ambient.fireflies.extra = life.fireflySwarms();
   menuCam.x = camp.x;
   menuCam.z = camp.z;
   menuCam.t = 0;
@@ -493,6 +501,7 @@ async function startWorld(meta) {
   await nextFrame();
   currentWorld = meta;
   clearWorldState(meta.seed);
+  ambient.fireflies.extra = [];
   mobs.enabled = true;
   env.frozen = false;
   player.dead = false;
@@ -792,6 +801,8 @@ function updateSfx(game, rainAmt, realDt) {
     sfx.setLevels({});
     // Sessio 59: valikon nuotioleirin rätinä ja sirkat (voimistuvat illan pimetessä).
     sfx.campfire(state === 'menu' ? 1 : 0, state === 'menu' ? 0.25 + 0.75 * (1 - Math.min(1, env.daylight * 2)) : 0, realDt);
+    // Sessio 60: yön eläinäänet valikossa (pöllö, hyeena, kehrääjä, ruokosammakot).
+    sfx.nightCalls(state === 'menu' ? 1 - Math.min(1, env.daylight * 3) : 0);
     sfx.waterfall(0, 0, realDt);
   }
   sfx.update(realDt);
@@ -909,6 +920,14 @@ function updateMenuCamera(dt) {
   menuCam.t += dt;
   const t = menuCam.t;
   env.setTime(Math.min(MENU_SPOT.nightEnd, MENU_SPOT.time + t * ((MENU_SPOT.nightEnd - MENU_SPOT.time) / MENU_SPOT.dusk)));
+  menuCam.weatherT -= dt;
+  if (menuCam.weatherT <= 0) {
+    // Pehmeä siirtymä toiseen illan säähän (environment.js: n. 25 s).
+    const others = MENU_WEATHERS.filter((k) => k !== menuCam.weather);
+    menuCam.weather = others[Math.floor(Math.random() * others.length)];
+    menuCam.weatherT = 110 + Math.random() * 90;
+    env.setWeather(menuCam.weather, false);
+  }
   const shot = CAMP_SHOTS[menu.shot] || CAMP_SHOTS.main;
   camp.world(shot.pos, _tPos);
   camp.world(shot.at, _tAt);
@@ -967,6 +986,8 @@ function frame(now) {
 
   camp.setVisible(state === 'menu');
   camp.update(dt, elapsed, camera, env.windDir.x * env.w.wind * 3, env.windDir.y * env.w.wind * 3);
+  life.setVisible(state === 'menu');
+  if (state === 'menu') life.update(dt, elapsed, env.daylight);
   if (state === 'menu') updateMenuCamera(dt);
   else if (inGame) {
     // Vene liikkuu ennen pelaajaa (kyydissä pelaajan paikka tulee veneeltä).
@@ -1260,5 +1281,5 @@ window.sahel = {
   viewmodel, interaction, drops, fallen, debris, breakables, ruins, explored, bigMap, menu, fps, events, persist, models,
   ripples, splashes, waterFx, materials, post, mobs, combat, hud, fire, devtools, music, sfx, blood,
   startWorld, enterMenu, quitToMenu, respawnPlayer, setState: (s) => setState(s), get state() { return state; },
-  menuSpot: MENU_SPOT, menuCam, survival, archery, build, buildMenu, useSlot, boats, ambient, vines, flies, waterfalls, farTerrain, peakMist,
+  menuSpot: MENU_SPOT, menuCam, camp, life, survival, archery, build, buildMenu, useSlot, boats, ambient, vines, flies, waterfalls, farTerrain, peakMist,
 };
