@@ -15,11 +15,16 @@ var _checks := 0
 
 
 func _init() -> void:
+	_run.call_deferred()
+
+
+func _run() -> void:
 	print("== Sahel Godot -testit ==")
 	_test_noise()
 	_test_terrain_twin()
 	_test_player_trajectory()
 	_test_input_map()
+	await _test_mouse_look()
 	_bench_noise()
 	print("\n%d tarkistusta, %d virhettä" % [_checks, _fails])
 	print("TULOS: " + ("OK" if _fails == 0 else "VIRHEITÄ"))
@@ -177,6 +182,36 @@ func _test_input_map() -> void:
 		for k in want[action]:
 			_check(k in keys, "%s: näppäin %s puuttuu" % [action, OS.get_keycode_string(k)])
 	print("näppäimet: %d toimintoa tarkistettu" % want.size())
+
+
+## Hiiren liike oikeana tapahtumana koko scenen läpi (HUD mukana): lukitussa
+## tilassa kursori on ruudun keskellä, joten keskellä oleva HUD-elementti ei
+## saa niellä tapahtumaa. (Sessio 61: tähtäin nieli sen, eikä hiiri kääntänyt.)
+func _test_mouse_look() -> void:
+	var main: Node = load("res://scenes/main.tscn").instantiate()
+	main.force_mouse_look = true  # ilman näyttöä hiirtä ei voi oikeasti lukita
+	root.add_child(main)
+	await process_frame
+	await process_frame
+	var player: Player = main.get_node("Player")
+	var yaw0 := player.yaw
+	var pitch0 := player.pitch
+	var center := root.get_visible_rect().size * 0.5
+	for i in 5:
+		var ev := InputEventMouseMotion.new()
+		ev.position = center
+		ev.global_position = center
+		ev.relative = Vector2(20, 4)
+		root.push_input(ev)
+		await process_frame
+	var dyaw := player.yaw - yaw0
+	var dpitch := player.pitch - pitch0
+	# 5 × 20 px × 0,0022 rad/px = -0,22 rad (oikealle), 5 × 4 px = -0,044 rad (alas)
+	_check(absf(dyaw + 0.22) < 1e-6, "hiiri ei käännä vaakaan: muutos %.4f rad (odotus -0.22)" % dyaw)
+	_check(absf(dpitch + 0.044) < 1e-6, "hiiri ei käännä pystyyn: muutos %.4f rad (odotus -0.044)" % dpitch)
+	print("hiiri: käännös %.4f rad, katse %.4f rad (odotus -0.2200, -0.0440)" % [dyaw, dpitch])
+	main.queue_free()
+	await process_frame
 
 
 func _bench_noise() -> void:

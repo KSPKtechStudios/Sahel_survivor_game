@@ -19,6 +19,10 @@ var terrain: TestTerrain
 var input := PlayerInput.new()
 var steps := 0
 
+## Testeille: hiiren liike käännetään, vaikka hiirtä ei ole lukittu
+## (ilman näyttöä lukitusta ei voi tehdä).
+var force_mouse_look := false
+
 var _autopilot := false
 var _shots_dir := ""
 var _sim_t := 0.0
@@ -115,17 +119,27 @@ func _chunk_mesh(cx: int, cz: int) -> ArrayMesh:
 	return mesh
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	elif event.is_action_pressed("ui_cancel"):
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	elif event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+## Hiiren liike luetaan _input-vaiheessa, ennen käyttöliittymää: lukitussa
+## tilassa kursori on ruudun keskellä, ja sessiossa 61 keskellä ollut tähtäin
+## nieli liikkeen, eikä hiiri kääntänyt katsetta (testi: run_tests.gd).
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion and _mouse_look():
 		var mm := event as InputEventMouseMotion
 		# Suodata satunnaiset valtavat hypyt (kuten JS-versiossa).
 		if absf(mm.relative.x) <= 400.0 and absf(mm.relative.y) <= 400.0:
 			input.mouse_dx += mm.relative.x
 			input.mouse_dy += mm.relative.y
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	elif event.is_action_pressed("ui_cancel"):
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+func _mouse_look() -> bool:
+	return force_mouse_look or Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
 
 
 func _process(delta: float) -> void:
@@ -135,7 +149,7 @@ func _process(delta: float) -> void:
 		_sim_t += dt
 		_drive_autopilot()
 	else:
-		input.locked = Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+		input.locked = _mouse_look()
 		input.forward = Input.is_action_pressed("move_forward")
 		input.back = Input.is_action_pressed("move_back")
 		input.left = Input.is_action_pressed("move_left")

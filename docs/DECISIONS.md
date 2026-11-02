@@ -2,6 +2,9 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-11-02 (sessio 61, jatko)
+- **Hiiren liike luetaan `_input`-vaiheessa ja HUD-elementit ohittavat hiiren (`mouse_filter = 2`).** Syy: lukitussa tilassa kursori on ruudun keskellä; tähtäin (`ColorRect`, oletuksena `MOUSE_FILTER_STOP`) nieli liikkeen ennen `_unhandled_input`ia. Toistettiin ensin testillä (käännös 0 rad), sitten korjattiin. Autopilotti ei huomannut vikaa, koska se syöttää käännöksen suoraan; siksi testi käyttää oikeita tapahtumia (`push_input`).
+
 ## 2026-11-02 (sessio 61): Godot-siirtokoe
 - **Siirtokohteeksi kokeillaan Godotia (4.7.2), ei Unitya tai Unrealia.** Syy (keskustelu käyttäjän kanssa): selaimen WebGL tulee vastaan raskaassa avoimessa maailmassa; Godotin projekti on kokonaan tekstiä (scenet `.tscn`, skriptit), joten Claude voi muokata myös scenejä, ja Godot toimii pilvessä ilman näyttöä (testit ja kuvakaappaukset). Valheim-tason grafiikka on Godotilla mahdollinen; Unrealin fotorealismi ei ole tavoite.
 - **Godot-projekti samaan repoon kansioon `godot/`**, ei uuteen repoon. Syy: JS-peli on siirron speksi, ja testit ajavat alkuperäistä `src/`-koodia vertailuarvoiksi.

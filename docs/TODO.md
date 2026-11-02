@@ -2,6 +2,8 @@
 
 ## Godot-siirto (sessio 61)
 - [x] Vaihe 1: kohina (`noise.js`), pelaajan liikkuminen (`player.js`), koemaasto, vertailutestit JS:ään.
+- [x] Hiiri ei kääntänyt katsetta (käyttäjä, korjattu sessio 61 jatko).
+- [ ] Avoin (käyttäjä: zipin lataaminen ja tuonti joka kerta on kömpelöä): nopeampi työtapa. Ehdotettu: Claude Code käyttäjän omalla koneella (Claude-sovellus) tai Remote Control -kansio, varalla GitHub Desktop + Pull.
 - [ ] Käyttäjä kokeilee vaihetta 1 omalla koneellaan (Godot 4.7, `godot/project.godot`, F5): liikkumisen tuntuma, juoksu, hyppy, kyykky, seinä; mikä FPS omalla koneella.
 - [x] Godot-kokeilu pushattu haaraan `claude/upbeat-fermat-9n671f` (käyttäjän lupa; selainpeli ei muutu).
 - [ ] Avoin: avataanko PR mainiin (käyttäjä päättää).

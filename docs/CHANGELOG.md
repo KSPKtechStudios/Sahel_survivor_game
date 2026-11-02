@@ -2,6 +2,10 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-11-02 (sessio 61, jatko): Godot-kokeilu, hiiri kääntää katsetta
+
+- **Korjattu: hiirellä ei voinut katsoa ympärilleen Godot-versiossa** (käyttäjä). Ruudun keskellä oleva tähtäin nieli hiiren liikkeen. Uusi testi lähettää oikean hiiritapahtuman koko scenen läpi.
+
 ## 2026-11-02 (sessio 61): Godot-siirtokoe, vaihe 1 (kohina ja pelaajan liikkuminen)
 
 - **Uusi kansio `godot/`:** Godot 4.7 -projekti, johon peliä kokeillaan siirtää pienin askelin. Selainpeli ei muutu.
