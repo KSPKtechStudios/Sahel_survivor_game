@@ -2,6 +2,29 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-11-02 (sessio 60, jatko)
+**Tehtiin**
+- Käyttäjän palaute:
+  - pelkistetty tyyli toimii, mutta osittain rustiikkisempi;
+  - maaksi multatekstuuri, jossa vain pari jalanjälkeä, ja pehmeät siirtymät;
+  - tavoite Valheim-tyylinen, kotoisa ja lämmin valikko, jossa haluaa viettää aikaa;
+  - kysy välillä.
+- Kysyttiin vaihtoehdot. Käyttäjä valitsi kuluneen logon, Cinzel säilyy, tulikärpäset ja yöäänet, elämää horisontissa ja vaihtelevan sään; PR:t yhdistää käyttäjä. Lisäksi pyydettiin nuotiolle soihdun liekkifysiikat ja ehdotettiin internetiä äänimaailmaan.
+- CLAUDE.md: pushaa aina, käyttäjä yhdistää PR:t, kysy välillä.
+- Multamaa: Poly Havenin CC0-mullat (`assets/textures/camp`), sekoitus sävyttimessä maskin mukaan, viisi jalanjälkeä, ruohon pehmeä raja (`clearingFade`).
+- Nuotio: soihdun tilavuusliekit (`campfire.js` `Tongue`), testattu erillisellä testisivulla (tyyni ja tuulinen), suurennettu, kun ensimmäinen oli liian ohut.
+- Logo: SVG-suodin `#logo-worn`, neljä kokeiltua versiota (`logotest.mjs`).
+- Valikon elämä `ui/menuLife.js`: linnut (näkyvät, V-muodostelma kuvassa), tulikärpäset (204 kpl, näkyvät yökuvassa), illan säävariantit. Gasellit eivät näy heinikon takia (näkyvyyslaskenta `herdcalc*.mjs`).
+- Äänet: haettiin Freesoundista CC0-äänitteet (spektrogrammeilla valittu), tehtiin saumattomat silmukat ffmpeg- ja numpy-skriptillä (`mkloop.py`), tasattiin LUFS-mittauksella; `sfx.js` käyttää niitä, ja synteesi jää varalle. Selaintesti: kaikki kuusi latautuvat, silmukat soivat ja yöäänet ajastuvat.
+- Kuvat (scratchpad): `g1_*`, `s3_*`, `life*_*`, `fire_*`. eslint puhdas.
+
+**Kesken / tiedossa**
+- Gasellilauma ei näy pääkuvassa (kysytty käyttäjältä).
+- Ääniä ei voi kuunnella testiympäristössä; tasot on asetettu mittausten perusteella, ja käyttäjä arvioi ne.
+
+**Seuraavaksi**
+- Käyttäjän vastaukset (gasellit, äänitteet peliin) ja palaute.
+
 ## 2026-11-01 (sessio 60)
 **Tehtiin**
 - Käyttäjän palaute session 59 valikoista:

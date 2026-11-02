@@ -135,3 +135,14 @@ Puut (assets/models/trees/; lähde tools/blender/build_trees.py, leafgen.py,
   (https://ambientcg.com), CC0, 1K-JPG pienennetty 512 px WebP:ksi:
   acacia = Bark014   shea = Bark001   baobab = Bark005 (vaalennettu, harmaampi)
   rain = Bark009     kapok = Bark010  emergent = Bark004   sapling = Bark002
+
+Äänet (assets/sfx/), Freesound (https://freesound.org), CC0, sessio 60:
+  campfire-loop.mp3 = "Campfire 02", HECKFRICKER (729396); 45 s:n pätkä,
+    kompressoitu, saumaton silmukka, mono
+  savanna-night.mp3 = "African savanna 2" (Masai Mara keskiyöllä),
+    AugustSandberg (202876); 60 s:n saumaton silmukka
+  owl.mp3 = "Owl Hoot", Breviceps (465697)
+  jackals.mp3 = "Jackals.wav", denkmal (539810); 26 s:n pätkä
+  nightjar.mp3 = "European nightjar", jjbubo (474859); 14 s:n pätkä
+  guineafowl.mp3 = "Guinea fowl", Breviceps (483923)
+  (suodatettu, häivytetty ja tasattu peliin)

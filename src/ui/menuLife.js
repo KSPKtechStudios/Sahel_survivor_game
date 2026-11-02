@@ -64,26 +64,46 @@ export class MenuLife {
     this.camp = camp;
     const [p, a] = view;
     const cx = camp.x + p[0], cz = camp.z + p[2];
+    this.camY = Math.max(camp.y + p[1], heightAt(cx, cz) + 0.5);
     const dx = a[0] - p[0], dz = a[2] - p[2], dl = Math.hypot(dx, dz);
     this.view = { cx, cz, fx: dx / dl, fz: dz / dl };
     this._placeHerd();
   }
 
-  // Lauman polku: poikittain pääkuvan katseeseen 45–110 m:n päässä.
+  // Lauman polku: lyhyt (±10 m) polku poikittain pääkuvan katseeseen. Paikka
+  // valitaan näkyvyyden mukaan: kamera on vain 1,35 m:n korkeudella ja edessä
+  // on joki heinikkorantoineen, joten kaukana (ensimmäinen kokeilu 95 m)
+  // lauma jäi kokonaan heinän taakse. Nyt vaaditaan, että koholla oleva pää
+  // (n. 1 m) näkyy välissä olevan maaston ja heinän (n. 0,95 m) yli; laiduntaessa
+  // pää painuu heinikkoon kuten oikeasti. Mieluiten 20–40 m:n päässä kuvan
+  // keskeltä vähän vasemmalle (akaasian vierellä, ei valikon tekstin alla).
   _placeHerd() {
     const { cx, cz } = this.view;
-    let best = null;
-    for (const turn of [0, -0.2, 0.2, -0.38, 0.38]) {
+    const cy = this.camY;
+    const sightOk = (x, z) => {
+      const dx = x - cx, dz = z - cz, D = Math.hypot(dx, dz);
+      const ang = (heightAt(x, z) + 1.0 - cy) / D;
+      for (let d = 7; d < D - 3; d += 2) {
+        waterAt(cx + dx * d / D, cz + dz * d / D, _w);
+        const top = _w.wl > _w.h ? _w.wl : _w.h + 0.95;
+        if ((top - cy) / d > ang - 0.002) return false;
+      }
+      return true;
+    };
+    let best = null, bestScore = -1e9;
+    for (let turn = -0.5; turn <= 0.9; turn += 0.1) {
       const fx = this.view.fx * Math.cos(turn) - this.view.fz * Math.sin(turn);
       const fz = this.view.fx * Math.sin(turn) + this.view.fz * Math.cos(turn);
-      for (let D = 45; D <= 110 && !best; D += 5) {
+      for (let D = 16; D <= 70; D += 3) {
         const mx = cx + fx * D, mz = cz + fz * D;
         const lx = -fz, lz = fx;
-        let ok = true;
-        for (let s = -22; s <= 22 && ok; s += 2) ok = walkable(mx + lx * s, mz + lz * s) && walkable(mx + lx * s + fx * 6, mz + lz * s + fz * 6);
-        if (ok) best = { mx, mz, lx, lz, fx, fz };
+        let ok = true, vis = 0, cnt = 0;
+        for (let s = -11; s <= 11 && ok; s += 1.5) ok = walkable(mx + lx * s, mz + lz * s) && walkable(mx + lx * s + fx * 3, mz + lz * s + fz * 3);
+        if (!ok) continue;
+        for (let s = -9; s <= 9; s += 3) { cnt++; if (sightOk(mx + lx * s, mz + lz * s)) vis++; }
+        const score = vis / cnt - Math.abs(D - 30) * 0.01 - Math.abs(turn + 0.2) * 0.25;
+        if (score > bestScore) { bestScore = score; best = { mx, mz, lx, lz, fx, fz, vis: vis / cnt, D, turn }; }
       }
-      if (best) break;
     }
     if (!best) return;
     this.path = best;
@@ -95,7 +115,7 @@ export class MenuLife {
       g.group.scale.setScalar(sc);
       this.group.add(g.group);
       this.herd.push({
-        md: g, s: -14 + i * 3 + (Math.random() - 0.5) * 2, side: (Math.random() - 0.5) * 6, dir: 1,
+        md: g, s: -6 + i * 3 + (Math.random() - 0.5) * 2, side: (Math.random() - 0.5) * 3, dir: 1,
         state: 'graze', t: 2 + Math.random() * 6, ph: Math.random() * 6, head: 1.4, yaw: 0, phase: Math.random() * 6,
         speed: 0,
       });
@@ -127,14 +147,14 @@ export class MenuLife {
       if (g.t <= 0) {
         // Vuorotellen laidunnusta ja hidasta vaellusta; polun päässä käännytään.
         if (g.state === 'graze') { g.state = 'walk'; g.t = 4 + Math.random() * 9; } else { g.state = 'graze'; g.t = 5 + Math.random() * 12; }
-        if (Math.abs(g.s) > 16) g.dir = -Math.sign(g.s);
+        if (Math.abs(g.s) > 7) g.dir = -Math.sign(g.s);
         else if (Math.random() < 0.3) g.dir = -g.dir;
       }
       const want = g.state === 'walk' ? 0.75 : 0;
       g.speed += (want - g.speed) * Math.min(1, dt * 1.5);
       g.s += g.dir * g.speed * dt;
-      g.s = Math.max(-21, Math.min(21, g.s));
-      g.side += Math.sin(time * 0.1 + g.phase) * 0.05 * dt;
+      g.s = Math.max(-10, Math.min(10, g.s));
+      g.side = Math.max(-2.5, Math.min(2.5, g.side + Math.sin(time * 0.1 + g.phase) * 0.05 * dt));
       const x = P.mx + P.lx * g.s + P.fx * g.side;
       const z = P.mz + P.lz * g.s + P.fz * g.side;
       const md = g.md;
@@ -151,7 +171,7 @@ export class MenuLife {
       const a = Math.sin(g.ph) * amp, b = Math.sin(g.ph + Math.PI) * amp;
       md.legs[0].rotation.x = a; md.legs[1].rotation.x = b; md.legs[2].rotation.x = b; md.legs[3].rotation.x = a;
       // Pää alas laiduntaessa, välillä ylös vilkuilemaan.
-      const look = g.state === 'graze' && Math.sin(time * 0.37 + g.phase * 3) > 0.85;
+      const look = g.state === 'graze' && Math.sin(time * 0.37 + g.phase * 3) > 0.4;
       const hx = g.state === 'graze' && !look ? 1.5 + Math.sin(time * 3 + g.phase) * 0.05 : 0.1;
       g.head += (hx - g.head) * Math.min(1, dt * 3);
       md.head.rotation.x = g.head;
@@ -162,27 +182,27 @@ export class MenuLife {
   // Lintuparvi: V-muodostelma tai löyhä parvi kulkee taivaan poikki.
   _spawnFlock() {
     const { cx, cz, fx, fz } = this.view;
-    const D = 65 + Math.random() * 70;
+    const D = 45 + Math.random() * 50;
     const lx = -fz, lz = fx;
     const dir = Math.random() < 0.5 ? 1 : -1;
     const turn = (Math.random() - 0.5) * 0.5;
     const vx = (lx * Math.cos(turn) - fx * Math.sin(turn)) * dir, vz = (lz * Math.cos(turn) - fz * Math.sin(turn)) * dir;
     const L = 130;
     const sx = cx + fx * D - vx * L, sz = cz + fz * D - vz * L;
-    const y = this.camp.y + 16 + Math.random() * 22;
+    const y = this.camp.y + 14 + Math.random() * 16;
     const n = 7 + Math.floor(Math.random() * 9);
     const vee = Math.random() < 0.6;
     const birds = [];
     for (let i = 0; i < n; i++) {
       const b = makeBirdShape(this.birdMat);
-      const sc = 1 + (Math.random() - 0.5) * 0.2;
+      const sc = 1.6 + (Math.random() - 0.5) * 0.3; // haikaran kokoisia (siipien kärkiväli n. 2,3 m)
       b.group.scale.setScalar(sc);
       this.group.add(b.group);
       // V: rivit taaksepäin ja sivuille; löyhä parvi: satunnainen pilvi.
       const k = Math.ceil(i / 2), side = i % 2 ? 1 : -1;
       const off = vee
-        ? { back: k * 2.6 + Math.random() * 0.6, lat: side * k * 2.2 + (Math.random() - 0.5) * 0.5, up: (Math.random() - 0.5) * 0.8 }
-        : { back: Math.random() * 14, lat: (Math.random() - 0.5) * 12, up: (Math.random() - 0.5) * 5 };
+        ? { back: k * 3.8 + Math.random() * 0.8, lat: side * k * 3.4 + (Math.random() - 0.5) * 0.6, up: (Math.random() - 0.5) * 1.0 }
+        : { back: Math.random() * 20, lat: (Math.random() - 0.5) * 18, up: (Math.random() - 0.5) * 6 };
       birds.push({ ...b, off, ph: Math.random() * 6, rate: 3.2 + Math.random() * 0.8, glide: Math.random() * 10 });
     }
     this.flocks.push({ x: sx, y, z: sz, vx, vz, speed: 9 + Math.random() * 3, dist: 0, len: L * 2.2, birds });

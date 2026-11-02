@@ -15,10 +15,10 @@ Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
   - hiillos, kipinät ja savu kuten ennen.
 - **Kulunut logo:** SAHEL-kirjaimet ovat kuin kulunutta valettua pronssia: rosoiset reunat, harvoja kolhuja ja painaumia, pinnan rae ja kulumalaikut, viistetty kohokuvio. Fontti on edelleen Cinzel.
 - **Valikon ilta elää** (käyttäjä: valikossa pitää haluta viettää aikaa):
-  - kaukana auringonlaskua vasten laiduntaa ja vaeltaa gasellilauma;
-  - hämärässä taivaan poikki lentää välillä lintuparvi (V-muodostelma tai löyhä parvi);
+  - hämärässä taivaan poikki lentää välillä haikaran kokoisten lintujen parvi (V-muodostelma tai löyhä parvi), siivet lyövät ja välillä liitävät;
+  - gasellilauma laiduntaa leirin lähellä, mutta pääkuvan matalasta kuvakulmasta heinikko peittää sen vielä (ratkaisu kysytään käyttäjältä);
   - pimeän tultua leirin ympärillä vilkkuu tulikärpäsiä;
-  - yöllä kuuluu täplähuuhkajan huhuilua, kaukaisen hyeenan huutoja, kehrääjän surinaa ja ruokosammakoiden kilahduksia;
+  - **oikeat äänitteet netistä** (käyttäjä: voisiko äänimaailmassakin hyödyntää internetiä; Freesound, CC0): nuotion rätinä, Masai Maran (Kenia) savannin yö sirkkoineen, huuhkajan huhuilu, kaukaisten sakaalien ulvonta, kehrääjän surina ja hämärässä helmikanojen ääntely; äänet kuuluvat kaukaa ja hieman kaikuen;
   - ilta vaihtelee kerrasta toiseen (tyyni, tuulinen, puolipilvinen tai utuisen kultainen) ja vaihtuu hiljalleen toiseen valikossa viipyessä.
 
 ## 2026-11-01 (sessio 60): valikon kamera, tallattu leirimaa ja uusi valikkoulkoasu

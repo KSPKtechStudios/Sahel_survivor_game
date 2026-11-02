@@ -5,7 +5,11 @@
   - leirin multamaa, jalanjäljet (joelta päin) ja pehmeät siirtymät ruohikkoon;
   - nuotion uudet liekit valikossa ja pelissä (rakennettu nuotio ja soihtuteline), myös tuulessa;
   - kulunut logo;
-  - valikon ilta: gasellit kaukana, lintuparvet hämärässä, tulikärpäset ja yöäänet pimeällä (odota valikossa noin 5 min), illan sää eri kerroilla.
+  - valikon ilta: lintuparvet hämärässä, tulikärpäset ja yöäänet pimeällä (odota valikossa noin 5 min), illan sää eri kerroilla;
+  - äänet: nuotion rätinä, savannin yö, huuhkaja, sakaalit, kehrääjä ja hämärän helmikanat (kuulostavatko oikeilta ja sopivan voimakkailta).
+- [ ] Avoin (sessio 60): gasellilauma ei näy pääkuvassa heinikon takia. Kysytty käyttäjältä: tallattu käytävä joelle ja gasellit juomassa, lyhytheinäinen laidun tai lauman poisto.
+- [ ] Avoin (sessio 60): tuodaanko oikeita äänitteitä (Freesound CC0) myös itse peliin (esim. savannin yö, nuotio, eläinten äänet)? Kysytty käyttäjältä.
+- [x] Valikon äänet oikeiksi äänitteiksi (Freesound CC0), sessio 60.
 - [ ] Avoin (sessio 60): jos käyttäjä haluaa lisää rustiikkia, ehdotetut vaihtoehdot olivat tulen hehku napeissa ja kipinät, oikeat materiaalit paneeleissa ja käsin piirretyt koristeet (eivät valittuja nyt).
 - [ ] Käyttäjä testaa session 60:
   - Pelaa → Takaisin (ja Asetukset → Takaisin): kameran siirtymä pehmeä eikä nykäise;

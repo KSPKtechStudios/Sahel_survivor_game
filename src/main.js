@@ -801,8 +801,10 @@ function updateSfx(game, rainAmt, realDt) {
     sfx.setLevels({});
     // Sessio 59: valikon nuotioleirin rätinä ja sirkat (voimistuvat illan pimetessä).
     sfx.campfire(state === 'menu' ? 1 : 0, state === 'menu' ? 0.25 + 0.75 * (1 - Math.min(1, env.daylight * 2)) : 0, realDt);
-    // Sessio 60: yön eläinäänet valikossa (pöllö, hyeena, kehrääjä, ruokosammakot).
-    sfx.nightCalls(state === 'menu' ? 1 - Math.min(1, env.daylight * 3) : 0);
+    // Sessio 60: yön eläinäänet valikossa (huuhkaja, sakaalit, kehrääjä; hämärässä helmikanat).
+    const dl = env.daylight;
+    const dusk = state === 'menu' ? Math.max(0, Math.min(1, (dl - 0.08) / 0.15)) * Math.max(0, Math.min(1, (0.75 - dl) / 0.2)) : 0;
+    sfx.nightCalls(state === 'menu' ? 1 - Math.min(1, dl * 3) : 0, dusk);
     sfx.waterfall(0, 0, realDt);
   }
   sfx.update(realDt);
