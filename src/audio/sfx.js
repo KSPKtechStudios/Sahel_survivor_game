@@ -53,7 +53,20 @@ const ONESHOTS = {
   mosquito: 'assets/sfx/mosquito-buzz.mp3',
   // Sessio 51: gorillan karjaisu (käyttäjän tuoma; leikattu 3,2 s).
   gorillaRoar: 'assets/sfx/gorilla-roar.mp3',
+  // Sessio 60: valikon leirin oikeat äänitteet (Freesound, CC0; tekijät
+  // assets/CREDITS.txt). Silmukat ristiinhäivytetty saumattomiksi.
+  campLoop: 'assets/sfx/campfire-loop.mp3',   // −24 LUFS
+  nightBed: 'assets/sfx/savanna-night.mp3',   // Masai Mara keskiyöllä, −20 LUFS
+  owl: 'assets/sfx/owl.mp3',                  // −18,5 LUFS
+  jackals: 'assets/sfx/jackals.mp3',          // −25,5 LUFS
+  nightjar: 'assets/sfx/nightjar.mp3',        // −22,5 LUFS
+  guineafowl: 'assets/sfx/guineafowl.mp3',    // −23,7 LUFS
 };
+// Sessio 60: leirin äänitteiden tasot (kaukaiset eläimet n. −34…−38 LUFS,
+// nuotio n. −30 ja yön sirkkamatto n. −32 täydellä yöllä).
+const CAMP_LOOP_LEVEL = 0.5;
+const NIGHT_BED_LEVEL = 0.26;
+const CALL_LEVEL = { owl: 0.17, jackals: 0.3, nightjar: 0.16, guineafowl: 0.28 };
 // Huitominen: tasattu huipputason mukaan (tiedostojen huiput −1,6 / −6,8 dB),
 // jolloin huitaisu on n. −24 dB ja olentoon osuessa n. −31 dB.
 const WHOOSH_LEVEL = { whoosh1: 0.06, whoosh2: 0.11 };  // sessio 12e: −2 dB
@@ -362,10 +375,16 @@ export class Sfx {
     }
     c.fire = fire;
     c.night = night;
-    c.rg.gain.setTargetAtTime(fire * 0.05, now, 0.4);
+    // Sessio 60: oikeat äänitteet, kun ne on ladattu (rätinäsilmukka ja yön
+    // sirkkamatto); syntetisoitu rätinä ja sirkat jäävät varalle.
+    if (!c.fireLoop) c.fireLoop = this._loop('campLoop', c.out);
+    if (!c.nightLoop) c.nightLoop = this._loop('nightBed', c.out);
+    if (c.fireLoop) c.fireLoop.g.gain.setTargetAtTime(fire * CAMP_LOOP_LEVEL, now, 0.5);
+    if (c.nightLoop) c.nightLoop.g.gain.setTargetAtTime(night * NIGHT_BED_LEVEL, now, 1.5);
+    c.rg.gain.setTargetAtTime(c.fireLoop ? 0 : fire * 0.05, now, 0.4);
     // Poksahdukset: tiheys ja voimakkuus vaihtelevat.
     c.pop -= dt;
-    while (fire > 0.01 && c.pop <= 0) {
+    while (fire > 0.01 && !c.fireLoop && c.pop <= 0) {
       c.pop += 0.04 + Math.random() * Math.random() * 0.45;
       const t = now + Math.random() * 0.03;
       const len = 0.006 + Math.random() * 0.03;
@@ -385,7 +404,7 @@ export class Sfx {
     }
     // Sirkat: kolmen pulssin siritys jaksoittain, hiukan epäsäännöllisesti.
     for (const k of c.crickets) {
-      while (night > 0.02 && k.next < now + 0.25) {
+      while (night > 0.02 && !c.nightLoop && k.next < now + 0.25) {
         const t0 = Math.max(k.next, now);
         for (let i = 0; i < 3; i++) {
           const t = t0 + i * 0.045;
@@ -400,8 +419,184 @@ export class Sfx {
     c.idle = fire < 0.01 && night < 0.01 ? c.idle + dt : 0;
     if (c.idle > 4) {
       c.roar.stop();
+      if (c.fireLoop) c.fireLoop.s.stop();
+      if (c.nightLoop) c.nightLoop.s.stop();
       c.out.disconnect();
       this.campNode = null;
+    }
+  }
+
+  // Sessio 60: puskurisilmukka (saumaton; alku ja loppu ohitetaan, ettei
+  // MP3:n täyte kuulu saumassa), alkaa satunnaisesta kohdasta.
+  _loop(name, dest) {
+    const buf = this.bufs[name];
+    if (!buf) return null;
+    const ctx = this.ctx;
+    const s = ctx.createBufferSource();
+    s.buffer = buf;
+    s.loop = true;
+    s.loopStart = 0.03;
+    s.loopEnd = buf.duration - 0.03;
+    const g = ctx.createGain();
+    g.gain.value = 0;
+    s.connect(g).connect(dest);
+    s.start(ctx.currentTime, 0.03 + Math.random() * (buf.duration - 0.1));
+    return { s, g };
+  }
+
+  // Eläimen ääni äänitteestä: kaukainen (alipäästö), suunta, kaikuun.
+  _callBuf(name, t, pan, vol, lowpass = 3200) {
+    const buf = this.bufs[name];
+    if (!buf) return false;
+    const ctx = this.ctx;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = 0.95 + Math.random() * 0.1;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = lowpass;
+    const g = ctx.createGain(); g.gain.value = vol;
+    const p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    src.connect(lp).connect(g);
+    if (p) { p.pan.value = pan; g.connect(p).connect(this.nightNode.dry); } else g.connect(this.nightNode.dry);
+    src.start(t);
+    return true;
+  }
+
+  // Sessio 60: yön eläinäänet valikon leirissä (käyttäjä: tulikärpäset ja
+  // yöäänet). Kaikki syntetisoidaan: täplähuuhkajan kaksiosainen huhuilu,
+  // kaukainen hyeenan nouseva "whoop"-sarja, kehrääjän pitkä surina ja
+  // ruokosammakoiden kilahdukset joen suunnalta. Äänet kulkevat kevyen kaiun
+  // (viive + alipäästö) läpi, jolloin ne kuulostavat kaukaisilta.
+  // night = 0..1 (päivällä 0: mitään ei ajasteta), dusk = hämärä 0..1.
+  // Kun äänitteet on ladattu (Freesound CC0), huuhkaja, sakaalit (hyeenan
+  // tilalla; kultasakaali elää Sahelissa) ja kehrääjä ovat oikeita, ja
+  // hämärässä kuuluu välillä helmikanojen ääntelyä. Sammakoiden synteesi vain,
+  // jos yön sirkkamatto puuttuu.
+  nightCalls(night, dusk = 0) {
+    const ctx = this.ctx;
+    if (!ctx || ctx.state !== 'running') return;
+    const now = ctx.currentTime;
+    let n = this.nightNode;
+    if (!n) {
+      if (night < 0.05 && dusk < 0.05) return;
+      const dry = ctx.createGain();
+      dry.gain.value = 1;
+      dry.connect(this.bedBus);
+      // Kaiku: kaksi viivettä takaisinkytkennällä, korkeat pois.
+      const wet = ctx.createGain();
+      wet.gain.value = 0.35;
+      const d1 = ctx.createDelay(1), d2 = ctx.createDelay(1);
+      d1.delayTime.value = 0.13; d2.delayTime.value = 0.29;
+      const fb = ctx.createGain(); fb.gain.value = 0.32;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1800;
+      dry.connect(d1); d1.connect(lp); lp.connect(d2); d2.connect(fb); fb.connect(d1); lp.connect(wet); d2.connect(wet);
+      wet.connect(this.bedBus);
+      n = this.nightNode = { dry, next: { owl: now + 6 + Math.random() * 10, hyena: now + 25 + Math.random() * 40, jar: now + 12 + Math.random() * 20, frog: now + 3 + Math.random() * 5, fowl: now + 8 + Math.random() * 12 } };
+    }
+    const pan = () => (Math.random() * 2 - 1) * 0.8;
+    const N = n.next;
+    const t = now + 0.05;
+    if (dusk > 0.05 && now > N.fowl) {
+      N.fowl = now + 28 + Math.random() * 40;
+      this._callBuf('guineafowl', t, pan(), CALL_LEVEL.guineafowl * dusk, 2600);
+    }
+    if (night < 0.05) {
+      for (const k of ['owl', 'hyena', 'jar', 'frog']) N[k] = Math.max(N[k], now + 4 + Math.random() * 6);
+      return;
+    }
+    if (now > N.owl) {
+      N.owl = now + 16 + Math.random() * 26;
+      if (night > 0.3 && !this._callBuf('owl', t, pan(), CALL_LEVEL.owl * night, 1400)) this._owl(t, pan(), 0.05 * night);
+    }
+    if (now > N.hyena) {
+      N.hyena = now + 50 + Math.random() * 70;
+      if (night > 0.5 && !this._callBuf('jackals', t, pan(), CALL_LEVEL.jackals * night, 2400)) this._hyena(t, pan(), 0.035 * night);
+    }
+    if (now > N.jar) {
+      N.jar = now + 22 + Math.random() * 35;
+      if (night > 0.25 && !this._callBuf('nightjar', t, pan(), CALL_LEVEL.nightjar * night, 3000)) this._nightjar(t, pan(), 0.012 * night);
+    }
+    if (now > N.frog) {
+      N.frog = now + 7 + Math.random() * 12;
+      if (!this.bufs.nightBed) this._frogs(t, -0.55 + Math.random() * 0.3, 0.02 * night);
+    }
+  }
+
+  // Siniääni korkeuskäyrällä ja verhokäyrällä yöäänten väylään.
+  _tone(t, f0, f1, dur, vol, pan, { attack = 0.05, type = 'sine', lowpass = 2400, vib = 0 } = {}) {
+    const ctx = this.ctx;
+    const o = ctx.createOscillator();
+    o.type = type;
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+    if (vib) {
+      const l = ctx.createOscillator(); const lg = ctx.createGain();
+      l.frequency.value = 5.5; lg.gain.value = vib;
+      l.connect(lg).connect(o.frequency); l.start(t); l.stop(t + dur + 0.05);
+    }
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + attack);
+    g.gain.setTargetAtTime(0, t + dur * 0.6, dur * 0.18);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = lowpass;
+    const p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    o.connect(lp).connect(g);
+    if (p) { p.pan.value = pan; g.connect(p).connect(this.nightNode.dry); } else g.connect(this.nightNode.dry);
+    o.start(t);
+    o.stop(t + dur + 0.4);
+  }
+
+  // Täplähuuhkaja: "huu-HUUU" (lyhyt ja pidempi, hieman laskeva).
+  _owl(t, pan, vol) {
+    const f = 330 + Math.random() * 40;
+    this._tone(t, f, f * 0.94, 0.28, vol * 0.8, pan, { attack: 0.05, lowpass: 900 });
+    this._tone(t, f * 2, f * 1.88, 0.28, vol * 0.08, pan, { attack: 0.05, lowpass: 1400 });
+    this._tone(t + 0.42, f * 1.06, f * 0.9, 0.62, vol, pan, { attack: 0.08, lowpass: 900, vib: 4 });
+    this._tone(t + 0.42, f * 2.12, f * 1.8, 0.62, vol * 0.08, pan, { attack: 0.08, lowpass: 1400 });
+  }
+
+  // Täplähyeena kaukana: 2–4 nousevaa "whoop"-huutoa.
+  _hyena(t, pan, vol) {
+    const k = 2 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < k; i++) {
+      const tt = t + i * (2.2 + Math.random() * 0.8);
+      const f0 = 260 + Math.random() * 40;
+      this._tone(tt, f0, f0 * 2.9, 1.1, vol, pan, { attack: 0.25, type: 'triangle', lowpass: 1300, vib: 6 });
+    }
+  }
+
+  // Kehrääjä: nopea, tasainen surina (kantoaalto amplitudimoduloituna).
+  _nightjar(t, pan, vol) {
+    const ctx = this.ctx;
+    const dur = 2.5 + Math.random() * 3.5;
+    const o = ctx.createOscillator();
+    o.frequency.value = 1050 + Math.random() * 200;
+    const am = ctx.createGain(); am.gain.value = 0;
+    const lfo = ctx.createOscillator(); lfo.type = 'square'; lfo.frequency.value = 36 + Math.random() * 6;
+    const lg = ctx.createGain(); lg.gain.value = 0.5;
+    const bias = ctx.createConstantSource ? ctx.createConstantSource() : null;
+    lfo.connect(lg).connect(am.gain);
+    if (bias) { bias.offset.value = 0.5; bias.connect(am.gain); bias.start(t); bias.stop(t + dur + 0.3); }
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.3);
+    g.gain.setValueAtTime(vol, t + dur - 0.4);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    const p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    o.connect(am).connect(g);
+    if (p) { p.pan.value = pan; g.connect(p).connect(this.nightNode.dry); } else g.connect(this.nightNode.dry);
+    o.start(t); lfo.start(t);
+    o.stop(t + dur + 0.2); lfo.stop(t + dur + 0.2);
+  }
+
+  // Ruokosammakot: kirkkaita, lyhyitä kilahduksia epäsäännöllisesti.
+  _frogs(t, pan, vol) {
+    const k = 4 + Math.floor(Math.random() * 9);
+    let tt = t;
+    const base = 2700 + Math.random() * 500;
+    for (let i = 0; i < k; i++) {
+      tt += 0.12 + Math.random() * 0.5;
+      const f = base * (0.96 + Math.random() * 0.08);
+      this._tone(tt, f, f * 0.985, 0.045, vol * (0.6 + Math.random() * 0.4), pan + (Math.random() - 0.5) * 0.3, { attack: 0.004, lowpass: 6000 });
     }
   }
 

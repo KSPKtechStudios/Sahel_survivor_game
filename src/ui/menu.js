@@ -131,23 +131,10 @@ export class Menu {
     $('load-text').textContent = text;
     $('load-fill').style.width = '0%';
     $('load-fill').parentElement.classList.remove('hidden');
-    $('btn-enter').classList.add('hidden');
   }
 
   setLoading(p) {
     $('load-fill').style.width = `${Math.round(p * 100)}%`;
-  }
-
-  // Lataus valmis: odota klikkausta (hiiren lukitus vaatii käyttäjän eleen).
-  loadingReady(text, onEnter, label = 'Klikkaa pelaamaan') {
-    // Näytä valmis maailma taustalla.
-    this.loading.classList.add('over-world');
-    $('load-text').textContent = text;
-    $('load-fill').parentElement.classList.add('hidden');
-    const btn = $('btn-enter');
-    btn.querySelector('.label').textContent = label;
-    btn.classList.remove('hidden');
-    btn.onclick = () => onEnter();
   }
 
   hideLoading() {

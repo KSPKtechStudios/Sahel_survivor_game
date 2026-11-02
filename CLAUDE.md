@@ -33,6 +33,9 @@ Kirjoita muistiinpanot samalla kun työskentelet, älä vasta lopuksi.
 - Älä työskentele suoraan `main`-haarassa pelimuutoksissa. Tee jokaiselle työlle oma haara (esim. `feat/...`, `fix/...`), pushaa se ja avaa PR `main`-haaraan (`gh pr create`).
 - Pidä PR:t pieninä ja yhden asian kokoisina.
 - PR:n kuvaukseen: mitä muuttui, miten sitä testataan ja testauslinkki.
+- **Pushaa muutokset aina GitHubiin**, ja päivitä samalla `docs/CHANGELOG.md` ja muut muistiinpanot samaan haaraan (käyttäjän pyyntö, sessio 60). Muutokset eivät saa jäädä vain koneelle.
+- **Käyttäjä yhdistää PR:t itse** mainiin kokeiltuaan ne. Älä yhdistä PR:ää itse. Jos PR on jo yhdistetty, jatkotyö aloitetaan uudesta haarasta mainin päältä.
+- **Kysy käyttäjältä välillä** suunnasta ja vaihtoehdoista, ja pohditaan yhdessä (käyttäjän toive, sessio 60). Erityisesti makuasioissa (ulkoasu, tunnelma) näytä vaihtoehdot ennen isoa työtä.
 
 ## 5. Testauslinkki (raw.githack)
 

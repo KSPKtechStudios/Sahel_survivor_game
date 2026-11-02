@@ -2,6 +2,38 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-11-02 (sessio 60, jatko 2): oikeat kipinät, kekäleet, selkeämpi logo, ei klikkausruutuja
+
+- **Kipinät näyttävät kipinöiltä** (käyttäjä: eivät vain keltaisena hohtavia palloja; koskee soihtua ja nuotiota) kaikkialla pelissä ja valikossa:
+  - jokainen kipinä on ohut, kirkas viiru, joka venyy liikkeen suuntaan (kuten kipinä näkyy silmälle ja kameralle);
+  - kuuma kipinä on valkokeltainen, viiletessään oranssi ja lopuksi tummanpunainen, ja sammuessaan se välkkyy;
+  - kipinät nousevat kuumuuden mukana, mutkittelevat levottomasti ja kulkevat tuulen mukana; nuotiosta purkautuu välillä rätinän kipinäsuihku.
+- **Nuotiosta lentää silloin tällöin kekäle** (noin 7–20 s välein): hehkuva puunpala lentää kaaressa kipinävana perässään, pomppaa maahan kipinöiden saattelemana, kytee hiipuen ja sammuu.
+- **Logo erottuu taustasta** (käyttäjä: logo kaipaa reunuksia, ohut teksti hukkuu): kirjaimilla on tumma reunus ja pehmeä varjo, ne ovat paksumpia ja kullanvärisempiä, ja kolhuja on vähemmän. Valikon napit erottuvat paremmin (tummempi varjo, kirkkaampi teksti).
+- **Iskulause poistettu** päävalikon alalaidasta.
+- **Ei enää "Klikkaa jatkaaksesi" eikä "Klikkaa pelaamaan" -ruutuja:**
+  - intron jälkeen avautuu suoraan päävalikko;
+  - kun maailma on ladattu, peli alkaa heti, jos selain sallii hiiren lukituksen; muuten maailma odottaa ja peli alkaa ensimmäisestä klikkauksesta tai näppäimestä.
+
+## 2026-11-01 (sessio 60, jatko): multamaa, soihdun liekit nuotioon, kulunut logo ja elävä ilta
+
+- **Leirin maa on oikeaa multaa** (käyttäjä: multatekstuuria, aivan pari jalanjälkeä, pehmeä siirtymä maamateriaalien välillä):
+  - nuotion ympärillä ja poluilla tiivistynyttä, tallattua multaa, reunoilla irtonaista kuivaa multaa (Poly Havenin valokuvatekstuurit, CC0);
+  - mullat, tuhka, kostea polku joelle ja ympäröivä maa liukuvat toisiinsa pehmeästi ilman rajoja;
+  - vain viisi paljaan jalan jälkeä: neljä askelta joelta päin ja yksi taljan vieressä;
+  - aukion reunalla ruoho harvenee ja madaltuu vähitellen eikä lopu kuin seinään.
+- **Nuotion tuli tehty soihdun liekkitekniikalla** (käyttäjä: realistisemmat tulifysiikat, samanlaiset kuin soihdussa), sekä pelin nuotioissa ja soihtutelineissä että valikossa:
+  - iso pääliekki ja sen ympärillä pienempiä liekin kieliä, jotka ovat tilavia joka suunnasta;
+  - liekit lepattavat ja venyvät nousevassa kohinassa, nuolaisevat välillä korkealle, ja tuuli ja puuskat taivuttavat niitä jousen tavoin;
+  - hiillos, kipinät ja savu kuten ennen.
+- **Kulunut logo:** SAHEL-kirjaimet ovat kuin kulunutta valettua pronssia: rosoiset reunat, harvoja kolhuja ja painaumia, pinnan rae ja kulumalaikut, viistetty kohokuvio. Fontti on edelleen Cinzel.
+- **Valikon ilta elää** (käyttäjä: valikossa pitää haluta viettää aikaa):
+  - hämärässä taivaan poikki lentää välillä haikaran kokoisten lintujen parvi (V-muodostelma tai löyhä parvi), siivet lyövät ja välillä liitävät;
+  - gasellilauma laiduntaa leirin lähellä, mutta pääkuvan matalasta kuvakulmasta heinikko peittää sen vielä (ratkaisu kysytään käyttäjältä);
+  - pimeän tultua leirin ympärillä vilkkuu tulikärpäsiä;
+  - **oikeat äänitteet netistä** (käyttäjä: voisiko äänimaailmassakin hyödyntää internetiä; Freesound, CC0): nuotion rätinä, Masai Maran (Kenia) savannin yö sirkkoineen, huuhkajan huhuilu, kaukaisten sakaalien ulvonta, kehrääjän surina ja hämärässä helmikanojen ääntely; äänet kuuluvat kaukaa ja hieman kaikuen;
+  - ilta vaihtelee kerrasta toiseen (tyyni, tuulinen, puolipilvinen tai utuisen kultainen) ja vaihtuu hiljalleen toiseen valikossa viipyessä.
+
 ## 2026-11-01 (sessio 60): valikon kamera, tallattu leirimaa ja uusi valikkoulkoasu
 
 - **Korjattu: kameran siirtymä Maailmat-näkymästä takaisin päävalikkoon oli super nopea** (käyttäjä: kun painaa Pelaa ja palaa päävalikkoon, animaatio menee tosi nopeasti). Syy: kamera liu'utti katsepistettä läheltä katsotusta kartasta kaukaiseen horisonttiin, jolloin kuva kääntyi alussa rajusti. Nyt jokainen siirtymä kestää saman ajan (2,6 s), kiihtyy ja jarruttaa pehmeästi, ja katsesuunta kääntyy tasaisesti. Kamera nousee siirtymässä hieman kaarelle.

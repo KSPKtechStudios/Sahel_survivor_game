@@ -14,6 +14,10 @@ Tekstuurit (assets/textures/), ambientCG (https://ambientcg.com), CC0:
   grass.png = Clauden piirtämä ruohoatlas (sessio 24, CC0)
   forestfloor.png = koottu Quaterniuksen lehtikuvista (ks. alla)
 
+Valikon leirin multa (assets/textures/camp/), sessio 60: Poly Haven
+  (https://polyhaven.com), CC0: soil_compact = forest_ground_06,
+  soil_loose = brown_mud_dry (1k; väri- ja normaalikartta (GL), uudelleenpakattu JPEG:ksi)
+
 Mallit (assets/models/, src/models/scanned/), Poly Haven (https://polyhaven.com), CC0:
   rocks/boulder_02..06 = namaqualand_boulder_02 .. namaqualand_boulder_06
   (1k glTF, kevennetty gltf-transform + meshoptimizer)
@@ -131,3 +135,14 @@ Puut (assets/models/trees/; lähde tools/blender/build_trees.py, leafgen.py,
   (https://ambientcg.com), CC0, 1K-JPG pienennetty 512 px WebP:ksi:
   acacia = Bark014   shea = Bark001   baobab = Bark005 (vaalennettu, harmaampi)
   rain = Bark009     kapok = Bark010  emergent = Bark004   sapling = Bark002
+
+Äänet (assets/sfx/), Freesound (https://freesound.org), CC0, sessio 60:
+  campfire-loop.mp3 = "Campfire 02", HECKFRICKER (729396); 45 s:n pätkä,
+    kompressoitu, saumaton silmukka, mono
+  savanna-night.mp3 = "African savanna 2" (Masai Mara keskiyöllä),
+    AugustSandberg (202876); 60 s:n saumaton silmukka
+  owl.mp3 = "Owl Hoot", Breviceps (465697)
+  jackals.mp3 = "Jackals.wav", denkmal (539810); 26 s:n pätkä
+  nightjar.mp3 = "European nightjar", jjbubo (474859); 14 s:n pätkä
+  guineafowl.mp3 = "Guinea fowl", Breviceps (483923)
+  (suodatettu, häivytetty ja tasattu peliin)

@@ -43,7 +43,12 @@
         resolve();
       }
       function onKey(e) {
-        if (e.code === 'Escape' || e.code === 'Space') { e.preventDefault(); e.stopImmediatePropagation(); finish(); }
+        if (e.code === 'Escape' || e.code === 'Space') {
+          e.preventDefault(); e.stopImmediatePropagation();
+          // Näppäin on käyttäjän ele: äänet saa avata (main.js).
+          if (window.sahelUnlockAudio) window.sahelUnlockAudio();
+          finish();
+        }
       }
       window.addEventListener('keydown', onKey, true);
       root.addEventListener('contextmenu', function (e) { e.preventDefault(); });
@@ -205,6 +210,47 @@
   <div id="devtools" class="hidden"></div>
 
   <!-- ===================== Valikon osat (sessio 59) ===================== -->
+  <!-- Sessio 60: logon kulunut metalli (SVG-suodin, menu.css .logo-word): rosoiset
+       reunat, harvat lohkeamat ja painaumat, pinnan rae ja kulumalaikut, viistetty
+       kohokuvio valolla ylävasemmalta ja tumma reunaviiva. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <filter id="logo-worn" x="-8%" y="-30%" width="116%" height="160%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="4" result="nEdge"/>
+      <feDisplacementMap in="SourceGraphic" in2="nEdge" scale="2.6" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.08 0.16" numOctaves="3" seed="11" result="nPit"/>
+      <feColorMatrix in="nPit" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -24 18.7" result="pitMask"/>
+      <feComposite in="rough" in2="pitMask" operator="in" result="pitted"/>
+      <feColorMatrix in="nPit" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 7 -4.75" result="dent"/>
+      <feComposite in="dent" in2="pitted" operator="in" result="dentIn"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="nGrain"/>
+      <feColorMatrix in="nGrain" type="matrix" values="0 0 0 0 0.1  0 0 0 0 0.06  0 0 0 0 0.03  0 0 0 1.4 -0.45" result="grain"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="3" seed="2" result="nWear"/>
+      <feColorMatrix in="nWear" type="matrix" values="0 0 0 0 0.1  0 0 0 0 0.06  0 0 0 0 0.03  0 0 0 1.7 -0.85" result="grime"/>
+      <feColorMatrix in="dentIn" type="matrix" values="0 0 0 0 0.12  0 0 0 0 0.07  0 0 0 0 0.03  0 0 0 0.38 0" result="dentDark"/>
+      <feMerge result="dirt"><feMergeNode in="grain"/><feMergeNode in="grime"/></feMerge>
+      <feComposite in="dirt" in2="pitted" operator="in" result="dirtIn"/>
+      <feMerge result="base"><feMergeNode in="pitted"/><feMergeNode in="dirtIn"/><feMergeNode in="dentDark"/></feMerge>
+      <feComposite in="pitted" in2="dentIn" operator="arithmetic" k1="0" k2="1" k3="-0.55" k4="0" result="heightA"/>
+      <feGaussianBlur in="heightA" stdDeviation="1.2" result="blurA"/>
+      <feSpecularLighting in="blurA" surfaceScale="4" specularConstant="1.0" specularExponent="20" lighting-color="#fff0cc" result="spec">
+        <feDistantLight azimuth="235" elevation="42"/>
+      </feSpecularLighting>
+      <feComposite in="spec" in2="pitted" operator="in" result="specIn"/>
+      <feComposite in="specIn" in2="base" operator="arithmetic" k1="0" k2="0.6" k3="1" k4="0" result="lit"/>
+      <feMorphology in="pitted" operator="erode" radius="1" result="inner"/>
+      <feComposite in="pitted" in2="inner" operator="out" result="rim"/>
+      <feColorMatrix in="rim" type="matrix" values="0 0 0 0 0.08  0 0 0 0 0.04  0 0 0 0 0.01  0 0 0 0.55 0" result="rimDark"/>
+      <!-- Sessio 60: tumma reunus ja pehmeä taustavarjo (käyttäjä: logo kaipaa reunuksia, ohut teksti hukkuu taustaan). -->
+      <feMorphology in="pitted" operator="dilate" radius="2.2" result="thick"/>
+      <feFlood flood-color="#160b04" flood-opacity="0.95"/>
+      <feComposite in2="thick" operator="in" result="outline"/>
+      <feMorphology in="pitted" operator="dilate" radius="5" result="thicker"/>
+      <feGaussianBlur in="thicker" stdDeviation="7" result="haloA"/>
+      <feFlood flood-color="#0a0502" flood-opacity="0.7"/>
+      <feComposite in2="haloA" operator="in" result="halo"/>
+      <feMerge><feMergeNode in="halo"/><feMergeNode in="outline"/><feMergeNode in="lit"/><feMergeNode in="rimDark"/></feMerge>
+    </filter>
+  </svg>
   <!-- Logo (sessio 60): harvennettu nimi ja ohut horisontti, jossa aurinko laskee. -->
   <template id="tpl-logo">
     <div class="logo">
@@ -232,7 +278,6 @@
             <button class="mbtn" data-action="settings" type="button"><span class="label">Asetukset</span></button>
             <button class="mbtn" data-action="credits" type="button"><span class="label">Tekijät</span></button>
           </nav>
-          <p class="mm-quote">Paahtavista hiekoista tukahduttaviin latvustoihin – maa ei anna mitään anteeksi.</p>
         </div>
 
         <!-- Sessio 49: tekijät (CC-BY-4.0-mallit vaativat nimeämisen; koko lista assets/CREDITS.txt) -->
@@ -250,6 +295,8 @@
                 <p class="credits-note">creativecommons.org/licenses/by/4.0 · muokattu peliin sopiviksi (koko, kevennys, muunnelmat, animaatioiden kevennys, luuranko ja animaatiot lisätty)</p>
                 <h3>Mallit ja tekstuurit (CC0)</h3>
                 <p>Poly Haven · ambientCG · Quaternius (Stylized Nature MegaKit) · ShareTextures</p>
+                <h3>Äänet (CC0)</h3>
+                <p>Freesound: HECKFRICKER (nuotio), AugustSandberg (Masai Maran yö), Breviceps (huuhkaja, helmikanat), denkmal (sakaalit), jjbubo (kehrääjä)</p>
                 <h3>Muut</h3>
                 <p>Kädet, norsu, nuija, soihtu, musiikki ja äänet: projektin omistajan toimittamat</p>
                 <p>Fontit: SIL Open Font License</p>
@@ -394,7 +441,6 @@
       <div class="logo-slot"></div>
       <div class="load-text" id="load-text">Ladataan…</div>
       <div class="load-bar"><i id="load-fill"></i></div>
-      <button class="mbtn cta hidden" id="btn-enter" type="button"><span class="label">Klikkaa pelaamaan</span></button>
     </div>
   </div>
 
