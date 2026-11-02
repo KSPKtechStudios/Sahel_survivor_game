@@ -11,7 +11,7 @@ Uusin merkintä ylimpänä.
 - Kuvat (scratchpad `shots/`, `shotsfp/`).
 
 **Kesken / tiedossa**
-- Käyttäjä pyysi aluksi, ettei GitHubiin kirjoiteta; muutokset on commitoitu paikallisesti, pushaus kysytään.
+- Käyttäjä pyysi aluksi, ettei GitHubiin kirjoiteta; myöhemmin hän salli pushauksen (ei saa sotkea selainpeliä: muutokset vain `godot/`- ja `docs/`-kansioissa). Haara pushattu, PR:ää ei avattu.
 - Ei selaintestilinkkiä: Godot-versio ajetaan Godot-editorissa (ohje `godot/README.md`).
 
 **Seuraavaksi**

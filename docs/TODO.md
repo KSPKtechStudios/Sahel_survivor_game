@@ -3,7 +3,8 @@
 ## Godot-siirto (sessio 61)
 - [x] Vaihe 1: kohina (`noise.js`), pelaajan liikkuminen (`player.js`), koemaasto, vertailutestit JS:ään.
 - [ ] Käyttäjä kokeilee vaihetta 1 omalla koneellaan (Godot 4.7, `godot/project.godot`, F5): liikkumisen tuntuma, juoksu, hyppy, kyykky, seinä; mikä FPS omalla koneella.
-- [ ] Avoin: pushataanko Godot-kokeilu GitHubiin (käyttäjä pyysi aluksi, ettei kirjoiteta).
+- [x] Godot-kokeilu pushattu haaraan `claude/upbeat-fermat-9n671f` (käyttäjän lupa; selainpeli ei muutu).
+- [ ] Avoin: avataanko PR mainiin (käyttäjä päättää).
 - [ ] Vaihe 2: oikea maasto (`src/world/terrain.js`, 2 085 riviä) vertailutesteineen; chunkkien lataus säikeissä. Arvioi GDScriptin nopeus (nyt 1,3 µs / kohinanäyte) vs. C#.
 - [ ] Vaihe 3: vesi, aallot ja uinti (`waves.js`, pelaajan uinti ja hukkuminen).
 - [ ] Vaihe 4: objektien sijoittelu (`chunkGen.js`) ja törmäykset puihin ja kiviin (`world.collidersNear`).
