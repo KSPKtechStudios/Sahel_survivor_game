@@ -87,7 +87,9 @@ const MENU_SPOT = { x: -2296, z: 582, yaw: 1.6, time: 17.55, nightEnd: 20.3, dus
 
 // --- Renderöijä ja kamera ----------------------------------------------------
 const canvas = $('game');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+// Sessio 62: canvasin oma reunanpehmennys pois: kuva piirretään jälkikäsittelyn
+// puskureihin (niissä MSAA), ja canvasin MSAA maksoi turhaan joka ruudulla.
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -336,8 +338,12 @@ function applySettings(s) {
   farTerrain.setRange(s.farView ?? 1400);
   camera.far = Math.max(1500, (s.farView || 0) + 200);
   camera.updateProjectionMatrix();
-  // Ultra: tarkkuus myös tarkoilla näytöillä (enintään 2× pikselitiheys).
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, s.quality === 'ultra' ? 2 : 1.5) * s.renderScale);
+  // Sessio 62: pikselitiheys enintään 1 (ultra 1,5). Ennen korkea laatu
+  // piirsi tarkoilla näytöillä 1,5× tiheydellä eli 2,25× pikselimäärän, ja
+  // jokainen jälkikäsittelyvaihe maksoi saman kertoimen.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, s.quality === 'ultra' ? 1.5 : 1) * s.renderScale);
+  // Reunanpehmennys (MSAA) laatutason mukaan: ultra 4, korkea ja keskitaso 2, matala ei.
+  post.setSamples(s.quality === 'ultra' ? 4 : s.quality === 'low' ? 0 : 2);
   renderer.setSize(window.innerWidth, window.innerHeight);
   if (s.shadows !== shadowMode) {
     const prevEnabled = renderer.shadowMap.enabled;
@@ -1254,6 +1260,8 @@ function frame(now) {
     drawTimer = 0.25;
     // Maailma tehosteineen, sitten käsi päälle (ei sumennuksia; sessio 37:
     // bloom ja sävytys koskevat myös kättä).
+    // Sessio 62: vain näkökeilaan osuvat esineinstanssit piirretään.
+    if (state !== 'boot') world.cull(camera, scene.fog ? scene.fog.far + 8 : Infinity);
     post.render(scene, camera, env, state === 'paused' ? 0 : dt, inGame ? viewmodel : null);
   }
   input.endFrame();

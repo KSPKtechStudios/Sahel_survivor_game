@@ -2,6 +2,23 @@
 
 Uusin merkintä ylimpänä.
 
+## 2026-11-23 (sessio 62)
+**Tehtiin**
+- Käyttäjä: palataan selainpeliin, se ei käytännössä pyöri hyvälläkään koneella; LODeja ja renderöintioptimointeja.
+- Haara aloitettiin uudelleen mainin päältä (PR #3 ja Godot-kokeilu, PR #5, yhdistetty). Godot-kansioon ei koskettu.
+- Mittaus ennen muutoksia (scratchpad `perf.mjs`, `perf2.mjs`, `perf3.mjs`): piirtokutsut ja kolmiot neljässä biomissa, erittely mallityypeittäin ja varjoihin, JS-profiili (JS ei pullonkaula).
+- Muutokset: näkymäkarsinta (`instancePool.js`, `world.cull`), sumun takaraja, `lodNear` sademetsäpuille, pikselitiheys ja MSAA (`post.setSamples`), canvas ilman antialiasia.
+- Tulos: sademetsä 21,5 → 9,2 M kolmiota (kaksi ruutua), karsti 15,6 → 4,1 M, aavikko 4,6 → 1,4 M, savanni 2,5 → 1,25 M.
+- Vertailukuva savannilla (main vs. optimoitu, `cmpshot.mjs`): sama sisältö, myös reunoilla. Sademetsän kuvaa ei saatu (kontin muisti loppui ohjelmistorenderöinnissä kummallakin versiolla).
+- eslint puhdas.
+
+**Kesken / tiedossa**
+- Oikeaa FPS:ää ei voi mitata pilvessä (ohjelmistorenderöinti); käyttäjä mittaa omalla koneellaan.
+- Sademetsä on yhä raskain (n. 4,6 M kolmiota ruudussa varjoineen).
+
+**Seuraavaksi**
+- Käyttäjän FPS-luvut. Sitten tarvittaessa maaston LOD, sademetsän kevyempi kaukomalli, varjojen rajaus tai jälkikäsittelyn keventäminen (TODO).
+
 ## 2026-11-02 (sessio 61)
 **Tehtiin**
 - Keskusteltiin pelimoottoriin siirrosta (Unity, Unreal, Godot). Käyttäjä: WebGL tulee vastaan, tavoite on Minecraft- ja Valheim-tyylinen avoimen maailman selviytymispeli Afrikassa ja melko hyvä grafiikka; valittiin kokeiluun Godot, aloitetaan perusmekaniikasta.

@@ -2,6 +2,13 @@
 
 Muoto: päivä, päätös, syy.
 
+## 2026-11-23 (sessio 62): suorituskyky
+- **Mitattiin ennen muutoksia** (scratchpad `perf.mjs`, `perf2.mjs`): siemen 777, näköetäisyys 5, neljä biomia. JS ei ollut pullonkaula (profiilissa JS lähes jouten); kolmiomäärä oli: sademetsässä 10,7 M kolmiota ruudussa, josta esineinstanssit 8,6 M (latvuspuiden lähimallit n. 7 000 kolmiota, kaukomalleja n. 1 800 kpl), varjoa heittävät 1,0 M kahdesti, maasto 0,45 M ja ruoho 0,2 M.
+- **Näkymäkarsinta poolin sisällä** (`instancePool.js` `cull`, `world.cull`): instanssit ovat suorittimen muistissa, ja joka ruudulla piirrettäviksi kopioidaan näkökeilaan osuvat (rajapallo + 1 m tuulihuojunnalle). Varjoa heittävät pidetään 40 m:n säteellä myös näkökeilan ulkopuolella (`SHADOW_KEEP`). Sumun takarajan (`scene.fog.far` + 8 m) takana ei piirretä. Puskuria ei lähetetä, jos näkyvä joukko ei muutu. Syy: yksi instanssiverkko per malli koko näkymäalueelle säästää piirtokutsuja, mutta ilman karsintaa kaikki piirrettiin joka suuntaan; chunk-kohtaiset verkot olisivat moninkertaistaneet piirtokutsut.
+- **`lodNear` tyypeittäin** (`objectTypes.js`): sademetsän raskaat puut lähimalliksi vain alle 1 chunkin päässä (keskus + 4 naapuria; ennen 1,6 eli 9 chunkia). Chunkkijaolla vaihtoehdot ovat käytännössä 0, 1 ja 1,41.
+- **Pikselitiheys enintään 1 (ultra 1,5), MSAA laatutason mukaan (`post.setSamples`), canvas ilman antialiasia.** Syy: kaikki jälkikäsittelyvaiheet maksavat pikselimäärän mukaan, ja tarkoilla näytöillä korkea laatu piirsi 2,25× pikseleitä 4× MSAA:lla. Canvasin MSAA oli turha, koska kuva tulee jälkikäsittelyn puskureista (jälkikäsittely on käytännössä aina päällä automaattisen valotuksen takia).
+- **Maaston LOD jätettiin myöhemmäksi:** maasto on näkökeilaan karsittuna n. 0,2 M kolmiota, ja karkeammat reunat vaatisivat helmat saumojen peittämiseksi.
+
 ## 2026-11-02 (sessio 61): Godot-siirtokoe
 - **Siirtokohteeksi kokeillaan Godotia (4.7.2), ei Unitya tai Unrealia.** Syy (keskustelu käyttäjän kanssa): selaimen WebGL tulee vastaan raskaassa avoimessa maailmassa; Godotin projekti on kokonaan tekstiä (scenet `.tscn`, skriptit), joten Claude voi muokata myös scenejä, ja Godot toimii pilvessä ilman näyttöä (testit ja kuvakaappaukset). Valheim-tason grafiikka on Godotilla mahdollinen; Unrealin fotorealismi ei ole tavoite.
 - **Godot-projekti samaan repoon kansioon `godot/`**, ei uuteen repoon. Syy: JS-peli on siirron speksi, ja testit ajavat alkuperäistä `src/`-koodia vertailuarvoiksi.
