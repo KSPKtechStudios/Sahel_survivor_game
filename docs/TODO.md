@@ -1,5 +1,10 @@
 # TODO
 
+## Suorituskyky (sessio 62)
+- [x] Näkymäkarsinta esineinstansseille, sademetsäpuiden LOD, pikselitiheys ja MSAA.
+- [ ] Käyttäjä kokeilee omalla koneellaan: FPS (Asetukset → Näytä FPS) savannilla, sademetsässä ja karstivuoristossa, laatutasot korkea ja ultra; näkyykö puiden mallin vaihtumista tai puuttuvia varjoja kuvan reunoilla.
+- [ ] Seuraavat vaihtoehdot, jos vielä hidas: maaston LOD (helmoilla), sademetsän kaukomalleille kolmas, vielä kevyempi taso (n. 1 000 puuta × 800 kolmiota), varjokaskadien kantama ja varjoa heittävien rajaus, jälkikäsittelyn yhdistelyvaiheen keventäminen.
+
 ## Godot-siirto (sessio 61)
 - [x] Vaihe 1: kohina (`noise.js`), pelaajan liikkuminen (`player.js`), koemaasto, vertailutestit JS:ään.
 - [ ] Käyttäjä kokeilee vaihetta 1 omalla koneellaan (Godot 4.7, `godot/project.godot`, F5): liikkumisen tuntuma, juoksu, hyppy, kyykky, seinä; mikä FPS omalla koneella.

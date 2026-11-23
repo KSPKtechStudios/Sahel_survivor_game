@@ -2,6 +2,17 @@
 
 Mitä peliin on lisätty tai muutettu. Uusin ylimpänä.
 
+## 2026-11-23 (sessio 62): suorituskyky (selainpeli)
+
+- **Peli piirtää ruudussa paljon vähemmän** (käyttäjä: peli ei käytännössä pyöri hyvälläkään koneella). Mittaus samoissa paikoissa ennen ja jälkeen (maailmapiirto kahdelta ruudulta, sisältää varjot):
+  - savanni 2,47 M → 1,25 M kolmiota;
+  - karstivuoristo 15,6 M → 4,1 M;
+  - sademetsä 21,5 M → 9,2 M;
+  - aavikko 4,6 M → 1,4 M.
+- **Näkymäkarsinta:** puut, pensaat, kivet ja muut esineet piirretään vain, jos ne ovat kameran näkökentässä. Ennen kaikki näköetäisyyden esineet piirrettiin joka ruudulla, myös selän takana olevat. Varjoa heittävät esineet piirretään 40 m:n säteellä myös kameran takana, ettei varjoja katoa kuvasta. Sumun takana olevia esineitä ei piirretä (hiekkamyrskyssä, sumussa ja sateessa iso säästö).
+- **Sademetsän raskaat puut** (latvuspuu, kapokkipuu ja jättiläispuu, 7 000–10 000 kolmiota) näytetään tarkkana mallina vain lähimmillä palasilla; kauempana kevyt malli, jonka sademetsän usva peittää.
+- **Kuvan tarkkuus:** korkealla ja sitä matalammilla laatutasoilla kuva lasketaan enintään näytön tarkkuudella (ennen tarkoilla näytöillä 1,5-kertaisena eli yli kaksinkertainen pikselimäärä); ultra enintään 1,5-kertainen. Reunanpehmennys (MSAA) laatutason mukaan: ultra 4, korkea ja keskitaso 2, matala ei. Canvasin oma, turha reunanpehmennys pois.
+
 ## 2026-11-02 (sessio 61): Godot-siirtokoe, vaihe 1 (kohina ja pelaajan liikkuminen)
 
 - **Uusi kansio `godot/`:** Godot 4.7 -projekti, johon peliä kokeillaan siirtää pienin askelin. Selainpeli ei muutu.

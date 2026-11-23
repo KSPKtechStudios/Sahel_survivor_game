@@ -13,7 +13,7 @@ import { CONFIG } from '../config.js';
 import { OBJECT_TYPES, OBJECT_TYPE_KEYS, DECOR_TYPES } from './objectTypes.js';
 import { scannedMaterial } from '../render/scannedMaterials.js';
 import { kitMaterials } from '../render/kitMaterials.js';
-import { InstancePool } from './instancePool.js';
+import { InstancePool, frustumPlanes } from './instancePool.js';
 import { GenPool } from './genPool.js';
 import { OBJ_STRIDE, DECOR_STRIDE } from './chunkGen.js';
 import { splitTree } from '../game/treeCut.js';
@@ -24,6 +24,7 @@ const SIZE = CONFIG.chunkSize;
 const SEG = CONFIG.chunkSegments;
 const LOD_NEAR = 1.6; // chunkia: tätä lähempänä tarkka malli + varjo
 const APPLY_BUDGET_MS = 4; // valmiiden chunkkien rakentaminen / ruutu
+const SHADOW_KEEP = 40;    // m: varjoa heittävät pidetään näin lähellä myös kameran takana (sessio 62)
 
 const _m = new THREE.Matrix4();
 const _q = new THREE.Quaternion();
@@ -101,6 +102,12 @@ export class World {
         });
       }
     }
+    // Sessio 62: kaikki poolit näkymäkarsintaa varten (cull).
+    this.allPools = [];
+    for (const P of Object.values(this.pools)) for (const k of ['near', 'far', 'shadow']) if (P[k]) this.allPools.push(...P[k]);
+    for (const list of Object.values(this.stumpPools)) this.allPools.push(...list);
+    this.planes = new Float32Array(24);
+    this.cullStats = { pools: 0, drawn: 0, total: 0 };
     // Sessio 24: tiheä ruohokenttä (render/grassField.js)
     this.grass = new GrassField(scene);
     this.gen = new GenPool(variantCounts);
@@ -176,6 +183,23 @@ export class World {
     this._updateShakes(dt);
   }
 
+  // Sessio 62: piirrä vain näkökeilaan osuvat instanssit (InstancePool.cull).
+  // Kutsutaan joka ruudulla ennen piirtoa. Varjoa heittävät pidetään mukana
+  // SHADOW_KEEP m säteellä myös näkökeilan ulkopuolella.
+  // maxDist: sumun takaraja (sen takana kaikki on sumun väristä).
+  cull(camera, maxDist = Infinity) {
+    camera.updateMatrixWorld();
+    frustumPlanes(camera, this.planes);
+    const p = camera.position, keep2 = SHADOW_KEEP * SHADOW_KEEP, far2 = maxDist * maxDist;
+    let drawn = 0, total = 0;
+    for (const pool of this.allPools) {
+      total += pool.used;
+      drawn += pool.cull(this.planes, p.x, p.y, p.z, keep2, far2);
+    }
+    this.cullStats.drawn = drawn;
+    this.cullStats.total = total;
+  }
+
   _distTo(cx, cz) {
     if (!this.center) return 0;
     return Math.hypot(cx - this.center.cx, cz - this.center.cz);
@@ -249,7 +273,7 @@ export class World {
     if (obj.stump) return dist <= 3.5 ? this.stumpPools[obj.type][obj.variant] : null;
     if (dist > Math.min(def.drawDist, this.detailRange) + 0.5) return null;
     const P = this.pools[obj.type];
-    if (P.far && dist > LOD_NEAR) return P.far[obj.variant];
+    if (P.far && dist > (def.lodNear ?? LOD_NEAR)) return P.far[obj.variant];
     return P.near[obj.variant];
   }
 

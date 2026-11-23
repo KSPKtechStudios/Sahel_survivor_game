@@ -7,6 +7,8 @@
 // kind:  tree = kaatuu ja pilkotaan, rock = säröilee ja murskautuu,
 //        bush = rytisee ja hajoaa, pickup = poimitaan [E], static = ei hakattava
 // drawDist: kuinka monen chunkin päähän esine piirretään.
+// lodNear (sessio 62): tätä lähempänä (chunkia) tarkka lähimalli, muuten world.js LOD_NEAR.
+// Sademetsän raskaat puut (n. 7 000–10 000 kolmiota) vain lähimmissä chunkeissa.
 // Sessio 22: harvest.minTier = kirveen / hakun vähimmäistaso (1 kivi, 2 piikivi,
 // 3 kupari, 4 rauta), peel = baobabin kuorinta ennen kaatamista, noChain = ei
 // kaadu toisen puun ketjureaktiossa, stumpR = kannon törmäyssäde.
@@ -25,14 +27,14 @@ export const OBJECT_TYPES = {
     log: { name: 'Kaatunut akasia', hp: 4, drops: [['wood', 3], ['stick', 2], ['gum', 1]] },
   },
   jungle: {
-    name: 'Kapokkipuu', model: 'jungle', kind: 'tree', material: 'vegetation', castShadow: true,
+    name: 'Kapokkipuu', model: 'jungle', kind: 'tree', material: 'vegetation', castShadow: true, lodNear: 1.0,
     density: { rainforest: 5, mare: 0.15 },
     scale: [1.0, 1.55], maxSlope: 0.55, collider: 0.6, hit: { y: 1.5, r: 0.85 }, drawDist: 99,
     harvest: { tool: 'axe', hp: 10, minTier: 3, needMsg: 'Tarvitset kirveen' }, noChain: true,
     log: { name: 'Kaatunut kapokkipuu', hp: 7, drops: [['heartwood', 3], ['wood', 3], ['stick', 2]] },
   },
   canopy: {
-    name: 'Sademetsäpuu', model: 'canopy', kind: 'tree', material: 'vegetation', castShadow: true,
+    name: 'Sademetsäpuu', model: 'canopy', kind: 'tree', material: 'vegetation', castShadow: true, lodNear: 1.0,
     density: { rainforest: 32, oasis: 0.5 },
     scale: [0.85, 1.3], maxSlope: 0.6, collider: 0.38, hit: { y: 1.3, r: 0.6 }, drawDist: 99,
     harvest: { tool: 'axe', hp: 6, minTier: 2, needMsg: 'Tarvitset kirveen' },
@@ -423,7 +425,7 @@ export const OBJECT_TYPES = {
   // vanhojen esineiden siemenet ja sijainnit eivät muutu).
   // Jättiläispuu: ylin latvuskerros (16–24 m), varjostaa metsänpohjan.
   emergent: {
-    name: 'Jättiläispuu', model: 'emergent', kind: 'tree', material: 'vegetation', castShadow: true,
+    name: 'Jättiläispuu', model: 'emergent', kind: 'tree', material: 'vegetation', castShadow: true, lodNear: 1.0,
     density: { rainforest: 6 },
     scale: [0.9, 1.15], maxSlope: 0.45, collider: 0.95, hit: { y: 1.8, r: 1.2 }, drawDist: 99,
     harvest: { tool: 'axe', hp: 18, minTier: 3, needMsg: 'Tarvitset kirveen' }, noChain: true,

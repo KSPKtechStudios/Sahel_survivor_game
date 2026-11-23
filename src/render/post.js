@@ -1084,6 +1084,15 @@ export class PostFX {
     this.compMat.uniforms.uAspect.value = w / h;
   }
 
+  // Sessio 62: MSAA-näytteet laatutason mukaan (0 = ei reunanpehmennystä).
+  setSamples(n) {
+    for (const rt of [this.sceneRT, this.hdrRT]) {
+      if (rt.samples === n) continue;
+      rt.samples = n;
+      rt.dispose();
+    }
+  }
+
   _pass(material, target) {
     this.quad.material = material;
     this.renderer.setRenderTarget(target);
